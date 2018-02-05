@@ -26,12 +26,12 @@ for x in range(10000):
     az  = new_coord.az.radian
 
 # parallactic angle calculation -----------------------------------------------------------------------------------
-    sindec = (np.sin(alt) * np.sin(31.95844)) + (np.cos(alt) * np.cos(az) * np.cos(31.95844))
+    sindec = (np.sin(alt) * np.sin(np.radians(31.95844))) + (np.cos(alt) * np.cos(az) * np.cos(np.radians(31.95844)))
     cosdec = np.sqrt(1.0 - sindec * sindec)
     if cosdec != 0:
         cosdec = 1/(cosdec)
     sin_h = -cosdec * np.cos(alt) *np.sin(az)
-    pa = (np.degrees(np.arcsin(np.cos(31.95844)*sin_h/cosdec)))
+    pa = (np.degrees(np.arcsin(np.cos(np.radians(31.95844))*sin_h/cosdec)))
 #---------------------------------------------------------------------------------------------------------------------
     print(pa) # show new parallactic angle in degrees
     print(new_coord.alt.degree) # show new position in degrees
