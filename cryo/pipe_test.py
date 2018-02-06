@@ -10,8 +10,8 @@ from astroplan import Observer
 
 # initialize coordinates of source on sky and time stepper ----------------------------------------------------------------------------------
 n = 0
-dec = 45 # degrees
-ra = 45 # degrees
+dec = 20 # degrees
+ra = 20 # degrees
 
 # this sections simulates tracking at the sidereal rate with data transmitted at 20 reports/sec -----------------------------------------------------------
 for x in range(10000):
