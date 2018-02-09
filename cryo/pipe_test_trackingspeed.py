@@ -5,6 +5,7 @@ the position by 179.25 arcseconds ("), or, since our position vectors are in deg
 
 # initialize coordinates of source on sky and time stepper ----------------------------------------------------------------------------------
 n = 0
+m = 0
 dec = 20.0 # degrees
 ra = 20.0 # degrees
 
@@ -12,15 +13,25 @@ ra = 20.0 # degrees
 constant DEC, then moving up slightly by DEC and tracking again backwards through RA. This will not create a zigzag pattern, but it will make
 a "box" on the sky, which is good enough for our testing purposes.'''
 newra = [0,20]
-newdec = [0,20]
+newdec = 20
 for i in range(1000000): #same for loop that exists in the other code...
-    if newra[1] > newra[0] and newra[1] < 90.0:
+    if newra[1] > newra[0] and newra[1] <= 90.0:
         newra[0] = newra[1]
         newra[1] = ra + (0.04979*n)
-        if newra <= 20.0:
-            newdec = dec + (0.04979*n)
-    elif newra > = 90.0:
-        newdec = dec + (0.04979*m)
-        newra = ra - (0.04929*n)
+
+    elif newra[1] < newra[0] and newra[1] < 90.0:
+        newra[0] = newra[1]
+        newra[1] = ra - (0.04929*n)
+
+    elif newra[1] > newra[0] and newra[1] >= 90.0:
+        n = 0
+        m = 1
+        newdec = dec + (0.04929*m) #we need to reset the index here or it would move by how long it took RA to reach 90
+        newra[1] = newra[0]
+        newra[0] = newra[1] # can't subtract by (0.04979*n) because the next movement check would end up with False Booleans
+
+    n = n + 1
+    m = m + 1
+        
 ''' The difference here is that the new coordinates have to be fed to SkyCoord each iteration to get updated alt and az, and requires them
 to be in the for loop with everything else.'''
