@@ -20,19 +20,19 @@ for x in range(10000):
     coord = SkyCoord(ra = ra*u.deg, dec = dec*u.deg, unit = 'deg',frame='icrs')
     time = thetime('2018-1-16 00:00:00')
     times = time + (n*u.second)
+    lst = kittpeak.local_sidereal_time(times)
+    ha = (lst.hour - (newra[1]/15.0)) # given in hours, converted to degrees later for PA calc
     frame = AltAz(obstime=times, location=location)
     new_coord = coord.transform_to(frame)
     alt = new_coord.alt.radian
     az  = new_coord.az.radian
 
-# parallactic angle calculation -----------------------------------------------------------------------------------
-    sindec = (np.sin(alt) * np.sin(np.radians(31.95844))) + (np.cos(alt) * np.cos(az) * np.cos(np.radians(31.95844)))
-    cosdec = np.sqrt(1.0 - sindec * sindec)
-    if cosdec != 0:
-        cosdec = 1/(cosdec)
-    sin_h = -cosdec * np.cos(alt) *np.sin(az)
-    pa = (np.degrees(np.arcsin(np.cos(np.radians(31.95844))*sin_h/cosdec)))
-#---------------------------------------------------------------------------------------------------------------------
+    # parallactic angle calculation -----------------------------------------------------------------------------------
+    sina = np.sin(np.radians(ha*15.0))
+    cosa = (np.tan(np.radians(31.95844))*np.cos(np.radians(dec)))-(np.sin(np.radians(dec))*np.cos(np.radians(ha*15.0)))
+    pa = np.degrees(np.arctan2(sina,cosa))
+
+    -------------------------------------------------------------------------------------------------------------------------
     print(pa) # show new parallactic angle in degrees
     print(new_coord.alt.degree) # show new position in degrees
     print(new_coord.az.degree)
