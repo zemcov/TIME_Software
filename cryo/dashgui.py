@@ -19,7 +19,6 @@ import subprocess
 from shutil import copy2
 import time
 
-
 app = dash.Dash()
 
 #specifying the color scheme for the whole page
@@ -65,14 +64,14 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
                     }
     ),
 
-    # adding a subtitle
+    # adding a subtitle    
     html.Div(children='A web interface for the control of the TIME instrument and other instrumentation', style={
              'textAlign': 'center',
              'color': colors['text']
              }
     ),
 
-    #label to input the number of frames
+    #label to input the number of frames    
     html.Label('Number of Frames',style={
              'textAlign': 'center',
              'color': colors['text']
@@ -86,12 +85,12 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
 def callback(value):
         return numframe = .format(value)
 
-    #label for different readout cards you want to collect data for
+    #label for different readout cards you want to collect data for    
     html.Label('Readout Cards', style={
         'textAlign': 'center',
         'color': colors['text']
     }),
-
+    
     dcc.Checklist(
         options=[
             {'label': 'RC1','value':'1'},
@@ -113,8 +112,8 @@ def callback(value):
                                        yaxis={'title':'Raw Counts'}
                                        )
             }),
-
-
+        
+  
    dcc.Graph(
          id = 'MCE Static Raw Data',
          figure={
@@ -129,11 +128,13 @@ def callback(value):
                                 yaxis={'title':'Random Data'}
                                )
                 })
-
+        
 # initializing a stream link object which updates the chart in plotly
 
 ])
 
-
+        
 if __name__=='__main__':
         app.run_server(debug=True)
+
+     
