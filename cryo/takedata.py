@@ -15,7 +15,8 @@ import time
 
 def takedata():
     i = 0
-    while time.time() <= tcurrent + 1:
+    tcurrent = time.time()
+    while new_tcurrent - tcurrent <= 1:
         f = mce_data.SmallMCEFile('/data/cryo/current_data/temp')
         h = f.Read(row_col=True, unfilter='DC').data
 

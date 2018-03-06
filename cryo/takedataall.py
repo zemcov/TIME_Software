@@ -15,19 +15,13 @@ import time
 
 def takedataall():
     i = 0
-    while time.time() <= tcurrent + 1:
+    tcurrent = time.time()
+    while new_tcurrent - tcurrent <= 1:
         f = mce_data.SmallMCEFile('/data/cryo/current_data/temp')
         h = f.Read(row_col=True, unfilter='DC').data
 
-        if i == 0:
-            copy2('/data/cryo/current_data/temp.run','/data/cryo/current_data/%s' %(filename) + '.run')
-            open("/data/cryo/current_data/temp","w").close()
-
         i = i+1
         time.sleep(0.1)
-
-        open("/data/cryo/current_data/temp","w").close()
-        open("/data/cryo/current_data/temp.run", "w").close()
 
         d = [[ [] for i in range(32)] for j in range(31)]
         for i in range(32):
