@@ -112,7 +112,7 @@ def main():
     pipename = 'params'
     pipename2 = 'heatmap'
     pipename3 = 'header'
-    pipenmae4 = 'livedata'
+    pipename4 = 'livedata'
 
     parameters = params(pipename)
     hm_data_stream(pipename2)
