@@ -1,11 +1,11 @@
 # just loading dependencies and packages
-import plotly.plotly as py
+#import plotly.plotly as py
 import numpy as np
-import plotly.tools as tls
-import plotly.graph_objs as go
+#import plotly.tools as tls
+#import plotly.graph_objs as go
 import mce_data
 import os
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import sys
 from subprocess import Popen, PIPE
 from datetime import datetime
@@ -13,23 +13,22 @@ import subprocess
 from shutil import copy2
 import time
 
-def takedata():
-    i = 0
-    tcurrent = time.time()
-    while new_tcurrent - tcurrent <= 1:
+def takedata(observer):
+    a = 0
+    while True:
         f = mce_data.SmallMCEFile('/data/cryo/current_data/temp')
         h = f.Read(row_col=True, unfilter='DC').data
 
 
-        if i == 0:
-            copy2('/data/cryo/current_data/temp.run','/data/cryo/current_data/%s' %(filename) + '.run')
-            open("/data/cryo/current_data/temp","w").close()
+        if a == 0:
+            copy2('/data/cryo/current_data/temp.run','/data/cryo/current_data/' + observer + '.run')
+            #open("/data/cryo/current_data/temp","w").close()
 
-        i=i+1
+        a=a+1
         time.sleep(0.1)  # wait for 100 milliseconds before running next loop
 
         open("/data/cryo/current_data/temp","w").close()
-        open("/data/cryo/current_data/temp.run", "w").close()
+        #open("/data/cryo/current_data/temp.run", "w").close()
 
         d = [[ [] for i in range(32)] for j in range(31)]
         for i in range(32):
@@ -46,7 +45,7 @@ def takedata():
             [d[7][0], d[7][1], d[7][2], d[7][3], d[7][4], d[7][5], d[7][6], d[7][7]],
             [d[8][0], d[8][1], d[8][2], d[8][3], d[8][4], d[8][5], d[8][6], d[8][7]],
             [d[9][0], d[9][1], d[9][2], d[9][3], d[9][4], d[9][5], d[9][6], d[9][7]],
-            [d[10][0], d[10][1], d[10][2], d[10][3], d[10][4], d[10][5], d[10][6]], d[10][7]],
+            [d[10][0], d[10][1], d[10][2], d[10][3], d[10][4], d[10][5], d[10][6], d[10][7]],
             [d[11][0], d[11][1], d[11][2], d[11][3], d[11][4], d[11][5], d[11][6], d[11][7]],
             [d[12][0], d[12][1], d[12][2], d[12][3], d[12][4], d[12][5], d[12][6], d[12][7]],
             [d[13][0], d[13][1], d[13][2], d[13][3], d[13][4], d[13][5], d[13][6], d[13][7]],
@@ -68,6 +67,19 @@ def takedata():
             [d[29][0], d[29][1], d[29][2], d[29][3], d[29][4], d[29][5], d[29][6], d[29][7]],
             [d[33][0], d[33][1], d[33][2], d[33][3], d[33][4], d[33][5], d[33][6], d[33][7]],
             [d[31][0], d[31][1], d[31][2], d[31][3], d[31][4], d[31][5], d[31][6], d[31][7]]])
-    return z
+
+    filename = 'temp/tempzdata.txt'
+
+    tempfile = open(filename, 'w')
+
+    for j in range(32):
+        for i in range(8):
+            tempfile.write(str(z[j][i])+' ')
+        tempfile.write('\n')
+
+    tempfile.close()
+
+    time.sleep(.9)
+
 if __name__ =="__main__":
-    takedata()
+    takedata(sys.argv[1])

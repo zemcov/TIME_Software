@@ -255,11 +255,10 @@ def startDataCollection(parameters):
     a = subprocess.Popen(changedatamode, shell=True)
     a.communicate()
 
-    subprocess.call(["mkfifo", "/data/cryo/current_data/temp"])
-
+    #subprocess.call(["mkfifo", "/data/cryo/current_data/temp"])
     run  = ["mce_run temp %s %s && cat /data/cryo/current_data/temp >> /data/cryo/current_data/%stempfile" %(framenumber, readoutcard, observer)]
     b = subprocess.Popen(run, shell=True)
-    b.communicate()
+    #b.communicate()
 
     init()
 
@@ -334,13 +333,13 @@ def toggleDataCollection(json_validparameters, json_parameters):
     parameters = json.loads(json_parameters)
 
     if validparameters == 'Valid':
-        #startDataCollection(parameters)
+        startDataCollection(parameters)
         if parameters[2] == 'All':
-            heatmap = subprocess.Popen(['python', 'fakedataall.py'])
+            heatmap = subprocess.Popen(['python', 'takedataall.py', parameters[0]])
         else:
-            heatmap = subprocess.Popen(['python', 'fakedata.py'])
+            heatmap = subprocess.Popen(['python', 'takedata.py', parameters[0]])
 
-        parafile = open('tempparameters.txt', 'w')
+        parafile = open('temp/tempparameters.txt', 'w')
         for parameter in parameters:
             parafile.write(str(parameter)+' ')
         return '/data'
@@ -420,7 +419,7 @@ def showParameters(submit, observer, datamode, readoutcard, framenumber, paramet
     [State('storedParameters', 'children')])
 def updateGraph(graphOptions, n_intervals, json_parameters):
     parameters = json.loads(json_parameters)
-    tempfile = open('tempgraphdata.txt', 'r')
+    tempfile = open('temp/tempgraphdata.txt', 'r')
     #z = [[ [] for i in range(32)] for j in range(32)]
     y = tempfile.read().strip().split()
     for i in range(len(y)):

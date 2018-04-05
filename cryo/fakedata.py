@@ -1,13 +1,15 @@
+import time
 
 def getMCEData():
     while True:
+        #Heatmap Data
         z = [[ [] for i in range(8)] for j in range(32)]
 
         for i in range(8):
             for j in range(32):
                 z[j][i] = j * i % 100
 
-        filename = 'tempzdata.txt'
+        filename = 'temp/tempzdata.txt'
 
         tempfile = open(filename, 'w')
 
@@ -20,7 +22,7 @@ def getMCEData():
 
         #Graph Data
         y = [[] for i in range(10)]
-        filename = 'tempgraphdata.txt'
+        filename = 'temp/tempgraphdata.txt'
         for i in range(10):
             y[i] = (i * a + a + i) % 100
         tempfile = open(filename, 'w')
@@ -29,6 +31,8 @@ def getMCEData():
         tempfile = open(filename, 'r')
         #print(tempfile.read().strip())
         tempfile.close()
+
+        time.sleep(0.1)
 
 def main():
     getMCEData()

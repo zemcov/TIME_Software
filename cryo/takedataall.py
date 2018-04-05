@@ -13,15 +13,21 @@ import subprocess
 from shutil import copy2
 import time
 
-def takedataall():
-    i = 0
-    tcurrent = time.time()
-    while new_tcurrent - tcurrent <= 1:
+def takedataall(observer):
+    a = 0
+    while True:
         f = mce_data.SmallMCEFile('/data/cryo/current_data/temp')
         h = f.Read(row_col=True, unfilter='DC').data
 
-        i = i+1
+        if a == 0:
+            copy2('/data/cryo/current_data/temp.run','/data/cryo/current_data/' + observer + '.run')
+            #open("/data/cryo/current_data/temp","w").close()
+
+        a = a+1
         time.sleep(0.1)
+
+        open("/data/cryo/current_data/temp","w").close()
+        #open("/data/cryo/current_data/temp.run", "w").close()
 
         d = [[ [] for i in range(32)] for j in range(31)]
         for i in range(32):
@@ -211,6 +217,18 @@ def takedataall():
                d[31][24], d[31][25], d[31][26], d[31][27], d[31][28], d[31][29],\
                d[31][30], d[31][31]]])
 
-    return z
+    filename = 'temp/tempzdata.txt'
+
+    tempfile = open(filename, 'w')
+
+    for i in range(32):
+        for j in range(32):
+            tempfile.write(str(z[j][i])+' ')
+        tempfile.write('\n')
+
+    tempfile.close()
+
+    time.sleep(.9)
+
 if __name__ =="__main__":
-    takedataall()
+    takedataall(sys.argv[1])

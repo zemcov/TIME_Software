@@ -9,7 +9,7 @@ def writetopipe(parameters):
     #creates pipe with name of pipename
     os.mkfifo(pipename)
     #opens named pipe to write parameters to it
-    fifo = open(path, 'w')
+    fifo = open(pipename, 'w')
     #writes data to named pipe
     fifo.write(data)
     #prints message to verfiy that write/read was successful

@@ -1,6 +1,6 @@
 import time
 
-def readfromfiles(parafilename, heatfilename, graphfilename):
+def readfromfiles(parafilename, heatfilename, graphfilename, headerfilename):
     #opens all temp files
     parafile = open(parafilename, 'r')
     heatfile = open(heatfilename, 'r')
@@ -27,14 +27,16 @@ def readfromfiles(parafilename, heatfilename, graphfilename):
         graph[i] = int(graph[i])
     graphfile.close()
 
-    return parameters, heatmap, graph
+    return parameters, heatmap, graph, headerfilename
 
 
 def main():
     while True:
         #calls function with the built in temp file names
         #outputs tuple of the 3 lists created by function
-        parameters, heatmap, graph = readfromfiles('tempparameters.txt', 'tempzdata.txt', 'tempgraphdata.txt')
+        parameters, heatmap, graph, headerfilename = readfromfiles(\
+        'temp/tempparameters.txt', 'temp/tempzdata.txt', 'temp/tempgraphdata.txt',\
+         '/data/cryo/current_data/' + sys.argv[1] + '.run')
 
         #prints lists to check code is working correctly
         print('Parameters:')
@@ -43,6 +45,8 @@ def main():
         print(heatmap)
         print('Graph:')
         print(graph)
+        print('Header:')
+        print(headerfilename)
         time.sleep(0.1)
 
 if __name__ == '__main__':

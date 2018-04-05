@@ -15,7 +15,7 @@ def getMCEData():
             for j in range(32):
                 z[j][i] = j * i * a % 100
 
-        filename = 'tempzdata.txt'
+        filename = 'temp/tempzdata.txt'
 
         tempfile = open(filename, 'w')
 
@@ -28,7 +28,7 @@ def getMCEData():
 
         #Graph Data
         y = [[] for i in range(10)]
-        filename = 'tempgraphdata.txt'
+        filename = 'temp/tempgraphdata.txt'
         for i in range(10):
             y[i] = (i * a + a + i) % 100
         tempfile = open(filename, 'w')
