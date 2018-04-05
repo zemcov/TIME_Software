@@ -86,8 +86,8 @@ def deprecate_arg(new_val, kwargs, new_arg, old_arg):
     # Note this pops the bad value from kwargs
     if old_arg in kwargs:
         if deprecation_warnings:
-            print 'Use of argument "%s" is deprecated, the new word is "%s".' % \
-                (old_arg, new_arg)
+            pass
+            #print 'Use of argument {} is deprecated, the new word is {}.'.format(old_arg, new_arg)
         return kwargs.pop(old_arg)
     return new_val
 
