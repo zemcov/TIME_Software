@@ -27,7 +27,9 @@ from shutil import copy2
 #import takedataall
 import guiheatmap
 import os
-
+import time
+import sys
+sys.path.append('/data/cryo/current_data')
 
 print(dcc.__version__)
 
@@ -147,20 +149,38 @@ data_page = html.Div([ #Main page of gui
         html.H4(children='Change Graph'),
         html.Div([
             dcc.RadioItems(
-                    id='graphOptions',
+                    id='mcegraph',
                     options=[
-                        {'label': 'MCE 1 RC 1', 'value': 1},
-                        {'label': 'MCE 1 RC 2', 'value': 2},
-                        {'label': 'MCE 1 RC 3', 'value': 3},
-                        {'label': 'MCE 1 RC 4', 'value': 4},
-                        {'label': 'MCE 2 RC 1', 'value': 5},
-                        {'label': 'MCE 2 RC 2', 'value': 6},
-                        {'label': 'MCE 2 RC 3', 'value': 7},
-                        {'label': 'MCE 2 RC 4', 'value': 8},
+                        {'label': 'MCE 1', 'value': 1},
+                        {'label': 'MCE 2', 'value': 2},
                     ],
                     value=1
-                )
-            ])
+                ),
+            dcc.Dropdown(
+                    id='rcgraph',
+                    options=[
+                        {'label': 'RC 1', 'value': 1},
+                        {'label': 'RC 2', 'value': 2},
+                        {'label': 'RC 3', 'value': 3},
+                        {'label': 'RC 4', 'value': 4},
+                    ],
+                    value = 2
+                ),
+            dcc.Dropdown(
+                    id='chgraph',
+                    options=[
+                        {'label': 'CH 1', 'value': 1},
+                        {'label': 'CH 2', 'value': 2},
+                        {'label': 'CH 3', 'value': 3},
+                        {'label': 'CH 4', 'value': 4},
+                        {'label': 'CH 5', 'value': 5},
+                        {'label': 'CH 6', 'value': 6},
+                        {'label': 'CH 7', 'value': 7},
+                        {'label': 'CH 8', 'value': 8},
+                    ],
+                    value = 1
+                ),
+            ]),
         ], style={'gridColumn': '2 / span 1',
           'gridRow': '2 / span 1'}),
 
@@ -168,18 +188,36 @@ data_page = html.Div([ #Main page of gui
         html.H4('Change Heatmap'),
         html.Div([
             dcc.RadioItems(
-                    id='heatmapOptions',
+                    id='mceheatmap',
                     options=[
-                        {'label': 'MCE 1 RC 1', 'value': 1},
-                        {'label': 'MCE 1 RC 2', 'value': 2},
-                        {'label': 'MCE 1 RC 3', 'value': 3},
-                        {'label': 'MCE 1 RC 4', 'value': 4},
-                        {'label': 'MCE 2 RC 1', 'value': 5},
-                        {'label': 'MCE 2 RC 2', 'value': 6},
-                        {'label': 'MCE 2 RC 3', 'value': 7},
-                        {'label': 'MCE 2 RC 4', 'value': 8},
+                        {'label': 'MCE 1', 'value': 1},
+                        {'label': 'MCE 2', 'value': 2},
                     ],
                     value=1
+                ),
+            dcc.Dropdown(
+                    id='rcheatmap',
+                    options=[
+                        {'label': 'RC 1', 'value': 1},
+                        {'label': 'RC 2', 'value': 2},
+                        {'label': 'RC 3', 'value': 3},
+                        {'label': 'RC 4', 'value': 4},
+                    ],
+                    value = 2
+                ),
+            dcc.Dropdown(
+                    id='chheatmap',
+                    options=[
+                        {'label': 'CH 1', 'value': 1},
+                        {'label': 'CH 2', 'value': 2},
+                        {'label': 'CH 3', 'value': 3},
+                        {'label': 'CH 4', 'value': 4},
+                        {'label': 'CH 5', 'value': 5},
+                        {'label': 'CH 6', 'value': 6},
+                        {'label': 'CH 7', 'value': 7},
+                        {'label': 'CH 8', 'value': 8},
+                    ],
+                    value = 1
                 ),
             ]),
         #html.Div(id='heatmapCheck')
@@ -251,16 +289,26 @@ def startDataCollection(parameters):
     datamode = parameters[1]
     readoutcard = str(parameters[2])
     framenumber = parameters[3]
+    print '1'
     changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (readoutcard, datamode)]
     a = subprocess.Popen(changedatamode, shell=True)
-    a.communicate()
-
+    #a.communicate()
+    print '2'
     #subprocess.call(["mkfifo", "/data/cryo/current_data/temp"])
-    run  = ["mce_run temp %s %s && cat /data/cryo/current_data/temp >> /data/cryo/current_data/%stempfile" %(framenumber, readoutcard, observer)]
+    run = ["mce_run temp %s %s --sequence=500" %(framenumber, readoutcard)]
     b = subprocess.Popen(run, shell=True)
     #b.communicate()
+    print '3'
 
     init()
+
+
+def stopDataCollection(parameters):
+    readoutcard = str(parameters[2])
+    run = ['mce_cmd -x stop rc%s ret_dat' %(readoutcard)]
+    a = subprocess.Popen(run, shell=True)
+    deletetemp = ['rm /data/cryo/current_data/temp.*']
+    b = subprocess.Popen(deletetemp, shell=True)
 
 
 def modZData(z, rc):
@@ -314,7 +362,7 @@ def validateParameters(json_parameters):
     validation = 'Valid'
     return json.dumps(validation)
 
-
+'''
 @app.callback(
     Output('parameterCheck', 'children'),
     [Input('validParameters', 'children')])
@@ -322,7 +370,7 @@ def parameterError(json_validparameters):
     validparameters = json.loads(json_validparameters)
     if validparameters == 'Invalid':
         return '**One or more parameters not entered!!**'
-
+'''
 
 @app.callback(
     Output('url', 'pathname'),
@@ -334,12 +382,12 @@ def toggleDataCollection(json_validparameters, json_parameters):
 
     if validparameters == 'Valid':
         startDataCollection(parameters)
+        time.sleep(1.0)
         if parameters[2] == 'All':
             heatmap = subprocess.Popen(['python', 'takedataall.py', parameters[0]])
         else:
             heatmap = subprocess.Popen(['python', 'takedata.py', parameters[0]])
-
-        parafile = open('temp/tempparameters.txt', 'w')
+        parafile = open('tempfiles/tempparameters.txt', 'w')
         for parameter in parameters:
             parafile.write(str(parameter)+' ')
         return '/data'
@@ -360,36 +408,103 @@ def showParameters(n_clicks, json_parameters):
     parameterStr += '*Time Started: ' + parameters[4]
     return parameterStr
 
-
+'''
 @app.callback(
     Output('stateMCE', 'children'),
     [Input('pauseData', 'n_clicks')])
 def pauseDataCollection(pauseData):
-    if pauseData % 2 == 0:
+    if pauseData/2 == 0:
         return 'MCE is running'
     else:
         return 'MCE is not running'
-
+'''
 
 @app.callback(
     Output('eStopData', 'children'),
-    [Input('eStop', 'n_clicks'),
-    Input('storedParameters', 'children')])
-def eStopDataCollection(clicks, json_parameters):
-    #eStopDataCollection()
+    [Input('eStop', 'n_clicks')])
+def eStopDataCollection(clicks):
+    print 'Hello!'
     if clicks > 0:
         eStop = 'Yes'
     else:
         eStop = 'No'
+    print eStop
     return json.dumps(eStop)
 
 
 @app.callback(
     Output('returnLink', 'children'),
-    [Input('eStop', 'n_clicks')])
-def resetPage(clicks):
-    #eStopDataCollection()
-    return dcc.Link('Enter new parameters', href='/index')
+    [Input('eStopData', 'children'),
+    Input('storedParameters', 'children')])
+def resetPage(eStop, json_parameters):
+    parameters = json.loads(json_parameters)
+    eStop = json.loads(eStop)
+    print 'Goodbye!'
+    if eStop == 'Yes':
+        print eStop
+        stopDataCollection(parameters)
+        return dcc.Link('Enter new parameters', href='/index')
+    else:
+        print eStop
+        return 'Press Emergency Stop to stop MCE'
+
+
+@app.callback(
+    Output('rcgraph', 'options'),
+    [Input('mcegraph', 'value')])
+def changeGraphRC(mcegraph):
+    if mcegraph == 1:
+        return [{'label': 'RC 1', 'value': 1},
+        {'label': 'RC 2', 'value': 2},
+        {'label': 'RC 3', 'value': 3},
+        {'label': 'RC 4', 'value': 4}]
+    else:
+        return [{'label': 'RC 1', 'value': 5},
+        {'label': 'RC 2', 'value': 6},
+        {'label': 'RC 3', 'value': 7},
+        {'label': 'RC 4', 'value': 8}]
+
+
+@app.callback(
+    Output('rcheatmap', 'options'),
+    [Input('mceheatmap', 'value')])
+def changeheatmapRC(mceheatmap):
+    if mceheatmap == 1:
+        return [{'label': 'RC 1', 'value': 1},
+        {'label': 'RC 2', 'value': 2},
+        {'label': 'RC 3', 'value': 3},
+        {'label': 'RC 4', 'value': 4}]
+    else:
+        return [{'label': 'RC 1', 'value': 5},
+        {'label': 'RC 2', 'value': 6},
+        {'label': 'RC 3', 'value': 7},
+        {'label': 'RC 4', 'value': 8}]
+
+
+@app.callback(
+    Output('mceState', 'children'),
+    [Input('chgraph', 'value'),
+    Input('heatInterval', 'n_intervals')])
+def changeChannel(chgraph, n_intervals):
+    tempfile = open('tempfiles/tempchannel.txt', 'w')
+    tempfile.write(str(chgraph))
+    tempfile.close()
+
+'''
+@app.callback(
+    Output('chgraph', 'options'),
+    Input('rcgraph', 'value')])
+def changegraphCH(rcgraph):
+    return [{'label': 'CH 1', 'value': 1 * rcgraph},
+    {'label': 'CH 2', 'value': 2 * rcgraph},
+    {'label': 'CH 3', 'value': 3 * rcgraph},
+    {'label': 'CH 4', 'value': 4 * rcgraph},
+    {'label': 'CH 5', 'value': 5 * rcgraph},
+    {'label': 'CH 6', 'value': 6 * rcgraph},
+    {'label': 'CH 7', 'value': 7 * rcgraph},
+    {'label': 'CH 8', 'value': 8 * rcgraph}]
+'''
+
 
 '''
 @app.callback(
@@ -414,21 +529,21 @@ def showParameters(submit, observer, datamode, readoutcard, framenumber, paramet
 
 @app.callback(
     Output('mceGraph', 'figure'),
-    [Input('graphOptions', 'value'),
+    [Input('rcgraph', 'value'),
      Input('heatInterval', 'n_intervals')],
     [State('storedParameters', 'children')])
-def updateGraph(graphOptions, n_intervals, json_parameters):
+def updateGraph(rcgraph, n_intervals, json_parameters):
     parameters = json.loads(json_parameters)
-    tempfile = open('temp/tempgraphdata.txt', 'r')
+    tempfile = open('tempfiles/tempgraphdata.txt', 'r')
     #z = [[ [] for i in range(32)] for j in range(32)]
     y = tempfile.read().strip().split()
     for i in range(len(y)):
-        y[i] = int(y[i])
+        y[i] = int(float(y[i]))
     tempfile.close()
 
 
-    if graphOptions == 1:
-        x_axis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    if rcgraph == 1:
+        x_axis = datetime.datetime.now().isoformat()
         y_axis = y
 
         trace = go.Scatter(
@@ -445,8 +560,8 @@ def updateGraph(graphOptions, n_intervals, json_parameters):
 
         fig = dict(data=data, layout=layout)
 
-    elif graphOptions == 2:
-        x_axis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif rcgraph == 2:
+        x_axis = datetime.datetime.now().isoformat()
         y_axis = y
 
         trace = go.Scatter(
@@ -463,8 +578,8 @@ def updateGraph(graphOptions, n_intervals, json_parameters):
 
         fig = dict(data=data, layout=layout)
 
-    elif graphOptions == 3:
-        x_axis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif rcgraph == 3:
+        x_axis = datetime.datetime.now().isoformat()
         y_axis = y
 
         trace = go.Scatter(
@@ -481,8 +596,8 @@ def updateGraph(graphOptions, n_intervals, json_parameters):
 
         fig = dict(data=data, layout=layout)
 
-    elif graphOptions == 4:
-        x_axis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif rcgraph == 4:
+        x_axis = datetime.datetime.now().isoformat()
         y_axis = y
 
         trace = go.Scatter(
@@ -499,8 +614,8 @@ def updateGraph(graphOptions, n_intervals, json_parameters):
 
         fig = dict(data=data, layout=layout)
 
-    elif graphOptions == 5:
-        x_axis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif rcgraph == 5:
+        x_axis = datetime.datetime.now().isoformat()
         y_axis = y
 
         trace = go.Scatter(
@@ -517,8 +632,8 @@ def updateGraph(graphOptions, n_intervals, json_parameters):
 
         fig = dict(data=data, layout=layout)
 
-    elif graphOptions == 6:
-        x_axis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif rcgraph == 6:
+        x_axis = datetime.datetime.now().isoformat()
         y_axis = y
 
         trace = go.Scatter(
@@ -535,8 +650,8 @@ def updateGraph(graphOptions, n_intervals, json_parameters):
 
         fig = dict(data=data, layout=layout)
 
-    elif graphOptions == 7:
-        x_axis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif rcgraph == 7:
+        x_axis = datetime.datetime.now().isoformat()
         y_axis = y
 
         trace = go.Scatter(
@@ -553,8 +668,8 @@ def updateGraph(graphOptions, n_intervals, json_parameters):
 
         fig = dict(data=data, layout=layout)
 
-    elif graphOptions == 8:
-        x_axis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif rcgraph == 8:
+        x_axis = datetime.datetime.now().isoformat()
         y_axis = y
 
         trace = go.Scatter(
@@ -576,7 +691,7 @@ def updateGraph(graphOptions, n_intervals, json_parameters):
 
 @app.callback(
     Output('mceHeatmap', 'figure'),
-    [Input('heatmapOptions', 'value'),
+    [Input('rcheatmap', 'value'),
      Input('heatInterval', 'n_intervals')],
     [State('storedParameters', 'children')])
 def runHeatmap(heatmapOptions, n_intervals, json_parameters):
