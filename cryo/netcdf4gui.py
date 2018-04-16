@@ -35,7 +35,7 @@ def main():
         #calls function with the built in temp file names
         #outputs tuple of the 3 lists created by function
         parameters, heatmap, graph, headerfilename = readfromfiles(\
-        'temp/tempparameters.txt', 'temp/tempzdata.txt', 'temp/tempgraphdata.txt',\
+        'tempfiles/tempparameters.txt', 'tempfiles/tempzdata.txt', 'tempfiles/tempgraphdata.txt',\
          '/data/cryo/current_data/' + sys.argv[1] + '.run')
 
         #prints lists to check code is working correctly

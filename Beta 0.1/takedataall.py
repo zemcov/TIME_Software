@@ -48,9 +48,6 @@ def takedataall(observer):
 
 def readdataall(f,mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
-    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-    subprocess.Popen(delete_file,shell=True)
-
     #d = np.array([[ [] for i in range(8)] for j in range(41)])
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
@@ -310,18 +307,20 @@ def readdataall(f,mce_file_name):
 
         tempfile.close()
 
-def readgraph(y, f, mce_file_name):
-    h = f.Read(row_col=True, unfilter='DC').data
-    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-    subprocess.Popen(delete_file,shell=True)
+def readgraphall(y,f,mce_file_name):
+        h = f.Read(row_col=True, unfilter='DC').data
+        delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
+        subprocess.Popen(delete_file,shell=True)
 
     chfile = open('tempfiles/tempchannel.txt', 'r')
     ch = int(chfile.read().strip())
     #T = range(h.shape[0])
     if len(y) < 5000:
-        y.append(h[:,ch]) #should output every row, and only 1 channel or column for all frame data
+        y.append(h[:,ch])
     else:
         y = y[1000:]
+
+    print(y)
 
     filename = 'tempfiles/tempgraphdata.txt'
     tempfile = open(filename, 'a')

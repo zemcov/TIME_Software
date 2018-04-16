@@ -28,13 +28,14 @@ def modZData(z, rc):
 def initHeatmap(parameters, heatmapOptions):
     if parameters[2] == 'All':
         print('All Readout Cards')
-        tempfile = open('temp/tempzdata.txt', 'r')
+        tempfile = open('tempfiles/tempzdata.txt', 'r')
         #z = [[ [] for i in range(32)] for j in range(32)]
         z = []
         for line in tempfile:
             x = line.strip().split()
             for i in range(len(x)):
-                x[i] = int(x[i])
+                x[i] = int(float(x[i]))
+                pass
             z.append(x)
         tempfile.close()
 
@@ -44,10 +45,11 @@ def initHeatmap(parameters, heatmapOptions):
                 go.Heatmap(z=new_z,
                            x=['CH1', 'CH2', 'CH3', 'CH4', 'CH5','CH6','CH7','CH8'],
                            y=['Row1','Row2','Row3','Row4','Row5','Row6','Row7',\
-                              'Row8','Row9','Row13','Row11','Row12','Row13','Row14',\
-                              'Row15','Row16','Row17','Row18','Row19','Row23','Row21',\
+                              'Row8','Row9','Row10','Row11','Row12','Row13','Row14',\
+                              'Row15','Row16','Row17','Row18','Row19','Row20','Row21',\
                               'Row22','Row23','Row24','Row25','Row26','Row27','Row28',\
-                              'Row29','Row33','Row31','Row32','Row33'])
+                              'Row29','Row30','Row31','Row32','Row33', 'Row34', 'Row35',\
+                              'Row36', 'Row37', 'Row38', 'Row39', 'Row40', 'Row41'])
         ]
 
         if heatmapOptions == 1:
@@ -92,24 +94,25 @@ def initHeatmap(parameters, heatmapOptions):
 
     else:
         print('Readout Card', parameters[2])
-        tempfile = open('tempzdata.txt', 'r')
+        tempfile = open('tempfiles/tempzdata.txt', 'r')
         #z = [[ [] for i in range(32)] for j in range(32)]
         z = []
         for line in tempfile:
             x = line.strip().split()
             for i in range(len(x)):
-                x[i] = int(x[i])
+                x[i] = int(float(x[i]))
             z.append(x)
         tempfile.close()
 
         data = [
                 go.Heatmap(z=z,
                            x=['CH1', 'CH2', 'CH3', 'CH4', 'CH5','CH6','CH7','CH8'],
-                           y=['Row1','Row2','Row3','Row4','Row5','Row6','Row7',\
-                              'Row8','Row9','Row13','Row11','Row12','Row13','Row14',\
-                              'Row15','Row16','Row17','Row18','Row19','Row23','Row21',\
-                              'Row22','Row23','Row24','Row25','Row26','Row27','Row28',\
-                              'Row29','Row33','Row31','Row32','Row33'])
+                            y=['Row1','Row2','Row3','Row4','Row5','Row6','Row7',\
+                               'Row8','Row9','Row10','Row11','Row12','Row13','Row14',\
+                               'Row15','Row16','Row17','Row18','Row19','Row20','Row21',\
+                               'Row22','Row23','Row24','Row25','Row26','Row27','Row28',\
+                               'Row29','Row30','Row31','Row32','Row33', 'Row34', 'Row35',\
+                               'Row36', 'Row37', 'Row38', 'Row39', 'Row40', 'Row41'])
         ]
 
         if parameters[2] == 1:

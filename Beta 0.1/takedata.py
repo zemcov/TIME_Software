@@ -127,9 +127,9 @@ def readgraph(y, f, mce_file_name):
     ch = int(chfile.read().strip())
     #T = range(h.shape[0])
     if len(y) < 5000:
-        y.append(h[:,ch]) #should output every row, and only 1 channel or column for all frame data
+        y.append(h[:,ch]) #output every row for channel chosen for 500 frames
     else:
-        y = y[1000:] #each 500 frame file will add 33 data points to y
+        y = y[1000:]
 
     print(y)
 
