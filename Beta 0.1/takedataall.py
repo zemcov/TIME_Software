@@ -48,10 +48,23 @@ def takedataall(observer):
 
 def readdataall(f,mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
+<<<<<<< HEAD
     #d = np.array([[ [] for i in range(8)] for j in range(41)])
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
+=======
+    print(h.shape)
+    print(h)
+    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
+    subprocess.Popen(delete_file,shell=True)
+
+    #d = np.array([[ [] for i in range(8)] for j in range(41)])
+    d = np.empty([41,32],dtype=float)
+    print(d.shape)
+    for b in range(41):
+        for c in range(32):
+>>>>>>> 7854dda37939273a4bdfb87515a1f6780c3a7dbb
             d[b][c] = (np.std(h[b][c],dtype=float))
 
     z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6],\
@@ -300,13 +313,19 @@ def readdataall(f,mce_file_name):
         filename = 'temp/tempzdata.txt'
         tempfile = open(filename, 'w')
 
+<<<<<<< HEAD
         for x in range(h.shape[0]):
             for y in range(h.shape[1]):
+=======
+        for x in range(41):
+            for y in range(32):
+>>>>>>> 7854dda37939273a4bdfb87515a1f6780c3a7dbb
                 tempfile.write(str(z[x][y])+' ')
             tempfile.write('\n')
 
         tempfile.close()
 
+<<<<<<< HEAD
 def readgraphall(y,f,mce_file_name):
         h = f.Read(row_col=True, unfilter='DC').data
         delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
@@ -330,5 +349,7 @@ def readgraphall(y,f,mce_file_name):
     tempfile.close()
     return y
 
+=======
+>>>>>>> 7854dda37939273a4bdfb87515a1f6780c3a7dbb
 if __name__ =="__main__":
     takedataall(sys.argv[1])

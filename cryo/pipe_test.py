@@ -32,7 +32,7 @@ for x in range(10000):
     cosa = (np.tan(np.radians(31.95844))*np.cos(np.radians(dec)))-(np.sin(np.radians(dec))*np.cos(np.radians(ha*15.0)))
     pa = np.degrees(np.arctan2(sina,cosa))
 
-    -------------------------------------------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------------------------------
     print(pa) # show new parallactic angle in degrees
     print(new_coord.alt.degree) # show new position in degrees
     print(new_coord.az.degree)
@@ -41,6 +41,3 @@ for x in range(10000):
     os.system('clear') #to clear previous number
 
     n = n + 0.05
-
-# this section simulates tracking at 15"/sec at 20 reports/sec
-    #still figuring out how to do this one...
