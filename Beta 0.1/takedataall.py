@@ -319,6 +319,7 @@ def readgraphall(y,f,mce_file_name):
     ch = int(chfile.read().strip())
     #T = range(h.shape[0])
     if len(y) < 5000:
+        d = h[:,ch]
         y.append(h[:,ch])
     else:
         y = y[1000:]
@@ -328,8 +329,8 @@ def readgraphall(y,f,mce_file_name):
     filename = 'tempfiles/tempgraphdata.txt'
     tempfile = open(filename, 'a')
 
-    for i in range(len(y)):
-        tempfile.write(str(y[i])+' ')
+    for j in range(d.shape[0]*d.shape[1]-1):
+        tempfile.write(str(y[len(y)-1][j])+' ')
     tempfile.close()
     return y
 

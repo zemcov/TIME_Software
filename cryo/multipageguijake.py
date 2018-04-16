@@ -538,7 +538,7 @@ def updateGraph(rcgraph, n_intervals, json_parameters):
     #z = [[ [] for i in range(32)] for j in range(32)]
     y = tempfile.read().strip().split()
     for i in range(len(y)):
-        y[i] = int(float(y[i]))
+        y[i] = float(y[i])
     tempfile.close()
 
 
