@@ -111,28 +111,32 @@ def readdata(f, mce_file_name):
 
 def readgraph(y, f, mce_file_name, a):
     h = f.Read(row_col=True, unfilter='DC').data
-    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-    subprocess.Popen(delete_file,shell=True)
+    #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
+    #subprocess.Popen(delete_file,shell=True)
 
     chfile = open('tempfiles/tempchannel.txt', 'r')
     ch = int(chfile.read().strip())
     if len(y) < 5000:
         d = h[:,ch]
-        y.append(np.mean(np.reshape(h[:,ch],d.shape[0]*d.shape[1]))) #should output every row, and only 1 channel or column for all frame data
+        y.append(np.reshape(h[:,ch],d.shape[0]*d.shape[1])) #should output every row, and only 1 channel or column for all frame data
         print(y[0])
     else:
         y = y[1000:] #each 500 frame file will add 33 data points to y
 
-    filename = 'tempfiles/tempgraphdata.txt'
+    if a > 10:
+        os.remove('tempfiles/tempgraphdata%s.txt' % (a - 10))
+    filename = 'tempfiles/tempgraphdata%s.txt' % (a)
 
-    if os.path.isfile(filename):
-        if a == 1:
-            os.remove(filename)
     #else:
     print(len(y))
-    tempfile = open(filename, 'a')
-
-
+    tempfile = open(filename, 'w')
+    for k in range(374):
+        for i in range(32):
+            for j in range(1):
+                tempfile.write(str(y[i][j][k]) + ' ')
+        tempfile.write('\n')
+    tempfile.close()
+'''
     for i in range(len(y)):
         if ch == 1:
             tempfile.write(str(y[i])+' '+'blue'+'\n')
@@ -149,9 +153,8 @@ def readgraph(y, f, mce_file_name, a):
         elif ch == 7:
             tempfile.write(str(y[i])+' '+'brown'+'\n')
         elif ch == 8:
-            tempfile.write(str(y[i])+' '+'pink'+'\n')
-    #tempfile.write(str(y[0]))
-    tempfile.close()
+            tempfile.write(str(y[i])+' '+'pink'+'\n')'''
+
 
 
 if __name__ == "__main__":
