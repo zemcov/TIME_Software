@@ -12,9 +12,9 @@ def all_files(group,var):
 
     if len(sys.argv) > 4 :
         if sys.argv[4] == '--group_att' :
-            group_att(sys.argv[4],f)
+            group_att(sys.argv[2],f)
         elif sys.argv[4] == '--var_att' :
-            var_att(sys.argv[4],f)
+            var_att(sys.argv[3],f)
 
     return x,t
 
@@ -27,12 +27,12 @@ def one_file(file,group,var):
 
     if len(sys.argv) > 5 :
         if sys.argv[5] == '--group_att' :
-            group_att(sys.argv[5],f)
+            group_att(sys.argv[3],f)
         elif sys.argv[5] == '--var_att' :
-            var_att(sys.argv[5],f)
+            var_att(sys.argv[4],f)
 
-    #return x,t
-    print(x[:])
+    return x,t
+    #print(x[:])
 
 def group_att(group,f):
     print("Meta Data for the {group} group".format(group=group))
