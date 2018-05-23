@@ -12,7 +12,8 @@ from datetime import datetime
 import subprocess
 from shutil import copy2
 import time
-
+import netcdf as nc
+n = 0
 def takedataall(observer):
     a = 0
     while True:
@@ -22,7 +23,8 @@ def takedataall(observer):
             if mce_file.exists():
                 a = a + 1
                 f = mce_data.SmallMCEFile(mce_file_name)
-                readdata(f, mce_file_name)
+                read_header(f)
+                readdataall(f, mce_file_name)
                 y = readgraphall(y, f, mce_file_name)
             else:
                 continue
@@ -33,7 +35,8 @@ def takedataall(observer):
             if mce_file.exists():
                 a = a + 1
                 f = mce_data.SmallMCEFile(mce_file_name)
-                readdata(f, mce_file_name)
+                read_header(f)
+                readdataall(f, mce_file_name)
                 y = readgraphall(y, f, mce_file_name)
             else:
                 continue
@@ -44,7 +47,8 @@ def takedataall(observer):
             if mce_file.exists():
                 a = a + 1
                 f = mce_data.SmallMCEFile(mce_file_name)
-                readdata(f, mce_file_name)
+                read_header(f)
+                readdataall(f, mce_file_name)
                 y = readgraphall(y, f, mce_file_name)
             else:
                 continue
@@ -56,7 +60,14 @@ def readdataall(f,mce_file_name):
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c],dtype=float))
-
+    #ADDING DATA TO NETCDF/CHECK FOR CETCDF FILE SIZE--------------------------------------------------------------------------------------------
+    if os.stat("~/gui_data_test%s.nc").st_size %(n) < 5*10**6 : # of bytes here
+        nc.raw_data(h,d,a)
+    else:
+        n = n + 1
+        nc.new_file(n)
+        nc.raw_data(h,d,a)
+    #----------------------------------------------------------------------------------------------
     z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6],\
                d[0][7], d[0][8], d[0][9], d[0][10], d[0][11], d[0][12], d[0][13],\
                d[0][14], d[0][15], d[0][16], d[0][17], d[0][18], d[0][19],\
@@ -311,9 +322,9 @@ def readdataall(f,mce_file_name):
         tempfile.close()
 
 def readgraphall(y,f,mce_file_name):
-        h = f.Read(row_col=True, unfilter='DC').data
-        delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-        subprocess.Popen(delete_file,shell=True)
+    h = f.Read(row_col=True, unfilter='DC').data
+    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
+    subprocess.Popen(delete_file,shell=True)
 
     chfile = open('tempfiles/tempchannel.txt', 'r')
     ch = int(chfile.read().strip())
@@ -334,5 +345,25 @@ def readgraphall(y,f,mce_file_name):
     tempfile.close()
     return y
 
+def read_header(f):
+    for key,value in f.header.items():
+        if key == '_rc_present':
+            for i in range(len(value)):
+                if value[i] == True:
+                    value[i] = "1"
+                elif value[i] == False:
+                    value[i] = "0"
+                else:
+                    print("I don't know what I am...")
+            value = ''.join(map(str,value))
+        value = str(value)
+        st.keys.append(key)
+        st.values.append(value)
+    # keys,values = zip(*f.header.items())
+    st.keys = np.asarray(st.keys,dtype=object)
+    st.values = np.asarray(st.values,dtype=object)
+    st.head = np.array((st.keys,st.values)).T
+
 if __name__ =="__main__":
     takedataall(sys.argv[1])
+    nc.new_file(n)
