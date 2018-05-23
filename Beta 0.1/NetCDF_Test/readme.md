@@ -30,7 +30,7 @@ if __name__ =="__main__":
 
   d) (STILL UNDER CONSTRUCTION) To print the attributes of a group:
       Add the flag "--group_att" to end of command
-
+ 
       # NOTE: This cannot be used in conjunction with "--var_att"
 
   e) (STILL UNDER CONSTRUCTION) To print the attributes of a variable:
