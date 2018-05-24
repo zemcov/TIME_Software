@@ -1,72 +1,77 @@
 # just loading dependencies and packages
-import plotly.plotly as py
 import numpy as np
-import plotly.tools as tls
-import plotly.graph_objs as go
-import mce_data
+from os import stat
 import os
-import matplotlib.pyplot as plt
 import sys
 from subprocess import Popen, PIPE
-from datetime import datetime
 import subprocess
-from shutil import copy2
 import time
+sys.path.append('/usr/lib/python2.7')
+sys.path.append('/data/cryo/current_data')
+import mce_data
+from pathlib2 import Path
 import netcdf as nc
+import settings as st
+
+
 n = 0
 def takedataall(observer):
     a = 0
     while True:
         if a < 10 : # create a check so we know the file is there and has the right name
-            mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
-            mce_file = Path("/data/cryo/current_data/temp.00%i" %(a+1)) #wait to read new file until old file is complete
+            mce_file_name = "/data/cryo/current_data/temp.00%i" %(st.a)
+            mce_file = Path("/data/cryo/current_data/temp.00%i" %(st.a+1)) #wait to read new file until old file is complete
             if mce_file.exists():
-                a = a + 1
+                st.a = st.a + 1
                 f = mce_data.SmallMCEFile(mce_file_name)
                 read_header(f)
                 readdataall(f, mce_file_name)
-                y = readgraphall(y, f, mce_file_name)
+                readgraphall(y, f, mce_file_name, st.a)
             else:
                 continue
 
-        if a >= 10 and a < 100 :
-            mce_file_name = "/data/cryo/current_data/temp.0%i"%(a)
-            mce_file = Path("/data/cryo/current_data/temp.0%i"%(a+1))
+        if st.a >= 10 and st.a < 100 :
+            mce_file_name = "/data/cryo/current_data/temp.0%i"%(st.a)
+            mce_file = Path("/data/cryo/current_data/temp.0%i"%(st.a+1))
             if mce_file.exists():
-                a = a + 1
+                st.a = st.a + 1
                 f = mce_data.SmallMCEFile(mce_file_name)
                 read_header(f)
                 readdataall(f, mce_file_name)
-                y = readgraphall(y, f, mce_file_name)
+                readgraphall(y, f, mce_file_name, st.a)
             else:
                 continue
 
-        if a >= 100 :
-            mce_file_name = "/data/cryo/current_data/temp.%i"%(a)
-            mce_file = Path("/data/cryo/current_data/temp.%i"%(a+1))
+        if st.a >= 100 :
+            mce_file_name = "/data/cryo/current_data/temp.%i"%(st.a)
+            mce_file = Path("/data/cryo/current_data/temp.%i"%(st.a+1))
             if mce_file.exists():
-                a = a + 1
+                st.a = st.a + 1
                 f = mce_data.SmallMCEFile(mce_file_name)
                 read_header(f)
                 readdataall(f, mce_file_name)
-                y = readgraphall(y, f, mce_file_name)
+                readgraphall(y, f, mce_file_name, st.a)
             else:
                 continue
+        time.sleep(1.0)
 
 def readdataall(f,mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
+    st.h_size = h.shape[2]
     #d = np.array([[ [] for i in range(8)] for j in range(41)])
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c],dtype=float))
-    #ADDING DATA TO NETCDF/CHECK FOR CETCDF FILE SIZE--------------------------------------------------------------------------------------------
-    if os.stat("~/gui_data_test%s.nc").st_size %(n) < 5*10**6 : # of bytes here
-        nc.raw_data(h,d,a)
+
+    #ADDING DATA TO NETCDF/CHECK FOR NETCDF FILE SIZE--------------------------------------------------------------------------------------------
+    if os.stat("~/gui_data_test{n}.nc".format(n=st.n)).st_size < 5*10**6 : # of bytes here
+        nc.data(h,d,;st.n,st.a)
     else:
-        n = n + 1
-        nc.new_file(n)
-        nc.raw_data(h,d,a)
+        st.n = st.n + 1
+        nc.mce.close()
+        nc.new_file(st.n)
+        nc.data(h,d,st.n,st.a)
     #----------------------------------------------------------------------------------------------
     z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6],\
                d[0][7], d[0][8], d[0][9], d[0][10], d[0][11], d[0][12], d[0][13],\
@@ -311,15 +316,15 @@ def readdataall(f,mce_file_name):
                d[41][24], d[41][25], d[41][26], d[41][27], d[41][28], d[41][29],\
                d[41][30], d[41][31]]])
 
-        filename = 'temp/tempzdata.txt'
-        tempfile = open(filename, 'w')
+    filename = 'temp/tempzdata.txt'
+    tempfile = open(filename, 'w')
 
-        for x in range(h.shape[0]):
-            for y in range(h.shape[1]):
-                tempfile.write(str(z[x][y])+' ')
-            tempfile.write('\n')
+    for x in range(h.shape[0]-1):
+        for y in range(h.shape[1]-1):
+            tempfile.write(str(z[x][y])+' ')
+        tempfile.write('\n')
 
-        tempfile.close()
+    tempfile.close()
 
 def readgraphall(y,f,mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
@@ -328,14 +333,11 @@ def readgraphall(y,f,mce_file_name):
 
     chfile = open('tempfiles/tempchannel.txt', 'r')
     ch = int(chfile.read().strip())
-    #T = range(h.shape[0])
     if len(y) < 5000:
         d = h[:,ch]
-        y.append(h[:,ch])
+        y.append(np.mean(np.reshape(h[:,ch],d.shape[0]*d.shape[1]))) #should output every row, and only 1 channel or column for all frame data
     else:
         y = y[1000:]
-
-    print(y)
 
     filename = 'tempfiles/tempgraphdata.txt'
     tempfile = open(filename, 'a')
@@ -365,5 +367,6 @@ def read_header(f):
     st.head = np.array((st.keys,st.values)).T
 
 if __name__ =="__main__":
+    st.init()
     takedataall(sys.argv[1])
     nc.new_file(n)

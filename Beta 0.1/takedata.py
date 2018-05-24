@@ -13,7 +13,7 @@ import mce_data
 from pathlib2 import Path
 import netcdf as nc
 import settings as st
-import datetime as now
+
 
 n = 0
 def takedata(observer):
@@ -59,7 +59,6 @@ def takedata(observer):
 
 def readdata(f, mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
-    head = h.header
     st.h_size = h.shape[2]
     #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     #subprocess.Popen(delete_file,shell=True)
@@ -70,7 +69,7 @@ def readdata(f, mce_file_name):
         for c in range(h.shape[1]-1):
             d[b][c] = (np.std(h[b][c],dtype=float))
     #ADDING DATA TO NETCDF/CHECK FOR CETCDF FILE SIZE--------------------------------------------------------------------------------------------
-    if os.stat("~/gui_data_test{n}.nc".format(b=st.n)).st_size %(n) < 5*10**6 : # of bytes here
+    if os.stat("~/gui_data_test{n}.nc".format(n=st.n)).st_size < 5*10**6 : # of bytes here
         nc.data(h,d,st.n,st.a)
     else:
         st.n = st.n + 1
@@ -114,8 +113,6 @@ def readdata(f, mce_file_name):
 
     filename = 'tempfiles/tempzdata.txt'
     tempfile = open(filename, 'w')
-
-    #print('Z:',z)
 
     for x in range(h.shape[0]-1):
         for y in range(h.shape[1]-1):
