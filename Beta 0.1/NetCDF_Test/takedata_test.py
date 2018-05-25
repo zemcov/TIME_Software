@@ -5,6 +5,7 @@ import os
 import settings as st
 import datetime as now
 import json
+from netcdftime import utime
 
 def readdata(f,mce_file_name,h):
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
