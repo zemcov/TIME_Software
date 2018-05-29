@@ -11,55 +11,49 @@ sys.path.append('/usr/lib/python2.7')
 sys.path.append('/data/cryo/current_data')
 import mce_data
 from pathlib2 import Path
-import netcdf as nc
-import settings as st
 
 
-n = 0
 def takedata(observer):
+    a = 0
     y = []
     while True:
 
-         if st.a < 10 : # create a check so we know the file is there and has the right name
-             mce_file_name = "/data/cryo/current_data/temp.00%i" %(st.a)
-             mce_file = Path("/data/cryo/current_data/temp.00%i" %(st.a+1)) #wait to read new file until old file is complete
+         if a < 10 : # create a check so we know the file is there and has the right name
+             mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
+             mce_file = Path("/data/cryo/current_data/temp.00%i" %(a+1)) #wait to read new file until old file is complete
              if mce_file.exists():
-                 st.a = st.a + 1
+                 a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
-                 read_header(f)
                  readdata(f, mce_file_name)
-                 readgraph(y, f, mce_file_name, st.a)
+                 y = readgraph(y, f, mce_file_name)
              else:
                  continue
 
-         if st.a >= 10 and st.a < 100 :
-             mce_file_name = "/data/cryo/current_data/temp.0%i"%(st.a)
-             mce_file = Path("/data/cryo/current_data/temp.0%i"%(st.a+1))
+         if a >= 10 and a < 100 :
+             mce_file_name = "/data/cryo/current_data/temp.0%i"%(a)
+             mce_file = Path("/data/cryo/current_data/temp.0%i"%(a+1))
              if mce_file.exists():
-                 st.a = st.a + 1
+                 a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
-                 read_header(f)
                  readdata(f, mce_file_name)
-                 readgraph(y, f, mce_file_name, st.a)
+                 y = readgraph(y, f, mce_file_name)
              else:
                  continue
 
-         if st.a >= 100 :
-             mce_file_name = "/data/cryo/current_data/temp.%i"%(st.a)
-             mce_file = Path("/data/cryo/current_data/temp.%i"%(st.a+1))
+         if a >= 100 :
+             mce_file_name = "/data/cryo/current_data/temp.%i"%(a)
+             mce_file = Path("/data/cryo/current_data/temp.%i"%(a+1))
              if mce_file.exists():
-                 st.a = st.a + 1
+                 a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
-                 read_header(f)
                  readdata(f, mce_file_name)
-                 readgraph(y, f, mce_file_name, st.a)
+                 y = readgraph(y, f, mce_file_name)
              else:
                  continue
-         time.sleep(1.0)
+
 
 def readdata(f, mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
-    st.h_size = h.shape[2]
     #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     #subprocess.Popen(delete_file,shell=True)
 
@@ -68,16 +62,7 @@ def readdata(f, mce_file_name):
     for b in range(h.shape[0]-1):
         for c in range(h.shape[1]-1):
             d[b][c] = (np.std(h[b][c],dtype=float))
-    #ADDING DATA TO NETCDF/CHECK FOR CETCDF FILE SIZE--------------------------------------------------------------------------------------------
-    if os.stat("~/gui_data_test{n}.nc".format(n=st.n)).st_size < 5*10**6 : # of bytes here
-        nc.data(h,d,st.n,st.a)
-    else:
-        st.n = st.n + 1
-        nc.mce.close()
-        nc.new_file(st.n)
-        nc.data(h,d,st.n,st.a)
 
-    #----------------------------------------------------------------------------------------------
     z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6], d[0][7]],
         [d[1][0], d[1][1], d[1][2], d[1][3], d[1][4], d[1][5], d[1][6], d[1][7]],
         [d[2][0], d[2][1], d[2][2], d[2][3], d[2][4], d[2][5], d[2][6], d[2][7]],
@@ -114,6 +99,8 @@ def readdata(f, mce_file_name):
     filename = 'tempfiles/tempzdata.txt'
     tempfile = open(filename, 'w')
 
+    #print('Z:',z)
+
     for x in range(h.shape[0]-1):
         for y in range(h.shape[1]-1):
             tempfile.write(str(z[x][y])+' ')
@@ -122,7 +109,7 @@ def readdata(f, mce_file_name):
     tempfile.close()
     #time.sleep(1.0)
 
-def readgraph(y, f, mce_file_name, a):
+def readgraph(y, f, mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
     delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     subprocess.Popen(delete_file,shell=True)
@@ -131,61 +118,20 @@ def readgraph(y, f, mce_file_name, a):
     ch = int(chfile.read().strip())
     if len(y) < 5000:
         d = h[:,ch]
-        y.append(np.mean(np.reshape(h[:,ch],d.shape[0]*d.shape[1]))) #should output every row, and only 1 channel or column for all frame data
+        y.append(np.reshape(h[:,ch],d.shape[0]*d.shape[1])) #should output every row, and only 1 channel or column for all frame data
         print(y[0])
     else:
         y = y[1000:] #each 500 frame file will add 33 data points to y
 
     filename = 'tempfiles/tempgraphdata.txt'
-
-    if os.path.isfile(filename):
-        if a == 1:
-            os.remove(filename)
-    #else:
-    print(len(y))
     tempfile = open(filename, 'a')
 
-
-    for i in range(len(y)):
-        if ch == 1:
-            tempfile.write(str(y[i])+' '+'blue'+'\n')
-        elif ch == 2:
-            tempfile.write(str(y[i])+' '+'red'+'\n')
-        elif ch == 3:
-            tempfile.write(str(y[i])+' '+'green'+'\n')
-        elif ch == 4:
-            tempfile.write(str(y[i])+' '+'orange'+'\n')
-        elif ch == 5:
-            tempfile.write(str(y[i])+' '+'yellow'+'\n')
-        elif ch == 6:
-            tempfile.write(str(y[i])+' '+'purple'+'\n')
-        elif ch == 7:
-            tempfile.write(str(y[i])+' '+'brown'+'\n')
-        elif ch == 8:
-            tempfile.write(str(y[i])+' '+'pink'+'\n')
-    #tempfile.write(str(y[0]))
+    for j in range(d.shape[0]*d.shape[1]-1):
+        tempfile.write(str(y[len(y)-1][j])+' ')
     tempfile.close()
-
-def read_header(f):
-    for key,value in f.header.items():
-        if key == '_rc_present':
-            for i in range(len(value)):
-                if value[i] == True:
-                    value[i] = "1"
-                elif value[i] == False:
-                    value[i] = "0"
-                else:
-                    print("I don't know what I am...")
-            value = ''.join(map(str,value))
-        value = str(value)
-        st.keys.append(key)
-        st.values.append(value)
-    # keys,values = zip(*f.header.items())
-    st.keys = np.asarray(st.keys,dtype=object)
-    st.values = np.asarray(st.values,dtype=object)
-    st.head = np.array((st.keys,st.values)).T
+    return y
 
 if __name__ == "__main__":
-    st.init()
     takedata(sys.argv[1])
-    nc.new_file(st.n)
+
+

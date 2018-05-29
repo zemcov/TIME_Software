@@ -427,12 +427,12 @@ def pauseDataCollection(pauseData):
     Output('eStopData', 'children'),
     [Input('eStop', 'n_clicks')])
 def eStopDataCollection(clicks):
-    print 'Hello!'
+    print('Hello!')
     if clicks > 0:
         eStop = 'Yes'
     else:
         eStop = 'No'
-    print eStop
+    print(eStop)
     return json.dumps(eStop)
 
 
@@ -443,13 +443,13 @@ def eStopDataCollection(clicks):
 def resetPage(eStop, json_parameters):
     parameters = json.loads(json_parameters)
     eStop = json.loads(eStop)
-    print 'Goodbye!'
+    print('Goodbye!')
     if eStop == 'Yes':
-        print eStop
+        print(eStop)
         stopDataCollection(parameters)
         return dcc.Link('Enter new parameters', href='/index')
     else:
-        print eStop
+        print(eStop)
         return 'Press Emergency Stop to stop MCE'
 
 
