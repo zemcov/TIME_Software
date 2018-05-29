@@ -25,7 +25,7 @@ def takedata(observer):
                  a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
                  readdata(f, mce_file_name)
-                 y = readgraph(y, f, mce_file_name)
+                 readgraph(y, f, mce_file_name, a)
              else:
                  continue
 
@@ -36,7 +36,7 @@ def takedata(observer):
                  a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
                  readdata(f, mce_file_name)
-                 y = readgraph(y, f, mce_file_name)
+                 readgraph(y, f, mce_file_name, a)
              else:
                  continue
 
@@ -47,10 +47,10 @@ def takedata(observer):
                  a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
                  readdata(f, mce_file_name)
-                 y = readgraph(y, f, mce_file_name)
+                 readgraph(y, f, mce_file_name, a)
              else:
                  continue
-
+         time.sleep(1.0)
 
 def readdata(f, mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
@@ -109,10 +109,10 @@ def readdata(f, mce_file_name):
     tempfile.close()
     #time.sleep(1.0)
 
-def readgraph(y, f, mce_file_name):
+def readgraph(y, f, mce_file_name, a):
     h = f.Read(row_col=True, unfilter='DC').data
-    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-    subprocess.Popen(delete_file,shell=True)
+    #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
+    #subprocess.Popen(delete_file,shell=True)
 
     chfile = open('tempfiles/tempchannel.txt', 'r')
     ch = int(chfile.read().strip())
@@ -123,13 +123,39 @@ def readgraph(y, f, mce_file_name):
     else:
         y = y[1000:] #each 500 frame file will add 33 data points to y
 
-    filename = 'tempfiles/tempgraphdata.txt'
-    tempfile = open(filename, 'a')
+    if a > 10:
+        os.remove('tempfiles/tempgraphdata%s.txt' % (a - 10))
+    filename = 'tempfiles/tempgraphdata%s.txt' % (a)
 
-    for j in range(d.shape[0]*d.shape[1]-1):
-        tempfile.write(str(y[len(y)-1][j])+' ')
+    #else:
+    print(len(y))
+    tempfile = open(filename, 'w')
+    for k in range(374):
+        for i in range(32):
+            for j in range(1):
+                tempfile.write(str(y[i][j][k]) + ' ')
+        tempfile.write('\n')
     tempfile.close()
-    return y
+'''
+    for i in range(len(y)):
+        if ch == 1:
+            tempfile.write(str(y[i])+' '+'blue'+'\n')
+        elif ch == 2:
+            tempfile.write(str(y[i])+' '+'red'+'\n')
+        elif ch == 3:
+            tempfile.write(str(y[i])+' '+'green'+'\n')
+        elif ch == 4:
+            tempfile.write(str(y[i])+' '+'orange'+'\n')
+        elif ch == 5:
+            tempfile.write(str(y[i])+' '+'yellow'+'\n')
+        elif ch == 6:
+            tempfile.write(str(y[i])+' '+'purple'+'\n')
+        elif ch == 7:
+            tempfile.write(str(y[i])+' '+'brown'+'\n')
+        elif ch == 8:
+            tempfile.write(str(y[i])+' '+'pink'+'\n')'''
+
+
 
 if __name__ == "__main__":
     takedata(sys.argv[1])
