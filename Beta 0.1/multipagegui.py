@@ -47,7 +47,9 @@ app.layout = html.Div([
     html.Div([
         html.Div(id='storedParameters'),
         html.Div(id='validParameters'),
-        html.Div(id='eStopData')
+        html.Div(id='eStopData'),
+        html.Div(id='graphy'),
+        html.Div(id='graphx')
     ], style={'display': 'none'}),
 ])
 
@@ -285,20 +287,21 @@ def init():
 
 
 def startDataCollection(parameters):
+    deletetempgraph = ['rm /TIME_Software/cryo/tempfiles/tempgraphdata.txt']
+    a = subprocess.Popen(deletetempgraph, shell=True)
     observer = parameters[0]
     datamode = parameters[1]
     readoutcard = str(parameters[2])
     framenumber = parameters[3]
-    print '1'
     changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (readoutcard, datamode)]
-    a = subprocess.Popen(changedatamode, shell=True)
+    b = subprocess.Popen(changedatamode, shell=True)
     #a.communicate()
-    print '2'
     #subprocess.call(["mkfifo", "/data/cryo/current_data/temp"])
     run = ["mce_run temp %s %s --sequence=500" %(framenumber, readoutcard)]
-    b = subprocess.Popen(run, shell=True)
+    c = subprocess.Popen(run, shell=True)
     #b.communicate()
-    print '3'
+    a.terminate()
+
 
     init()
 
@@ -493,7 +496,7 @@ def changeChannel(chgraph, n_intervals):
 '''
 @app.callback(
     Output('chgraph', 'options'),
-    Input('rcgraph', 'value')])
+    [Input('rcgraph', 'value')])
 def changegraphCH(rcgraph):
     return [{'label': 'CH 1', 'value': 1 * rcgraph},
     {'label': 'CH 2', 'value': 2 * rcgraph},
@@ -504,8 +507,6 @@ def changegraphCH(rcgraph):
     {'label': 'CH 7', 'value': 7 * rcgraph},
     {'label': 'CH 8', 'value': 8 * rcgraph}]
 '''
-
-
 '''
 @app.callback(
     Output('enteredParameters', 'children'),
@@ -525,169 +526,131 @@ def showParameters(submit, observer, datamode, readoutcard, framenumber, paramet
     *framenumber: {}
     .format(observer, datamode, readoutcard, framenumber)
 '''
+@app.callback(
+    Output('graphy', 'children'),
+    [Input('heatInterval', 'n_intervals')])
+def updateGraphY(n_intervals):
+    y = []
+    if os.path.isfile('tempfiles/tempgraphdata.txt'):
+        tempfile = open('tempfiles/tempgraphdata.txt', 'r')
+        #z = [[ [] for i in range(32)] for j in range(32)]
+        for line in tempfile:
+            point = line.strip().split()
+            y.append(point)
+        for i in range(len(y)):
+            y[i][0] = float(y[i][0])
+        tempfile.close()
+        return json.dumps(y)
+    else:
+        pass
+
+
+@app.callback(
+    Output('graphx', 'children'),
+    [Input('heatInterval', 'n_intervals')])
+def updateGraphX(n_intervals):
+    print('Hello!')
+    x = []
+    for i in range(n_intervals):
+        x.append(i + 1)
+    return json.dumps(x)
 
 
 @app.callback(
     Output('mceGraph', 'figure'),
     [Input('rcgraph', 'value'),
-     Input('heatInterval', 'n_intervals')],
-    [State('storedParameters', 'children')])
-def updateGraph(rcgraph, n_intervals, json_parameters):
-    parameters = json.loads(json_parameters)
-    tempfile = open('tempfiles/tempgraphdata.txt', 'r')
-    #z = [[ [] for i in range(32)] for j in range(32)]
-    y = tempfile.read().strip().split()
+     Input('graphx', 'children')],
+    [State('storedParameters', 'children'),
+    State('graphy', 'children')])
+def updateGraph(rcgraph, x, json_parameters, y):
+    y = json.loads(y)
+    x_axis = json.loads(x)
+    data = []
+    y_data = []
     for i in range(len(y)):
-        y[i] = int(float(y[i]))
-    tempfile.close()
+        y_data.append(y[i][0])
 
-
-    if rcgraph == 1:
-        x_axis = datetime.datetime.now().isoformat()
-        y_axis = y
-
-        trace = go.Scatter(
+    for i in range(len(y)):
+        trace0 = go.Scatter(
                 x = x_axis,
-                y = y_axis,
+                y = y_data,
                 mode = 'lines+markers',
-                name = 'MCE Data'
+                name = 'MCE Data',
+                marker = dict(
+                    color = y[i][1],
+                    line = dict(
+                        color = 'black'
+                    )
+                )
             )
+        data.append(trace0)
 
-        data = [trace]
+    parameters = json.loads(json_parameters)
+    if rcgraph == 1:
         layout = dict(title= 'MCE 1 RC 1',
-                      xaxis = dict(title = 'Time (seconds)'),
-                      yaxis = dict(title = 'Counts'))
+                      xaxis = dict(title = 'Delta Time from UTC (seconds)'),
+                      yaxis = dict(title = 'Average Counts over 500 Frames'),
+                      showlegend = False)
 
         fig = dict(data=data, layout=layout)
 
     elif rcgraph == 2:
-        x_axis = datetime.datetime.now().isoformat()
-        y_axis = y
-
-        trace = go.Scatter(
-                x = x_axis,
-                y = y_axis,
-                mode = 'lines+markers',
-                name = 'MCE Data'
-            )
-
-        data = [trace]
         layout = dict(title= 'MCE 1 RC 2',
-                      xaxis = dict(title = 'Time (seconds)'),
-                      yaxis = dict(title = 'Counts'))
+                      xaxis = dict(title = 'Delta Time from UTC (seconds)'),
+                      yaxis = dict(title = 'Average Counts over 500 Frames'),
+                      showlegend = False)
 
         fig = dict(data=data, layout=layout)
 
     elif rcgraph == 3:
-        x_axis = datetime.datetime.now().isoformat()
-        y_axis = y
-
-        trace = go.Scatter(
-                x = x_axis,
-                y = y_axis,
-                mode = 'lines+markers',
-                name = 'MCE Data'
-            )
-
-        data = [trace]
         layout = dict(title= 'MCE 1 RC 3',
-                      xaxis = dict(title = 'Time (seconds)'),
-                      yaxis = dict(title = 'Counts'))
+                      xaxis = dict(title = 'Delta Time from UTC (seconds)'),
+                      yaxis = dict(title = 'Average Counts over 500 Frames'),
+                      showlegend = False)
 
         fig = dict(data=data, layout=layout)
 
     elif rcgraph == 4:
-        x_axis = datetime.datetime.now().isoformat()
-        y_axis = y
-
-        trace = go.Scatter(
-                x = x_axis,
-                y = y_axis,
-                mode = 'lines+markers',
-                name = 'MCE Data'
-            )
-
-        data = [trace]
         layout = dict(title= 'MCE 1 RC 4',
-                      xaxis = dict(title = 'Time (seconds)'),
-                      yaxis = dict(title = 'Counts'))
+                      xaxis = dict(title = 'Delta Time from UTC (seconds)'),
+                      yaxis = dict(title = 'Average Counts over 500 Frames'),
+                      showlegend = False)
 
         fig = dict(data=data, layout=layout)
 
     elif rcgraph == 5:
-        x_axis = datetime.datetime.now().isoformat()
-        y_axis = y
-
-        trace = go.Scatter(
-                x = x_axis,
-                y = y_axis,
-                mode = 'lines+markers',
-                name = 'MCE Data'
-            )
-
-        data = [trace]
         layout = dict(title= 'MCE 2 RC 1',
-                      xaxis = dict(title = 'Time (seconds)'),
-                      yaxis = dict(title = 'Counts'))
+                      xaxis = dict(title = 'Delta Time from UTC (seconds)'),
+                      yaxis = dict(title = 'Average Counts over 500 Frames'),
+                      showlegend = False)
 
         fig = dict(data=data, layout=layout)
 
     elif rcgraph == 6:
-        x_axis = datetime.datetime.now().isoformat()
-        y_axis = y
-
-        trace = go.Scatter(
-                x = x_axis,
-                y = y_axis,
-                mode = 'lines+markers',
-                name = 'MCE Data'
-            )
-
-        data = [trace]
         layout = dict(title= 'MCE 2 RC 2',
-                      xaxis = dict(title = 'Time (seconds)'),
-                      yaxis = dict(title = 'Counts'))
+                      xaxis = dict(title = 'Delta Time from UTC (seconds)'),
+                      yaxis = dict(title = 'Average Counts over 500 Frames'),
+                      showlegend = False)
 
         fig = dict(data=data, layout=layout)
 
     elif rcgraph == 7:
-        x_axis = datetime.datetime.now().isoformat()
-        y_axis = y
-
-        trace = go.Scatter(
-                x = x_axis,
-                y = y_axis,
-                mode = 'lines+markers',
-                name = 'MCE Data'
-            )
-
-        data = [trace]
         layout = dict(title= 'MCE 2 RC 3',
-                      xaxis = dict(title = 'Time (seconds)'),
-                      yaxis = dict(title = 'Counts'))
+                      xaxis = dict(title = 'Delta Time from UTC (seconds)'),
+                      yaxis = dict(title = 'Average Counts over 500 Frames'),
+                      showlegend = False)
 
         fig = dict(data=data, layout=layout)
 
     elif rcgraph == 8:
-        x_axis = datetime.datetime.now().isoformat()
-        y_axis = y
-
-        trace = go.Scatter(
-                x = x_axis,
-                y = y_axis,
-                mode = 'lines+markers',
-                name = 'MCE Data'
-            )
-
-        data = [trace]
         layout = dict(title= 'MCE 2 RC 4',
-                      xaxis = dict(title = 'Time (seconds)'),
-                      yaxis = dict(title = 'Counts'))
+                      xaxis = dict(title = 'Delta Time from UTC (seconds)'),
+                      yaxis = dict(title = 'Average Counts over 500 Frames'),
+                      showlegend = False)
 
         fig = dict(data=data, layout=layout)
 
     return fig
-
 
 @app.callback(
     Output('mceHeatmap', 'figure'),
