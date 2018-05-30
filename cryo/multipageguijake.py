@@ -35,6 +35,9 @@ print(dcc.__version__)
 
 print('Hello')
 
+global totaltime
+totaltime = []
+
 app = dash.Dash()
 
 app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
@@ -239,7 +242,7 @@ data_page = html.Div([ #Main page of gui
         dcc.Graph(id='mceHeatmap'),
         dcc.Interval(
             id='heatInterval',
-            interval=1*2000,
+            interval=1*1000,
             n_intervals=0
         )
         ], style={'gridColumn': '3 / span 2',
@@ -290,6 +293,13 @@ def init():
 def startDataCollection(parameters):
     #deletetempgraph = ['rm /TIME_Software/cryo/tempfiles/tempgraphdata.txt']
     #a = subprocess.Popen(deletetempgraph, shell=True)
+    for i in range(11):
+        tempfilename = 'tempfiles/tempgraphdata%s.txt' % (i)
+        tempfile = os.path.exists(tempfilename)
+        if tempfile:
+            delete_file = ['rm ' + tempfilename]
+            subprocess.Popen(delete_file,shell=True)
+
     observer = parameters[0]
     datamode = parameters[1]
     readoutcard = str(parameters[2])
@@ -438,8 +448,8 @@ def eStopDataCollection(clicks):
 
 @app.callback(
     Output('returnLink', 'children'),
-    [Input('eStopData', 'children'),
-    Input('storedParameters', 'children')])
+    [Input('eStopData', 'children')],
+    [State('storedParameters', 'children')])
 def resetPage(eStop, json_parameters):
     parameters = json.loads(json_parameters)
     eStop = json.loads(eStop)
@@ -532,67 +542,96 @@ def showParameters(submit, observer, datamode, readoutcard, framenumber, paramet
     Output('graphy', 'children'),
     [Input('heatInterval', 'n_intervals')])
 def updateGraphY(n_intervals):
-    y = []
-    for p in range(1, 11):
-        if os.path.isfile('tempfiles/tempgraphdata%s.txt' % (n_intervals - p)):
-            tempfile = open('tempfiles/tempgraphdata%s.txt' % (n_intervals - p), 'r')
+    ally = []
+    timeinterval = 10
+    for p in range(timeinterval):
+        if os.path.isfile('tempfiles/tempgraphdata%s.txt' % ((p + n_intervals) % timeinterval + 1)):
+            tempfile = open('tempfiles/tempgraphdata%s.txt' % ((p + n_intervals) % timeinterval + 1), 'r')
             #z = [[ [] for i in range(32)] for j in range(32)]
+            data = tempfile.readline().strip().split()
+            y = []
             for i in range(374):
-                point = tempfile.readline.strip().split()
-                y.append(point)
-            for i in range(374):
-                for j in range(32):
-                    y[i][j] = float(y[i][j])
+                smally = []
+                for j in range(i * 32, i * 32 + 32):
+                    smally.append(float(data[j]))
+                y.append(smally)
             tempfile.close()
-            return json.dumps(y)
+            ally = ally + y
         else:
             pass
+    return json.dumps(ally)
 
-
+'''
 @app.callback(
     Output('graphx', 'children'),
     [Input('heatInterval', 'n_intervals')])
 def updateGraphX(n_intervals):
     x = []
-    for i in range(n_intervals * 374):
-        x.append(i + 1)
+    if n_intervals > 10:
+        for i in range(10 * 374):
+            x.append(i + n_intervals)
+    else:
+        for i in range(n_intervals * 374):
+            x.append(i + (n_intervals * 374))
     return json.dumps(x)
-
+'''
 
 @app.callback(
     Output('mceGraph', 'figure'),
     [Input('rcgraph', 'value'),
-     Input('graphx', 'children')],
+     Input('graphy', 'children')],
     [State('storedParameters', 'children'),
-    State('graphy', 'children')])
-def updateGraph(rcgraph, x, json_parameters, y):
+    State('heatInterval', 'n_intervals')])
+    #State('graphx', 'children')])
+def updateGraph(rcgraph, y, json_parameters, n_intervals):
+    timeinterval = 10
     y = json.loads(y)
-    x_axis = json.loads(x)
+    x = []
     data = []
     y_data = []
-    for i in range(374):
-        y_data.append(y[i])
+
+    n_intervals += 1
+
+    for i in range(32):
+        small_y_data = []
+        for j in range(len(y)):
+            small_y_data.append(y[j][i])
+        y_data.append(small_y_data)
+
+    if n_intervals > timeinterval:
+        for i in range(timeinterval * 374):
+            x.append((n_intervals - timeinterval) + i / 374.0)
+            totaltime.append((n_intervals - timeinterval) + i / 374.0)
+    else:
+        for i in range(n_intervals * 374):
+            x.append(i / 374.0)
+            totaltime.append(i / 374.0)
+
+    x_axis = x
+
+    print(len(y_data))
+    print(len(y_data[0]))
+    print(len(x_axis))
+    print(x_axis[0])
 
     for i in range(32):
         trace0 = go.Scattergl(
                 x = x_axis,
                 y = y_data[:][i],
-                mode = 'lines+markers',
+                mode = 'markers',
                 #name = 'MCE Data',
-                #marker = dict(
-                    #color = y[i][1],
-                    #line = dict(
-                        #color = 'black'
-                    #)
-                #)
-            )
+                marker = dict(
+                    color = 'blue',
+                    )
+                )
         data.append(trace0);
 
     parameters = json.loads(json_parameters)
+
     if rcgraph == 1:
         layout = dict(title= 'MCE 1 RC 1',
                       xaxis = dict(
-                        title = 'Number Frames from Start (seconds/374)',
+                        title = 'Time from Start of Collection (seconds)',
                         ticklen= 10),
                       yaxis = dict(title = 'Counts'),
                       showlegend = False)
@@ -602,7 +641,7 @@ def updateGraph(rcgraph, x, json_parameters, y):
     elif rcgraph == 2:
         layout = dict(title= 'MCE 1 RC 2',
                        xaxis = dict(
-                         title = 'Number Frames from Start (seconds/374)',
+                         title = 'Time from Start of Collection (seconds)',
                          ticklen= 10),
                        yaxis = dict(title = 'Counts'),
                       showlegend = False)
@@ -612,7 +651,7 @@ def updateGraph(rcgraph, x, json_parameters, y):
     elif rcgraph == 3:
         layout = dict(title= 'MCE 1 RC 3',
                        xaxis = dict(
-                         title = 'Number Frames from Start (seconds/374)',
+                         title = 'Time from Start of Collection (seconds)',
                          ticklen= 10),
                        yaxis = dict(title = 'Counts'),
                       showlegend = False)
@@ -622,7 +661,7 @@ def updateGraph(rcgraph, x, json_parameters, y):
     elif rcgraph == 4:
         layout = dict(title= 'MCE 1 RC 4',
                        xaxis = dict(
-                         title = 'Number Frames from Start (seconds/374)',
+                         title = 'Time from Start of Collection (seconds)',
                          ticklen= 10),
                        yaxis = dict(title = 'Counts'),
                       showlegend = False)
@@ -632,7 +671,7 @@ def updateGraph(rcgraph, x, json_parameters, y):
     elif rcgraph == 5:
         layout = dict(title= 'MCE 2 RC 1',
                        xaxis = dict(
-                         title = 'Number Frames from Start (seconds/374)',
+                         title = 'Time from Start of Collection (seconds)',
                          ticklen= 10),
                        yaxis = dict(title = 'Counts'),
                       showlegend = False)
@@ -642,7 +681,7 @@ def updateGraph(rcgraph, x, json_parameters, y):
     elif rcgraph == 6:
         layout = dict(title= 'MCE 2 RC 2',
                        xaxis = dict(
-                         title = 'Number Frames from Start (seconds/374)',
+                         title = 'Time from Start of Collection (seconds)',
                          ticklen= 10),
                        yaxis = dict(title = 'Counts'),
                       showlegend = False)
@@ -652,7 +691,7 @@ def updateGraph(rcgraph, x, json_parameters, y):
     elif rcgraph == 7:
         layout = dict(title= 'MCE 2 RC 3',
                        xaxis = dict(
-                         title = 'Number Frames from Start (seconds/374)',
+                         title = 'Time from Start of Collection (seconds)',
                          ticklen= 10),
                        yaxis = dict(title = 'Counts'),
                       showlegend = False)
@@ -662,7 +701,7 @@ def updateGraph(rcgraph, x, json_parameters, y):
     elif rcgraph == 8:
         layout = dict(title= 'MCE 2 RC 4',
                        xaxis = dict(
-                         title = 'Number Frames from Start (seconds/374)',
+                         title = 'Time from Start of Collection (seconds)',
                          ticklen= 10),
                        yaxis = dict(title = 'Counts'),
                       showlegend = False)

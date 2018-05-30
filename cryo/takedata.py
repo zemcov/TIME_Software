@@ -20,25 +20,33 @@ def takedata(observer):
 
          if a < 10 : # create a check so we know the file is there and has the right name
              mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
-             mce_file = Path("/data/cryo/current_data/temp.00%i" %(a+1)) #wait to read new file until old file is complete
+             if a == 9:
+                 mce_file = Path("/data/cryo/current_data/temp.0%i"%(a+1))
+             else:
+                 mce_file = Path("/data/cryo/current_data/temp.00%i" %(a+1)) #wait to read new file until old file is complete
              if mce_file.exists():
                  a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
                  readdata(f, mce_file_name)
-                 y = readgraph(y, f, mce_file_name)
+                 y = readgraph(y, f, mce_file_name, a)
              else:
-                 continue
+                #continue
+                pass
 
          if a >= 10 and a < 100 :
              mce_file_name = "/data/cryo/current_data/temp.0%i"%(a)
-             mce_file = Path("/data/cryo/current_data/temp.0%i"%(a+1))
+             if a == 99:
+                 mce_file = Path("/data/cryo/current_data/temp.%i"%(a+1))
+             else:
+                 mce_file = Path("/data/cryo/current_data/temp.0%i"%(a+1))
              if mce_file.exists():
                  a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
                  readdata(f, mce_file_name)
-                 y = readgraph(y, f, mce_file_name)
+                 y = readgraph(y, f, mce_file_name, a)
              else:
-                 continue
+                # continue
+                pass
 
          if a >= 100 :
              mce_file_name = "/data/cryo/current_data/temp.%i"%(a)
@@ -47,10 +55,10 @@ def takedata(observer):
                  a = a + 1
                  f = mce_data.SmallMCEFile(mce_file_name)
                  readdata(f, mce_file_name)
-                 y = readgraph(y, f, mce_file_name)
+                 y = readgraph(y, f, mce_file_name, a)
              else:
-                 continue
-
+                 #continue
+                 pass
 
 def readdata(f, mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
@@ -109,7 +117,7 @@ def readdata(f, mce_file_name):
     tempfile.close()
     #time.sleep(1.0)
 
-def readgraph(y, f, mce_file_name):
+def readgraph(y, f, mce_file_name, a):
     h = f.Read(row_col=True, unfilter='DC').data
     delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     subprocess.Popen(delete_file,shell=True)
@@ -122,16 +130,23 @@ def readgraph(y, f, mce_file_name):
         print(y[0])
     else:
         y = y[1000:] #each 500 frame file will add 33 data points to y
-
-    filename = 'tempfiles/tempgraphdata.txt'
-    tempfile = open(filename, 'a')
+    if a % 10 == 0:
+        filename = 'tempfiles/tempgraphdata%s.txt'%(10)
+        tempfile = open(filename, 'w')
+    else:
+        filename = 'tempfiles/tempgraphdata%s.txt'%(a % 10)
+        tempfile = open(filename, 'w')
 
     for j in range(d.shape[0]*d.shape[1]-1):
         tempfile.write(str(y[len(y)-1][j])+' ')
     tempfile.close()
+
+
+    #oldtempfile = 'tempfiles/tempgraphdata%s.txt'%(a - 10)
+    #deletetemp = ["rm %s" %(oldtempfile)] #to keep temp files from piling up in memory
+    #subprocess.Popen(deletetemp,shell=True)
+
     return y
 
 if __name__ == "__main__":
     takedata(sys.argv[1])
-
-
