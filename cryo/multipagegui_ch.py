@@ -242,7 +242,7 @@ data_page = html.Div([ #Main page of gui
         dcc.Graph(id='mceHeatmap'),
         dcc.Interval(
             id='heatInterval',
-            interval=1*1000,
+            interval=2*1000,
             n_intervals=0
         )
         ], style={'gridColumn': '3 / span 2',
@@ -293,7 +293,7 @@ def init():
 def startDataCollection(parameters):
     #deletetempgraph = ['rm /TIME_Software/cryo/tempfiles/tempgraphdata.txt']
     #a = subprocess.Popen(deletetempgraph, shell=True)
-    for i in range(11):
+    for i in range(10):
         tempfilename = 'tempfiles/tempgraphdata%s.txt' % (i)
         tempfile = os.path.exists(tempfilename)
         if tempfile:
@@ -310,6 +310,10 @@ def startDataCollection(parameters):
     #subprocess.call(["mkfifo", "/data/cryo/current_data/temp"])
     run = ["mce_run temp %s %s --sequence=374" %(framenumber, readoutcard)]
     c = subprocess.Popen(run, shell=True)
+
+    tempfile = open('tempfiles/tempchannel.txt', 'w')
+    tempfile.write(str(1))
+    tempfile.close()
     #b.communicate()
     #a.terminate()
 
@@ -497,9 +501,8 @@ def changeheatmapRC(mceheatmap):
 
 @app.callback(
     Output('graphchannel', 'children'),
-    [Input('chgraph', 'value'),
-    Input('heatInterval', 'n_intervals')])
-def changeChannel(chgraph, n_intervals):
+    [Input('chgraph', 'value')])
+def changeChannel(chgraph):
     tempfile = open('tempfiles/tempchannel.txt', 'w')
     tempfile.write(str(chgraph))
     tempfile.close()
@@ -542,24 +545,51 @@ def showParameters(submit, observer, datamode, readoutcard, framenumber, paramet
     Output('graphy', 'children'),
     [Input('heatInterval', 'n_intervals')])
 def updateGraphY(n_intervals):
-    ally = []
+    ally = [0]
+    allch = []
     timeinterval = 10
-    for p in range(timeinterval):
-        if os.path.isfile('tempfiles/tempgraphdata%s.txt' % ((p + n_intervals) % timeinterval + 1)):
-            tempfile = open('tempfiles/tempgraphdata%s.txt' % ((p + n_intervals) % timeinterval + 1), 'r')
-            #z = [[ [] for i in range(32)] for j in range(32)]
-            data = tempfile.readline().strip().split()
+    rows = 32
 
+    n_intervals = n_intervals * 2 + 1
+
+    print('gui', n_intervals)
+    for p in range(timeinterval - 1, -1, -1):
+        current = (n_intervals - p) % timeinterval
+        if os.path.isfile('tempfiles/tempgraphdata%s.txt' % (current)):
+            tempfile = open('tempfiles/tempgraphdata%s.txt' % (current), 'r')
+            #z = [[ [] for i in range(32)] for j in range(32)]
+            ch = tempfile.readline().strip()
+            allch.append(int(ch))
+            data = tempfile.readline().strip().split()
             y = []
-            for i in range(374):
+            '''
+            for i in range(rows):
+                #sumy = 0
                 smally = []
-                for j in range(i * 32, i * 32 + 32):
-                    smally.append(float(data[j]))
+                for j in range(374):
+                    #sumy += float(data[j])
+                    smally.append(float(data[(j * rows) + 1 + i]))
+                #y.append(sumy / 32)
                 y.append(smally)
+            '''
+            for i in range(374):
+                #smally = []
+                sumy = 0
+                for j in range(i * rows, i * rows + rows):
+                    sumy += float(data[j])
+                    #smally.append(float(data[j]))
+                y.append(sumy / 32)
+                #y.append(smally)
             tempfile.close()
-            ally = ally + y
+            ally.append(y)
+            #print(n_intervals, p, current, ch)
+            #print('isfile')
         else:
+            #print('isntfile')
             pass
+    ally[0] = allch
+    print(len(ally) - 1)
+    print(len(ally[1]))
     return json.dumps(ally)
 
 '''
@@ -586,46 +616,154 @@ def updateGraphX(n_intervals):
     #State('graphx', 'children')])
 def updateGraph(rcgraph, y, json_parameters, n_intervals):
     timeinterval = 10
-    y = json.loads(y)
-    x = []
+    ally = json.loads(y)
     data = []
-    y_data = []
+    masterx = []
+    rows = 1
 
-    n_intervals += 1
+    n_intervals = n_intervals * 2 + 1
 
-    for i in range(32):
-        small_y_data = []
-        for j in range(len(y)):
-            small_y_data.append(y[j][i])
-        y_data.append(small_y_data)
+    for i in range(374):
+        masterx.append(i / 374.0)
 
-    if n_intervals > timeinterval:
-        for i in range(timeinterval * 374):
-            x.append((n_intervals - timeinterval) + i / 374.0)
-            totaltime.append((n_intervals - timeinterval) + i / 374.0)
-    else:
-        for i in range(n_intervals * 374):
-            x.append(i / 374.0)
-            totaltime.append(i / 374.0)
+    for n in range(len(ally) - 1):
+        ch = ally[0][n]
+        x = []
+        secdata = []
+        y_data = []
+        y = ally[n + 1]
 
-    x_axis = x
 
-    print(len(y_data))
-    print(len(y_data[0]))
-    print(len(x_axis))
-    print(x_axis[0])
+        #for i in range(rows):
+        #    small_y_data = []
+        #    for j in range(len(y)):
+        #        small_y_data.append(y[j][i])
+        #    y_data.append(small_y_data)
 
-    for i in range(32):
-        trace0 = go.Scattergl(
+
+        y_data = y
+
+        if n_intervals > timeinterval:
+            for i in range(374):
+                x.append((n_intervals - timeinterval + n) + masterx[i])
+                totaltime.append((n_intervals - timeinterval + n) + masterx[i])
+        else:
+            for i in range(374):
+                x.append(n + masterx[i])
+                totaltime.append(n + masterx[i])
+
+        x_axis = x
+
+        #print(len(y_data))
+        #print(len(y_data[0]))
+        #print(len(x_axis))
+        #print(x_axis[0])
+        #print(n, ch)
+
+        if ch == 1:
+            #for i in range(rows):
+            trace0 = go.Pointcloud(
+                    x = x_axis,
+                    y = y_data,
+                    #mode = 'markers',
+                    #name = 'MCE Data',
+                    marker = dict(
+                        color = 'blue',
+                        )
+                    )
+            data.append(trace0);
+
+        elif ch == 2:
+            #for i in range(rows):
+            trace0 = go.Pointcloud(
                 x = x_axis,
-                y = y_data[:][i],
-                mode = 'markers',
+                y = y_data,
+                #mode = 'markers',
                 #name = 'MCE Data',
                 marker = dict(
-                    color = 'blue',
+                    color = 'red',
                     )
                 )
-        data.append(trace0);
+            data.append(trace0);
+
+        elif ch == 3:
+            #for i in range(rows):
+            trace0 = go.Pointcloud(
+                    x = x_axis,
+                    y = y_data,
+                    #mode = 'markers',
+                    #name = 'MCE Data',
+                    marker = dict(
+                        color = 'green',
+                        )
+                    )
+            data.append(trace0);
+
+        elif ch == 4:
+            #for i in range(rows):
+            trace0 = go.Pointcloud(
+                    x = x_axis,
+                    y = y_data,
+                    #mode = 'markers',
+                    #name = 'MCE Data',
+                    marker = dict(
+                        color = 'yellow',
+                        )
+                    )
+            data.append(trace0);
+
+        elif ch == 5:
+            #for i in range(rows):
+            trace0 = go.Pointcloud(
+                    x = x_axis,
+                    y = y_data,
+                    #mode = 'markers',
+                    #name = 'MCE Data',
+                    marker = dict(
+                        color = 'orange',
+                        )
+                    )
+            data.append(trace0);
+
+        elif ch == 6:
+            #for i in range(rows):
+            trace0 = go.Pointcloud(
+                    x = x_axis,
+                    y = y_data,
+                    #mode = 'markers',
+                    #name = 'MCE Data',
+                    marker = dict(
+                        color = 'purple',
+                        )
+                    )
+            data.append(trace0);
+
+        elif ch == 7:
+            #for i in range(rows):
+            trace0 = go.Pointcloud(
+                    x = x_axis,
+                    y = y_data,
+                    #mode = 'markers',
+                    #name = 'MCE Data',
+                    marker = dict(
+                        color = 'brown',
+                        )
+                    )
+            data.append(trace0);
+
+        elif ch == 8:
+            #for i in range(rows):
+            trace0 = go.Pointcloud(
+                    x = x_axis,
+                    y = y_data,
+                    #mode = 'markers',
+                    #name = 'MCE Data',
+                    marker = dict(
+                        color = 'black',
+                        )
+                    )
+            data.append(trace0);
+        #data.append(trace0);
 
     parameters = json.loads(json_parameters)
 

@@ -124,18 +124,20 @@ def readgraph(y, f, mce_file_name, a):
 
     chfile = open('tempfiles/tempchannel.txt', 'r')
     ch = int(chfile.read().strip())
-    if len(y) < 5000:
-        d = h[:,ch]
-        y.append(np.reshape(h[:,ch],d.shape[0]*d.shape[1])) #should output every row, and only 1 channel or column for all frame data
-        print(y[0])
-    else:
-        y = y[1000:] #each 500 frame file will add 33 data points to y
-    if a % 10 == 0:
-        filename = 'tempfiles/tempgraphdata%s.txt'%(10)
-        tempfile = open(filename, 'w')
-    else:
-        filename = 'tempfiles/tempgraphdata%s.txt'%(a % 10)
-        tempfile = open(filename, 'w')
+    #print(ch)
+
+    d = h[:,ch - 1]
+    #print(d[0:10])
+    y.append(np.reshape(h[:,ch - 1],d.shape[0]*d.shape[1])) #should output every row, and only 1 channel or column for all frame data
+    #print(y[len(y) - 1])
+    #print(len(y))
+    #print(len(y[len(y) - 1]))
+
+    print('takedata', a)
+    filename = 'tempfiles/tempgraphdata%s.txt'%(a % 10)
+    tempfile = open(filename, 'w')
+
+    tempfile.write(str(ch) + '\n')
 
     for j in range(d.shape[0]*d.shape[1]-1):
         tempfile.write(str(y[len(y)-1][j])+' ')
