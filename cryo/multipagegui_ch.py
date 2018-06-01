@@ -233,6 +233,11 @@ data_page = html.Div([ #Main page of gui
     html.Div([ #MCE Graph Div
         html.H4(children='MCE Graphs'),
         dcc.Graph(id='mceGraph'),
+        dcc.Interval(
+            id='graphInterval',
+            interval=2*1000,
+            n_intervals=0
+        )
         ], style={'gridColumn': '3 / span 2',
               'gridRow': '2 / span 1'}
         ),
@@ -293,7 +298,7 @@ def init():
 def startDataCollection(parameters):
     #deletetempgraph = ['rm /TIME_Software/cryo/tempfiles/tempgraphdata.txt']
     #a = subprocess.Popen(deletetempgraph, shell=True)
-    for i in range(10):
+    for i in range(2):
         tempfilename = 'tempfiles/tempgraphdata%s.txt' % (i)
         tempfile = os.path.exists(tempfilename)
         if tempfile:
@@ -450,6 +455,7 @@ def eStopDataCollection(clicks):
     return json.dumps(eStop)
 
 
+
 @app.callback(
     Output('returnLink', 'children'),
     [Input('eStopData', 'children')],
@@ -541,14 +547,17 @@ def showParameters(submit, observer, datamode, readoutcard, framenumber, paramet
     *framenumber: {}
     .format(observer, datamode, readoutcard, framenumber)
 '''
+'''
 @app.callback(
     Output('graphy', 'children'),
     [Input('heatInterval', 'n_intervals')])
 def updateGraphY(n_intervals):
-    ally = [0]
+    allxy = [0, 0, 0]
     allch = []
+    allx = []
+    ally = []
     timeinterval = 10
-    rows = 32
+    rows = 1
 
     n_intervals = n_intervals * 2 + 1
 
@@ -561,8 +570,9 @@ def updateGraphY(n_intervals):
             ch = tempfile.readline().strip()
             allch.append(int(ch))
             data = tempfile.readline().strip().split()
-            y = []
-            '''
+            smallx = []
+            smally = []
+
             for i in range(rows):
                 #sumy = 0
                 smally = []
@@ -571,27 +581,41 @@ def updateGraphY(n_intervals):
                     smally.append(float(data[(j * rows) + 1 + i]))
                 #y.append(sumy / 32)
                 y.append(smally)
-            '''
+
             for i in range(374):
                 #smally = []
-                sumy = 0
-                for j in range(i * rows, i * rows + rows):
-                    sumy += float(data[j])
+                #sumy = 0
+                #for j in range(i * rows, i * rows + rows):
+                #    sumy += float(data[j])
                     #smally.append(float(data[j]))
-                y.append(sumy / 32)
+                #y.append(sumy / 32)
                 #y.append(smally)
+                if n_intervals > timeinterval:
+                    masterx = i / 374.0
+                    smallx.append((n_intervals - timeinterval + p) + masterx)
+                        #totaltime.append((n_intervals - timeinterval + n) + masterx[i])
+                else:
+                    masterx = i / 374.0
+                    smallx.append(p + masterx)
+                    #totaltime.append(n + masterx)
+
+                smally.append(float(data[i]))
+
             tempfile.close()
-            ally.append(y)
+            allx.append(smallx)
+            ally.append(smally)
             #print(n_intervals, p, current, ch)
             #print('isfile')
         else:
             #print('isntfile')
             pass
-    ally[0] = allch
-    print(len(ally) - 1)
-    print(len(ally[1]))
-    return json.dumps(ally)
-
+    allxy[0] = allch
+    allxy[1]= allx
+    allxy[2] = ally
+    print(len(allxy) - 1)
+    print(len(allxy[1]))
+    return json.dumps(allxy)
+'''
 '''
 @app.callback(
     Output('graphx', 'children'),
@@ -610,245 +634,382 @@ def updateGraphX(n_intervals):
 @app.callback(
     Output('mceGraph', 'figure'),
     [Input('rcgraph', 'value'),
-     Input('graphy', 'children')],
+     Input('graphInterval', 'n_intervals')],
     [State('storedParameters', 'children'),
-    State('heatInterval', 'n_intervals')])
+    State('mceGraph', 'figure')])
+    #State('heatInterval', 'n_intervals')])
     #State('graphx', 'children')])
-def updateGraph(rcgraph, y, json_parameters, n_intervals):
-    timeinterval = 10
-    ally = json.loads(y)
-    data = []
-    masterx = []
-    rows = 1
-
+def updateGraph(rcgraph, n_intervals, json_parameters, figure):
+    totaltimeinterval = 30
+    timeinterval = 2
     n_intervals = n_intervals * 2 + 1
-
-    for i in range(374):
-        masterx.append(i / 374.0)
-
-    for n in range(len(ally) - 1):
-        ch = ally[0][n]
-        x = []
-        secdata = []
-        y_data = []
-        y = ally[n + 1]
+    if n_intervals == 0:
+        data = []
+    elif figure is None:
+        print(figure)
+        #data = figure['data']
+        data = []
+    else:
+        data = figure['data']
 
 
-        #for i in range(rows):
-        #    small_y_data = []
-        #    for j in range(len(y)):
-        #        small_y_data.append(y[j][i])
-        #    y_data.append(small_y_data)
 
+    #allxy = json.loads(xy)
+    #masterx = []
+    #for i in range(374):
+        #masterx.append(i / 374.0)
 
-        y_data = y
-
-        if n_intervals > timeinterval:
+    #for n in range(len(allxy[1])):
+    print('gui', (n_intervals - 1) / 2, n_intervals)
+    for p in range(1, -1, -1):
+        current = (n_intervals - p) % timeinterval
+        if os.path.isfile('tempfiles/tempgraphdata%s.txt' % (current)):
+            tempfile = open('tempfiles/tempgraphdata%s.txt' % (current), 'r')
+            #z = [[ [] for i in range(32)] for j in range(32)]
+            ch = int(tempfile.readline().strip())
+            datagrab = tempfile.readline().strip().split()
+            smallx = []
+            smally = []
             for i in range(374):
-                x.append((n_intervals - timeinterval + n) + masterx[i])
-                totaltime.append((n_intervals - timeinterval + n) + masterx[i])
+                masterx = i / 374.0
+                smallx.append(n_intervals + masterx - p - 1)
+                smally.append(float(datagrab[i]))
+            tempfile.close()
+            #allx.append(smallx)
+            #ally.append(smally)
+            x_axis = smallx
+            y_data = smally
+            '''
+            if n_intervals > timeinterval:
+                for i in range(374):
+                    masterx = i / 374.0
+                    x.append((n_intervals - timeinterval + n) + masterx)
+                    #totaltime.append((n_intervals - timeinterval + n) + masterx[i])
+            else:
+                for i in range(374):
+                    masterx = i / 374.0
+                    x.append(n + masterx)
+                    #totaltime.append(n + masterx)
+            '''
+
+            #print(len(y_data))
+            #print(len(y_data[0]))
+            #print(len(x_axis))
+            #print(x_axis[0])
+            #print(n, ch)
+
+            if ch == 1:
+                #for i in range(rows):
+                trace0 = go.Pointcloud(
+                        x = x_axis,
+                        y = y_data,
+                        #mode = 'markers',
+                        #name = 'MCE Data',
+                        marker = dict(
+                            color = 'blue',
+                            )
+                        )
+                data.append(trace0);
+
+            elif ch == 2:
+                #for i in range(rows):
+                trace0 = go.Pointcloud(
+                    x = x_axis,
+                    y = y_data,
+                    #mode = 'markers',
+                    #name = 'MCE Data',
+                    marker = dict(
+                        color = 'red',
+                        )
+                    )
+                data.append(trace0);
+
+            elif ch == 3:
+                #for i in range(rows):
+                trace0 = go.Pointcloud(
+                        x = x_axis,
+                        y = y_data,
+                        #mode = 'markers',
+                        #name = 'MCE Data',
+                        marker = dict(
+                            color = 'green',
+                            )
+                        )
+                data.append(trace0);
+
+            elif ch == 4:
+                #for i in range(rows):
+                trace0 = go.Pointcloud(
+                        x = x_axis,
+                        y = y_data,
+                        #mode = 'markers',
+                        #name = 'MCE Data',
+                        marker = dict(
+                            color = 'yellow',
+                            )
+                        )
+                data.append(trace0);
+
+            elif ch == 5:
+                #for i in range(rows):
+                trace0 = go.Pointcloud(
+                        x = x_axis,
+                        y = y_data,
+                        #mode = 'markers',
+                        #name = 'MCE Data',
+                        marker = dict(
+                            color = 'orange',
+                            )
+                        )
+                data.append(trace0);
+
+            elif ch == 6:
+                #for i in range(rows):
+                trace0 = go.Pointcloud(
+                        x = x_axis,
+                        y = y_data,
+                        #mode = 'markers',
+                        #name = 'MCE Data',
+                        marker = dict(
+                            color = 'purple',
+                            )
+                        )
+                data.append(trace0);
+
+            elif ch == 7:
+                #for i in range(rows):
+                trace0 = go.Pointcloud(
+                        x = x_axis,
+                        y = y_data,
+                        #mode = 'markers',
+                        #name = 'MCE Data',
+                        marker = dict(
+                            color = 'brown',
+                            )
+                        )
+                data.append(trace0);
+
+            elif ch == 8:
+                #for i in range(rows):
+                trace0 = go.Pointcloud(
+                        x = x_axis,
+                        y = y_data,
+                        #mode = 'markers',
+                        #name = 'MCE Data',
+                        marker = dict(
+                            color = 'black',
+                            )
+                        )
+                data.append(trace0);
+            #data.append(trace0);
         else:
-            for i in range(374):
-                x.append(n + masterx[i])
-                totaltime.append(n + masterx[i])
+            pass
 
-        x_axis = x
-
-        #print(len(y_data))
-        #print(len(y_data[0]))
-        #print(len(x_axis))
-        #print(x_axis[0])
-        #print(n, ch)
-
-        if ch == 1:
+        #y = allxy[n + 1]
             #for i in range(rows):
-            trace0 = go.Pointcloud(
-                    x = x_axis,
-                    y = y_data,
-                    #mode = 'markers',
-                    #name = 'MCE Data',
-                    marker = dict(
-                        color = 'blue',
-                        )
-                    )
-            data.append(trace0);
-
-        elif ch == 2:
-            #for i in range(rows):
-            trace0 = go.Pointcloud(
-                x = x_axis,
-                y = y_data,
-                #mode = 'markers',
-                #name = 'MCE Data',
-                marker = dict(
-                    color = 'red',
-                    )
-                )
-            data.append(trace0);
-
-        elif ch == 3:
-            #for i in range(rows):
-            trace0 = go.Pointcloud(
-                    x = x_axis,
-                    y = y_data,
-                    #mode = 'markers',
-                    #name = 'MCE Data',
-                    marker = dict(
-                        color = 'green',
-                        )
-                    )
-            data.append(trace0);
-
-        elif ch == 4:
-            #for i in range(rows):
-            trace0 = go.Pointcloud(
-                    x = x_axis,
-                    y = y_data,
-                    #mode = 'markers',
-                    #name = 'MCE Data',
-                    marker = dict(
-                        color = 'yellow',
-                        )
-                    )
-            data.append(trace0);
-
-        elif ch == 5:
-            #for i in range(rows):
-            trace0 = go.Pointcloud(
-                    x = x_axis,
-                    y = y_data,
-                    #mode = 'markers',
-                    #name = 'MCE Data',
-                    marker = dict(
-                        color = 'orange',
-                        )
-                    )
-            data.append(trace0);
-
-        elif ch == 6:
-            #for i in range(rows):
-            trace0 = go.Pointcloud(
-                    x = x_axis,
-                    y = y_data,
-                    #mode = 'markers',
-                    #name = 'MCE Data',
-                    marker = dict(
-                        color = 'purple',
-                        )
-                    )
-            data.append(trace0);
-
-        elif ch == 7:
-            #for i in range(rows):
-            trace0 = go.Pointcloud(
-                    x = x_axis,
-                    y = y_data,
-                    #mode = 'markers',
-                    #name = 'MCE Data',
-                    marker = dict(
-                        color = 'brown',
-                        )
-                    )
-            data.append(trace0);
-
-        elif ch == 8:
-            #for i in range(rows):
-            trace0 = go.Pointcloud(
-                    x = x_axis,
-                    y = y_data,
-                    #mode = 'markers',
-                    #name = 'MCE Data',
-                    marker = dict(
-                        color = 'black',
-                        )
-                    )
-            data.append(trace0);
-        #data.append(trace0);
+            #    small_y_data = []
+            #    for j in range(len(y)):
+            #        small_y_data.append(y[j][i])
+            #    y_data.append(small_y_data)
 
     parameters = json.loads(json_parameters)
+    if n_intervals == totaltimeinterval + 1:
+        data = data[1:]
+        print(len(data))
+    elif n_intervals > totaltimeinterval:
+        data = data[2:]
+        print(len(data))
 
-    if rcgraph == 1:
-        layout = dict(title= 'MCE 1 RC 1',
-                      xaxis = dict(
-                        title = 'Time from Start of Collection (seconds)',
-                        ticklen= 10),
-                      yaxis = dict(title = 'Counts'),
-                      showlegend = False)
+    if n_intervals > totaltimeinterval:
 
-        fig = dict(data=data, layout=layout)
+        if rcgraph == 1:
+            layout = dict(title= 'MCE 1 RC 1',
+                          xaxis = dict(
+                            title = 'Time from Start of Collection (seconds)',
+                            ticklen= 10,
+                            nticks= totaltimeinterval,
+                            range=[n_intervals - totaltimeinterval, n_intervals]),
+                          yaxis = dict(title = 'Counts'),
+                          showlegend = False)
 
-    elif rcgraph == 2:
-        layout = dict(title= 'MCE 1 RC 2',
-                       xaxis = dict(
-                         title = 'Time from Start of Collection (seconds)',
-                         ticklen= 10),
-                       yaxis = dict(title = 'Counts'),
-                      showlegend = False)
+            fig = dict(data=data, layout=layout)
 
-        fig = dict(data=data, layout=layout)
+        elif rcgraph == 2:
+            layout = dict(title= 'MCE 1 RC 2',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= totaltimeinterval,
+                             range=[n_intervals - totaltimeinterval, n_intervals]),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
 
-    elif rcgraph == 3:
-        layout = dict(title= 'MCE 1 RC 3',
-                       xaxis = dict(
-                         title = 'Time from Start of Collection (seconds)',
-                         ticklen= 10),
-                       yaxis = dict(title = 'Counts'),
-                      showlegend = False)
+            fig = dict(data=data, layout=layout)
 
-        fig = dict(data=data, layout=layout)
+        elif rcgraph == 3:
+            layout = dict(title= 'MCE 1 RC 3',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= totaltimeinterval,
+                             range=[n_intervals - totaltimeinterval, n_intervals]),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
 
-    elif rcgraph == 4:
-        layout = dict(title= 'MCE 1 RC 4',
-                       xaxis = dict(
-                         title = 'Time from Start of Collection (seconds)',
-                         ticklen= 10),
-                       yaxis = dict(title = 'Counts'),
-                      showlegend = False)
+            fig = dict(data=data, layout=layout)
 
-        fig = dict(data=data, layout=layout)
+        elif rcgraph == 4:
+            layout = dict(title= 'MCE 1 RC 4',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= totaltimeinterval,
+                             range=[n_intervals - totaltimeinterval, n_intervals]),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
 
-    elif rcgraph == 5:
-        layout = dict(title= 'MCE 2 RC 1',
-                       xaxis = dict(
-                         title = 'Time from Start of Collection (seconds)',
-                         ticklen= 10),
-                       yaxis = dict(title = 'Counts'),
-                      showlegend = False)
+            fig = dict(data=data, layout=layout)
 
-        fig = dict(data=data, layout=layout)
+        elif rcgraph == 5:
+            layout = dict(title= 'MCE 2 RC 1',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= totaltimeinterval,
+                             range=[n_intervals - totaltimeinterval, n_intervals]),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
 
-    elif rcgraph == 6:
-        layout = dict(title= 'MCE 2 RC 2',
-                       xaxis = dict(
-                         title = 'Time from Start of Collection (seconds)',
-                         ticklen= 10),
-                       yaxis = dict(title = 'Counts'),
-                      showlegend = False)
+            fig = dict(data=data, layout=layout)
 
-        fig = dict(data=data, layout=layout)
+        elif rcgraph == 6:
+            layout = dict(title= 'MCE 2 RC 2',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= totaltimeinterval,
+                             range=[n_intervals - totaltimeinterval, n_intervals]),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
 
-    elif rcgraph == 7:
-        layout = dict(title= 'MCE 2 RC 3',
-                       xaxis = dict(
-                         title = 'Time from Start of Collection (seconds)',
-                         ticklen= 10),
-                       yaxis = dict(title = 'Counts'),
-                      showlegend = False)
+            fig = dict(data=data, layout=layout)
 
-        fig = dict(data=data, layout=layout)
+        elif rcgraph == 7:
+            layout = dict(title= 'MCE 2 RC 3',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= totaltimeinterval,
+                             range=[n_intervals - totaltimeinterval, n_intervals]),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
 
-    elif rcgraph == 8:
-        layout = dict(title= 'MCE 2 RC 4',
-                       xaxis = dict(
-                         title = 'Time from Start of Collection (seconds)',
-                         ticklen= 10),
-                       yaxis = dict(title = 'Counts'),
-                      showlegend = False)
+            fig = dict(data=data, layout=layout)
 
-        fig = dict(data=data, layout=layout)
+        elif rcgraph == 8:
+            layout = dict(title= 'MCE 2 RC 4',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= totaltimeinterval,
+                             range=[n_intervals - totaltimeinterval, n_intervals]),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
+
+    else:
+        if rcgraph == 1:
+            layout = dict(title= 'MCE 1 RC 1',
+                          xaxis = dict(
+                            title = 'Time from Start of Collection (seconds)',
+                            ticklen= 10,
+                            nticks= n_intervals),
+                          yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
+
+        elif rcgraph == 2:
+            layout = dict(title= 'MCE 1 RC 2',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= n_intervals),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
+
+        elif rcgraph == 3:
+            layout = dict(title= 'MCE 1 RC 3',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= n_intervals),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
+
+        elif rcgraph == 4:
+            layout = dict(title= 'MCE 1 RC 4',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= n_intervals),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
+
+        elif rcgraph == 5:
+            layout = dict(title= 'MCE 2 RC 1',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= n_intervals),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
+
+        elif rcgraph == 6:
+            layout = dict(title= 'MCE 2 RC 2',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= n_intervals),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
+
+        elif rcgraph == 7:
+            layout = dict(title= 'MCE 2 RC 3',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= n_intervals),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
+
+        elif rcgraph == 8:
+            layout = dict(title= 'MCE 2 RC 4',
+                           xaxis = dict(
+                             title = 'Time from Start of Collection (seconds)',
+                             ticklen= 10,
+                             nticks= n_intervals),
+                           yaxis = dict(title = 'Counts'),
+                          showlegend = False)
+
+            fig = dict(data=data, layout=layout)
 
     return fig
 
+'''
 @app.callback(
     Output('mceHeatmap', 'figure'),
     [Input('rcheatmap', 'value'),
@@ -857,7 +1018,7 @@ def updateGraph(rcgraph, y, json_parameters, n_intervals):
 def runHeatmap(heatmapOptions, n_intervals, json_parameters):
     parameters = json.loads(json_parameters)
     return guiheatmap.initHeatmap(parameters, heatmapOptions)
-
+'''
 
 '''
 @app.callback(

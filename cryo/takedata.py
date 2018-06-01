@@ -134,12 +134,12 @@ def readgraph(y, f, mce_file_name, a):
     #print(len(y[len(y) - 1]))
 
     print('takedata', a)
-    filename = 'tempfiles/tempgraphdata%s.txt'%(a % 10)
+    filename = 'tempfiles/tempgraphdata%s.txt'%(a % 2)
     tempfile = open(filename, 'w')
 
     tempfile.write(str(ch) + '\n')
 
-    for j in range(d.shape[0]*d.shape[1]-1):
+    for j in range(0, d.shape[0]*d.shape[1]-1, 32):
         tempfile.write(str(y[len(y)-1][j])+' ')
     tempfile.close()
 

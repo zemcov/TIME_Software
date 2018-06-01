@@ -560,6 +560,7 @@ def updateGraphY(n_intervals):
             ally = ally + y
         else:
             pass
+    
     return json.dumps(ally)
 
 '''
