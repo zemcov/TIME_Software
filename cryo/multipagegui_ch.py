@@ -35,8 +35,7 @@ print(dcc.__version__)
 
 print('Hello')
 
-global totaltime
-totaltime = []
+global runtakedata
 
 app = dash.Dash()
 
@@ -332,6 +331,8 @@ def stopDataCollection(parameters):
     a = subprocess.Popen(run, shell=True)
     deletetemp = ['rm /data/cryo/current_data/temp.*']
     b = subprocess.Popen(deletetemp, shell=True)
+    #runtakedata.terminate()
+
 
 
 def modZData(z, rc):
@@ -407,9 +408,9 @@ def toggleDataCollection(json_validparameters, json_parameters):
         startDataCollection(parameters)
         time.sleep(1.0)
         if parameters[2] == 'All':
-            heatmap = subprocess.Popen(['python', 'takedataall.py', parameters[0]])
+            runtakedata = subprocess.Popen(['python', 'takedataall.py', parameters[0]])
         else:
-            heatmap = subprocess.Popen(['python', 'takedata.py', parameters[0]])
+            runtakedata = subprocess.Popen(['python', 'takedata.py', parameters[0]])
         parafile = open('tempfiles/tempparameters.txt', 'w')
         for parameter in parameters:
             parafile.write(str(parameter)+' ')

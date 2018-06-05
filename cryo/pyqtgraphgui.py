@@ -66,7 +66,7 @@ else:
 
 win = pg.GraphicsWindow()
 win.setWindowTitle('MCE TIME Data')
-qbtn = pg.PushButton('Quit', self)
+qbtn = QtGui.QPushButton('Quit')
 qbtn.clicked.connect(quitgui)
 
 totaltimeinterval = 30
