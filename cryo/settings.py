@@ -17,3 +17,5 @@ def init():
     d = []
     global h
     h = []
+    global n_intervals
+    n_intervals = 0

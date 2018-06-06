@@ -1,4 +1,3 @@
-import pyqtgraph as pg
 from pyqtgraph import QtCore, QtGui
 import numpy as np
 import sys
@@ -6,6 +5,8 @@ import datetime
 import os
 import subprocess
 import time
+import pyqtgraph as pg
+#import settings as st
 
 class mcegui(QtGui.QWidget):
     def __init__(self):
@@ -16,7 +17,8 @@ class mcegui(QtGui.QWidget):
 
 
     def init_mce(self):
-        for i in range(2):
+        self.timeinterval = 1
+        for i in range(self.timeinterval):
             tempfilename = 'tempfiles/tempgraphdata%s.txt' % (i)
             tempfile = os.path.exists(tempfilename)
             if tempfile:
@@ -27,8 +29,8 @@ class mcegui(QtGui.QWidget):
         self.readoutcard = ''
         self.framenumber = ''
         self.frameperfile = 374
-        self.totaltimeinterval = 10
-        self.timeinterval = 1
+        self.totaltimeinterval = 30
+        #st.init()
 
     def init_ui(self):
         self.setWindowTitle('MCE TIME Data')
@@ -57,7 +59,7 @@ class mcegui(QtGui.QWidget):
         a = subprocess.Popen(run, shell=True)
         deletetemp = ['rm /data/cryo/current_data/temp.*']
         b = subprocess.Popen(deletetemp, shell=True)
-        self.runmce.terminate()
+        #self.runtakedata.terminate()
         sys.exit()
 
     def on_submitbutton_clicked(self):
@@ -175,20 +177,26 @@ class mcegui(QtGui.QWidget):
         run = ["mce_run temp %s %s --sequence=%s" %(self.framenumber, self.readoutcard, self.frameperfile)]
         c = subprocess.Popen(run, shell=True)
 
-        if self.readoutcard == 'All':
-            self.runmce = subprocess.Popen(['python', 'takedataall.py', self.observer])
-        else:
-            self.runmce = subprocess.Popen(['python', 'takedata.py', self.observer])
-
         self.n_intervals = 1
+
+        self.starttime = datetime.datetime.utcnow()
+
+        if self.readoutcard == 'All':
+            self.runtakedata = subprocess.call(['python', 'takedataall.py', str(self.n_intervals)])
+        else:
+            self.runtakedata = subprocess.call(['python', 'takedata.py', str(self.n_intervals)])
+
         self.data = [0, 0, 0]
+        #tempfile = open('tempfiles/temptimedata.txt', 'w')
+        #tempfile.write(str(self.n_intervals))
+        #tempfile.close()
 
         self.mcegraphdata = pg.ScatterPlotItem()
         #self.plotwidget.addItem(self.mcegraph)
         self.graphwin = pg.GraphicsWindow()
         self.graphwin.setWindowTitle('MCE TIME Data')
 
-        self.mcegraph = self.graphwin.addPlot()
+        self.mcegraph = self.graphwin.addPlot(col=2)
 
         self.mcegraph.setLabel('bottom', 'Time', 's')
         self.mcegraph.setLabel('left', 'Counts')
@@ -202,11 +210,25 @@ class mcegui(QtGui.QWidget):
 
     def moveplot(self):
         self.n_intervals+=self.timeinterval
+        #tempfile = open('tempfiles/temptimedata.txt', 'w')
+        #tempfile.write(str(self.n_intervals))
+        #tempfile.close()
+
+        self.starttime = datetime.datetime.utcnow()
+
+        if self.readoutcard == 'All':
+            self.runtakedata = subprocess.call(['python', 'takedataall.py', str(self.n_intervals)])
+        else:
+            self.runtakedata = subprocess.call(['python', 'takedata.py', str(self.n_intervals)])
+
         self.updateplot()
 
     def updateplot(self):
-        while not os.path.isfile('tempfiles/tempgraphdata%s.txt' % (0)):
+        if self.n_intervals == 1:
+            while not os.path.isfile('tempfiles/tempgraphdata%s.txt' % (0)):
+                continue
             time.sleep(0.1)
+        #self.runtakedata.terminate()
         tempfile = open('tempfiles/tempgraphdata%s.txt' % (0), 'r')
         ch = tempfile.readline().strip()
         if not ch:
@@ -225,7 +247,7 @@ class mcegui(QtGui.QWidget):
         y = []
         for i in range(self.frameperfile):
             #point = []
-            masterx = i / (self.frameperfile * 1.0)
+            masterx = i / 374.0
             #point.append(self.n_intervals + masterx - 1)
             x.append(self.n_intervals + masterx - 1)
             #point.append(float(datagrab[i]))
@@ -250,7 +272,7 @@ class mcegui(QtGui.QWidget):
 
         tempfile.close()
         #data[0].extend(ch)
-        if self.n_intervals == 1:
+        if self.n_intervals == 1 or self.n_intervals % self.totaltimeinterval == 2:
             self.data[0] = pointcolor
             self.data[1] = x
             self.data[2] = y
@@ -261,21 +283,24 @@ class mcegui(QtGui.QWidget):
             self.data[1].extend(x)
             self.data[2].extend(y)
 
-        if self.n_intervals > self.totaltimeinterval:
-            self.data[0] = self.data[0][self.frameperfile:]
-            self.data[1] = self.data[1][self.frameperfile:]
-            self.data[2] = self.data[2][self.frameperfile:]
+        #if self.n_intervals > self.totaltimeinterval:
+        #    self.data[0] = self.data[0][self.frameperfile:]
+        #    self.data[1] = self.data[1][self.frameperfile:]
+        #    self.data[2] = self.data[2][self.frameperfile:]
             #if self.n_intervals > self.totaltimeinterval + 1:
             #    self.data[0] = self.data[0][374:]
             #    self.data[1] = self.data[1][374:]
             #    self.data[2] = self.data[2][374:]
-        print(len(self.data[0]))
-        print(len(self.data[1]))
-        print(len(self.data[2]))
+        #print(len(self.data[0]))
+        #print(len(self.data[1]))
+        #print(len(self.data[2]))
+        print(len(pointcolor))
+        print(len(x))
+        print(len(y))
             #p1.setPos(n_intervals)
-        pointcolor = self.data[0]
-        x = self.data[1]
-        y = self.data[2]
+        #pointcolor = self.data[0]
+        #x = self.data[1]
+        #y = self.data[2]
         x = np.asarray(x)
         y = np.asarray(y)
         #self.plotwidget.setLabel('bottom', 'Time', 's')
@@ -283,15 +308,28 @@ class mcegui(QtGui.QWidget):
         #self.plotwidget.setTitle('MCE TIME Data')
         if self.n_intervals == 1:
             self.mcegraph.addItem(self.mcegraphdata)
-            self.mcegraphdata.setData(x, y)
-            self.mcegraphdata.setBrush(pointcolor)
+            self.mcegraphdata.setData(x, y, brush=pointcolor)
+        elif self.n_intervals % self.totaltimeinterval == 1:
+            if self.n_intervals == self.totaltimeinterval + 1:
+                self.oldmcegraphdata = pg.ScatterPlotItem()
+                self.oldmcegraph = self.graphwin.addPlot(col=1)
+                self.oldmcegraph.setLabel('bottom', 'Time', 's')
+                self.oldmcegraph.setLabel('left', 'Counts')
+                self.oldmcegraph.setTitle('Old MCE TIME Data')
+                self.oldmcegraph.addItem(self.oldmcegraphdata)
+            self.oldmcegraphdata.setData(self.data[1], self.data[2], brush=self.data[0])
+            self.mcegraphdata.clear()
+            self.mcegraphdata.setData(x, y, brush=pointcolor)
+            self.data = [0, 0, 0]
         else:
-            self.mcegraphdata.setData(x, y)
-            self.mcegraphdata.setBrush(pointcolor)
+            self.mcegraphdata.addPoints(x, y, brush=pointcolor)
             #if self.n_intervals > self.totaltimeinterval:
                 #x_axis = pg.AxisItem('bottom', parent=self.mcegraph)
                 #x_axis.setRange(self.n_intervals - self.totaltimeinterval, self.n_intervals)
                 #self.data[0] = self.data[0][self.frameperfile:]
+        self.endtime = datetime.datetime.utcnow()
+        self.timetaken = self.endtime - self.starttime
+        print('Time taken:', str(self.timetaken))
 
 def main():
     app = QtGui.QApplication(sys.argv)
