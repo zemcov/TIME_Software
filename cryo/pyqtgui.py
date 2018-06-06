@@ -26,6 +26,9 @@ class mcegui(QtGui.QWidget):
         self.datamode = ''
         self.readoutcard = ''
         self.framenumber = ''
+        self.frameperfile = 374
+        self.totaltimeinterval = 10
+        self.timeinterval = 1
 
     def init_ui(self):
         self.setWindowTitle('MCE TIME Data')
@@ -169,7 +172,7 @@ class mcegui(QtGui.QWidget):
     def initplot(self):
         changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (self.readoutcard, self.datamode)]
         b = subprocess.Popen(changedatamode, shell=True)
-        run = ["mce_run temp %s %s --sequence=374" %(self.framenumber, self.readoutcard)]
+        run = ["mce_run temp %s %s --sequence=%s" %(self.framenumber, self.readoutcard, self.frameperfile)]
         c = subprocess.Popen(run, shell=True)
 
         if self.readoutcard == 'All':
@@ -177,8 +180,6 @@ class mcegui(QtGui.QWidget):
         else:
             self.runmce = subprocess.Popen(['python', 'takedata.py', self.observer])
 
-        self.totaltimeinterval = 30
-        self.timeinterval = 1
         self.n_intervals = 1
         self.data = [0, 0, 0]
 
@@ -204,7 +205,6 @@ class mcegui(QtGui.QWidget):
         self.updateplot()
 
     def updateplot(self):
-        print('gui', self.n_intervals)
         while not os.path.isfile('tempfiles/tempgraphdata%s.txt' % (0)):
             time.sleep(0.1)
         tempfile = open('tempfiles/tempgraphdata%s.txt' % (0), 'r')
@@ -213,14 +213,19 @@ class mcegui(QtGui.QWidget):
             ch = 1
         else:
             ch = int(ch)
+        a = tempfile.readline().strip()
+        print('gui', str(self.n_intervals), a)
+        a = int(a)
+        #if a > self.n_intervals:
+        #    self.n_intervals = a
         datagrab = tempfile.readline().strip().split()
         #xy = []
         pointcolor = []
         x = []
         y = []
-        for i in range(374):
+        for i in range(self.frameperfile):
             #point = []
-            masterx = i / 374.0
+            masterx = i / (self.frameperfile * 1.0)
             #point.append(self.n_intervals + masterx - 1)
             x.append(self.n_intervals + masterx - 1)
             #point.append(float(datagrab[i]))
@@ -251,15 +256,15 @@ class mcegui(QtGui.QWidget):
             self.data[2] = y
         else:
             self.data[0].extend(pointcolor)
-            self.data[1] = x
-            self.data[2] = y
-        #    self.data[1].extend(x)
-        #    self.data[2].extend(y)
+            #self.data[1] = x
+            #self.data[2] = y
+            self.data[1].extend(x)
+            self.data[2].extend(y)
 
-#        if self.n_intervals > self.totaltimeinterval:
-#            self.data[0] = self.data[0][374:]
-#            self.data[1] = self.data[1][374:]
-#            self.data[2] = self.data[2][374:]
+        if self.n_intervals > self.totaltimeinterval:
+            self.data[0] = self.data[0][self.frameperfile:]
+            self.data[1] = self.data[1][self.frameperfile:]
+            self.data[2] = self.data[2][self.frameperfile:]
             #if self.n_intervals > self.totaltimeinterval + 1:
             #    self.data[0] = self.data[0][374:]
             #    self.data[1] = self.data[1][374:]
@@ -281,11 +286,12 @@ class mcegui(QtGui.QWidget):
             self.mcegraphdata.setData(x, y)
             self.mcegraphdata.setBrush(pointcolor)
         else:
-            self.mcegraphdata.addPoints(x, y)
+            self.mcegraphdata.setData(x, y)
             self.mcegraphdata.setBrush(pointcolor)
-            if self.n_intervals > self.totaltimeinterval:
-                x_axis = pg.AxisItem('bottom', parent=self.mcegraph)
-                x_axis.setRange(self.n_intervals - self.totaltimeinterval, self.n_intervals)
+            #if self.n_intervals > self.totaltimeinterval:
+                #x_axis = pg.AxisItem('bottom', parent=self.mcegraph)
+                #x_axis.setRange(self.n_intervals - self.totaltimeinterval, self.n_intervals)
+                #self.data[0] = self.data[0][self.frameperfile:]
 
 def main():
     app = QtGui.QApplication(sys.argv)

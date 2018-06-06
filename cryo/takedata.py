@@ -139,6 +139,8 @@ def readgraph(y, f, mce_file_name, a):
 
     tempfile.write(str(ch) + '\n')
 
+    tempfile.write(str(a) + '\n')
+
     for j in range(0, d.shape[0]*d.shape[1]-1, 32):
         tempfile.write(str(y[len(y)-1][j])+' ')
     tempfile.close()
