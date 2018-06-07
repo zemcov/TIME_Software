@@ -308,7 +308,8 @@ class mcegui(QtGui.QWidget):
         #self.heatmapwin.addItem(self.heatmap)
 
     def updateheatmap(self):
-        self.heatmap.setImage(self.z.T)
+        z = np.asarray(self.z)
+        self.heatmap.setImage(z.T)
 
 def main():
     app = QtGui.QApplication(sys.argv)
