@@ -302,7 +302,7 @@ class mcegui(QtGui.QWidget):
 
     def initheatmap(self):
         z = np.asarray(self.z)
-        self.heatmapwin = pg.GraphicsWindow
+        self.heatmapwin = pg.image('MCE Heatmap')
         self.heatmap = pg.ImageItem(z)
         self.heatmapwin.addItem(self.heatmap)
 
