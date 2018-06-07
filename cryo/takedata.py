@@ -10,34 +10,29 @@ import time
 sys.path.append('/usr/lib/python2.7')
 sys.path.append('/data/cryo/current_data')
 import mce_data
-from pathlib2 import Path
+#from pathlib2 import Path
 import datetime
 #import settings as st
 #import pyqtgui as qg
 
 
-def takedata(a):
+def takedata(a, ch):
     print('Hello!')
     a -= 1
     y = []
-    #temptimefile = open('tempfiles/temptimedata.txt', 'r')
     while True:
-         #if a != 0:
-        #     n_intervals = temptimefile.read().strip()
-        #     if n_intervals:
-        #         a = int(n_intervals)
+
         if a < 10 : # create a check so we know the file is there and has the right name
             mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
             if a == 9:
-                mce_file = Path("/data/cryo/current_data/temp.0%i"%(a+1))
+                mce_file = os.path.exists("/data/cryo/current_data/temp.0%i"%(a+1))
             else:
-                mce_file = Path("/data/cryo/current_data/temp.00%i" %(a+1)) #wait to read new file until old file is complete
-            if mce_file.exists():
+                mce_file = os.path.exists("/data/cryo/current_data/temp.00%i" %(a+1)) #wait to read new file until old file is complete
+            if mce_file:
                 a = a + 1
-                #print(datetime.datetime.utcnow().isoformat())
                 f = mce_data.SmallMCEFile(mce_file_name)
-                readdata(f, mce_file_name)
-                y = readgraph(y, f, mce_file_name, a)
+                z = readdata(f, mce_file_name)
+                graphdata = readgraph(y, f, mce_file_name, a, ch)
                 break
             else:
                 #continue
@@ -46,15 +41,14 @@ def takedata(a):
         elif a >= 10 and a < 100 :
             mce_file_name = "/data/cryo/current_data/temp.0%i"%(a)
             if a == 99:
-                mce_file = Path("/data/cryo/current_data/temp.%i"%(a+1))
+                mce_file = os.path.exists("/data/cryo/current_data/temp.%i"%(a+1))
             else:
-                mce_file = Path("/data/cryo/current_data/temp.0%i"%(a+1))
-            if mce_file.exists():
+                mce_file = os.path.exists("/data/cryo/current_data/temp.0%i"%(a+1))
+            if mce_file:
                 a = a + 1
-                #print(datetime.datetime.utcnow().isoformat())
                 f = mce_data.SmallMCEFile(mce_file_name)
-                readdata(f, mce_file_name)
-                y = readgraph(y, f, mce_file_name, a)
+                z = readdata(f, mce_file_name)
+                graphdata = readgraph(y, f, mce_file_name, a, ch)
                 break
             else:
                 #continue
@@ -62,18 +56,18 @@ def takedata(a):
 
         elif a >= 100 :
             mce_file_name = "/data/cryo/current_data/temp.%i"%(a)
-            mce_file = Path("/data/cryo/current_data/temp.%i"%(a+1))
-            if mce_file.exists():
+            mce_file = os.path.exists("/data/cryo/current_data/temp.%i"%(a+1))
+            if mce_file:
                 a = a + 1
-                #print(datetime.datetime.utcnow().isoformat())
                 f = mce_data.SmallMCEFile(mce_file_name)
-                readdata(f, mce_file_name)
-                y = readgraph(y, f, mce_file_name, a)
+                z = readdata(f, mce_file_name)
+                graphdata = readgraph(y, f, mce_file_name, a, ch)
                 break
             else:
                 #continue
                 pass
 
+    return z, graphdata
 
 def readdata(f, mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
@@ -119,26 +113,27 @@ def readdata(f, mce_file_name):
         [d[30][0], d[30][1], d[30][2], d[30][3], d[30][4], d[30][5], d[30][6], d[30][7]],
         [d[31][0], d[31][1], d[31][2], d[31][3], d[31][4], d[31][5], d[31][6], d[31][7]]])
 
-    filename = 'tempfiles/tempzdata.txt'
-    tempfile = open(filename, 'w')
+    #filename = 'tempfiles/tempzdata.txt'
+    #tempfile = open(filename, 'w')
 
     #print('Z:',z)
 
-    for x in range(h.shape[0]-1):
-        for y in range(h.shape[1]-1):
-            tempfile.write(str(z[x][y])+' ')
-        tempfile.write('\n')
+    #for x in range(h.shape[0]-1):
+    #    for y in range(h.shape[1]-1):
+    #        tempfile.write(str(z[x][y])+' ')
+    #    tempfile.write('\n')
 
-    tempfile.close()
+    #tempfile.close()
     #time.sleep(1.0)
+    return z
 
-def readgraph(y, f, mce_file_name, a):
+def readgraph(y, f, mce_file_name, a, ch):
     h = f.Read(row_col=True, unfilter='DC').data
     delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     subprocess.Popen(delete_file,shell=True)
 
-    chfile = open('tempfiles/tempchannel.txt', 'r')
-    ch = int(chfile.read().strip())
+    #chfile = open('tempfiles/tempchannel.txt', 'r')
+    #ch = int(chfile.read().strip())
     #print(ch)
 
     d = h[:,ch - 1]
@@ -149,24 +144,28 @@ def readgraph(y, f, mce_file_name, a):
     #print(len(y[len(y) - 1]))
 
     print('takedata', a)
-    filename = 'tempfiles/tempgraphdata%s.txt'%(a % 1)
-    tempfile = open(filename, 'w')
+    #filename = 'tempfiles/tempgraphdata%s.txt'%(a % 1)
+    #tempfile = open(filename, 'w')
 
-    tempfile.write(str(ch) + '\n')
+    #tempfile.write(str(ch) + '\n')
 
-    tempfile.write(str(a) + '\n')
+    #tempfile.write(str(a) + '\n')
+
+    newy = []
 
     for j in range(0, d.shape[0]*d.shape[1]-1, 32):
-        tempfile.write(str(y[len(y)-1][j])+' ')
-    tempfile.close()
+        #tempfile.write(str(y[len(y)-1][j])+' ')
+        newy.append(y[len(y)-1][j])
+    #tempfile.close()
 
 
     #oldtempfile = 'tempfiles/tempgraphdata%s.txt'%(a - 10)
     #deletetemp = ["rm %s" %(oldtempfile)] #to keep temp files from piling up in memory
     #subprocess.Popen(deletetemp,shell=True)
 
+    graphdata = [a, ch, newy]
 
-    return y
+    return graphdata
 
 if __name__ == "__main__":
     takedata(int(sys.argv[1]))
