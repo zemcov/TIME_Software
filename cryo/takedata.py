@@ -73,12 +73,16 @@ def readdata(f, mce_file_name):
     h = f.Read(row_col=True, unfilter='DC').data
     #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     #subprocess.Popen(delete_file,shell=True)
-
+    #print(h.shape)
+    #print(np.std(h[7][7][:]))
     #d = np.array([[ [] for i in range(8)] for j in range(41)])
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
-    for b in range(h.shape[0]-1):
-        for c in range(h.shape[1]-1):
-            d[b][c] = (np.std(h[b][c],dtype=float))
+    for b in range(h.shape[0]):
+        for c in range(h.shape[1]):
+            #print(h[b][c][:10])
+            d[b][c] = (np.std(h[b][c][:],dtype=float))
+
+    #print(d)
 
     z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6], d[0][7]],
         [d[1][0], d[1][1], d[1][2], d[1][3], d[1][4], d[1][5], d[1][6], d[1][7]],
@@ -143,7 +147,7 @@ def readgraph(y, f, mce_file_name, a, ch):
     #print(len(y))
     #print(len(y[len(y) - 1]))
 
-    print('takedata', a)
+    #print('takedata', a)
     #filename = 'tempfiles/tempgraphdata%s.txt'%(a % 1)
     #tempfile = open(filename, 'w')
 

@@ -29,20 +29,21 @@ class mcegui(QtGui.QWidget):
         self.readoutcard = ''
         self.framenumber = ''
         self.frameperfile = 374
-        self.totaltimeinterval = 45
+        self.totaltimeinterval = 60
         self.currentchannel = 1
+        self.oldch = 1
 
     def init_ui(self):
         self.setWindowTitle('MCE TIME Data')
         self.getparameters()
         self.channelselection()
         self.grid = QtGui.QGridLayout()
-        self.grid.addLayout(self.parametersquit, 1, 1)
+        self.grid.addLayout(self.parametersquit, 1, 1, 1, 1)
         self.setLayout(self.grid)
 
-        self.grid.addLayout(self.channelbox, 2, 2)
+        self.grid.addLayout(self.channelbox, 3, 1, 1, 1)
 
-        #self.setGeometry(10, 10, 1000, 600)
+        self.setGeometry(10, 10, 1920, 1080)
         self.show()
 
     def qt_connections(self):
@@ -74,7 +75,9 @@ class mcegui(QtGui.QWidget):
             self.datamode = 1
         self.readoutcard = self.enterreadoutcard.currentIndex() + 1
         self.framenumber = self.enterframenumber.text()
-        if self.observer == '' or self.framenumber == '' or self.framenumber == '0':
+        self.datarate = self.enterdatarate.text()
+        self.channeldelete = self.enterchanneldelete.currentText()
+        if self.observer == '' or self.framenumber == '' or self.framenumber == '0' or self.datarate == '0' or self.datarate == '':
             self.parameterwarning = QtGui.QMessageBox()
             self.parameterwarning.setIcon(QtGui.QMessageBox.Warning)
             self.parameterwarning.setText('One or more parameters not entered correctly!')
@@ -82,14 +85,18 @@ class mcegui(QtGui.QWidget):
             self.parameterwarning.setWindowTitle('Parameter Warning')
             self.parameterwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             self.parameterwarning.exec_()
-
         else:
             parafile = open('tempfiles/tempparameters.txt', 'w')
             parafile.write(self.observer+' ')
             parafile.write(str(self.datamode)+' ')
             parafile.write(str(self.readoutcard)+' ')
             parafile.write(self.framenumber+' ')
+            parafile.write(self.datarate+' ')
+            parafile.write(self.channeldelete+' ')
             parafile.close()
+
+            editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
+            a = subprocess.call(editdatarate, shell=True)
 
             parameteroutput = QtGui.QVBoxLayout()
 
@@ -97,23 +104,32 @@ class mcegui(QtGui.QWidget):
             self.datamodetext = QtGui.QLabel()
             self.readoutcardtext = QtGui.QLabel()
             self.framenumbertext = QtGui.QLabel()
+            self.dataratetext = QtGui.QLabel()
+            self.channeldeletetext = QtGui.QLabel()
 
             self.observertext.setText('Observer: %s' % (self.observer))
             self.datamodetext.setText('Datamode: %s' % (self.datamode))
             self.readoutcardtext.setText('Readout Card: %s' % (self.readoutcard))
             self.framenumbertext.setText('Frame Number: %s' % (self.framenumber))
+            self.dataratetext.setText('Data Rate: %s' % (self.datarate))
+            self.channeldeletetext.setText('Delete Old Channels: %s' % (self.channeldelete))
+
 
             parameteroutput.addWidget(self.observertext)
             parameteroutput.addWidget(self.datamodetext)
             parameteroutput.addWidget(self.readoutcardtext)
             parameteroutput.addWidget(self.framenumbertext)
+            parameteroutput.addWidget(self.dataratetext)
+            parameteroutput.addWidget(self.channeldeletetext)
 
-            self.grid.addLayout(parameteroutput, 1, 2)
+            self.grid.addLayout(parameteroutput, 2, 1, 1, 1)
 
             print('Observer: %s' % (self.observer))
             print('Datamode: %s' % (self.datamode))
             print('Readout Card: %s' % (self.readoutcard))
             print('Frame Number: %s' % (self.framenumber))
+            print('Data Rate: %s' % (self.datarate))
+            print('Delete Old Channels: %s' % (self.channeldelete))
 
             self.initplot()
 
@@ -126,7 +142,7 @@ class mcegui(QtGui.QWidget):
     def getparameters(self):
         self.parametersquit = QtGui.QVBoxLayout()
 
-        self.enterobserver = QtGui.QLineEdit()
+        self.enterobserver = QtGui.QLineEdit('Jake')
         self.enterdatamode = QtGui.QComboBox()
         self.enterdatamode.addItems(['Error', 'Raw', 'Low Pass Filtered', 'Mixed Mode', 'SQ1 Feedback'])
         self.enterreadoutcard = QtGui.QComboBox()
@@ -135,7 +151,10 @@ class mcegui(QtGui.QWidget):
                 self.enterreadoutcard.addItem('MCE 1 RC %s' % (i % 4 + 1))
             else:
                 self.enterreadoutcard.addItem('MCE 2 RC %s' % (i % 4 + 1))
-        self.enterframenumber = QtGui.QLineEdit()
+        self.enterframenumber = QtGui.QLineEdit('1350000')
+        self.enterdatarate = QtGui.QLineEdit('45')
+        self.enterchanneldelete = QtGui.QComboBox()
+        self.enterchanneldelete.addItems(['No', 'Yes'])
         self.submitbutton = QtGui.QPushButton('Submit')
 
         self.parameters = QtGui.QFormLayout()
@@ -143,6 +162,8 @@ class mcegui(QtGui.QWidget):
         self.parameters.addRow('Datamode', self.enterdatamode)
         self.parameters.addRow('Readout Card', self.enterreadoutcard)
         self.parameters.addRow('Frame Number', self.enterframenumber)
+        self.parameters.addRow('Data Rate', self.enterdatarate)
+        self.parameters.addRow('Delete Old Channels', self.enterchanneldelete)
         self.parameters.addRow(self.submitbutton)
 
         self.parametersquit.addLayout(self.parameters)
@@ -189,10 +210,13 @@ class mcegui(QtGui.QWidget):
         self.data = [0, 0, 0]
 
         self.mcegraphdata = pg.ScatterPlotItem()
-        self.graphwin = pg.GraphicsWindow()
-        self.graphwin.setWindowTitle('MCE TIME Data')
+        #self.graphwin = pg.GraphicsWindow()
+        #self.graphwin.setWindowTitle('MCE TIME Data')
 
-        self.mcegraph = self.graphwin.addPlot(col=2)
+        #self.mcegraph = self.graphwin.addPlot(col=2)
+    	self.mcegraph = pg.PlotWidget()
+
+    	self.grid.addWidget(self.mcegraph, 1, 5, 2, 3)
 
         self.mcegraph.setLabel('bottom', 'Time', 's')
         self.mcegraph.setLabel('left', 'Counts')
@@ -264,52 +288,67 @@ class mcegui(QtGui.QWidget):
 
         #tempfile.close()
         if self.n_intervals == 1 or self.n_intervals % self.totaltimeinterval == 2:
-            self.data[0] = pointcolor
-            self.data[1] = x
-            self.data[2] = y
+            self.data[0] = x
+            self.data[1] = y
         else:
-            self.data[0].extend(pointcolor)
-            self.data[1].extend(x)
-            self.data[2].extend(y)
-        print(len(pointcolor))
-        print(len(x))
-        print(len(y))
+            self.data[0].extend(x)
+            self.data[1].extend(y)
+        #print(len(pointcolor))
+        #print(len(x))
+        #print(len(y))
         x = np.asarray(x)
         y = np.asarray(y)
         if self.n_intervals == 1:
             self.mcegraph.addItem(self.mcegraphdata)
             self.mcegraph.setXRange(self.n_intervals - 1, self.n_intervals + self.totaltimeinterval - 1, padding=0)
             self.mcegraphdata.setData(x, y, brush=pointcolor)
+            self.oldch = ch
         elif self.n_intervals % self.totaltimeinterval == 1:
             if self.n_intervals == self.totaltimeinterval + 1:
-                self.oldmcegraphdata = pg.ScatterPlotItem()
-                self.oldmcegraph = self.graphwin.addPlot(col=1)
+                self.oldmcegraphdata = pg.PlotCurveItem()
+                #self.oldmcegraph = self.graphwin.addPlot(col=1)
+                self.oldmcegraph = pg.PlotWidget()
+                self.grid.addWidget(self.oldmcegraph, 1, 2, 2, 3)
                 self.oldmcegraph.setLabel('bottom', 'Time', 's')
                 self.oldmcegraph.setLabel('left', 'Counts')
                 self.oldmcegraph.setTitle('Old MCE TIME Data')
                 self.oldmcegraph.addItem(self.oldmcegraphdata)
-            self.oldmcegraph.setXRange(self.data[1][0], self.data[1][-1], padding=0)
-            self.oldmcegraphdata.setData(self.data[1], self.data[2], brush=self.data[0])
+            self.oldmcegraph.setXRange(self.data[0][0], self.data[0][-1], padding=0)
+            self.oldmcegraphdata.setData(self.data[0], self.data[1])
             self.mcegraphdata.clear()
-            self.mcegraph.setXRange(self.n_intervals, self.n_intervals + self.totaltimeinterval - 1, padding=0)
+            self.mcegraph.setXRange(self.n_intervals - 1, self.n_intervals + self.totaltimeinterval - 1, padding=0)
             self.mcegraphdata.setData(x, y, brush=pointcolor)
             self.data = [0, 0, 0]
         else:
-            self.mcegraphdata.addPoints(x, y, brush=pointcolor)
+            if self.channeldelete == 'Yes' and self.oldch != ch:
+                self.mcegraphdata.clear()
+                self.mcegraphdata.setData(x, y, brush=pointcolor)
+            else:
+                self.mcegraphdata.addPoints(x, y, brush=pointcolor)
+            self.oldch = ch
         self.endtime = datetime.datetime.utcnow()
         self.timetaken = self.endtime - self.starttime
         print('Time taken: %s' % (self.timetaken))
 
     def initheatmap(self):
         z = np.asarray(self.z)
-        self.heatmap = pg.image(img=z.T, title='MCE Heatmap')
+        z.astype(int)
+        #print(z)
+        self.heatmap = pg.ImageView()
         self.heatmap.setPredefinedGradient('thermal')
+        self.heatmap.setImage(z.T)
+        self.heatmap.setLevels(100, 190)
+        #self.heatmap.setTitle('MCE Heatmap')
         #self.heatmap = pg.ImageItem(z)
         #self.heatmapwin.addItem(self.heatmap)
+        self.grid.addWidget(self.heatmap, 3, 2, 1, 3)
 
     def updateheatmap(self):
         z = np.asarray(self.z)
+        z.astype(int)
+        #print(z)
         self.heatmap.setImage(z.T)
+        self.heatmap.setLevels(100, 180)
 
 def main():
     app = QtGui.QApplication(sys.argv)
