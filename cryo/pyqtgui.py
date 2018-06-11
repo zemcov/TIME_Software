@@ -8,6 +8,7 @@ import time
 import pyqtgraph as pg
 #import settings as st
 import takedata as td
+import random as rm
 
 class mcegui(QtGui.QWidget):
     def __init__(self):
@@ -29,7 +30,7 @@ class mcegui(QtGui.QWidget):
         self.readoutcard = ''
         self.framenumber = ''
         self.frameperfile = 374
-        self.totaltimeinterval = 60
+        self.totaltimeinterval = 120
         self.currentchannel = 1
         self.oldch = 1
 
@@ -77,6 +78,8 @@ class mcegui(QtGui.QWidget):
         self.framenumber = self.enterframenumber.text()
         self.datarate = self.enterdatarate.text()
         self.channeldelete = self.enterchanneldelete.currentText()
+        self.timestarted = datetime.datetime.utcnow()
+        self.timestarted = self.timestarted.isoformat()
         if self.observer == '' or self.framenumber == '' or self.framenumber == '0' or self.datarate == '0' or self.datarate == '':
             self.parameterwarning = QtGui.QMessageBox()
             self.parameterwarning.setIcon(QtGui.QMessageBox.Warning)
@@ -93,6 +96,7 @@ class mcegui(QtGui.QWidget):
             parafile.write(self.framenumber+' ')
             parafile.write(self.datarate+' ')
             parafile.write(self.channeldelete+' ')
+            parafile.write(self.timestarted+' ')
             parafile.close()
 
             editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
@@ -106,6 +110,7 @@ class mcegui(QtGui.QWidget):
             self.framenumbertext = QtGui.QLabel()
             self.dataratetext = QtGui.QLabel()
             self.channeldeletetext = QtGui.QLabel()
+            self.timestartedtext = QtGui.QLabel()
 
             self.observertext.setText('Observer: %s' % (self.observer))
             self.datamodetext.setText('Datamode: %s' % (self.datamode))
@@ -113,6 +118,7 @@ class mcegui(QtGui.QWidget):
             self.framenumbertext.setText('Frame Number: %s' % (self.framenumber))
             self.dataratetext.setText('Data Rate: %s' % (self.datarate))
             self.channeldeletetext.setText('Delete Old Channels: %s' % (self.channeldelete))
+            self.timestartedtext.setText('Time Started: %s' % (self.timestarted))
 
 
             parameteroutput.addWidget(self.observertext)
@@ -121,6 +127,7 @@ class mcegui(QtGui.QWidget):
             parameteroutput.addWidget(self.framenumbertext)
             parameteroutput.addWidget(self.dataratetext)
             parameteroutput.addWidget(self.channeldeletetext)
+            parameteroutput.addWidget(self.timestartedtext)
 
             self.grid.addLayout(parameteroutput, 2, 1, 1, 1)
 
@@ -130,6 +137,10 @@ class mcegui(QtGui.QWidget):
             print('Frame Number: %s' % (self.framenumber))
             print('Data Rate: %s' % (self.datarate))
             print('Delete Old Channels: %s' % (self.channeldelete))
+            print('Time Started: %s' % (self.timestarted))
+
+            self.frameperfile = (50 * 10 ** 6) / (33 * 90 * int(self.datarate))
+            print('Frame per file: %s' % (self.frameperfile))
 
             self.initplot()
 
@@ -191,6 +202,30 @@ class mcegui(QtGui.QWidget):
         #print(self.selectchannel.currentText())
         print(self.currentchannel)
 
+    def initkmirrordata(self):
+        self.parallacticangle = rm.randint(10, 170)
+        self.positionalerror = rm.randint(0, 90)
+
+        self.parallacticangletext = QtGui.QLabel()
+        self.positionalerrortext = QtGui.QLabel()
+
+        self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
+        self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
+
+        self.kmirrordatatext = QtGui.QVBoxLayout()
+
+        self.kmirrordatatext.addWidget(self.parallacticangletext)
+        self.kmirrordatatext.addWidget(self.positionalerrortext)
+
+        self.grid.addLayout(self.kmirrordatatext, 4, 1, 1, 1)
+
+    def updatekmirrordata(self):
+        self.parallacticangle = rm.randint(10, 170)
+        self.positionalerror = rm.randint(0, 90)
+
+        self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
+        self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
+
     def initplot(self):
         changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (self.readoutcard, self.datamode)]
         b = subprocess.Popen(changedatamode, shell=True)
@@ -222,8 +257,9 @@ class mcegui(QtGui.QWidget):
         self.mcegraph.setLabel('left', 'Counts')
         self.mcegraph.setTitle('MCE TIME Data')
 
-        self.updateplot()
         self.initheatmap()
+        self.initkmirrordata()
+        self.updateplot()
 
         self.timer = pg.QtCore.QTimer()
         self.timer.timeout.connect(self.moveplot)
@@ -241,6 +277,7 @@ class mcegui(QtGui.QWidget):
             self.z, self.graphdata = td.takedata(self.n_intervals, self.currentchannel)
 
         self.updateheatmap()
+        self.updatekmirrordata()
         self.updateplot()
 
     def updateplot(self):
@@ -334,21 +371,36 @@ class mcegui(QtGui.QWidget):
         z = np.asarray(self.z)
         z.astype(int)
         #print(z)
-        self.heatmap = pg.ImageView()
+        self.heatmapplot = pg.PlotItem()
+        self.heatmapplot.setLabel('bottom', 'Row')
+        self.heatmapplot.setLabel('left', 'Channel')
+        self.heatmapplot.setXRange(0, 8, padding=0)
+        self.heatmapplot.setYRange(0, 32, padding=0)
+        self.heatmap = pg.ImageView(view= self.heatmapplot)
         self.heatmap.setPredefinedGradient('thermal')
-        self.heatmap.setImage(z.T)
-        self.heatmap.setLevels(100, 190)
+        self.heatmap.setImage(z)
+        if self.frameperfile == 11:
+            #self.heatmap.setPredefinedGradient('flame')
+            self.heatmap.setLevels(60, 260)
+        else:
+            self.heatmap.setLevels(100, 190)
+
+        #self.heatmap.setYRange
         #self.heatmap.setTitle('MCE Heatmap')
         #self.heatmap = pg.ImageItem(z)
         #self.heatmapwin.addItem(self.heatmap)
-        self.grid.addWidget(self.heatmap, 3, 2, 1, 3)
+        self.grid.addWidget(self.heatmap, 3, 2, 2, 5)
 
     def updateheatmap(self):
         z = np.asarray(self.z)
         z.astype(int)
         #print(z)
-        self.heatmap.setImage(z.T)
-        self.heatmap.setLevels(100, 180)
+        self.heatmap.setImage(z)
+        if self.frameperfile == 11:
+            #self.heatmap.setPredefinedGradient('flame')
+            self.heatmap.setLevels(60, 260)
+        else:
+            self.heatmap.setLevels(100, 190)
 
 def main():
     app = QtGui.QApplication(sys.argv)
