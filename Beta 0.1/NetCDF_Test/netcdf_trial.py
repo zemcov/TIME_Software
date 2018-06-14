@@ -73,13 +73,13 @@ def new_file(n):
     Rc[0] = str(2) #str(parameters[2])
 
 def data_all(h,d,n,a):
-    Time[0] = str(now.datetime.utcnow())
-    Rms_Noise_All[0,:,:] = d # can use datetime from gui...
-    Raw_Data_All[0,:,:,:] = h
-    Header[0,:,:] = st.head
+    Time[st.a] = str(now.datetime.utcnow())
+    Rms_Noise_All[st.a,:,:] = d # can use datetime from gui...
+    Raw_Data_All[st.a,:,:,:] = h
+    Header[st.a,:,:] = st.head
 
 def data(h,d,n,a):
-    Time[0] = str(now.datetime.utcnow())
-    Rms_Noise[0,:,:] = d
-    Raw_Data[0,:,:,:] = h
-    Header[0,:,:] = st.head
+    Time[st.a] = str(now.datetime.utcnow())
+    Rms_Noise[st.a,:,:] = d
+    Raw_Data[st.a,:,:,:] = h
+    Header[st.a,:,:] = st.head
