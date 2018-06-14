@@ -27,13 +27,13 @@ def new_file(n):
     guiparams.createDimension('r',1)
     guiparams.createDimension('t',None)
     # Dimensions for Data Arrays -------------------------------------------------------------------
-    stream.createDimension('raw_rows',41)
+    stream.createDimension('raw_rows',33)
     stream.createDimension('raw_cols',8)
     stream.createDimension('raw_cols_all',32)
     stream.createDimension('raw_num',st.h_size)
     stream.createDimension('t',None)
 
-    heatmap.createDimension('rms_rows',41)
+    heatmap.createDimension('rms_rows',33)
     heatmap.createDimension('rms_cols',8)
     heatmap.createDimension('rms_cols_all',32)
     heatmap.createDimension('t',None)
