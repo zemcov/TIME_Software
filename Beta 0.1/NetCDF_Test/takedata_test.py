@@ -22,6 +22,8 @@ def readdata(f,mce_file_name,h):
         nct.data(h,d,st.n,st.a)
 
 def read_header(f):
+    keys = []
+    values = []
     for key,value in f.header.items():
         if key == '_rc_present':
             for i in range(len(value)):
@@ -33,12 +35,12 @@ def read_header(f):
                     print("I don't know what I am...")
             value = ''.join(map(str,value))
         value = str(value)
-        st.keys.append(key)
-        st.values.append(value)
+        keys.append(key)
+        values.append(value)
     # keys,values = zip(*f.header.items())
-    st.keys = np.asarray(st.keys,dtype=object)
-    st.values = np.asarray(st.values,dtype=object)
-    st.head = np.array((st.keys,st.values)).T
+    keys = np.asarray(keys,dtype=object)
+    values = np.asarray(values,dtype=object)
+    st.head = np.array((keys,values)).T
     #-------------------------------------------------------------------------------
 
 if __name__ =="__main__":
