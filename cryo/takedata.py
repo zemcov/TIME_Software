@@ -12,14 +12,21 @@ sys.path.append('/data/cryo/current_data')
 import mce_data
 #from pathlib2 import Path
 import datetime
-#import settings as st
+import fnmatch
+import settings as st
+import netcdf_trial as nc
 #import pyqtgui as qg
 
 
-def takedata(a, ch):
-    print('Hello!')
+def takedata(a, ch, n_files, frameperfile, mce):
+    #print('Hello!')
+
+    #nc.initglobal()
     a -= 1
+    st.a = a
+    #nc.new_file(st.n, frameperfile)
     y = []
+    allgraphdata = []
     while True:
 
         if a < 10 : # create a check so we know the file is there and has the right name
@@ -29,10 +36,20 @@ def takedata(a, ch):
             else:
                 mce_file = os.path.exists("/data/cryo/current_data/temp.00%i" %(a+1)) #wait to read new file until old file is complete
             if mce_file:
-                a = a + 1
-                f = mce_data.SmallMCEFile(mce_file_name)
-                z = readdata(f, mce_file_name)
-                graphdata = readgraph(y, f, mce_file_name, a, ch)
+                print(len(os.listdir('/data/cryo/current_data')) - 2 - n_files)
+                for i in range(len(os.listdir('/data/cryo/current_data')) - 2 - n_files):
+                    if a < 10:
+                        mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
+                    else:
+                        mce_file_name = "/data/cryo/current_data/temp.0%i" %(a)
+                    #print(datafile)
+                    a = a + 1
+                    st.a = a
+                    f = mce_data.SmallMCEFile(mce_file_name)
+                    read_header(f)
+                    z, mce = readdata(f, mce_file_name, frameperfile, mce)
+                    graphdata = readgraph(y, f, mce_file_name, a, ch)
+                    allgraphdata.append(graphdata)
                 break
             else:
                 #continue
@@ -45,10 +62,20 @@ def takedata(a, ch):
             else:
                 mce_file = os.path.exists("/data/cryo/current_data/temp.0%i"%(a+1))
             if mce_file:
-                a = a + 1
-                f = mce_data.SmallMCEFile(mce_file_name)
-                z = readdata(f, mce_file_name)
-                graphdata = readgraph(y, f, mce_file_name, a, ch)
+                print(len(os.listdir('/data/cryo/current_data')) - 2 - n_files)
+                for i in range(len(os.listdir('/data/cryo/current_data')) - 2 - n_files):
+                    if a < 100:
+                        mce_file_name = "/data/cryo/current_data/temp.0%i" %(a)
+                    else:
+                        mce_file_name = "/data/cryo/current_data/temp.%i" %(a)
+        		    #print(datafile)
+                    a = a + 1
+                    st.a = a
+                    f = mce_data.SmallMCEFile(mce_file_name)
+                    read_header(f)
+                    z, mce = readdata(f, mce_file_name, frameperfile, mce)
+                    graphdata = readgraph(y, f, mce_file_name, a, ch)
+                    allgraphdata.append(graphdata)
                 break
             else:
                 #continue
@@ -58,18 +85,26 @@ def takedata(a, ch):
             mce_file_name = "/data/cryo/current_data/temp.%i"%(a)
             mce_file = os.path.exists("/data/cryo/current_data/temp.%i"%(a+1))
             if mce_file:
-                a = a + 1
-                f = mce_data.SmallMCEFile(mce_file_name)
-                z = readdata(f, mce_file_name)
-                graphdata = readgraph(y, f, mce_file_name, a, ch)
+                print(len(os.listdir('/data/cryo/current_data')) - 2 - n_files)
+                for i in range(len(os.listdir('/data/cryo/current_data')) - 2 - n_files):
+                    mce_file_name = "/data/cryo/current_data/temp.%i" %(a)
+        		    #print(datafile)
+                    a = a + 1
+                    st.a = a
+                    f = mce_data.SmallMCEFile(mce_file_name)
+                    read_header(f)
+                    z, mce = readdata(f, mce_file_name, frameperfile, mce)
+                    graphdata = readgraph(y, f, mce_file_name, a, ch)
+                    allgraphdata.append(graphdata)
                 break
             else:
                 #continue
                 pass
 
-    return z, graphdata
+    #nc.new_file(st.n, frameperfile)
+    return z, allgraphdata, mce
 
-def readdata(f, mce_file_name):
+def readdata(f, mce_file_name, frameperfile, mce):
     h = f.Read(row_col=True, unfilter='DC').data
     #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     #subprocess.Popen(delete_file,shell=True)
@@ -81,8 +116,21 @@ def readdata(f, mce_file_name):
         for c in range(h.shape[1]):
             #print(h[b][c][:10])
             d[b][c] = (np.std(h[b][c][:],dtype=float))
+    #print(d.shape)
+    #print(h.shape)
 
     #print(d)
+    #st.h_size = h.shape[2]
+    #print(st.h_size)
+    if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
+        nc.data(h,d,st.n,st.a)
+    else:
+        st.n = st.n + 1
+        #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
+        mce.close()
+        print('----------New File----------')
+        mce = nc.new_file(st.n, frameperfile)
+        nc.data(h,d,st.n,st.a)
 
     z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6], d[0][7]],
         [d[1][0], d[1][1], d[1][2], d[1][3], d[1][4], d[1][5], d[1][6], d[1][7]],
@@ -129,7 +177,7 @@ def readdata(f, mce_file_name):
 
     #tempfile.close()
     #time.sleep(1.0)
-    return z
+    return z, mce
 
 def readgraph(y, f, mce_file_name, a, ch):
     h = f.Read(row_col=True, unfilter='DC').data
@@ -171,5 +219,27 @@ def readgraph(y, f, mce_file_name, a, ch):
 
     return graphdata
 
+def read_header(f):
+    keys = []
+    values = []
+    for key,value in f.header.items():
+        if key == '_rc_present':
+            for i in range(len(value)):
+                if value[i] == True:
+                    value[i] = "1"
+                elif value[i] == False:
+                    value[i] = "0"
+                else:
+                    print("I don't know what I am...")
+            value = ''.join(map(str,value))
+        value = str(value)
+        keys.append(key)
+        values.append(value)
+    # keys,values = zip(*f.header.items())
+    keys = np.asarray(keys,dtype=object)
+    values = np.asarray(values,dtype=object)
+    st.head = np.array((keys,values)).T
+
 if __name__ == "__main__":
-    takedata(int(sys.argv[1]))
+    #takedata(int(sys.argv[1]))
+    takedata(1, 1)

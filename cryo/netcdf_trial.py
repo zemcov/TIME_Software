@@ -2,14 +2,16 @@ from netCDF4 import Dataset
 from netCDF4 import MFDataset
 import os
 import sys
+#import takedata_test as td
 import settings as st
 import datetime as now
 from netCDF4 import num2date, date2num
 
 #from multipagegui import parameters
 
-def new_file(n):
-    mce = Dataset("gui_data_test{n}.nc".format(n=st.n),"w",format="NETCDF4")
+
+def new_file(n, h_size):
+    mce = Dataset("tempfiles/gui_data_test{n}.nc".format(n=st.n),"w",format="NETCDF4")
 
     # create the gui parameters group
     guiparams = mce.createGroup('guiparams')
@@ -17,7 +19,7 @@ def new_file(n):
     heatmap = mce.createGroup('heatmap')
     mce_header = mce.createGroup('mce_header')
 
-    # GUI PARAMETERS ---------------------------------------------------------------------------------
+     # GUI PARAMETERS ---------------------------------------------------------------------------------
     guiparams.createDimension('det',1)
     guiparams.createDimension('obs',1)
     guiparams.createDimension('date',1)
@@ -26,13 +28,13 @@ def new_file(n):
     guiparams.createDimension('r',1)
     guiparams.createDimension('t',None)
     # Dimensions for Data Arrays -------------------------------------------------------------------
-    stream.createDimension('raw_rows',41)
+    stream.createDimension('raw_rows',33)
     stream.createDimension('raw_cols',8)
     stream.createDimension('raw_cols_all',32)
-    stream.createDimension('raw_num',st.h_size)
+    stream.createDimension('raw_num', h_size)
     stream.createDimension('t',None)
 
-    heatmap.createDimension('rms_rows',41)
+    heatmap.createDimension('rms_rows',33)
     heatmap.createDimension('rms_cols',8)
     heatmap.createDimension('rms_cols_all',32)
     heatmap.createDimension('t',None)
@@ -43,8 +45,8 @@ def new_file(n):
 
     # creating variables --------------------------------------------------------------------------------
     Observer = guiparams.createVariable("observer","S3","obs")
-    Datetime = guiparams.createVariable('datetime', 'S8','date')
-    Frames = guiparams.createVariable('frames', 'S3','f')
+    Datetime = guiparams.createVariable('datetime', 'S26','date')
+    Frames = guiparams.createVariable('frames', 'S8','f')
     Datamode = guiparams.createVariable('datamode','S2','mode')
     Detector = guiparams.createVariable('detector','f8','det')
     Rc = guiparams.createVariable('rc','S1','r') # can either use rc name or integer used by gui
@@ -65,23 +67,33 @@ def new_file(n):
     Header = mce_header.createVariable('header','S3',('t','v','k'))
 
     # appending to variables w/ gui params ------------------------------------------------------------
-    Observer[0] = 'VLB' #str(parameters[0])
-    Frames[0] = '100' #str(parameters[3])
-    Datetime[0] = '00:00:00' #str(parameters[4]
-    Datamode[0] = str(10) #str(parameters[1])
-    Rc[0] = str(2) #str(parameters[2])
+    #Observer[0] = 'VLB' #str(parameters[0])
+    #Frames[0] = '100' #str(parameters[3])
+    #Datetime[0] = '00:00:00' #str(parameters[4]
+    #Datamode[0] = str(10) #str(parameters[1])
+    #Rc[0] = str(2) #str(parameters[2])
+
+    parafilename = (os.pardir + '/cryo/tempfiles/tempparameters.txt')
+    parafile = open(parafilename, 'r')
+    parameters = parafile.readline().strip().split()
+    Observer[0] = parameters[0]
+    Frames[0] = parameters[3]
+    Datetime[0] = parameters[6]
+    Datamode[0] = parameters[1]
+    Rc[0] = parameters[2]
+    parafile.close()
+
+    return mce
 
 def data_all(h,d,n,a):
-    Time[0] = str(now.datetime.utcnow())
-    Rms_Noise_All[0,:,:] = st.d # can use datetime from gui...
-    Raw_Data_All[0,:,:,:] = st.h
-    Header[0,:,:] = st.head
+    Time[a] = str(now.datetime.utcnow())
+    Rms_Noise_All[a,:,:] = d # can use datetime from gui...
+    Raw_Data_All[a,:,:,:] = h
+    Header[a,:,:] = st.head
 
 def data(h,d,n,a):
-    Time[0] = str(now.datetime.utcnow())
-    Rms_Noise[0,:,:] = st.d
-    Raw_Data[0,:,:,:] = st.h
-    Header[0,:,:] = st.head
-
-if __name__ == '__main__':
-    new_file(0)
+    Time[a] = str(now.datetime.utcnow())
+    #Rms_Noise.shape()
+    Rms_Noise[a,:,:] = d
+    Raw_Data[a,:,:,:] = h
+    Header[a,:,:] = st.head

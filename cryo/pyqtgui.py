@@ -8,7 +8,10 @@ import time
 import pyqtgraph as pg
 #import settings as st
 import takedata as td
+import takedataall as tda
 import random as rm
+import netcdf_trial as nc
+import settings as st
 
 class mcegui(QtGui.QWidget):
     def __init__(self):
@@ -19,8 +22,8 @@ class mcegui(QtGui.QWidget):
 
     def init_mce(self):
         self.timeinterval = 1
-        for i in range(self.timeinterval):
-            tempfilename = 'tempfiles/tempgraphdata%s.txt' % (i)
+        for i in range(len(os.listdir('tempfiles'))):
+            tempfilename = 'tempfiles/gui_data_test%s.nc' % (i)
             tempfile = os.path.exists(tempfilename)
             if tempfile:
                 delete_file = ['rm ' + tempfilename]
@@ -33,17 +36,15 @@ class mcegui(QtGui.QWidget):
         self.totaltimeinterval = 120
         self.currentchannel = 1
         self.oldch = 1
+        st.init()
 
     def init_ui(self):
         self.setWindowTitle('MCE TIME Data')
         self.getparameters()
-        self.channelselection()
         self.grid = QtGui.QGridLayout()
+        #self.startstopbuttons()
         self.grid.addLayout(self.parametersquit, 1, 1, 1, 1)
         self.setLayout(self.grid)
-
-        self.grid.addLayout(self.channelbox, 3, 1, 1, 1)
-
         self.setGeometry(10, 10, 1920, 1080)
         self.show()
 
@@ -51,10 +52,16 @@ class mcegui(QtGui.QWidget):
         self.quitbutton.clicked.connect(self.on_quitbutton_clicked)
         self.submitbutton.clicked.connect(self.on_submitbutton_clicked)
         self.selectchannel.currentIndexChanged.connect(self.changechannel)
+        self.readoutcardselect.currentIndexChanged.connect(self.changereadoutcard)
+        #self.startmce.clicked.connect(self.resumemce)
+        #self.stopmce.clicked.connect(self.pausemce)
 
     def on_quitbutton_clicked(self):
         print('Quitting Application')
-        run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
+        if self.readoutcard == 'All':
+            run = ['mce_cmd -x stop rcs ret_dat']
+        else:
+            run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
         a = subprocess.Popen(run, shell=True)
         deletetemp = ['rm /data/cryo/current_data/temp.*']
         b = subprocess.Popen(deletetemp, shell=True)
@@ -75,6 +82,10 @@ class mcegui(QtGui.QWidget):
         elif self.datamode == 'SQ1 Feedback':
             self.datamode = 1
         self.readoutcard = self.enterreadoutcard.currentIndex() + 1
+        if self.readoutcard == 9:
+            self.readoutcard = 'All'
+            self.currentreadoutcard = 2
+            self.currentreadoutcarddisplay = 'MCE 1 RC 2'
         self.framenumber = self.enterframenumber.text()
         self.datarate = self.enterdatarate.text()
         self.channeldelete = self.enterchanneldelete.currentText()
@@ -124,12 +135,18 @@ class mcegui(QtGui.QWidget):
             parameteroutput.addWidget(self.observertext)
             parameteroutput.addWidget(self.datamodetext)
             parameteroutput.addWidget(self.readoutcardtext)
+            if self.readoutcard == 'All':
+                self.currentreadoutcardtext = QtGui.QLabel()
+                self.currentreadoutcardtext.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
+                parameteroutput.addWidget(self.currentreadoutcardtext)
             parameteroutput.addWidget(self.framenumbertext)
             parameteroutput.addWidget(self.dataratetext)
             parameteroutput.addWidget(self.channeldeletetext)
             parameteroutput.addWidget(self.timestartedtext)
 
             self.grid.addLayout(parameteroutput, 2, 1, 1, 1)
+
+            self.channelselection()
 
             print('Observer: %s' % (self.observer))
             print('Datamode: %s' % (self.datamode))
@@ -153,7 +170,8 @@ class mcegui(QtGui.QWidget):
     def getparameters(self):
         self.parametersquit = QtGui.QVBoxLayout()
 
-        self.enterobserver = QtGui.QLineEdit('Jake')
+        self.enterobserver = QtGui.QLineEdit('JMB')
+        self.enterobserver.setMaxLength(3)
         self.enterdatamode = QtGui.QComboBox()
         self.enterdatamode.addItems(['Error', 'Raw', 'Low Pass Filtered', 'Mixed Mode', 'SQ1 Feedback'])
         self.enterreadoutcard = QtGui.QComboBox()
@@ -162,7 +180,9 @@ class mcegui(QtGui.QWidget):
                 self.enterreadoutcard.addItem('MCE 1 RC %s' % (i % 4 + 1))
             else:
                 self.enterreadoutcard.addItem('MCE 2 RC %s' % (i % 4 + 1))
+        self.enterreadoutcard.addItem('All')
         self.enterframenumber = QtGui.QLineEdit('1350000')
+        self.enterframenumber.setMaxLength(9)
         self.enterdatarate = QtGui.QLineEdit('45')
         self.enterchanneldelete = QtGui.QComboBox()
         self.enterchanneldelete.addItems(['No', 'Yes'])
@@ -182,17 +202,31 @@ class mcegui(QtGui.QWidget):
         self.quitbutton = QtGui.QPushButton('Quit')
         self.parametersquit.addWidget(self.quitbutton)
 
+        self.readoutcardselect = QtGui.QComboBox()
+        self.selectchannel = QtGui.QComboBox()
+
     def channelselection(self):
         #tempfile = open('tempfiles/tempchannel.txt', 'w')
         #tempfile.write('1')
         #tempfile.close()
+        self.channelreadoutbox = QtGui.QFormLayout()
 
-        self.channelbox = QtGui.QVBoxLayout()
-
-        self.selectchannel = QtGui.QComboBox()
+        if self.readoutcard == 'All':
+            for i in range(8):
+                if i < 4:
+                    self.readoutcardselect.addItem('MCE 1 RC %s' % (i % 4 + 1))
+                else:
+                    self.readoutcardselect.addItem('MCE 2 RC %s' % (i % 4 + 1))
+            self.readoutcardlabel = QtGui.QLabel('Readout Card')
+            self.channelreadoutbox.addRow(self.readoutcardlabel, self.readoutcardselect)
+        #self.channelbox = QtGui.QVBoxLayout()
         self.selectchannel.addItems(['1', '2', '3', '4', '5', '6', '7', '8'])
 
-        self.channelbox.addWidget(self.selectchannel)
+        self.channellabel = QtGui.QLabel('Channel')
+
+        self.channelreadoutbox.addRow(self.channellabel, self.selectchannel)
+
+        self.grid.addLayout(self.channelreadoutbox, 3, 1, 1, 1)
 
     def changechannel(self):
         #tempfile = open('tempfiles/tempchannel.txt', 'w')
@@ -201,6 +235,34 @@ class mcegui(QtGui.QWidget):
         #tempfile.close()
         #print(self.selectchannel.currentText())
         print(self.currentchannel)
+
+    def changereadoutcard(self):
+        self.currentreadoutcard = self.readoutcardselect.currentIndex() + 1
+        self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
+
+    #def startstopbuttons(self):
+        #self.startstopmce = QtGui.QHBoxLayout()
+        #self.startmce = QtGui.QPushButton('Resume MCE')
+        #self.stopmce = QtGui.QPushButton('Pause MCE')
+        #self.startstopmce.addWidget(self.startmce)
+        #self.startstopmce.addWidget(self.stopmce)
+        #self.grid.addLayout(self.startstopmce, 4, 1, 1, 1)
+
+    #def resumemce(self):
+    #    if self.readoutcard == 'All':
+    #        run = ["mce_cmd -x go rcs ret_dat"]
+    #        c = subprocess.Popen(run, shell=True)
+    #    else:
+    #        run = ["mce_cmd -x go rc%s ret_dat" % (self.readoutcard)]
+    #        c = subprocess.Popen(run, shell=True)
+
+    #def pausemce(self):
+    #    if self.readoutcard == 'All':
+    #        run = ["mce_cmd -x stop rcs ret_dat"]
+    #        c = subprocess.Popen(run, shell=True)
+    #    else:
+    #        run = ["mce_cmd -x stop rc%s ret_dat" % (self.readoutcard)]
+    #        c = subprocess.Popen(run, shell=True)
 
     def initkmirrordata(self):
         self.parallacticangle = rm.randint(10, 170)
@@ -227,20 +289,32 @@ class mcegui(QtGui.QWidget):
         self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
 
     def initplot(self):
-        changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (self.readoutcard, self.datamode)]
-        b = subprocess.Popen(changedatamode, shell=True)
-        run = ["mce_run temp %s %s --sequence=%s" %(self.framenumber, self.readoutcard, self.frameperfile)]
-        c = subprocess.Popen(run, shell=True)
+        self.n_files = len(os.listdir('/data/cryo/current_data'))
+        print(self.n_files)
+        if self.readoutcard == 'All':
+            changedatamode = ["mce_cmd -x wb rca data_mode %s" % (self.datamode)]
+            b = subprocess.Popen(changedatamode, shell=True)
+            print('Hello!')
+            run = ["mce_run temp %s s --sequence=%s" %(self.framenumber, self.frameperfile)]
+            c = subprocess.Popen(run, shell=True)
+        else:
+            changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (self.readoutcard, self.datamode)]
+            b = subprocess.Popen(changedatamode, shell=True)
+            run = ["mce_run temp %s %s --sequence=%s" %(self.framenumber, self.readoutcard, self.frameperfile)]
+            c = subprocess.Popen(run, shell=True)
 
         self.n_intervals = 1
 
         self.starttime = datetime.datetime.utcnow()
 
+        self.mce = nc.new_file(st.n, self.frameperfile)
+
         if self.readoutcard == 'All':
-            self.runtakedata = subprocess.call(['python', 'takedataall.py', str(self.n_intervals)])
+            #self.runtakedata = subprocess.call(['python', 'takedataall.py', str(self.n_intervals)])
+            self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce)
         else:
         #    self.runtakedata = subprocess.call(['python', 'takedata.py', str(self.n_intervals)])
-            self.z, self.graphdata = td.takedata(self.n_intervals, self.currentchannel)
+            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce)
 
         self.data = [0, 0, 0]
 
@@ -257,6 +331,15 @@ class mcegui(QtGui.QWidget):
         self.mcegraph.setLabel('left', 'Counts')
         self.mcegraph.setTitle('MCE TIME Data')
 
+        self.oldmcegraphdata = pg.PlotCurveItem()
+        #self.oldmcegraph = self.graphwin.addPlot(col=1)
+        self.oldmcegraph = pg.PlotWidget()
+        self.grid.addWidget(self.oldmcegraph, 1, 2, 2, 3)
+        self.oldmcegraph.setLabel('bottom', 'Time', 's')
+        self.oldmcegraph.setLabel('left', 'Counts')
+        self.oldmcegraph.setTitle('Old MCE TIME Data')
+        self.oldmcegraph.addItem(self.oldmcegraphdata)
+
         self.initheatmap()
         self.initkmirrordata()
         self.updateplot()
@@ -271,10 +354,11 @@ class mcegui(QtGui.QWidget):
         self.starttime = datetime.datetime.utcnow()
 
         if self.readoutcard == 'All':
-            self.runtakedata = subprocess.call(['python', 'takedataall.py', str(self.n_intervals)])
+            #self.runtakedata = subprocess.call(['python', 'takedataall.py', str(self.n_intervals)])
+            self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce)
         else:
         #    self.runtakedata = subprocess.call(['python', 'takedata.py', str(self.n_intervals)])
-            self.z, self.graphdata = td.takedata(self.n_intervals, self.currentchannel)
+            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce)
 
         self.updateheatmap()
         self.updatekmirrordata()
@@ -288,84 +372,79 @@ class mcegui(QtGui.QWidget):
         #self.runtakedata.terminate()
         #tempfile = open('tempfiles/tempgraphdata%s.txt' % (0), 'r')
         #ch = tempfile.readline().strip()
-        ch = self.graphdata[1]
-        #if not ch:
-        #    ch = 1
-        #else:
-        #    ch = int(ch)
-        #a = tempfile.readline().strip()
-        a = self.graphdata[0]
-        print('gui %s %s' % (self.n_intervals, a))
-        #a = int(a)
-        #datagrab = tempfile.readline().strip().split()
-        #xy = []
-        pointcolor = []
-        x = []
-        y = self.graphdata[2][:self.frameperfile]
-        for i in range(self.frameperfile):
-            masterx = i / 374.0
-            x.append(self.n_intervals + masterx - 1)
-            #y.append(float(datagrab[i]))
-            if ch == 1:
-                pointcolor.append(pg.mkBrush('b'))
-            elif ch == 2:
-                pointcolor.append(pg.mkBrush('r'))
-            elif ch == 3:
-                pointcolor.append(pg.mkBrush('g'))
-            elif ch == 4:
-                pointcolor.append(pg.mkBrush('y'))
-            elif ch == 5:
-                pointcolor.append(pg.mkBrush('c'))
-            elif ch == 6:
-                pointcolor.append(pg.mkBrush('m'))
-            elif ch == 7:
-                pointcolor.append(pg.mkBrush('k'))
-            elif ch == 8:
-                pointcolor.append(pg.mkBrush('w'))
+    	for g in range(len(self.allgraphdata)):
+    	    self.graphdata = self.allgraphdata[g]
+            ch = self.graphdata[1]
+            #if not ch:
+            #    ch = 1
+            #else:
+            #    ch = int(ch)
+            #a = tempfile.readline().strip()
+            a = self.graphdata[0]
+            print('gui %s %s' % (self.n_intervals, a))
+            #a = int(a)
+            #datagrab = tempfile.readline().strip().split()
+            #xy = []
+            pointcolor = []
+            x = []
+            y = self.graphdata[2][:self.frameperfile]
+            for i in range(self.frameperfile):
+                masterx = i / 374.0
+                x.append(self.n_intervals + masterx - 1)
+                #y.append(float(datagrab[i]))
+                if ch == 1:
+                    pointcolor.append(pg.mkBrush('b'))
+                elif ch == 2:
+                    pointcolor.append(pg.mkBrush('r'))
+                elif ch == 3:
+                    pointcolor.append(pg.mkBrush('g'))
+                elif ch == 4:
+                    pointcolor.append(pg.mkBrush('y'))
+                elif ch == 5:
+                    pointcolor.append(pg.mkBrush('c'))
+                elif ch == 6:
+                    pointcolor.append(pg.mkBrush('m'))
+                elif ch == 7:
+                    pointcolor.append(pg.mkBrush('k'))
+                elif ch == 8:
+                    pointcolor.append(pg.mkBrush('w'))
 
-        #tempfile.close()
-        if self.n_intervals == 1 or self.n_intervals % self.totaltimeinterval == 2:
-            self.data[0] = x
-            self.data[1] = y
-        else:
-            self.data[0].extend(x)
-            self.data[1].extend(y)
-        #print(len(pointcolor))
-        #print(len(x))
-        #print(len(y))
-        x = np.asarray(x)
-        y = np.asarray(y)
-        if self.n_intervals == 1:
-            self.mcegraph.addItem(self.mcegraphdata)
-            self.mcegraph.setXRange(self.n_intervals - 1, self.n_intervals + self.totaltimeinterval - 1, padding=0)
-            self.mcegraphdata.setData(x, y, brush=pointcolor)
-            self.oldch = ch
-        elif self.n_intervals % self.totaltimeinterval == 1:
-            if self.n_intervals == self.totaltimeinterval + 1:
-                self.oldmcegraphdata = pg.PlotCurveItem()
-                #self.oldmcegraph = self.graphwin.addPlot(col=1)
-                self.oldmcegraph = pg.PlotWidget()
-                self.grid.addWidget(self.oldmcegraph, 1, 2, 2, 3)
-                self.oldmcegraph.setLabel('bottom', 'Time', 's')
-                self.oldmcegraph.setLabel('left', 'Counts')
-                self.oldmcegraph.setTitle('Old MCE TIME Data')
-                self.oldmcegraph.addItem(self.oldmcegraphdata)
-            self.oldmcegraph.setXRange(self.data[0][0], self.data[0][-1], padding=0)
-            self.oldmcegraphdata.setData(self.data[0], self.data[1])
-            self.mcegraphdata.clear()
-            self.mcegraph.setXRange(self.n_intervals - 1, self.n_intervals + self.totaltimeinterval - 1, padding=0)
-            self.mcegraphdata.setData(x, y, brush=pointcolor)
-            self.data = [0, 0, 0]
-        else:
-            if self.channeldelete == 'Yes' and self.oldch != ch:
-                self.mcegraphdata.clear()
-                self.mcegraphdata.setData(x, y, brush=pointcolor)
+            #tempfile.close()
+            if self.n_intervals == 1 or self.n_intervals % self.totaltimeinterval == 2:
+                self.data[0] = x
+                self.data[1] = y
             else:
-                self.mcegraphdata.addPoints(x, y, brush=pointcolor)
-            self.oldch = ch
-        self.endtime = datetime.datetime.utcnow()
-        self.timetaken = self.endtime - self.starttime
-        print('Time taken: %s' % (self.timetaken))
+                self.data[0].extend(x)
+                self.data[1].extend(y)
+            #print(len(pointcolor))
+            #print(len(x))
+            #print(len(y))
+            x = np.asarray(x)
+            y = np.asarray(y)
+            if self.n_intervals == 1:
+                self.mcegraph.addItem(self.mcegraphdata)
+                self.mcegraph.setXRange(self.n_intervals - 1, self.n_intervals + self.totaltimeinterval - 1, padding=0)
+                self.mcegraphdata.setData(x, y, brush=pointcolor)
+                self.oldch = ch
+            elif self.n_intervals % self.totaltimeinterval == 1:
+                self.oldmcegraph.setXRange(self.data[0][0], self.data[0][-1], padding=0)
+                self.oldmcegraphdata.setData(self.data[0], self.data[1])
+                self.mcegraphdata.clear()
+                self.mcegraph.setXRange(self.n_intervals - 1, self.n_intervals + self.totaltimeinterval - 1, padding=0)
+                self.mcegraphdata.setData(x, y, brush=pointcolor)
+                self.data = [0, 0, 0]
+            else:
+                if self.channeldelete == 'Yes' and self.oldch != ch:
+                    self.mcegraphdata.clear()
+                    self.mcegraphdata.setData(x, y, brush=pointcolor)
+                else:
+                    self.mcegraphdata.addPoints(x, y, brush=pointcolor)
+                self.oldch = ch
+            self.endtime = datetime.datetime.utcnow()
+            self.timetaken = self.endtime - self.starttime
+    	    if len(self.allgraphdata) > 1 and g != len(self.allgraphdata) - 1:
+                self.n_intervals += 1
+            print('Time taken: %s' % (self.timetaken))
 
     def initheatmap(self):
         z = np.asarray(self.z)
