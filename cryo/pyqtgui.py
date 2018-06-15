@@ -439,7 +439,7 @@ class mcegui(QtGui.QWidget):
                     self.mcegraphdata.setData(x, y, brush=pointcolor)
                 else:
                     self.mcegraphdata.addPoints(x, y, brush=pointcolor)
-                self.oldch = ch
+            self.oldch = ch
             self.endtime = datetime.datetime.utcnow()
             self.timetaken = self.endtime - self.starttime
     	    if len(self.allgraphdata) > 1 and g != len(self.allgraphdata) - 1:
