@@ -1,28 +1,36 @@
 # Description
   The purpose of this program is to live graph the data being processed by the
-  MCE for real-time surveillance of the system and verification the data is
-  getting collected correctly. Additionally, the data is archived in a NETCDF
-  database to be analyzed later. These two tasks are accomplished by using
-  the pyqtgraph and NETCDF4 to generate the GUI and to archive the data
+  MCE, K-Mirror, housekeeping, telescope and others for real-time surveillance of the system.
+  The data being monitored is simultaneously stored in a NETCDF4 file format, with a dedicated retrieval
+  script written to return the raw data arrays as well as the heatmap. These two tasks are accomplished by using
+  the pyqtgraph and NETCDF4 anaconda package to generate the GUI and to archive the data
   respectively.
 
 # Installation
-  To install the required Python libraries to run this program, pip is needed
+  anaconda python 2.7 distribution is recommended for all sub-packages necessary
+  (python 2.7 required for mce/mas software requirements)
+  64-bit Linux installer (check this link for updated download https://www.anaconda.com/download/#linux)
 
-  numpy:
-  pip install numpy (may need to run as sudo to fix permission errors)
+  https://repo.anaconda.com/archive/Anaconda2-5.2.0-Linux-x86_64.sh
+
+  see this link for included packages with anaconda install (will be out of date from newer versions)
+  https://docs.anaconda.com/anaconda/packages/old-pkg-lists/2.3.0/py27
 
   pyqtgraph:
-  pip install pyqtgraph (may need to run as sudo to fix permission errors)
+  pip install pyqtgraph
 
   NETCDF4:
-  pip install netCDF4 (may need to run as sudo to fix permission errors)
+  conda install -c anaconda netcdf4
 
 # Starting the System
-  To run the program, navigate to TIME_Software/cryo and run:
+  To run the program, navigate to TIME_Software/cryo and run from the terminal:
+# this might be different depending on how we package it into a new Beta 2.0 release directory
   python pyqtgui.py
+
   this should start the program, prompting for the different parameters required
-  to run the MCE and the program. The different parameters are as follows:
+  to run the MCE and the program.
+
+# Description of GUI Parameters (set by user)
 
   Observer: 3 initials of current user of program, defaults to JMB
 
@@ -45,8 +53,9 @@
   Once the submit button has been pressed and the parameters set are valid, the
   program will start live graphing the data depending on the parameters given.
   The top right graph is the current data being plotted, the middle graph being
-  the last interval of data plotted, currently set to 120 seconds. The bottom is
-  the heatmap of the channels, with the 8 channels going horizontally and the 32
+  the last interval of data plotted, currently set to 120 seconds.
+# need to include directions on how to change the interval shown, we should probably include an extra parameter that can be changed on the screen.
+  The bottom is the heatmap of the channels, with the 8 channels going horizontally and the 32
   rows going vertically. The left side under the Submit and Quit buttons is a
   list of all the parameters set including the UTC time the live graphing
   started. Below that is the ability to change channels for the live graphing,
@@ -54,3 +63,7 @@
   the current readout card. The bottom left is data from the K-Mirror, however
   currently it just outputs random integers as that has not been fully
   implemented yet.
+
+# add in which files the main file is dependant on, (takedata and netcdf file as examples)
+# need to add description of what the responsibility/function of each subfile is
+# add in comments within each file about what each function is responsible for
