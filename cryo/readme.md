@@ -41,7 +41,7 @@
   After all the parameters have been set, press the Submit button to start live
   graphing.
 
-#Live Graphing
+# Live Graphing
   Once the submit button has been pressed and the parameters set are valid, the
   program will start live graphing the data depending on the parameters given.
   The top right graph is the current data being plotted, the middle graph being
@@ -52,5 +52,5 @@
   started. Below that is the ability to change channels for the live graphing,
   and if all MCEs are picked, there would also be a dropdown menu for changing
   the current readout card. The bottom left is data from the K-Mirror, however
-   currently it just outputs random integers as that has not been fully
-   implemented yet.
+  currently it just outputs random integers as that has not been fully
+  implemented yet.
