@@ -1,10 +1,8 @@
 # Description
   The purpose of this program is to live graph the data being processed by the
   MCE, K-Mirror, housekeeping, telescope and others for real-time surveillance of the system.
-  The data being monitored is simultaneously stored in a NETCDF4 file format, with a dedicated retrieval
-  script written to return the raw data arrays as well as the heatmap. These two tasks are accomplished by using
-  the pyqtgraph and NETCDF4 anaconda package to generate the GUI and to archive the data
-  respectively.
+  The data being monitored is simultaneously stored in a NETCDF4 file format, with a dedicated retrieval script written to return the raw data arrays as well as the heatmap. These two tasks are accomplished by using the pyqtgraph and NETCDF4 anaconda package to generate the GUI and to archive the data respectively.
+
 
 # Installation
   anaconda python 2.7 distribution is recommended for all sub-packages necessary
@@ -22,13 +20,30 @@
   NETCDF4:
   conda install -c anaconda netcdf4
 
+
+#Files Installed
+  pyqtgui.py: Main file, runs the GUI and is dependent on all other files
+
+  takedata.py/takedataall.py: Reads/deletes MCE tempfiles and creates arrays of data for
+  the graph/heatmap to plot with, different files depending on if 1 or All readout
+  cards are being read respectively; also calls netcdf_trial functions to archive
+  data, called by pyqtgui
+
+  netcdf_trial.py: Creates and updates data in netCDF4 files, called by both pyqtgui
+  and takedata/takedataall
+
+  settings.py: Stores global variables for use by netcdf_trial and takedata/takedataall,
+  called by all other files
+
+
 # Starting the System
   To run the program, navigate to TIME_Software/cryo and run from the terminal:
-# this might be different depending on how we package it into a new Beta 2.0 release directory
+  (this might be different depending on how we package it into a new Beta 2.0 release directory)
   python pyqtgui.py
 
   this should start the program, prompting for the different parameters required
   to run the MCE and the program.
+
 
 # Description of GUI Parameters (set by user)
 
@@ -43,26 +58,27 @@
 
   Data Rate: Rate for the MCE to collect data at, defaults to 45
 
+  Time Interval: Amount of time the graph displays
+
   Delete Old Channels: Delete old channels on the live graph after the channel
   has been changed to reduce clutter, defaults to No
 
   After all the parameters have been set, press the Submit button to start live
   graphing.
 
+
 # Live Graphing
   Once the submit button has been pressed and the parameters set are valid, the
   program will start live graphing the data depending on the parameters given.
   The top right graph is the current data being plotted, the middle graph being
-  the last interval of data plotted, currently set to 120 seconds.
-# need to include directions on how to change the interval shown, we should probably include an extra parameter that can be changed on the screen.
-  The bottom is the heatmap of the channels, with the 8 channels going horizontally and the 32
-  rows going vertically. The left side under the Submit and Quit buttons is a
-  list of all the parameters set including the UTC time the live graphing
-  started. Below that is the ability to change channels for the live graphing,
-  and if all MCEs are picked, there would also be a dropdown menu for changing
-  the current readout card. The bottom left is data from the K-Mirror, however
-  currently it just outputs random integers as that has not been fully
-  implemented yet.
+  the last interval of data plotted. The bottom is the heatmap of the channels,
+  with the 8 channels going horizontally and the 32 rows going vertically.
+  The left side under the Submit and Quit buttons is a list of all the parameters
+  set including the UTC time the live graphing started. Below that is the ability
+  to change channels for the live graphing, and if all MCEs are picked, there
+  would also be a dropdown menu for changing the current readout card. The bottom
+  left is data from the K-Mirror, however currently it just outputs random integers
+  as that has not been fully implemented yet.
 
 # add in which files the main file is dependant on, (takedata and netcdf file as examples)
 # need to add description of what the responsibility/function of each subfile is

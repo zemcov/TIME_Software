@@ -1,11 +1,7 @@
 # just loading dependencies and packages
-import plotly.plotly as py
 import numpy as np
-import plotly.tools as tls
-import plotly.graph_objs as go
 import mce_data
 import os
-import matplotlib.pyplot as plt
 import sys
 from subprocess import Popen, PIPE
 from datetime import datetime
