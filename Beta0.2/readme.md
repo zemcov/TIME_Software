@@ -37,8 +37,7 @@
 
 
 # Starting the System
-  To run the program, navigate to TIME_Software/cryo and run from the terminal:
-  (this might be different depending on how we package it into a new Beta 2.0 release directory)
+  To run the program, navigate to TIME_Software/Beta0.2 and run from the terminal:
   python pyqtgui.py
 
   this should start the program, prompting for the different parameters required
