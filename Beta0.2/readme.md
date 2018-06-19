@@ -78,8 +78,3 @@
   would also be a dropdown menu for changing the current readout card. The bottom
   left is data from the K-Mirror, however currently it just outputs random integers
   as that has not been fully implemented yet.
-
-# Things to Do
-  add in which files the main file is dependant on, (takedata and netcdf file as examples)
-  need to add description of what the responsibility/function of each subfile is
-  add in comments within each file about what each function is responsible for
