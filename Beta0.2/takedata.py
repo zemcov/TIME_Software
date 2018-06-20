@@ -36,8 +36,8 @@ def takedata(a, ch, n_files, frameperfile, mce):
             else:
                 mce_file = os.path.exists("/data/cryo/current_data/temp.00%i" %(a+1)) #wait to read new file until old file is complete
             if mce_file:
-                print(len(os.listdir('/data/cryo/current_data')) - 2 - n_files)
-                for i in range(len(os.listdir('/data/cryo/current_data')) - 2 - n_files):
+                print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
+                for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
                     if a < 10:
                         mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
                     else:

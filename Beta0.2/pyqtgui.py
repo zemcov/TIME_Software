@@ -132,7 +132,7 @@ class mcegui(QtGui.QWidget):
             self.readoutcardtext = QtGui.QLabel()
             self.framenumbertext = QtGui.QLabel()
             self.dataratetext = QtGui.QLabel()
-            self.timeintervaltext = Qt.QLabel()
+            self.timeintervaltext = QtGui.QLabel()
             self.channeldeletetext = QtGui.QLabel()
             self.timestartedtext = QtGui.QLabel()
 
