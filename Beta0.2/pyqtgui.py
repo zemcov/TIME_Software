@@ -101,8 +101,9 @@ class mcegui(QtGui.QWidget):
         self.timestarted = datetime.datetime.utcnow()
         self.timestarted = self.timestarted.isoformat()
         #check if parameters are valid - will create warning box if invalid
-        if self.observer == '' or self.framenumber == '' or self.framenumber == '0' or self.datarate == '0' or self.datarate == '' or
-        self.timeinterval == '' or self.timeinterval == '0':
+        if self.observer == '' or self.framenumber == '' or self.framenumber == '0'\
+        or self.datarate == '0' or self.datarate == '' or self.timeinterval == ''\
+        or self.timeinterval == '0':
             self.parameterwarning = QtGui.QMessageBox()
             self.parameterwarning.setIcon(QtGui.QMessageBox.Warning)
             self.parameterwarning.setText('One or more parameters not entered correctly!')
@@ -132,7 +133,7 @@ class mcegui(QtGui.QWidget):
             self.readoutcardtext = QtGui.QLabel()
             self.framenumbertext = QtGui.QLabel()
             self.dataratetext = QtGui.QLabel()
-            self.timeintervaltext = Qt.QLabel()
+            self.timeintervaltext = QtGui.QLabel()
             self.channeldeletetext = QtGui.QLabel()
             self.timestartedtext = QtGui.QLabel()
 
