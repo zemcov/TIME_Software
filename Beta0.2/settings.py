@@ -6,6 +6,6 @@ def init():
     global a
     a = 0
     global h_size
-    h_size = 0
+    h_size = []
     global head
     head = []

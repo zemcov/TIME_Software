@@ -11,6 +11,7 @@ import takedataall as tda
 import random as rm
 import netcdf_trial as nc
 import settings as st
+sys.path.append('/data/cryo/current_data')
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -143,7 +144,7 @@ class mcegui(QtGui.QWidget):
             self.framenumbertext.setText('Frame Number: %s' % (self.framenumber))
             self.dataratetext.setText('Data Rate: %s' % (self.datarate))
             self.timeintervaltext.setText('Time Interval: %s' % (self.timeinterval))
-            self.channeldeletetext.setText('Delete Old Channels: %s' % (self.channeldelete))
+            self.channeldeletetext.setText('Delete Old Columns: %s' % (self.channeldelete))
             self.timestartedtext.setText('Time Started: %s' % (self.timestarted))
 
 
@@ -170,7 +171,7 @@ class mcegui(QtGui.QWidget):
             print('Frame Number: %s' % (self.framenumber))
             print('Data Rate: %s' % (self.datarate))
             print('Time Interval: %s' % (self.timeinterval))
-            print('Delete Old Channels: %s' % (self.channeldelete))
+            print('Delete Old Columns: %s' % (self.channeldelete))
             print('Time Started: %s' % (self.timestarted))
 
             self.frameperfile = (50 * 10 ** 6) / (33 * 90 * int(self.datarate))
@@ -215,7 +216,7 @@ class mcegui(QtGui.QWidget):
         self.parameters.addRow('Readout Card', self.enterreadoutcard)
         self.parameters.addRow('Frame Number', self.enterframenumber)
         self.parameters.addRow('Data Rate', self.enterdatarate)
-        self.parameters.addRow('Delete Old Channels', self.enterchanneldelete)
+        self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
         self.parameters.addRow(self.submitbutton)
 
@@ -246,7 +247,7 @@ class mcegui(QtGui.QWidget):
         #creates channel dropbox
         self.selectchannel.addItems(['1', '2', '3', '4', '5', '6', '7', '8'])
 
-        self.channellabel = QtGui.QLabel('Channel')
+        self.channellabel = QtGui.QLabel('Column')
 
         self.channelreadoutbox.addRow(self.channellabel, self.selectchannel)
 
@@ -293,7 +294,7 @@ class mcegui(QtGui.QWidget):
     def initplot(self):
         #counts number of files in current_data for later checks of number of
         #temp files
-        self.n_files = len(os.listdir('/data/cryo/current_data'))
+        self.n_files = len(os.listdir("/data/cryo/current_data"))
         print(self.n_files)
         #changes commands to start mce if All readout cards are to be read
         if self.readoutcard == 'All':
@@ -337,6 +338,7 @@ class mcegui(QtGui.QWidget):
         self.mcegraph.setTitle('MCE TIME Data')
 
         #initalize old data graph GUI item and add labels
+        self.oldmcegraph = pg.PlotWidget()
         self.oldmcegraphdata = pg.PlotCurveItem()
         self.grid.addWidget(self.oldmcegraph, 1, 2, 2, 3)
         self.oldmcegraph.setLabel('bottom', 'Time', 's')
@@ -352,12 +354,12 @@ class mcegui(QtGui.QWidget):
         #timer for updating graph
         self.timer = pg.QtCore.QTimer()
         self.timer.timeout.connect(self.moveplot)
-        self.timer.start(1000 * self.timeinterval)
+        self.timer.start(1000)
 
     #updates 'clock' (n_intervals) and recalls takedata/takedataall, also calls
     #update functions
     def moveplot(self):
-        self.n_intervals+=self.timeinterval
+        self.n_intervals+=int(1)
 
         self.starttime = datetime.datetime.utcnow()
 
@@ -466,10 +468,10 @@ class mcegui(QtGui.QWidget):
         self.heatmap.setPredefinedGradient('thermal')
         self.heatmap.setImage(z)
         #changes levels for heatmap to create gradient at depending on the data rate
-        if self.frameperfile == 11:
-            self.heatmap.setLevels(60, 260)
-        else:
-            self.heatmap.setLevels(100, 190)
+        # if self.frameperfile == 11:
+        #     self.heatmap.setLevels(60, 260)
+        # else:
+        #     self.heatmap.setLevels(100, 190)
         self.grid.addWidget(self.heatmap, 3, 2, 2, 5)
 
     #updates heatmap
@@ -480,10 +482,10 @@ class mcegui(QtGui.QWidget):
         z.astype(int)
         self.heatmap.setImage(z)
         #changes levels for heatmap to create gradient at depending on the data rate
-        if self.frameperfile == 11:
-            self.heatmap.setLevels(60, 260)
-        else:
-            self.heatmap.setLevels(100, 190)
+        # if self.frameperfile == 11:
+        #     self.heatmap.setLevels(60, 260)
+        # else:
+        #     self.heatmap.setLevels(100, 190)
 
 #calls mcegui class to start GUI
 def main():

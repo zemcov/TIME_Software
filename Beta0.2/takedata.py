@@ -38,6 +38,7 @@ def takedata(a, ch, n_files, frameperfile, mce):
             if mce_file:
                 print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
                 for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
+                    print('Checking for directory files...')
                     if a < 10:
                         mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
                     else:
@@ -62,8 +63,8 @@ def takedata(a, ch, n_files, frameperfile, mce):
             else:
                 mce_file = os.path.exists("/data/cryo/current_data/temp.0%i"%(a+1))
             if mce_file:
-                print(len(os.listdir('/data/cryo/current_data')) - 2 - n_files)
-                for i in range(len(os.listdir('/data/cryo/current_data')) - 2 - n_files):
+                print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
+                for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
                     if a < 100:
                         mce_file_name = "/data/cryo/current_data/temp.0%i" %(a)
                     else:
@@ -85,8 +86,8 @@ def takedata(a, ch, n_files, frameperfile, mce):
             mce_file_name = "/data/cryo/current_data/temp.%i"%(a)
             mce_file = os.path.exists("/data/cryo/current_data/temp.%i"%(a+1))
             if mce_file:
-                print(len(os.listdir('/data/cryo/current_data')) - 2 - n_files)
-                for i in range(len(os.listdir('/data/cryo/current_data')) - 2 - n_files):
+                print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
+                for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
                     mce_file_name = "/data/cryo/current_data/temp.%i" %(a)
         		    #print(datafile)
                     a = a + 1
@@ -106,12 +107,16 @@ def takedata(a, ch, n_files, frameperfile, mce):
 
 def readdata(f, mce_file_name, frameperfile, mce):
     h = f.Read(row_col=True, unfilter='DC').data
+    print(h.shape)
+    st.h_size = (h.shape[0],h.shape[1],h.shape[2])
+    st.d_size = (h.shape[0],h.shape[1])
     #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     #subprocess.Popen(delete_file,shell=True)
     #print(h.shape)
     #print(np.std(h[7][7][:]))
     #d = np.array([[ [] for i in range(8)] for j in range(41)])
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
+    print(d.shape)
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
             #print(h[b][c][:10])
@@ -239,6 +244,7 @@ def read_header(f):
     keys = np.asarray(keys,dtype=object)
     values = np.asarray(values,dtype=object)
     st.head = np.array((keys,values)).T
+    print(st.head.shape)
 
 if __name__ == "__main__":
     #takedata(int(sys.argv[1]))
