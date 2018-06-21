@@ -170,7 +170,7 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
 
     #tempfile.close()
     #time.sleep(1.0)
-    return z, mce
+    return d, mce
 
 def readgraph(y, f, mce_file_name, a, ch):
     h = f.Read(row_col=True, unfilter='DC').data
