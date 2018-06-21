@@ -127,6 +127,9 @@ def readdata(f, mce_file_name, frameperfile, mce):
     #print(d)
     #st.h_size = h.shape[2]
     #print(st.h_size)
+    print(st.h_size[0])
+    print(st.head.shape)
+    mce = nc.new_file(st.n, h.shape)
     if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
         nc.data(h,d,st.n,st.a)
     else:
