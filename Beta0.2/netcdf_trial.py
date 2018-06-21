@@ -28,14 +28,18 @@ def new_file(n, h_size):
     guiparams.createDimension('r',1)
     guiparams.createDimension('t',None)
     # Dimensions for Data Arrays -------------------------------------------------------------------
+<<<<<<< HEAD
     print(st.h_size)
     stream.createDimension('raw_rows',st.h_size[0])
+=======
+    stream.createDimension('raw_rows',h_size[0])
+>>>>>>> cbb741fbfb105a2cd0a24f2ef4966855e5642ab1
     stream.createDimension('raw_cols',8)
     stream.createDimension('raw_cols_all',32)
-    stream.createDimension('raw_num', h_size)
+    stream.createDimension('raw_num', h_size[2])
     stream.createDimension('t',None)
 
-    heatmap.createDimension('rms_rows',st.h_size[0])
+    heatmap.createDimension('rms_rows',h_size[0])
     heatmap.createDimension('rms_cols',8)
     heatmap.createDimension('rms_cols_all',32)
     heatmap.createDimension('t',None)
