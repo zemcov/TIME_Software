@@ -41,6 +41,7 @@ class mcegui(QtGui.QWidget):
         self.totaltimeinterval = 120
         self.currentchannel = 1
         self.oldch = 1
+	#self.row
         st.init()
 
     #creates GUI window and calls functions to populate GUI
@@ -314,7 +315,8 @@ class mcegui(QtGui.QWidget):
         self.totaltimeinterval = int(self.timeinterval)
 
         #create new netCDF4 file
-        self.mce = nc.new_file(st.n, self.frameperfile)
+        #self.mce = nc.new_file(st.n, self.frameperfile)
+	self.mce = 1
 
         #calls takedata or takedata depending on 1 or all readout cards respectfully,
         #passes variables to let takedata/takedataall correctly parse data and
@@ -366,7 +368,7 @@ class mcegui(QtGui.QWidget):
         if self.readoutcard == 'All':
             self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce)
         else:
-            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce)
+            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce, self.row)
 
         self.updateheatmap()
         self.updatekmirrordata()
