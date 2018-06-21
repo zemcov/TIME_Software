@@ -107,9 +107,9 @@ def takedata(a, ch, n_files, frameperfile, mce):
 
 def readdata(f, mce_file_name, frameperfile, mce):
     h = f.Read(row_col=True, unfilter='DC').data
-    print(h.shape)
-    st.h_size = (h.shape[0],h.shape[1],h.shape[2])
-    st.d_size = (h.shape[0],h.shape[1])
+    print(st.h_size)
+    st.h_size.append(h.shape)
+    print(st.h_size)
     #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     #subprocess.Popen(delete_file,shell=True)
     #print(h.shape)
@@ -245,6 +245,7 @@ def read_header(f):
     values = np.asarray(values,dtype=object)
     st.head = np.array((keys,values)).T
     print(st.head.shape)
+    st.head_size = st.head.shape
 
 if __name__ == "__main__":
     #takedata(int(sys.argv[1]))

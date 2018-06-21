@@ -9,3 +9,5 @@ def init():
     h_size = []
     global head
     head = []
+    global head_size
+    head_size = []

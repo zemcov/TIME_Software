@@ -28,19 +28,19 @@ def new_file(n, h_size):
     guiparams.createDimension('r',1)
     guiparams.createDimension('t',None)
     # Dimensions for Data Arrays -------------------------------------------------------------------
-    stream.createDimension('raw_rows',33)
+    stream.createDimension('raw_rows',st.h_size[0])
     stream.createDimension('raw_cols',8)
     stream.createDimension('raw_cols_all',32)
     stream.createDimension('raw_num', h_size)
     stream.createDimension('t',None)
 
-    heatmap.createDimension('rms_rows',33)
+    heatmap.createDimension('rms_rows',st.h_size[0])
     heatmap.createDimension('rms_cols',8)
     heatmap.createDimension('rms_cols_all',32)
     heatmap.createDimension('t',None)
 
-    mce_header.createDimension('k',2)
-    mce_header.createDimension('v',17)
+    mce_header.createDimension('k',st.head_size[0])
+    mce_header.createDimension('v',st.head_size[1])
     mce_header.createDimension('t',None)
 
     # creating variables --------------------------------------------------------------------------------
