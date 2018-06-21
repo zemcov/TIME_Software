@@ -28,6 +28,7 @@ def new_file(n, h_size):
     guiparams.createDimension('r',1)
     guiparams.createDimension('t',None)
     # Dimensions for Data Arrays -------------------------------------------------------------------
+    print(st.h_size)
     stream.createDimension('raw_rows',st.h_size[0])
     stream.createDimension('raw_cols',8)
     stream.createDimension('raw_cols_all',32)

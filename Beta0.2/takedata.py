@@ -43,7 +43,6 @@ def takedata(a, ch, n_files, frameperfile, mce):
                         mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
                     else:
                         mce_file_name = "/data/cryo/current_data/temp.0%i" %(a)
-                    #print(datafile)
                     a = a + 1
                     st.a = a
                     f = mce_data.SmallMCEFile(mce_file_name)
@@ -69,7 +68,6 @@ def takedata(a, ch, n_files, frameperfile, mce):
                         mce_file_name = "/data/cryo/current_data/temp.0%i" %(a)
                     else:
                         mce_file_name = "/data/cryo/current_data/temp.%i" %(a)
-        		    #print(datafile)
                     a = a + 1
                     st.a = a
                     f = mce_data.SmallMCEFile(mce_file_name)
@@ -89,7 +87,6 @@ def takedata(a, ch, n_files, frameperfile, mce):
                 print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
                 for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
                     mce_file_name = "/data/cryo/current_data/temp.%i" %(a)
-        		    #print(datafile)
                     a = a + 1
                     st.a = a
                     f = mce_data.SmallMCEFile(mce_file_name)
@@ -107,26 +104,16 @@ def takedata(a, ch, n_files, frameperfile, mce):
 
 def readdata(f, mce_file_name, frameperfile, mce):
     h = f.Read(row_col=True, unfilter='DC').data
-    print(st.h_size)
-    st.h_size.append(h.shape)
-    print(st.h_size)
     #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     #subprocess.Popen(delete_file,shell=True)
     #print(h.shape)
     #print(np.std(h[7][7][:]))
     #d = np.array([[ [] for i in range(8)] for j in range(41)])
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
-    print(d.shape)
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
-            #print(h[b][c][:10])
             d[b][c] = (np.std(h[b][c][:],dtype=float))
-    #print(d.shape)
-    #print(h.shape)
 
-    #print(d)
-    #st.h_size = h.shape[2]
-    #print(st.h_size)
     if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
         nc.data(h,d,st.n,st.a)
     else:
