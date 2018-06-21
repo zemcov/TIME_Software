@@ -39,8 +39,8 @@ def new_file(n, h_size, head):
     heatmap.createDimension('rms_cols_all',32)
     heatmap.createDimension('t',None)
 
-    mce_header.createDimension('k',head.shape[0])
-    mce_header.createDimension('v',head.shape[1])
+    mce_header.createDimension('k',head.shape[1])
+    mce_header.createDimension('v',head.shape[0])
     mce_header.createDimension('t',None)
 
     # creating variables --------------------------------------------------------------------------------
@@ -82,7 +82,6 @@ def new_file(n, h_size, head):
     Datamode[0] = parameters[1]
     Rc[0] = parameters[2]
     parafile.close()
-
     return mce
 
 def data_all(h,d,n,a,head):
@@ -93,8 +92,6 @@ def data_all(h,d,n,a,head):
 
 def data(h,d,n,a,head):
     Time[a] = str(now.datetime.utcnow())
-    print(d.shape)
-    #Rms_Noise.shape()
     Rms_Noise[a,:,:] = d
     Raw_Data[a,:,:,:] = h
     Header[a,:,:] = head
