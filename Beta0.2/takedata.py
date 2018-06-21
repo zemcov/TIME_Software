@@ -46,8 +46,8 @@ def takedata(a, ch, n_files, frameperfile, mce):
                     a = a + 1
                     st.a = a
                     f = mce_data.SmallMCEFile(mce_file_name)
-                    header = read_header(f)
-                    z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
+                    read_header(f)
+                    z, mce = readdata(f, mce_file_name, frameperfile, mce)
                     graphdata = readgraph(y, f, mce_file_name, a, ch)
                     allgraphdata.append(graphdata)
                 break
@@ -71,8 +71,8 @@ def takedata(a, ch, n_files, frameperfile, mce):
                     a = a + 1
                     st.a = a
                     f = mce_data.SmallMCEFile(mce_file_name)
-                    header = read_header(f)
-                    z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
+                    read_header(f)
+                    z, mce = readdata(f, mce_file_name, frameperfile, mce)
                     graphdata = readgraph(y, f, mce_file_name, a, ch)
                     allgraphdata.append(graphdata)
                 break
@@ -90,8 +90,8 @@ def takedata(a, ch, n_files, frameperfile, mce):
                     a = a + 1
                     st.a = a
                     f = mce_data.SmallMCEFile(mce_file_name)
-                    header = read_header(f)
-                    z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
+                    read_header(f)
+                    z, mce = readdata(f, mce_file_name, frameperfile, mce)
                     graphdata = readgraph(y, f, mce_file_name, a, ch)
                     allgraphdata.append(graphdata)
                 break
@@ -102,7 +102,7 @@ def takedata(a, ch, n_files, frameperfile, mce):
     #nc.new_file(st.n, frameperfile)
     return z, allgraphdata, mce
 
-def readdata(f, mce_file_name, frameperfile, mce, head):
+def readdata(f, mce_file_name, frameperfile, mce):
     h = f.Read(row_col=True, unfilter='DC').data
     #delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     #subprocess.Popen(delete_file,shell=True)
@@ -113,18 +113,18 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
-    if a == 1:
-    	mce = nc.new_file(st.n, h.shape, head)
+    # if st.a == 1:
+    # 	mce = nc.new_file(st.n, h.shape, head)
     if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
-        nc.data(h,d,st.n,st.a,head)
+        nc.data(h,d,st.n,st.a)
     else:
         st.n = st.n + 1
         #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
         mce.close()
         print('----------New File----------')
-        mce = nc.new_file(st.n, frameperfile, head)
-        nc.data(h,d,st.n,st.a,head)
-    '''
+        mce = nc.new_file(st.n, frameperfile)
+        nc.data(h,d,st.n,st.a)
+
     z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6], d[0][7]],
         [d[1][0], d[1][1], d[1][2], d[1][3], d[1][4], d[1][5], d[1][6], d[1][7]],
         [d[2][0], d[2][1], d[2][2], d[2][3], d[2][4], d[2][5], d[2][6], d[2][7]],
@@ -157,7 +157,7 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
         [d[29][0], d[29][1], d[29][2], d[29][3], d[29][4], d[29][5], d[29][6], d[29][7]],
         [d[30][0], d[30][1], d[30][2], d[30][3], d[30][4], d[30][5], d[30][6], d[30][7]],
         [d[31][0], d[31][1], d[31][2], d[31][3], d[31][4], d[31][5], d[31][6], d[31][7]]])
-    '''
+
     #filename = 'tempfiles/tempzdata.txt'
     #tempfile = open(filename, 'w')
 
@@ -170,7 +170,7 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
 
     #tempfile.close()
     #time.sleep(1.0)
-    return d, mce
+    return z, mce
 
 def readgraph(y, f, mce_file_name, a, ch):
     h = f.Read(row_col=True, unfilter='DC').data
@@ -231,8 +231,7 @@ def read_header(f):
     # keys,values = zip(*f.header.items())
     keys = np.asarray(keys,dtype=object)
     values = np.asarray(values,dtype=object)
-    head = np.array((keys,values)).T
-    return head
+    st.head = np.array((keys,values)).T
 
 if __name__ == "__main__":
     #takedata(int(sys.argv[1]))

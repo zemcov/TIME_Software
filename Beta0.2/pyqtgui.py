@@ -41,7 +41,6 @@ class mcegui(QtGui.QWidget):
         self.totaltimeinterval = 120
         self.currentchannel = 1
         self.oldch = 1
-	#self.row
         st.init()
 
     #creates GUI window and calls functions to populate GUI
@@ -315,8 +314,7 @@ class mcegui(QtGui.QWidget):
         self.totaltimeinterval = int(self.timeinterval)
 
         #create new netCDF4 file
-        #self.mce = nc.new_file(st.n, self.frameperfile)
-	self.mce = 1
+        self.mce = nc.new_file(st.n, self.frameperfile)
 
         #calls takedata or takedata depending on 1 or all readout cards respectfully,
         #passes variables to let takedata/takedataall correctly parse data and
@@ -389,7 +387,6 @@ class mcegui(QtGui.QWidget):
             #creates x values for current time interval and colors points based
             #on current channel
             pointcolor = []
-            pointsymbol = []
             x = []
             for i in range(self.frameperfile):
                 #create x value
@@ -412,15 +409,7 @@ class mcegui(QtGui.QWidget):
                     pointcolor.append(pg.mkBrush('k'))
                 elif ch == 8:
                     pointcolor.append(pg.mkBrush('w'))
-                if self.readoutcard == 'All':
-                    if self.currentreadoutcard % 4 == 1:
-                        pointsymbol.append('o')
-                    elif self.currentreadoutcard % 4 == 2:
-                        pointsymbol.append('s')
-                    elif self.currentreadoutcard % 4 == 3:
-                        pointsymbol.append('t')
-                    elif self.currentreadoutcard % 4 == 0:
-                        pointsymbol.append('d')
+
             #initializes old data list on either the first update or the first one after
             #the current total time interval, otherwise adds to current list
             if self.n_intervals == 1 or self.n_intervals % self.totaltimeinterval == 2:
@@ -436,10 +425,7 @@ class mcegui(QtGui.QWidget):
             if self.n_intervals == 1:
                 self.mcegraph.addItem(self.mcegraphdata)
                 self.mcegraph.setXRange(self.n_intervals - 1, self.n_intervals + self.totaltimeinterval - 1, padding=0)
-                if self.readoutcard == 'All':
-                    self.mcegraphdata.setData(x, y, brush=pointcolor, symbol=pointsymbol)
-                else:
-                    self.mcegraphdata.setData(x, y, brush=pointcolor)
+                self.mcegraphdata.setData(x, y, brush=pointcolor)
                 self.oldch = ch
             #clears graphdata and updates old graph after the total time interval
             #has passed
@@ -448,24 +434,15 @@ class mcegui(QtGui.QWidget):
                 self.oldmcegraphdata.setData(self.data[0], self.data[1])
                 self.mcegraphdata.clear()
                 self.mcegraph.setXRange(self.n_intervals - 1, self.n_intervals + self.totaltimeinterval - 1, padding=0)
-                if self.readoutcard == 'All':
-                    self.mcegraphdata.setData(x, y, brush=pointcolor, symbol=pointsymbol)
-                else:
-                    self.mcegraphdata.setData(x, y, brush=pointcolor)
+                self.mcegraphdata.setData(x, y, brush=pointcolor)
                 self.data = [0, 0, 0]
             #updates graph, if channel delete is set to yes will clear data first
             else:
                 if self.channeldelete == 'Yes' and self.oldch != ch:
                     self.mcegraphdata.clear()
-                    if self.readoutcard == 'All':
-                        self.mcegraphdata.setData(x, y, brush=pointcolor, symbol=pointsymbol)
-                    else:
-                        self.mcegraphdata.setData(x, y, brush=pointcolor)
+                    self.mcegraphdata.setData(x, y, brush=pointcolor)
                 else:
-                    if self.readoutcard == 'All':
-                        self.mcegraphdata.addPoints(x, y, brush=pointcolor, symbol=pointsymbol)
-                    else:
-                        self.mcegraphdata.addPoints(x, y, brush=pointcolor)
+                    self.mcegraphdata.addPoints(x, y, brush=pointcolor)
             self.oldch = ch
             #watchdog for time to update graph/heatmap/K-mirror data
             self.endtime = datetime.datetime.utcnow()

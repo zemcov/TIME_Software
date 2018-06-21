@@ -10,7 +10,7 @@ from netCDF4 import num2date, date2num
 #from multipagegui import parameters
 
 
-def new_file(n, h_size, head):
+def new_file(n, h_size):
     mce = Dataset("tempfiles/gui_data_test{n}.nc".format(n=st.n),"w",format="NETCDF4")
 
     # create the gui parameters group
@@ -28,19 +28,22 @@ def new_file(n, h_size, head):
     guiparams.createDimension('r',1)
     guiparams.createDimension('t',None)
     # Dimensions for Data Arrays -------------------------------------------------------------------
-    stream.createDimension('raw_rows',h_size[0])
+    #stream.createDimension('raw_rows',h_size[0])
+    stream.createDimension('raw_rows',33)
     stream.createDimension('raw_cols',8)
     stream.createDimension('raw_cols_all',32)
-    stream.createDimension('raw_num', h_size[2])
+    stream.createDimension('raw_num',374)
+    #stream.createDimension('raw_num', h_size[2])
     stream.createDimension('t',None)
 
-    heatmap.createDimension('rms_rows',h_size[0])
+    #heatmap.createDimension('rms_rows',h_size[0])
+    heatmap.createDimension('rms_rows',33)
     heatmap.createDimension('rms_cols',8)
     heatmap.createDimension('rms_cols_all',32)
     heatmap.createDimension('t',None)
 
-    mce_header.createDimension('k',head.shape[1])
-    mce_header.createDimension('v',head.shape[0])
+    mce_header.createDimension('k',2)
+    mce_header.createDimension('v',17)
     mce_header.createDimension('t',None)
 
     # creating variables --------------------------------------------------------------------------------
@@ -84,14 +87,14 @@ def new_file(n, h_size, head):
     parafile.close()
     return mce
 
-def data_all(h,d,n,a,head):
+def data_all(h,d,n,a):
     Time[a] = str(now.datetime.utcnow())
     Rms_Noise_All[a,:,:] = d # can use datetime from gui...
     Raw_Data_All[a,:,:,:] = h
-    Header[a,:,:] = head
+    Header[a,:,:] = st.head
 
-def data(h,d,n,a,head):
+def data(h,d,n,a):
     Time[a] = str(now.datetime.utcnow())
     Rms_Noise[a,:,:] = d
     Raw_Data[a,:,:,:] = h
-    Header[a,:,:] = head
+    Header[a,:,:] = st.head
