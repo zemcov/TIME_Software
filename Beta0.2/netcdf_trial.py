@@ -10,7 +10,7 @@ from netCDF4 import num2date, date2num
 #from multipagegui import parameters
 
 
-def new_file(n, h_size):
+def new_file(n, h_size, head):
     mce = Dataset("tempfiles/gui_data_test{n}.nc".format(n=st.n),"w",format="NETCDF4")
 
     # create the gui parameters group
@@ -28,12 +28,7 @@ def new_file(n, h_size):
     guiparams.createDimension('r',1)
     guiparams.createDimension('t',None)
     # Dimensions for Data Arrays -------------------------------------------------------------------
-<<<<<<< HEAD
-    print(st.h_size)
-    stream.createDimension('raw_rows',st.h_size[0])
-=======
     stream.createDimension('raw_rows',h_size[0])
->>>>>>> cbb741fbfb105a2cd0a24f2ef4966855e5642ab1
     stream.createDimension('raw_cols',8)
     stream.createDimension('raw_cols_all',32)
     stream.createDimension('raw_num', h_size[2])
@@ -44,8 +39,8 @@ def new_file(n, h_size):
     heatmap.createDimension('rms_cols_all',32)
     heatmap.createDimension('t',None)
 
-    mce_header.createDimension('k',st.head_size[0])
-    mce_header.createDimension('v',st.head_size[1])
+    mce_header.createDimension('k',head.shape[0])
+    mce_header.createDimension('v',head.shape[1])
     mce_header.createDimension('t',None)
 
     # creating variables --------------------------------------------------------------------------------
@@ -90,16 +85,16 @@ def new_file(n, h_size):
 
     return mce
 
-def data_all(h,d,n,a):
+def data_all(h,d,n,a,head):
     Time[a] = str(now.datetime.utcnow())
     Rms_Noise_All[a,:,:] = d # can use datetime from gui...
     Raw_Data_All[a,:,:,:] = h
-    Header[a,:,:] = st.head
+    Header[a,:,:] = head
 
-def data(h,d,n,a):
+def data(h,d,n,a,head):
     Time[a] = str(now.datetime.utcnow())
     print(d.shape)
     #Rms_Noise.shape()
     Rms_Noise[a,:,:] = d
     Raw_Data[a,:,:,:] = h
-    Header[a,:,:] = st.head
+    Header[a,:,:] = head
