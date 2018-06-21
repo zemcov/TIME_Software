@@ -39,8 +39,8 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce):
 	                a = a + 1
 	                st.a = a
 	                f = mce_data.SmallMCEFile(mce_file_name)
-	                read_header(f)
-	                z, mce = readdataall(f, mce_file_name, frameperfile, mce)
+	                header = read_header(f)
+	                z, mce = readdataall(f, mce_file_name, frameperfile, mce, header)
 	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc)
 	                allgraphdata.append(graphdata)
 	            break
@@ -65,8 +65,8 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce):
 	                a = a + 1
 	                st.a = a
 	                f = mce_data.SmallMCEFile(mce_file_name)
-	                read_header(f)
-	                z, mce = readdataall(f, mce_file_name, frameperfile, mce)
+	                header = read_header(f)
+	                z, mce = readdataall(f, mce_file_name, frameperfile, mce, header)
 	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc)
 	                allgraphdata.append(graphdata)
 	            break
@@ -85,8 +85,8 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce):
 	                a = a + 1
 	                st.a = a
 	                f = mce_data.SmallMCEFile(mce_file_name)
-	                read_header(f)
-	                z, mce = readdataall(f, mce_file_name, frameperfile, mce)
+	                header = read_header(f)
+	                z, mce = readdataall(f, mce_file_name, frameperfile, mce, header)
 	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc)
 	                allgraphdata.append(graphdata)
 	            break
@@ -97,14 +97,15 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce):
     #nc.new_file(st.n, frameperfile)
 	return z, allgraphdata, mce
 
-def readdataall(f,mce_file_name, frameperfile, mce):
+def readdataall(f,mce_file_name, frameperfile, mce, head):
 	h = f.Read(row_col=True, unfilter='DC').data
 	#d = np.array([[ [] for i in range(8)] for j in range(41)])
 	d = np.empty([h.shape[0],h.shape[1]],dtype=float)
 	for b in range(h.shape[0]):
 		for c in range(h.shape[1]):
 	    		d[b][c] = (np.std(h[b][c][:],dtype=float))
-
+	if a == 1:
+		mce = nc.new_file(st.n, h.shape, head)
 	if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
 		nc.data(h,d,st.n,st.a)
 	else:
@@ -116,7 +117,7 @@ def readdataall(f,mce_file_name, frameperfile, mce):
 		nc.data(h,d,st.n,st.a)
 	print(d.shape)
 	print(h.shape)
-
+	'''
 	z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6], d[0][7]],
         [d[1][0], d[1][1], d[1][2], d[1][3], d[1][4], d[1][5], d[1][6], d[1][7]],
         [d[2][0], d[2][1], d[2][2], d[2][3], d[2][4], d[2][5], d[2][6], d[2][7]],
@@ -149,7 +150,7 @@ def readdataall(f,mce_file_name, frameperfile, mce):
         [d[29][0], d[29][1], d[29][2], d[29][3], d[29][4], d[29][5], d[29][6], d[29][7]],
         [d[30][0], d[30][1], d[30][2], d[30][3], d[30][4], d[30][5], d[30][6], d[30][7]],
         [d[31][0], d[31][1], d[31][2], d[31][3], d[31][4], d[31][5], d[31][6], d[31][7]]])
-
+	'''
 	'''
 	z = ([[d[0][0], d[0][1], d[0][2], d[0][3], d[0][4], d[0][5], d[0][6],\
 	       d[0][7], d[0][8], d[0][9], d[0][10], d[0][11], d[0][12], d[0][13],\
@@ -405,7 +406,7 @@ def readdataall(f,mce_file_name, frameperfile, mce):
 	#    tempfile.write('\n')
 
 	#tempfile.close()
-	return z, mce
+	return d, mce
 
 def readgraphall(y,f,mce_file_name,a,ch,rc):
 	h = f.Read(row_col=True, unfilter='DC').data
@@ -454,7 +455,8 @@ def read_header(f):
     # keys,values = zip(*f.header.items())
     keys = np.asarray(keys,dtype=object)
     values = np.asarray(values,dtype=object)
-    st.head = np.array((keys,values)).T
+    head = np.array((keys,values)).T
+    return head
 
 if __name__ =="__main__":
     takedataall(sys.argv[1], sys.argv[2], sys.argv[3])
