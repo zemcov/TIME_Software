@@ -180,6 +180,7 @@ class mcegui(QtGui.QWidget):
             self.frameperfile = (50 * 10 ** 6) / (33 * 90 * int(self.datarate))
             print('Frame per file: %s' % (self.frameperfile))
 
+            self.submitbutton.setEnabled(False)
             self.initplot()
 
     #resets parameter variables after warning box is read
@@ -240,19 +241,14 @@ class mcegui(QtGui.QWidget):
 
         #adds readout card dropbox if All
         if self.readoutcard == 'All':
-            for i in range(8):
-                if i < 4:
-                    self.readoutcardselect.addItem('MCE 1 RC %s' % (i % 4 + 1))
-                else:
-                    self.readoutcardselect.addItem('MCE 2 RC %s' % (i % 4 + 1))
-            self.readoutcardlabel = QtGui.QLabel('Readout Card')
-            self.channelreadoutbox.addRow(self.readoutcardlabel, self.readoutcardselect)
-
+            for i in range(32):
+                self.selectchannel.addItem(str(i))
+        else:
+            self.selectchannel.addItems(['0', '1', '2', '3', '4', '5', '6', '7'])
         #creates channel dropbox
-        self.selectchannel.addItems(['1', '2', '3', '4', '5', '6', '7', '8'])
 
         for i in range(33):
-            self.selectrow.addItem(str(i + 1))
+            self.selectrow.addItem(str(i))
 
         self.channellabel = QtGui.QLabel('Column')
 
@@ -266,12 +262,12 @@ class mcegui(QtGui.QWidget):
 
     #changes channel of live graph when user changes channel
     def changechannel(self):
-        self.currentchannel = int(self.selectchannel.currentText())
+        self.currentchannel = int(self.selectchannel.currentText()) + 1
         print(self.currentchannel)
 
 
     def changerow(self):
-        self.row = int(self.selectrow.currentText())
+        self.row = int(self.selectrow.currentText()) + 1
         print(self.row)
 
     #changes readout card of live graph when user changes readout card
