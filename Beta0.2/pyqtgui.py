@@ -368,7 +368,7 @@ class mcegui(QtGui.QWidget):
         if self.readoutcard == 'All':
             self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce)
         else:
-            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce, self.row)
+            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce)#, self.row)
 
         self.updateheatmap()
         self.updatekmirrordata()
