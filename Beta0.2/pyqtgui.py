@@ -504,6 +504,7 @@ class mcegui(QtGui.QWidget):
         self.heatmap.setPredefinedGradient('thermal')
         self.heatmap.setImage(z)
         #changes levels for heatmap to create gradient at depending on the data rate
+        print(z)
         self.avggrad = int(np.average(z))
         self.stddevgrad = int(np.std(z))
         print('heatmap average: %s' % (self.avggrad))

@@ -40,7 +40,7 @@ def new_file(n, h_size, head):
     heatmap.createDimension('t',None)
 
     mce_header.createDimension('k',2)
-    mce_header.createDimension('v',16)
+    mce_header.createDimension('v',17)
     mce_header.createDimension('t',None)
 
     # creating variables --------------------------------------------------------------------------------
@@ -66,12 +66,6 @@ def new_file(n, h_size, head):
     global Header
     Header = mce_header.createVariable('header','S3',('t','v','k'))
 
-    # appending to variables w/ gui params ------------------------------------------------------------
-    #Observer[0] = 'VLB' #str(parameters[0])
-    #Frames[0] = '100' #str(parameters[3])
-    #Datetime[0] = '00:00:00' #str(parameters[4]
-    #Datamode[0] = str(10) #str(parameters[1])
-    #Rc[0] = str(2) #str(parameters[2])
 
     parafilename = (os.pardir + '/cryo/tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
