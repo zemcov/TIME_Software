@@ -41,7 +41,7 @@ class mcegui(QtGui.QWidget):
         self.totaltimeinterval = 120
         self.currentchannel = 1
         self.oldch = 1
-	#self.row
+        #self.row
         st.init()
 
     #creates GUI window and calls functions to populate GUI
@@ -316,8 +316,8 @@ class mcegui(QtGui.QWidget):
 
         #create new netCDF4 file
         #self.mce = nc.new_file(st.n, self.frameperfile)
-	self.mce = 1
 
+        self.mce = 1
         #calls takedata or takedata depending on 1 or all readout cards respectfully,
         #passes variables to let takedata/takedataall correctly parse data and
         #gets data for graohing back
