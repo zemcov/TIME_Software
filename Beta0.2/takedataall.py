@@ -107,14 +107,14 @@ def readdataall(f,mce_file_name, frameperfile, mce, head):
 	if a == 1:
 		mce = nc.new_file(st.n, h.shape, head)
 	if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
-		nc.data(h,d,st.n,st.a,head)
+		nc.data_all(h,d,st.n,st.a,head)
 	else:
 		st.n = st.n + 1
         #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
 		mce.close()
 		print('----------New File----------')
 		mce = nc.new_file(st.n, h.shape, head)
-		nc.data(h,d,st.n,st.ahead)
+		nc.data_all(h,d,st.n,st.a,head)
 	print(d.shape)
 	print(h.shape)
 	'''
