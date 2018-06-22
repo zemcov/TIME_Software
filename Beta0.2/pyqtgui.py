@@ -502,17 +502,23 @@ class mcegui(QtGui.QWidget):
         self.heatmapplot = pg.PlotItem()
         self.heatmapplot.setLabel('bottom', 'Row')
         self.heatmapplot.setLabel('left', 'Channel')
-        self.heatmapplot.setXRange(0, 8, padding=0)
-        self.heatmapplot.setYRange(0, 32, padding=0)
+        #self.heatmapplot.setXRange(0, 8, padding=0)
+        #self.heatmapplot.setYRange(0, 32, padding=0)
         self.heatmap = pg.ImageView(view= self.heatmapplot)
         self.heatmap.setPredefinedGradient('thermal')
         self.heatmap.setImage(z)
         #changes levels for heatmap to create gradient at depending on the data rate
+        self.avggrad = int(np.average(z))
+        self.stddevgrad = int(np.std(z))
+        print('heatmap average: %s' % (self.avggrad))
+        print('std dev grad %s' % (self.stddevgrad))
+        self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
         # if self.frameperfile == 11:
         #     self.heatmap.setLevels(60, 260)
         # else:
         #     self.heatmap.setLevels(100, 190)
         self.grid.addWidget(self.heatmap, 3, 2, 2, 5)
+
 
     #updates heatmap
     def updateheatmap(self):
@@ -522,6 +528,7 @@ class mcegui(QtGui.QWidget):
         z.astype(int)
         self.heatmap.setImage(z)
         #changes levels for heatmap to create gradient at depending on the data rate
+        self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
         # if self.frameperfile == 11:
         #     self.heatmap.setLevels(60, 260)
         # else:
