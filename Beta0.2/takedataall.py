@@ -11,7 +11,7 @@ import time
 import settings as st
 import netcdf_trial as nc
 
-def takedataall(a, ch, rc, n_files, frameperfile, mce):
+def takedataall(a, ch, rc, n_files, frameperfile, mce, row):
 	#print('Hello!')
 	#st.init()
 	#nc.new_file(st.n)
@@ -41,7 +41,7 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce):
 	                f = mce_data.SmallMCEFile(mce_file_name)
 	                header = read_header(f)
 	                z, mce = readdataall(f, mce_file_name, frameperfile, mce, header)
-	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc)
+	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc, row)
 	                allgraphdata.append(graphdata)
 	            break
 	        else:
@@ -67,7 +67,7 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce):
 	                f = mce_data.SmallMCEFile(mce_file_name)
 	                header = read_header(f)
 	                z, mce = readdataall(f, mce_file_name, frameperfile, mce, header)
-	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc)
+	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc, row)
 	                allgraphdata.append(graphdata)
 	            break
 	        else:
@@ -87,7 +87,7 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce):
 	                f = mce_data.SmallMCEFile(mce_file_name)
 	                header = read_header(f)
 	                z, mce = readdataall(f, mce_file_name, frameperfile, mce, header)
-	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc)
+	                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc, row)
 	                allgraphdata.append(graphdata)
 	            break
 	        else:
@@ -107,14 +107,14 @@ def readdataall(f,mce_file_name, frameperfile, mce, head):
 	if a == 1:
 		mce = nc.new_file(st.n, h.shape, head)
 	if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
-		nc.data(h,d,st.n,st.a)
+		nc.data(h,d,st.n,st.a,head)
 	else:
 		st.n = st.n + 1
         #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
 		mce.close()
 		print('----------New File----------')
-		mce = nc.new_file(st.n, frameperfile)
-		nc.data(h,d,st.n,st.a)
+		mce = nc.new_file(st.n, h.shape, head)
+		nc.data(h,d,st.n,st.ahead)
 	print(d.shape)
 	print(h.shape)
 	'''
@@ -408,7 +408,7 @@ def readdataall(f,mce_file_name, frameperfile, mce, head):
 	#tempfile.close()
 	return d, mce
 
-def readgraphall(y,f,mce_file_name,a,ch,rc):
+def readgraphall(y,f,mce_file_name,a,ch,rc,row):
 	h = f.Read(row_col=True, unfilter='DC').data
 	delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
 	subprocess.Popen(delete_file,shell=True)
@@ -429,7 +429,7 @@ def readgraphall(y,f,mce_file_name,a,ch,rc):
 
 	#filename = 'tempfiles/tempgraphdata.txt'
     #tempfile = open(filename, 'a')
-	for j in range(0, d.shape[0]*d.shape[1]-1, 32):
+	for j in range(row - 1, d.shape[0]*d.shape[1], 33):
 		#tempfile.write(str(y[len(y)-1][j])+' ')
 		#tempfile.close()
 		newy.append(y[len(y)-1][j])

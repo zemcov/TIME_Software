@@ -18,7 +18,7 @@ import netcdf_trial as nc
 #import pyqtgui as qg
 
 
-def takedata(a, ch, n_files, frameperfile, mce):
+def takedata(a, ch, n_files, frameperfile, mce, row):
     #print('Hello!')
 
     #nc.initglobal()
@@ -38,7 +38,7 @@ def takedata(a, ch, n_files, frameperfile, mce):
             if mce_file:
                 print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
                 for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
-                    print('Checking for directory files...')
+                    #print('Checking for directory files...')
                     if a < 10:
                         mce_file_name = "/data/cryo/current_data/temp.00%i" %(a)
                     else:
@@ -48,7 +48,7 @@ def takedata(a, ch, n_files, frameperfile, mce):
                     f = mce_data.SmallMCEFile(mce_file_name)
                     header = read_header(f)
                     z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
-                    graphdata = readgraph(y, f, mce_file_name, a, ch)
+                    graphdata = readgraph(y, f, mce_file_name, a, ch, row)
                     allgraphdata.append(graphdata)
                 break
             else:
@@ -73,7 +73,7 @@ def takedata(a, ch, n_files, frameperfile, mce):
                     f = mce_data.SmallMCEFile(mce_file_name)
                     header = read_header(f)
                     z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
-                    graphdata = readgraph(y, f, mce_file_name, a, ch)
+                    graphdata = readgraph(y, f, mce_file_name, a, ch, row)
                     allgraphdata.append(graphdata)
                 break
             else:
@@ -92,7 +92,7 @@ def takedata(a, ch, n_files, frameperfile, mce):
                     f = mce_data.SmallMCEFile(mce_file_name)
                     header = read_header(f)
                     z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
-                    graphdata = readgraph(y, f, mce_file_name, a, ch)
+                    graphdata = readgraph(y, f, mce_file_name, a, ch, row)
                     allgraphdata.append(graphdata)
                 break
             else:
@@ -172,7 +172,7 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
     #time.sleep(1.0)
     return d, mce
 
-def readgraph(y, f, mce_file_name, a, ch):
+def readgraph(y, f, mce_file_name, a, ch, row):
     h = f.Read(row_col=True, unfilter='DC').data
     delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
     subprocess.Popen(delete_file,shell=True)
@@ -198,10 +198,12 @@ def readgraph(y, f, mce_file_name, a, ch):
 
     newy = []
 
-    for j in range(0, d.shape[0]*d.shape[1]-1, 32):
+    for j in range(row - 1, d.shape[0]*d.shape[1], 33):
         #tempfile.write(str(y[len(y)-1][j])+' ')
         newy.append(y[len(y)-1][j])
     #tempfile.close()
+
+    print('newy: %s' % (len(newy)))
 
 
     #oldtempfile = 'tempfiles/tempgraphdata%s.txt'%(a - 10)

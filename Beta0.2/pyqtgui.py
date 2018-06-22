@@ -40,6 +40,7 @@ class mcegui(QtGui.QWidget):
         self.frameperfile = 374
         self.totaltimeinterval = 120
         self.currentchannel = 1
+        self.row = 1
         self.oldch = 1
         #self.row
         st.init()
@@ -60,6 +61,7 @@ class mcegui(QtGui.QWidget):
         self.submitbutton.clicked.connect(self.on_submitbutton_clicked)
         self.selectchannel.currentIndexChanged.connect(self.changechannel)
         self.readoutcardselect.currentIndexChanged.connect(self.changereadoutcard)
+        self.selectrow.currentIndexChanged.connect(self.changerow)
 
     #quits out of GUI and stops the MCE
     def on_quitbutton_clicked(self):
@@ -229,6 +231,7 @@ class mcegui(QtGui.QWidget):
 
         self.readoutcardselect = QtGui.QComboBox()
         self.selectchannel = QtGui.QComboBox()
+        self.selectrow = QtGui.QComboBox()
 
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
@@ -248,9 +251,16 @@ class mcegui(QtGui.QWidget):
         #creates channel dropbox
         self.selectchannel.addItems(['1', '2', '3', '4', '5', '6', '7', '8'])
 
+        for i in range(33):
+            self.selectrow.addItem(str(i + 1))
+
         self.channellabel = QtGui.QLabel('Column')
 
+        self.rowlabel = QtGui.QLabel('Row')
+
         self.channelreadoutbox.addRow(self.channellabel, self.selectchannel)
+
+        self.channelreadoutbox.addRow(self.rowlabel, self.selectrow)
 
         self.grid.addLayout(self.channelreadoutbox, 3, 1, 1, 1)
 
@@ -258,6 +268,11 @@ class mcegui(QtGui.QWidget):
     def changechannel(self):
         self.currentchannel = int(self.selectchannel.currentText())
         print(self.currentchannel)
+
+
+    def changerow(self):
+        self.row = int(self.selectrow.currentText())
+        print(self.row)
 
     #changes readout card of live graph when user changes readout card
     def changereadoutcard(self):
@@ -322,9 +337,10 @@ class mcegui(QtGui.QWidget):
         #passes variables to let takedata/takedataall correctly parse data and
         #gets data for graohing back
         if self.readoutcard == 'All':
-            self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce)
+            self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce, \
+            self.row)
         else:
-            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce)
+            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce, self.row)
 
         #initalize data list
         self.data = [0, 0, 0]
@@ -366,9 +382,10 @@ class mcegui(QtGui.QWidget):
         self.starttime = datetime.datetime.utcnow()
 
         if self.readoutcard == 'All':
-            self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce)
+            self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce,\
+            self.row)
         else:
-            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce)#, self.row)
+            self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce, self.row)
 
         self.updateheatmap()
         self.updatekmirrordata()
