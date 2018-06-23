@@ -28,8 +28,8 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce, row):
                 f = mce_data.SmallMCEFile(mce_file_name)
                 header = read_header(f)
                 z, mce = readdataall(f, mce_file_name, frameperfile, mce, header)
-                #graphdata = readgraphall(y, f, mce_file_name, a, ch, rc, row)
-                #allgraphdata.append(graphdata)
+                graphdata = readgraphall(y, f, mce_file_name, a, ch, rc, row)
+                allgraphdata.append(graphdata)
             break
         else:
             pass
@@ -59,10 +59,11 @@ def readgraphall(y,f,mce_file_name,a,ch,rc,row):
 	h = f.Read(row_col=True, unfilter='DC').data
 	delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
 	subprocess.Popen(delete_file,shell=True)
-	d = h[:,ch + ((rc-1) * 8) - 1]
-	y.append(np.reshape(h[:,ch + ((rc-1) * 8) - 1],d.shape[0]*d.shape[1]))
-	newy = []
 
+    d = h[:,ch + ((rc-1) * 8) - 1]
+	y.append(np.reshape(d , d.shape[0]*d.shape[1]))
+
+    newy = []
 	for j in range(row-1, d.shape[0]*d.shape[1], 33):
 		newy.append(y[len(y)-1][j])
 	graphdata = [a, ch, newy]
