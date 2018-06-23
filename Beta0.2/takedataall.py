@@ -59,16 +59,14 @@ def readgraphall(y,f,mce_file_name,a,ch,rc,row):
 	h = f.Read(row_col=True, unfilter='DC').data
 	delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
 	subprocess.Popen(delete_file,shell=True)
-
     d = h[:,ch + ((rc-1) * 8) - 1]
-
     new_array = []
     for j in range(d.shape[1]):
         new_array.append(d[row][j])
 
     graphdata = [a,ch,new_array]
     return graphdata
-    
+
 	# y.append(np.reshape(d , d.shape[0]*d.shape[1]))
     #
     # newy = []
