@@ -56,9 +56,9 @@ def readdataall(f,mce_file_name, frameperfile, mce, head):
 	return d, mce
 
 def readgraphall(y,f,mce_file_name,a,ch,rc,row):
-	h = f.Read(row_col=True, unfilter='DC').data
-	delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-	subprocess.Popen(delete_file,shell=True)
+    h = f.Read(row_col=True, unfilter='DC').data
+    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
+    subprocess.Popen(delete_file,shell=True)
     d = h[:,ch + ((rc-1) * 8) - 1]
     new_array = []
     for j in range(d.shape[1]):
