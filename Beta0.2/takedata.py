@@ -69,14 +69,13 @@ def readgraph(y, f, mce_file_name, a, ch, row):
     y.append(np.reshape(d,d.shape[0]*d.shape[1])) #should output every row, and only 1 channel or column for all frame data
 '''
 for ch = 0, h.shape = (33,8,374), d.shape = (33,374), y.shape = (33*374,)
-'''
-    newy = []
-'''
+
 can't we just do this to index the correct row of data...?
 new_array = []
 for j in range(d.shape[1]):
     new_array.append(d[row][j])
 '''
+    newy = []
     for j in range(row - 1, d.shape[0]*d.shape[1], 33):
         newy.append(y[len(y)-1][j])
 
