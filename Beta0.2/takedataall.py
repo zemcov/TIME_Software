@@ -63,8 +63,7 @@ def readgraphall(y,f,mce_file_name,a,ch,rc,row):
 	y.append(np.reshape(h[:,ch + ((rc - 1) * 8) - 1],d.shape[0]*d.shape[1]))
 	newy = []
 
-	#for j in range(row - 1, d.shape[0]*d.shape[1], 33):
-    for j in range(row, d.shape[0]*d.shape[1], 33):
+	for j in range(row, d.shape[0]*d.shape[1], 33):
 		newy.append(y[len(y)-1][j])
 	graphdata = [a, ch, newy]
 	return graphdata
