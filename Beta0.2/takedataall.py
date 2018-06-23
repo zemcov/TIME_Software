@@ -61,13 +61,21 @@ def readgraphall(y,f,mce_file_name,a,ch,rc,row):
 	subprocess.Popen(delete_file,shell=True)
 
     d = h[:,ch + ((rc-1) * 8) - 1]
-	y.append(np.reshape(d , d.shape[0]*d.shape[1]))
 
-    newy = []
-	for j in range(row-1, d.shape[0]*d.shape[1], 33):
-		newy.append(y[len(y)-1][j])
-	graphdata = [a, ch, newy]
-	return graphdata
+    new_array = []
+    for j in range(d.shape[1]):
+        new_array.append(d[row][j])
+
+    graphdata = [a,ch,new_array]
+    return graphdata
+    
+	# y.append(np.reshape(d , d.shape[0]*d.shape[1]))
+    #
+    # newy = []
+	# for j in range(row-1, d.shape[0]*d.shape[1], 33):
+	# 	newy.append(y[len(y)-1][j])
+	# graphdata = [a, ch, newy]
+	# return graphdata
 
 def read_header(f):
     keys = []
