@@ -168,13 +168,13 @@ class mcegui(QtGui.QWidget):
 
             self.channelselection()
 
-            print('Observer: %s' % (self.observer))
-            print('Datamode: %s' % (self.datamode))
-            print('Readout Card: %s' % (self.readoutcard))
-            print('Frame Number: %s' % (self.framenumber))
-            print('Data Rate: %s' % (self.datarate))
-            print('Time Interval: %s' % (self.timeinterval))
-            print('Delete Old Columns: %s' % (self.channeldelete))
+            # print('Observer: %s' % (self.observer))
+            # print('Datamode: %s' % (self.datamode))
+            # print('Readout Card: %s' % (self.readoutcard))
+            # print('Frame Number: %s' % (self.framenumber))
+            # print('Data Rate: %s' % (self.datarate))
+            # print('Time Interval: %s' % (self.timeinterval))
+            # print('Delete Old Columns: %s' % (self.channeldelete))
             print('Time Started: %s' % (self.timestarted))
 
             self.frameperfile = (50 * 10 ** 6) / (33 * 90 * int(self.datarate))
@@ -504,7 +504,7 @@ class mcegui(QtGui.QWidget):
         self.heatmap.setPredefinedGradient('thermal')
         self.heatmap.setImage(z)
         #changes levels for heatmap to create gradient at depending on the data rate
-        print(z)
+        #print(z)
         self.avggrad = int(np.average(z))
         self.stddevgrad = int(np.std(z))
         print('heatmap average: %s' % (self.avggrad))
