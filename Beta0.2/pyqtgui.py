@@ -24,14 +24,19 @@ class mcegui(QtGui.QWidget):
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
+        if os.path.exists('~/Desktop/mce_files') :
+            continue
+        else:
+            mce_dir = ["mkdir ~/Desktop/mce_files" % (self.datamode)]
+            subprocess.Popen(mce_dir, shell=True)
+
         self.timeinterval = 1
         #deleting old gui_data_test files
-        for i in range(len(os.listdir('tempfiles'))):
-            tempfilename = 'tempfiles/gui_data_test%s.nc' % (i)
-            tempfile = os.path.exists(tempfilename)
-            if tempfile:
-                delete_file = ['rm ' + tempfilename]
-                subprocess.Popen(delete_file,shell=True)
+        # for i in range(len(os.listdir('tempfiles'))):
+        #     tempfilename = 'tempfiles/gui_data_test%s.nc' % (i)
+        #     if os.path.exists(tempfilename):
+        #         delete_file = ['rm ' + tempfilename]
+        #         subprocess.Popen(delete_file,shell=True)
         #setting all variables
         self.observer = ''
         self.datamode = ''
@@ -67,14 +72,18 @@ class mcegui(QtGui.QWidget):
     def on_quitbutton_clicked(self):
         print('Quitting Application')
         #stop mce with subprocess
-        if self.readoutcard == 'All':
-            run = ['mce_cmd -x stop rcs ret_dat']
-        else:
-            run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
-        a = subprocess.Popen(run, shell=True)
-        #delete all MCE temp files still in directory
-        deletetemp = ['rm /data/cryo/current_data/temp.*']
-        b = subprocess.Popen(deletetemp, shell=True)
+        '''
+        will need to add two of these for 2 mce computers...
+        '''
+        command = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+            pilot2@timemce.rit.edu ; mce_cmd -x stop rc%s ret_dat ;\
+            rm /data/cryo/current_data/temp.*' %(self.readoutcard)]
+        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+        # run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
+        # a = subprocess.Popen(run, shell=True)
+        # #delete all MCE temp files still in directory
+        # b = subprocess.Popen(deletetemp, shell=True)
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -127,8 +136,13 @@ class mcegui(QtGui.QWidget):
             parafile.write(self.timestarted+' ')
             parafile.close()
 
-            editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
-            a = subprocess.call(editdatarate, shell=True)
+            editdatarate = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+                pilot2@timemce.rit.edu ; mce_cmd -x wb cc data_ratestop' %(self.datarate)]
+            process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+            proc_stdout = process.communicate()[0].strip()
+            sys.exit()
+            # editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
+            # a = subprocess.call(editdatarate, shell=True)
 
             parameteroutput = QtGui.QVBoxLayout()
 
@@ -306,19 +320,26 @@ class mcegui(QtGui.QWidget):
     def initplot(self):
         #counts number of files in current_data for later checks of number of
         #temp files
-        self.n_files = len(os.listdir("/data/cryo/current_data"))
+        self.n_files = len(os.listdir("~/Desktop/mce1"))
         print(self.n_files)
         #changes commands to start mce if All readout cards are to be read
-        if self.readoutcard == 'All':
-            changedatamode = ["mce_cmd -x wb rca data_mode %s" % (self.datamode)]
-            b = subprocess.Popen(changedatamode, shell=True)
-            run = ["mce_run temp %s s --sequence=%s" %(self.framenumber, self.frameperfile)]
-            c = subprocess.Popen(run, shell=True)
-        else:
-            changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (self.readoutcard, self.datamode)]
-            b = subprocess.Popen(changedatamode, shell=True)
-            run = ["mce_run temp %s %s --sequence=%s" %(self.framenumber, self.readoutcard, self.frameperfile)]
-            c = subprocess.Popen(run, shell=True)
+        command = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+            pilot2@timemce.rit.edu ; mce_cmd -x wb rc%s data_mode %s ;\
+            mce_run temp %s %s --sequence=%s' %(self.readoutcard,self.datamode,\
+            self.framenumber,self.readoutcard,self.frameperfile)]
+        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+
+        # if self.readoutcard == 'All':
+        #     changedatamode = ["mce_cmd -x wb rca data_mode %s" % (self.datamode)]
+        #     b = subprocess.Popen(changedatamode, shell=True)
+        #     run = ["mce_run temp %s s --sequence=%s" %(self.framenumber, self.frameperfile)]
+        #     c = subprocess.Popen(run, shell=True)
+        # else:
+        #     changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (self.readoutcard, self.datamode)]
+        #     b = subprocess.Popen(changedatamode, shell=True)
+        #     run = ["mce_run temp %s %s --sequence=%s" %(self.framenumber, self.readoutcard, self.frameperfile)]
+        #     c = subprocess.Popen(run, shell=True)
 
         #initialize time
         self.n_intervals = 1

@@ -11,7 +11,7 @@ from netCDF4 import num2date, date2num
 
 
 def new_file(n, h_size, head):
-    mce = Dataset("tempfiles/gui_data_test{n}.nc".format(n=st.n),"w",format="NETCDF4")
+        mce = Dataset("~/Desktop/mce_files/gui_data_test{n}.nc".format(n=st.n),"w",format="NETCDF4")
 
     # create the gui parameters group
     guiparams = mce.createGroup('guiparams')

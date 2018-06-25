@@ -24,11 +24,11 @@ def takedata(a, ch, n_files, frameperfile, mce, row):
     y = []
     allgraphdata = []
     while True:
-        mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
-        mce_file = os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
+        mce_file_name = "tempfiles/mce1/temp.%0.3i" %(a)
+        mce_file = os.path.exists("tempfiles/mce1/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
         if mce_file:
-            print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
-            for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
+            print(len(os.listdir("~tempfiles/mce1")) - 2 - n_files)
+            for i in range(len(os.listdir("~tempfiles/mce1")) - 2 - n_files):
                 a = a + 1
                 st.a = a
                 f = mce_data.SmallMCEFile(mce_file_name)
