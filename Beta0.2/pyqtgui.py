@@ -11,7 +11,7 @@ import takedataall as tda
 import random as rm
 import netcdf_trial as nc
 import settings as st
-sys.path.append('/data/cryo/current_data')
+#sys.path.append('/data/cryo/current_data')
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -72,18 +72,32 @@ class mcegui(QtGui.QWidget):
     def on_quitbutton_clicked(self):
         print('Quitting Application')
         #stop mce with subprocess
-        '''
-        will need to add two of these for 2 mce computers...
-        '''
-        command = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+        command1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
             pilot2@timemce.rit.edu ; mce_cmd -x stop rc%s ret_dat ;\
             rm /data/cryo/current_data/temp.*' %(self.readoutcard)]
-        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+        process = subprocess.Popen(command1,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+
+        command2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
+            time@time-mce-0.caltech.edu ; mce_cmd -x stop rc%s ret_dat ;\
+            rm /data/cryo/current_data/temp.*' %(self.readoutcard)]
+        process = subprocess.Popen(command2,stdout=subprocess.PIPE, shell=True)
         proc_stdout = process.communicate()[0].strip()
         # run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
         # a = subprocess.Popen(run, shell=True)
         # #delete all MCE temp files still in directory
         # b = subprocess.Popen(deletetemp, shell=True)
+        #-------------------------------------------------------------------------------
+        command1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+            pilot2@timemce.rit.edu ; pkill -f "python ~/Desktop/mce1_sftp.py"']
+        process = subprocess.Popen(command1,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+
+        command2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
+            time@time-mce-0.caltech.edu ; pkill -f "python ~/Desktop/mce2_sftp.py"']
+        process = subprocess.Popen(command2,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -136,9 +150,14 @@ class mcegui(QtGui.QWidget):
             parafile.write(self.timestarted+' ')
             parafile.close()
 
-            editdatarate = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+            editdatarate1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
                 pilot2@timemce.rit.edu ; mce_cmd -x wb cc data_ratestop' %(self.datarate)]
-            process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+            process = subprocess.Popen(editdatarate1,stdout=subprocess.PIPE, shell=True)
+            proc_stdout = process.communicate()[0].strip()
+
+            editdatarate2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
+                time@time-mce-0.caltech.edu ; mce_cmd -x wb cc data_ratestop' %(self.datarate)]
+            process = subprocess.Popen(editdatarate2,stdout=subprocess.PIPE, shell=True)
             proc_stdout = process.communicate()[0].strip()
             sys.exit()
             # editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
@@ -320,14 +339,34 @@ class mcegui(QtGui.QWidget):
     def initplot(self):
         #counts number of files in current_data for later checks of number of
         #temp files
-        self.n_files = len(os.listdir("~/Desktop/mce1"))
+        self.n_files = len(os.listdir("tempfiles/mce1"))
         print(self.n_files)
+        #----------------------------------------------------------------------------------
+        # start the mce1 file system check (rit mce)
+        sftp1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+            pilot2@timemce.rit.edu ; python /Desktop/mce1_sftp.py]
+        process = subprocess.Popen(sftp1,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+        #----------------------------------------------------------------------------------
+        # start the mce2 file system check (caltech mce)
+        sftp2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
+            time@time-mce-0.caltech.edu ; python /Desktop/mce2_sftp.py]
+        process = subprocess.Popen(sftp2,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+        #----------------------------------------------------------------------------------
         #changes commands to start mce if All readout cards are to be read
-        command = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+        chdatamode1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
             pilot2@timemce.rit.edu ; mce_cmd -x wb rc%s data_mode %s ;\
             mce_run temp %s %s --sequence=%s' %(self.readoutcard,self.datamode,\
             self.framenumber,self.readoutcard,self.frameperfile)]
-        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+        process = subprocess.Popen(chdatamode1,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+
+        chdatamode2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
+            time@time-mce-0.caltech.edu ; mce_cmd -x wb rc%s data_mode %s ;\
+            mce_run temp %s %s --sequence=%s' %(self.readoutcard,self.datamode,\
+            self.framenumber,self.readoutcard,self.frameperfile)]
+        process = subprocess.Popen(chdatamode2,stdout=subprocess.PIPE, shell=True)
         proc_stdout = process.communicate()[0].strip()
 
         # if self.readoutcard == 'All':
