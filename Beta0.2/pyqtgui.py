@@ -72,21 +72,13 @@ class mcegui(QtGui.QWidget):
     def on_quitbutton_clicked(self):
         print('Quitting Application')
         #stop mce with subprocess
-        command1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
-            pilot2@timemce.rit.edu ; mce_cmd -x stop rc%s ret_dat ;\
-            rm /data/cryo/current_data/temp.*' %(self.readoutcard)]
-        process = subprocess.Popen(command1,stdout=subprocess.PIPE, shell=True)
-        proc_stdout = process.communicate()[0].strip()
+        '''
+        need to delete files from mce1 and mce2 inside of tempfiles
+        '''
+        subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
+        subprocess.Popen(['./mce2_stop.sh %s' %(self.readoutcard)], shell=True)
+        subprocess.Popen(['rm /tempfiles/mce1/temp.* ; rm /tempfiles/mce2/temp.*'], shell=True)
 
-        command2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
-            time@time-mce-0.caltech.edu ; mce_cmd -x stop rc%s ret_dat ;\
-            rm /data/cryo/current_data/temp.*' %(self.readoutcard)]
-        process = subprocess.Popen(command2,stdout=subprocess.PIPE, shell=True)
-        proc_stdout = process.communicate()[0].strip()
-        # run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
-        # a = subprocess.Popen(run, shell=True)
-        # #delete all MCE temp files still in directory
-        # b = subprocess.Popen(deletetemp, shell=True)
         #-------------------------------------------------------------------------------
         command1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
             pilot2@timemce.rit.edu ; pkill -f "python ~/Desktop/mce1_sftp.py"']
@@ -150,18 +142,9 @@ class mcegui(QtGui.QWidget):
             parafile.write(self.timestarted+' ')
             parafile.close()
 
-            editdatarate1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
-                pilot2@timemce.rit.edu ; mce_cmd -x wb cc data_ratestop' %(self.datarate)]
-            process = subprocess.Popen(editdatarate1,stdout=subprocess.PIPE, shell=True)
-            proc_stdout = process.communicate()[0].strip()
-
-            editdatarate2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
-                time@time-mce-0.caltech.edu ; mce_cmd -x wb cc data_ratestop' %(self.datarate)]
-            process = subprocess.Popen(editdatarate2,stdout=subprocess.PIPE, shell=True)
-            proc_stdout = process.communicate()[0].strip()
-            sys.exit()
-            # editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
-            # a = subprocess.call(editdatarate, shell=True)
+            # change mce data rates -----------------------------------------
+            subprocess.Popen(['./mce1_cdr.sh %s' %(self.datarate)], shell=True)
+            subprocess.Popen(['./mce2_cdr.sh %s' %(self.datarate)], shell=True)
 
             parameteroutput = QtGui.QVBoxLayout()
 
@@ -355,30 +338,15 @@ class mcegui(QtGui.QWidget):
         proc_stdout = process.communicate()[0].strip()
         #----------------------------------------------------------------------------------
         #changes commands to start mce if All readout cards are to be read
-        chdatamode1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
-            pilot2@timemce.rit.edu ; mce_cmd -x wb rc%s data_mode %s ;\
-            mce_run temp %s %s --sequence=%s' %(self.readoutcard,self.datamode,\
-            self.framenumber,self.readoutcard,self.frameperfile)]
-        process = subprocess.Popen(chdatamode1,stdout=subprocess.PIPE, shell=True)
-        proc_stdout = process.communicate()[0].strip()
+        '''
+        note that we need to change how the rc cards are defined, don't need
+        two different functions to choose which
+        '''
 
-        chdatamode2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
-            time@time-mce-0.caltech.edu ; mce_cmd -x wb rc%s data_mode %s ;\
-            mce_run temp %s %s --sequence=%s' %(self.readoutcard,self.datamode,\
-            self.framenumber,self.readoutcard,self.frameperfile)]
-        process = subprocess.Popen(chdatamode2,stdout=subprocess.PIPE, shell=True)
-        proc_stdout = process.communicate()[0].strip()
-
-        # if self.readoutcard == 'All':
-        #     changedatamode = ["mce_cmd -x wb rca data_mode %s" % (self.datamode)]
-        #     b = subprocess.Popen(changedatamode, shell=True)
-        #     run = ["mce_run temp %s s --sequence=%s" %(self.framenumber, self.frameperfile)]
-        #     c = subprocess.Popen(run, shell=True)
-        # else:
-        #     changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (self.readoutcard, self.datamode)]
-        #     b = subprocess.Popen(changedatamode, shell=True)
-        #     run = ["mce_run temp %s %s --sequence=%s" %(self.framenumber, self.readoutcard, self.frameperfile)]
-        #     c = subprocess.Popen(run, shell=True)
+        subprocess.Popen(['./mce1_cdm.sh %s %s' %(self.readoutcard,self.datamode)], shell=True)
+        subprocess.Popen(['./mce2_cdm.sh %s %s' %(self.readoutcard,self.datamode)], shell=True)
+        subprocess.Popen(['./mce1_run.sh %s %s %s'] %(self.readoutcard,self.framenumber,self.frameperfile), shell=True)
+        subprocess.Popen(['./mce2_run.sh %s %s %s'] %(self.readoutcard,self.framenumber,self.frameperfile), shell=True)
 
         #initialize time
         self.n_intervals = 1
