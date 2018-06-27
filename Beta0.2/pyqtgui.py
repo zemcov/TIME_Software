@@ -263,7 +263,8 @@ class mcegui(QtGui.QWidget):
     #changes channel of live graph when user changes channel
     def changechannel(self):
         self.currentchannel = int(self.selectchannel.currentText()) + 1
-        print(self.currentchannel)
+	self.changereadoutcard()
+        #print(self.currentchannel)
 
 
     def changerow(self):
@@ -272,8 +273,20 @@ class mcegui(QtGui.QWidget):
 
     #changes readout card of live graph when user changes readout card
     def changereadoutcard(self):
-        self.currentreadoutcard = self.readoutcardselect.currentIndex() + 1
-        self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
+	if self.currentchannel < 9:
+	   self.currentreadoutcard = 1
+	   self.currentreadoutcarddisplay = 'MCE 1 RC 1'
+	elif self.currentchannel >= 9 and self.currentchannel < 17:
+	   self.currentreadoutcard = 2
+	   self.currentreadoutcarddisplay = 'MCE 1 RC 2'
+	elif self.currentchannel >= 17 and self.currentchannel < 25:
+	   self.currentreadoutcard = 3
+	   self.currentreadoutcarddisplay = 'MCE 1 RC 3'
+	elif self.currentchannel >= 25:
+	   self.currentreadoutcard = 4
+	   self.currentreadoutcarddisplay = 'MCE 1 RC 4'
+	self.currentreadoutcardtext.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
+        #self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
 
     #adds location for K-mirror data, currently has place holder data
     def initkmirrordata(self):
@@ -409,21 +422,21 @@ class mcegui(QtGui.QWidget):
                 masterx = i / (self.frameperfile * 1.0)
                 x.append(self.n_intervals + masterx - 1)
                 #picks color based on current channel
-                if ch == 1:
+                if ch % 8 == 1:
                     pointcolor.append(pg.mkBrush('b'))
-                elif ch == 2:
+                elif ch % 8 == 2:
                     pointcolor.append(pg.mkBrush('r'))
-                elif ch == 3:
+                elif ch % 8 == 3:
                     pointcolor.append(pg.mkBrush('g'))
-                elif ch == 4:
+                elif ch % 8 == 4:
                     pointcolor.append(pg.mkBrush('y'))
-                elif ch == 5:
+                elif ch % 8 == 5:
                     pointcolor.append(pg.mkBrush('c'))
-                elif ch == 6:
+                elif ch % 8 == 6:
                     pointcolor.append(pg.mkBrush('m'))
-                elif ch == 7:
+                elif ch % 8 == 7:
                     pointcolor.append(pg.mkBrush('k'))
-                elif ch == 8:
+                elif ch % 8 == 0:
                     pointcolor.append(pg.mkBrush('w'))
                 if self.readoutcard == 'All':
                     if self.currentreadoutcard % 4 == 1:
