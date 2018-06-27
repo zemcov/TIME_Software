@@ -77,19 +77,13 @@ class mcegui(QtGui.QWidget):
         '''
         subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
         subprocess.Popen(['./mce2_stop.sh %s' %(self.readoutcard)], shell=True)
-        subprocess.Popen(['rm /tempfiles/mce1/temp.* ; rm /tempfiles/mce2/temp.*'], shell=True)
+        subprocess.Popen(['rm /tempfiles/mce1/temp.*'], shell=True)
+        subprocess.Popen(['rm /tempfiles/mce2/temp.*'], shell=True)
 
         #-------------------------------------------------------------------------------
-        command1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
-            pilot2@timemce.rit.edu ; pkill -f "python ~/Desktop/mce1_sftp.py"']
-        process = subprocess.Popen(command1,stdout=subprocess.PIPE, shell=True)
-        proc_stdout = process.communicate()[0].strip()
-
-        command2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
-            time@time-mce-0.caltech.edu ; pkill -f "python ~/Desktop/mce2_sftp.py"']
-        process = subprocess.Popen(command2,stdout=subprocess.PIPE, shell=True)
-        proc_stdout = process.communicate()[0].strip()
-
+        subprocess.Popen(['./mce1_files.sh stop'], shell=True)
+        subprocess.Popen(['./mce2_files.sh stop'], shell=True)
+        
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
