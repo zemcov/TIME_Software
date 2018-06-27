@@ -63,7 +63,7 @@ def readgraphall(y,f,mce_file_name,a,ch,rc,row):
     d = h[:,ch - 1]# + ((rc-1) * 8) - 1]
     new_array = []
     for j in range(d.shape[1]):
-        new_array.append(d[row][j])
+        new_array.append(d[row - 1][j])
 
     graphdata = [a,ch,new_array]
     return graphdata
