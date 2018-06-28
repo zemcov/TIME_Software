@@ -15,5 +15,8 @@ while True:
     pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
     print('Data Received')
     print(pa,time)
-s.close()
-sys.exit()
+
+    if KeyboardInterrupt:
+        s.close()
+        sys.exit()
+        False
