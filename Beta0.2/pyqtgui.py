@@ -11,6 +11,7 @@ import takedataall as tda
 import random as rm
 import netcdf_trial as nc
 import settings as st
+import socket, struct, threading
 sys.path.append('/data/cryo/current_data')
 
 #class of all components of GUI
@@ -102,6 +103,7 @@ class mcegui(QtGui.QWidget):
         self.datarate = self.enterdatarate.text()
         self.timeinterval = self.entertimeinterval.text()
         self.channeldelete = self.enterchanneldelete.currentText()
+        self.showmcedata = self.entershowmcedata.currentText()
         self.timestarted = datetime.datetime.utcnow()
         self.timestarted = self.timestarted.isoformat()
         #check if parameters are valid - will create warning box if invalid
@@ -115,6 +117,9 @@ class mcegui(QtGui.QWidget):
             self.parameterwarning.setWindowTitle('Parameter Warning')
             self.parameterwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             self.parameterwarning.exec_()
+        elif self.showmcedata == 'No':
+            self.submitbutton.setEnabled(False)
+            self.inittelescope()
         else:
             parafile = open('tempfiles/tempparameters.txt', 'w')
             parafile.write(self.observer+' ')
@@ -181,7 +186,10 @@ class mcegui(QtGui.QWidget):
             print('Frame per file: %s' % (self.frameperfile))
 
             self.submitbutton.setEnabled(False)
+
             self.initplot()
+
+            self.inittelescope()
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
@@ -212,6 +220,8 @@ class mcegui(QtGui.QWidget):
         self.entertimeinterval = QtGui.QLineEdit('120')
         self.enterchanneldelete = QtGui.QComboBox()
         self.enterchanneldelete.addItems(['No', 'Yes'])
+        self.entershowmcedata = QtGui.QComboBox()
+        self.entershowmcedata.addItems(['Yes', 'No'])
         self.submitbutton = QtGui.QPushButton('Submit')
 
         self.parameters = QtGui.QFormLayout()
@@ -222,6 +232,7 @@ class mcegui(QtGui.QWidget):
         self.parameters.addRow('Data Rate', self.enterdatarate)
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
+        self.parameters.addRow('Show MCE Data', self.entershowmcedata)
         self.parameters.addRow(self.submitbutton)
 
         self.parametersquit.addLayout(self.parameters)
@@ -233,6 +244,41 @@ class mcegui(QtGui.QWidget):
         self.readoutcardselect = QtGui.QComboBox()
         self.selectchannel = QtGui.QComboBox()
         self.selectrow = QtGui.QComboBox()
+
+
+    def inittelescope(self):
+        self.telescopewindow = QtGui.QWidget()
+        self.telescopewindow.setWindowTitle('Telescope Data')
+        self.inittelescopedata()
+        self.telegrid = QtGui.QGridLayout()
+        self.telegrid.addLayout(self.telescopedata, 1, 1, 1, 1)
+        self.telescopewindow.setGeometry(50, 50, 100, 100)
+        self.telescopewindow.setLayout(self.telegrid)
+        self.telescopewindow.show()
+
+
+    def inittelescopedata(self):
+        '''
+        PORT = 14555
+
+        # I am accepting telescope sim data for the gui
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(('',PORT))
+        print('Server listening on port %i' %(PORT))
+        s.listen(5)
+        unpacker = struct.Struct('d i d d d d d')
+        client, info = s.accept()
+        while True:
+            data = client.recv(unpacker.size)
+            pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
+            print('Data Received')
+            print(pa,time)
+        '''
+        self.telescopedata = QtGui.QVBoxLayout()
+        self.telescopetest = QtGui.QLabel('Hello!')
+        self.telescopedata.addWidget(self.telescopetest)
+
 
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
@@ -514,7 +560,6 @@ class mcegui(QtGui.QWidget):
         # else:
         #     self.heatmap.setLevels(100, 190)
         self.grid.addWidget(self.heatmap, 3, 2, 2, 5)
-
 
     #updates heatmap
     def updateheatmap(self):
