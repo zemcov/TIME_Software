@@ -76,6 +76,10 @@ class mcegui(QtGui.QWidget):
         #delete all MCE temp files still in directory
         deletetemp = ['rm /data/cryo/current_data/temp.*']
         b = subprocess.Popen(deletetemp, shell=True)
+        tempfilename = 'tempfiles/quittele.txt'
+        tempfile = open(tempfilename, 'w')
+        tempfile.write('Close')
+        tempfile.close()
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -258,23 +262,18 @@ class mcegui(QtGui.QWidget):
 
 
     def inittelescopedata(self):
-        '''
-        PORT = 14555
+        runtelecollect = 'python readteledata.py'
+        runtele = subprocess.Popen(runtelecollect, shell=True)
 
-        # I am accepting telescope sim data for the gui
+        runteleserver = './runteleserver.sh'
+        run = subprocess.Popen(runteleserver, shell=True)
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(('',PORT))
-        print('Server listening on port %i' %(PORT))
-        s.listen(5)
-        unpacker = struct.Struct('d i d d d d d')
-        client, info = s.accept()
-        while True:
-            data = client.recv(unpacker.size)
-            pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
-            print('Data Received')
-            print(pa,time)
-        '''
+        tempfile = open('tempfiles/tempteledata.txt', 'r')
+        if os.path.exists('tempfiles/tempteledata.txt'):
+            teledata = tempfile.read().strip().split()
+
+        print(teledata)
+
         self.telescopedata = QtGui.QVBoxLayout()
         self.telescopetest = QtGui.QLabel('Hello!')
         self.telescopedata.addWidget(self.telescopetest)
@@ -309,7 +308,8 @@ class mcegui(QtGui.QWidget):
     #changes channel of live graph when user changes channel
     def changechannel(self):
         self.currentchannel = int(self.selectchannel.currentText()) + 1
-	self.changereadoutcard()
+        if self.readoutcard == 'All':
+	           self.changereadoutcard()
         #print(self.currentchannel)
 
 
@@ -319,20 +319,20 @@ class mcegui(QtGui.QWidget):
 
     #changes readout card of live graph when user changes readout card
     def changereadoutcard(self):
-	if self.currentchannel < 9:
-	   self.currentreadoutcard = 1
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 1'
-	elif self.currentchannel >= 9 and self.currentchannel < 17:
-	   self.currentreadoutcard = 2
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 2'
-	elif self.currentchannel >= 17 and self.currentchannel < 25:
-	   self.currentreadoutcard = 3
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 3'
-	elif self.currentchannel >= 25:
-	   self.currentreadoutcard = 4
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 4'
-	self.currentreadoutcardtext.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
-        #self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
+    	if self.currentchannel < 9:
+    	   self.currentreadoutcard = 1
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 1'
+    	elif self.currentchannel >= 9 and self.currentchannel < 17:
+    	   self.currentreadoutcard = 2
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 2'
+    	elif self.currentchannel >= 17 and self.currentchannel < 25:
+    	   self.currentreadoutcard = 3
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 3'
+    	elif self.currentchannel >= 25:
+    	   self.currentreadoutcard = 4
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 4'
+    	self.currentreadoutcardtext.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
+            #self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
 
     #adds location for K-mirror data, currently has place holder data
     def initkmirrordata(self):
