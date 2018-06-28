@@ -28,7 +28,7 @@ COLOR = 'black'
 # -------------------------------------------------------------------------
 PILOT1 = '129.21.172.16'
 MY_MAC = '129.21.61.159' #server
-MAC_PORT = 8888
+MAC_PORT = 14555
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((PILOT1, MAC_PORT))
 message = 'Hello!'
