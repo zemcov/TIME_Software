@@ -40,7 +40,7 @@ def new_file(n, h_size, head):
     heatmap.createDimension('t',None)
 
     mce_header.createDimension('k',2)
-    mce_header.createDimension('v',17)
+    mce_header.createDimension('v',16)
     mce_header.createDimension('t',None)
 
     # creating variables --------------------------------------------------------------------------------

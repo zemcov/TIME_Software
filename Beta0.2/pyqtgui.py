@@ -11,6 +11,7 @@ import takedataall as tda
 import random as rm
 import netcdf_trial as nc
 import settings as st
+import socket, struct, threading
 sys.path.append('/data/cryo/current_data')
 
 #class of all components of GUI
@@ -75,6 +76,10 @@ class mcegui(QtGui.QWidget):
         #delete all MCE temp files still in directory
         deletetemp = ['rm /data/cryo/current_data/temp.*']
         b = subprocess.Popen(deletetemp, shell=True)
+        tempfilename = 'tempfiles/quittele.txt'
+        tempfile = open(tempfilename, 'w')
+        tempfile.write('Close')
+        tempfile.close()
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -102,6 +107,7 @@ class mcegui(QtGui.QWidget):
         self.datarate = self.enterdatarate.text()
         self.timeinterval = self.entertimeinterval.text()
         self.channeldelete = self.enterchanneldelete.currentText()
+        self.showmcedata = self.entershowmcedata.currentText()
         self.timestarted = datetime.datetime.utcnow()
         self.timestarted = self.timestarted.isoformat()
         #check if parameters are valid - will create warning box if invalid
@@ -115,6 +121,9 @@ class mcegui(QtGui.QWidget):
             self.parameterwarning.setWindowTitle('Parameter Warning')
             self.parameterwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             self.parameterwarning.exec_()
+        elif self.showmcedata == 'No':
+            self.submitbutton.setEnabled(False)
+            self.inittelescope()
         else:
             parafile = open('tempfiles/tempparameters.txt', 'w')
             parafile.write(self.observer+' ')
@@ -181,7 +190,10 @@ class mcegui(QtGui.QWidget):
             print('Frame per file: %s' % (self.frameperfile))
 
             self.submitbutton.setEnabled(False)
+
             self.initplot()
+
+            self.inittelescope()
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
@@ -212,6 +224,8 @@ class mcegui(QtGui.QWidget):
         self.entertimeinterval = QtGui.QLineEdit('120')
         self.enterchanneldelete = QtGui.QComboBox()
         self.enterchanneldelete.addItems(['No', 'Yes'])
+        self.entershowmcedata = QtGui.QComboBox()
+        self.entershowmcedata.addItems(['Yes', 'No'])
         self.submitbutton = QtGui.QPushButton('Submit')
 
         self.parameters = QtGui.QFormLayout()
@@ -222,6 +236,7 @@ class mcegui(QtGui.QWidget):
         self.parameters.addRow('Data Rate', self.enterdatarate)
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
+        self.parameters.addRow('Show MCE Data', self.entershowmcedata)
         self.parameters.addRow(self.submitbutton)
 
         self.parametersquit.addLayout(self.parameters)
@@ -233,6 +248,36 @@ class mcegui(QtGui.QWidget):
         self.readoutcardselect = QtGui.QComboBox()
         self.selectchannel = QtGui.QComboBox()
         self.selectrow = QtGui.QComboBox()
+
+
+    def inittelescope(self):
+        self.telescopewindow = QtGui.QWidget()
+        self.telescopewindow.setWindowTitle('Telescope Data')
+        self.inittelescopedata()
+        self.telegrid = QtGui.QGridLayout()
+        self.telegrid.addLayout(self.telescopedata, 1, 1, 1, 1)
+        self.telescopewindow.setGeometry(50, 50, 100, 100)
+        self.telescopewindow.setLayout(self.telegrid)
+        self.telescopewindow.show()
+
+
+    def inittelescopedata(self):
+        runtelecollect = 'python readteledata.py'
+        runtele = subprocess.Popen(runtelecollect, shell=True)
+
+        runteleserver = './runteleserver.sh'
+        run = subprocess.Popen(runteleserver, shell=True)
+
+        tempfile = open('tempfiles/tempteledata.txt', 'r')
+        if os.path.exists('tempfiles/tempteledata.txt'):
+            teledata = tempfile.read().strip().split()
+
+        print(teledata)
+
+        self.telescopedata = QtGui.QVBoxLayout()
+        self.telescopetest = QtGui.QLabel('Hello!')
+        self.telescopedata.addWidget(self.telescopetest)
+
 
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
@@ -263,7 +308,8 @@ class mcegui(QtGui.QWidget):
     #changes channel of live graph when user changes channel
     def changechannel(self):
         self.currentchannel = int(self.selectchannel.currentText()) + 1
-	self.changereadoutcard()
+        if self.readoutcard == 'All':
+	           self.changereadoutcard()
         #print(self.currentchannel)
 
 
@@ -273,20 +319,20 @@ class mcegui(QtGui.QWidget):
 
     #changes readout card of live graph when user changes readout card
     def changereadoutcard(self):
-	if self.currentchannel < 9:
-	   self.currentreadoutcard = 1
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 1'
-	elif self.currentchannel >= 9 and self.currentchannel < 17:
-	   self.currentreadoutcard = 2
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 2'
-	elif self.currentchannel >= 17 and self.currentchannel < 25:
-	   self.currentreadoutcard = 3
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 3'
-	elif self.currentchannel >= 25:
-	   self.currentreadoutcard = 4
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 4'
-	self.currentreadoutcardtext.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
-        #self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
+    	if self.currentchannel < 9:
+    	   self.currentreadoutcard = 1
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 1'
+    	elif self.currentchannel >= 9 and self.currentchannel < 17:
+    	   self.currentreadoutcard = 2
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 2'
+    	elif self.currentchannel >= 17 and self.currentchannel < 25:
+    	   self.currentreadoutcard = 3
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 3'
+    	elif self.currentchannel >= 25:
+    	   self.currentreadoutcard = 4
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 4'
+    	self.currentreadoutcardtext.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
+            #self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
 
     #adds location for K-mirror data, currently has place holder data
     def initkmirrordata(self):
@@ -528,7 +574,6 @@ class mcegui(QtGui.QWidget):
         # else:
         #     self.heatmap.setLevels(100, 190)
         self.grid.addWidget(self.heatmap, 3, 2, 2, 5)
-
 
     #updates heatmap
     def updateheatmap(self):
