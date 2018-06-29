@@ -25,14 +25,21 @@ class mcegui(QtGui.QWidget):
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
+        tempfiledir = os.path.expanduser('~/Desktop/mce_files')
+        if os.path.exists(tempfiledir):
+            print('Hello!')
+        else:
+            mce_dir = ["mkdir ~/Desktop/mce_files"] #% (self.datamode)]
+            subprocess.Popen(mce_dir, shell=True)
+
         self.timeinterval = 1
         #deleting old gui_data_test files
-        for i in range(len(os.listdir('tempfiles'))):
-            tempfilename = 'tempfiles/gui_data_test%s.nc' % (i)
-            tempfile = os.path.exists(tempfilename)
-            if tempfile:
-                delete_file = ['rm ' + tempfilename]
-                subprocess.Popen(delete_file,shell=True)
+        #for i in range(len(os.listdir('tempfiles'))):
+        #    tempfilename = 'tempfiles/gui_data_test%s.nc' % (i)
+        #    tempfile = os.path.exists(tempfilename)
+        #    if tempfile:
+        #        delete_file = ['rm ' + tempfilename]
+        #        subprocess.Popen(delete_file,shell=True)
         #setting all variables
         self.observer = ''
         self.datamode = ''
@@ -251,6 +258,7 @@ class mcegui(QtGui.QWidget):
 
 
     def inittelescope(self):
+        return
         self.telescopewindow = QtGui.QWidget()
         self.telescopewindow.setWindowTitle('Telescope Data')
         self.inittelescopedata()
@@ -262,6 +270,7 @@ class mcegui(QtGui.QWidget):
 
 
     def inittelescopedata(self):
+        return
         runtelecollect = 'python readteledata.py'
         runtele = subprocess.Popen(runtelecollect, shell=True)
 
@@ -277,7 +286,6 @@ class mcegui(QtGui.QWidget):
         self.telescopedata = QtGui.QVBoxLayout()
         self.telescopetest = QtGui.QLabel('Hello!')
         self.telescopedata.addWidget(self.telescopetest)
-
 
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
@@ -422,6 +430,7 @@ class mcegui(QtGui.QWidget):
         #call other init functions and begin updating graph
         self.initheatmap()
         self.initkmirrordata()
+        self.initfftgraph()
         self.updateplot()
 
         #timer for updating graph
@@ -444,6 +453,7 @@ class mcegui(QtGui.QWidget):
 
         self.updateheatmap()
         self.updatekmirrordata()
+        self.updatefftgraph()
         self.updateplot()
 
     #writes and updates data to both live graph and old graph
@@ -456,6 +466,7 @@ class mcegui(QtGui.QWidget):
             a = self.graphdata[0]
             ch = self.graphdata[1]
             y = self.graphdata[2][:self.frameperfile]
+            self.y = y
             #visual watchdog to make sure everything is in-sync with everything else
             print('gui %s %s' % (self.n_intervals, a))
             #creates x values for current time interval and colors points based
@@ -493,6 +504,7 @@ class mcegui(QtGui.QWidget):
                         pointsymbol.append('t')
                     elif self.currentreadoutcard % 4 == 0:
                         pointsymbol.append('d')
+            self.x = x
             #initializes old data list on either the first update or the first one after
             #the current total time interval, otherwise adds to current list
             if self.n_intervals == 1 or self.n_intervals % self.totaltimeinterval == 2:
@@ -573,7 +585,7 @@ class mcegui(QtGui.QWidget):
         #     self.heatmap.setLevels(60, 260)
         # else:
         #     self.heatmap.setLevels(100, 190)
-        self.grid.addWidget(self.heatmap, 3, 2, 2, 5)
+        self.grid.addWidget(self.heatmap, 3, 2, 2, 3)
 
     #updates heatmap
     def updateheatmap(self):
@@ -588,6 +600,31 @@ class mcegui(QtGui.QWidget):
         #     self.heatmap.setLevels(60, 260)
         # else:
         #     self.heatmap.setLevels(100, 190)
+
+
+    def initfftgraph(self):
+        self.fftgraph = pg.PlotWidget()
+        self.fftgraphdata = pg.ScatterPlotItem()
+        self.fftgraph.addItem(self.fftgraphdata)
+
+        self.fftgraph.setLabel('bottom', 'Time', 's')
+        self.fftgraph.setLabel('left', 'Counts')
+        self.fftgraph.setTitle('FFT Data')
+
+        self.grid.addWidget(self.fftgraph, 3, 5, 2, 3)
+
+
+    def updatefftgraph(self):
+        self.fftdata = np.fft.fft(self.y)
+
+        self.fftdata = np.asarray(self.fftdata, dtype=np.float32)
+
+        #print(self.fftdata)
+
+        self.fftdata[0] = self.fftdata[1]
+
+        self.fftgraphdata.setData(self.x, self.fftdata)
+
 
 #calls mcegui class to start GUI
 def main():

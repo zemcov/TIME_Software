@@ -48,10 +48,11 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
-
+    
+    tempfiledir = os.path.expanduser('~/Desktop/mce_files')
     if st.a == 1:
     	mce = nc.new_file(st.n, h.shape, head)
-    if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
+    if os.stat(tempfiledir + "/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
         nc.data(h,d,st.n,st.a,head)
     else:
         st.n = st.n + 1
