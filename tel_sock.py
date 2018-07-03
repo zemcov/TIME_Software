@@ -26,9 +26,10 @@ dec = 20 # static
 loops_deg = 2 #number of loops per degrees = loops_deg
 COLOR = 'black'
 # -------------------------------------------------------------------------
-PILOT1 = '129.21.172.16' #client
+#PILOT1 = '129.21.172.16' #client
 PILOT1_PORT = 8888
 MY_MAC = '129.21.61.159' #server
+PILOT1 = '129.21.172.211'
 MAC_PORT = 8888
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((PILOT1, MAC_PORT))

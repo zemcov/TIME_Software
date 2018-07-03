@@ -83,10 +83,19 @@ class mcegui(QtGui.QWidget):
         #delete all MCE temp files still in directory
         deletetemp = ['rm /data/cryo/current_data/temp.*']
         b = subprocess.Popen(deletetemp, shell=True)
-        tempfilename = 'tempfiles/quittele.txt'
-        tempfile = open(tempfilename, 'w')
-        tempfile.write('Close')
-        tempfile.close()
+
+        self.runtele.terminate()
+
+        runteleserver = './runteleserver.sh stop'
+        run = subprocess.Popen(runteleserver, shell=True)
+
+
+        #tempfilename = 'tempfiles/quittele.txt'
+        #tempfile = open(tempfilename, 'w')
+        #tempfile.write('Close')
+        #tempfile.close()
+
+
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -258,34 +267,142 @@ class mcegui(QtGui.QWidget):
 
 
     def inittelescope(self):
-        return
+        #return
+        tempfilename = 'tempfiles/quittele.txt'
+        tempfile = open(tempfilename, 'w')
+        tempfile.write('Open')
+        tempfile.close()
         self.telescopewindow = QtGui.QWidget()
         self.telescopewindow.setWindowTitle('Telescope Data')
         self.inittelescopedata()
         self.telegrid = QtGui.QGridLayout()
         self.telegrid.addLayout(self.telescopedata, 1, 1, 1, 1)
+        self.telegrid.addWidget(self.altazgraph, 1, 2, 2, 2)
+        self.telegrid.addWidget(self.radecgraph, 1, 4, 2, 2)
         self.telescopewindow.setGeometry(50, 50, 100, 100)
         self.telescopewindow.setLayout(self.telegrid)
         self.telescopewindow.show()
 
+        self.teletimer = pg.QtCore.QTimer()
+        self.teletimer.timeout.connect(self.updatetelescopedata)
+        self.teletimer.start(1000)
+
 
     def inittelescopedata(self):
-        return
+        #self.teleintervals = 1
+        altazcolor = pg.mkBrush('b')
+        radeccolor = pg.mkBrush('r')
+        #return
         runtelecollect = 'python readteledata.py'
-        runtele = subprocess.Popen(runtelecollect, shell=True)
+        self.runtele = subprocess.Popen(runtelecollect, shell=True)
 
-        runteleserver = './runteleserver.sh'
+        runteleserver = './runteleserver.sh start'
         run = subprocess.Popen(runteleserver, shell=True)
 
         tempfile = open('tempfiles/tempteledata.txt', 'r')
-        if os.path.exists('tempfiles/tempteledata.txt'):
-            teledata = tempfile.read().strip().split()
+        while not os.path.exists('tempfiles/tempteledata.txt'):
+            time.sleep(0.1)
+        teledata = tempfile.read().strip().split()
 
         print(teledata)
 
         self.telescopedata = QtGui.QVBoxLayout()
         self.telescopetest = QtGui.QLabel('Hello!')
         self.telescopedata.addWidget(self.telescopetest)
+
+        self.altazgraph = pg.PlotWidget()
+        self.altazgraphdata = pg.ScatterPlotItem()
+        self.altazgraph.addItem(self.altazgraphdata)
+        self.altazgraph.showGrid(x=True, y=True)
+        self.altazgraph.setTitle('Alt-Az Graph')
+        self.altazgraph.setLabel('left', 'alt')
+        self.altazgraph.setLabel('bottom', 'az')
+
+        self.radecgraph = pg.PlotWidget()
+        self.radecgraphdata = pg.ScatterPlotItem()
+        self.radecgraph.addItem(self.radecgraphdata)
+        self.radecgraph.showGrid(x=True, y=True)
+        self.radecgraph.setTitle('Ra-Dec Graph')
+        self.radecgraph.setLabel('left', 'DEC (deg)')
+        self.radecgraph.setLabel('bottom', 'RA (deg)')
+
+        alt = [float(teledata[2])]
+        az = [float(teledata[3])]
+
+        dec = [float(teledata[5])]
+        ra = [float(teledata[4])]
+
+        #print(az, alt)
+
+        self.altazgraphdata.setData(x=az, y=alt, brush=altazcolor)
+        self.radecgraphdata.setData(x=ra, y=dec, brush=radeccolor)
+
+        self.patext = QtGui.QLabel('PA: %s' % teledata[0])
+        self.slewtext = QtGui.QLabel('Slew Flag: %s' % teledata[1])
+        self.alttext = QtGui.QLabel('Alt: %s'%teledata[2])
+        self.aztext = QtGui.QLabel('Az: %s'%teledata[3])
+        self.ratext = QtGui.QLabel('RA: %s'%teledata[4])
+        self.dectext = QtGui.QLabel('Dec: %s'%teledata[5])
+        self.timetext = QtGui.QLabel('UTC Time: %s'%teledata[6])
+
+        self.telescopedata.addWidget(self.patext)
+        self.telescopedata.addWidget(self.slewtext)
+        self.telescopedata.addWidget(self.alttext)
+        self.telescopedata.addWidget(self.aztext)
+        self.telescopedata.addWidget(self.ratext)
+        self.telescopedata.addWidget(self.dectext)
+        self.telescopedata.addWidget(self.timetext)
+
+
+    def updatetelescopedata(self):
+        tempfile = open('tempfiles/tempteledata.txt', 'r')
+        if os.path.exists('tempfiles/tempteledata.txt'):
+            teledata = tempfile.read().strip().split()
+
+        #self.teleintervals += 1
+        '''
+        if self.teleintervals % 8 == 1:
+            telecolor = pg.mkBrush('b')
+        elif self.teleintervals % 8 == 2:
+            telecolor = pg.mkBrush('r')
+        elif self.teleintervals % 8 == 3:
+            telecolor = pg.mkBrush('g')
+        elif self.teleintervals % 8 == 4:
+            telecolor = pg.mkBrush('y')
+        elif self.teleintervals % 8 == 5:
+            telecolor = pg.mkBrush('c')
+        elif self.teleintervals % 8 == 6:
+            telecolor = pg.mkBrush('m')
+        elif self.teleintervals % 8 == 7:
+            telecolor = pg.mkBrush('k')
+        elif self.teleintervals % 8 == 0:
+            telecolor = pg.mkBrush('w')
+        '''
+        telecolor = pg.mkBrush('b')
+        radeccolor = pg.mkBrush('r')
+
+        self.patext.setText('PA: %s' % teledata[0])
+        self.slewtext.setText('Slew Flag: %s' % teledata[1])
+        self.alttext.setText('Alt: %s'%teledata[2])
+        self.aztext.setText('Az: %s'%teledata[3])
+        self.ratext.setText('RA: %s'%teledata[4])
+        self.dectext.setText('Dec: %s'%teledata[5])
+        self.timetext.setText('UTC Time: %s'%teledata[6])
+
+        alt = [float(teledata[2])]
+        az = [float(teledata[3])]
+        dec = [float(teledata[5])]
+        ra = [float(teledata[4])]
+
+        #print(az, alt)
+
+        self.altazgraphdata.addPoints(x=az, y=alt, brush=telecolor)
+        self.radecgraphdata.addPoints(x=ra, y=dec, brush=radeccolor)
+
+
+
+
+        #print(teledata)
 
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
