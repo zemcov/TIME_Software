@@ -1,12 +1,12 @@
 import socket, struct, threading, sys
 
-PORT = 14555
+MAC_PORT = 8888
 
 # I am accepting telescope sim data for the gui
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('',MAC_PORT))
-print('Server listening on port %i' %(PORT))
+print('Server listening on port %i' %(MAC_PORT))
 s.listen(5)
 unpacker = struct.Struct('d i d d d d d')
 client, info = s.accept()
