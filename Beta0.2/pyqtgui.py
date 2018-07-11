@@ -75,25 +75,26 @@ class mcegui(QtGui.QWidget):
     def on_quitbutton_clicked(self):
         print('Quitting Application')
         #stop mce with subprocess
-        if self.readoutcard == 'All':
-            run = ['mce_cmd -x stop rcs ret_dat']
-        else:
-            run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
-        a = subprocess.Popen(run, shell=True)
-        #delete all MCE temp files still in directory
-        deletetemp = ['rm /data/cryo/current_data/temp.*']
-        b = subprocess.Popen(deletetemp, shell=True)
+        if self.showmcedata == 'Yes':
+            if self.readoutcard == 'All':
+                run = ['mce_cmd -x stop rcs ret_dat']
+            else:
+                run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
+            a = subprocess.Popen(run, shell=True)
+            #delete all MCE temp files still in directory
+            deletetemp = ['rm /data/cryo/current_data/temp.*']
+            b = subprocess.Popen(deletetemp, shell=True)
 
-        self.runtele.terminate()
+        #self.runtele.terminate()
+        self.runnetcdf.terminate()
 
         runteleserver = './runteleserver.sh stop'
         run = subprocess.Popen(runteleserver, shell=True)
 
-
-        #tempfilename = 'tempfiles/quittele.txt'
-        #tempfile = open(tempfilename, 'w')
-        #tempfile.write('Close')
-        #tempfile.close()
+        tempfilename = 'tempfiles/quittele.txt'
+        tempfile = open(tempfilename, 'w')
+        tempfile.write('Close')
+        tempfile.close()
 
 
         sys.exit()
@@ -267,7 +268,6 @@ class mcegui(QtGui.QWidget):
 
 
     def inittelescope(self):
-        #return
         tempfilename = 'tempfiles/quittele.txt'
         tempfile = open(tempfilename, 'w')
         tempfile.write('Open')
@@ -307,8 +307,8 @@ class mcegui(QtGui.QWidget):
         print(teledata)
 
         self.telescopedata = QtGui.QVBoxLayout()
-        self.telescopetest = QtGui.QLabel('Hello!')
-        self.telescopedata.addWidget(self.telescopetest)
+        #self.telescopetest = QtGui.QLabel('Hello!')
+        #self.telescopedata.addWidget(self.telescopetest)
 
         self.altazgraph = pg.PlotWidget()
         self.altazgraphdata = pg.ScatterPlotItem()
@@ -516,11 +516,17 @@ class mcegui(QtGui.QWidget):
         #calls takedata or takedata depending on 1 or all readout cards respectfully,
         #passes variables to let takedata/takedataall correctly parse data and
         #gets data for graohing back
+        netcdfcmd = ['python runnetcdf.py %s' % (self.n_files)]
+        print(netcdfcmd)
+        self.runnetcdf = subprocess.Popen(netcdfcmd, shell=True)
+
         if self.readoutcard == 'All':
             self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce, \
             self.row)
         else:
             self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce, self.row)
+
+
 
         #initalize data list
         self.data = [0, 0, 0]

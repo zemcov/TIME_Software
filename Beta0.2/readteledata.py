@@ -9,9 +9,10 @@ print('Server listening on port %i' %(PORT))
 s.listen(5)
 #runteleserver = './runteleserver.sh start'
 #run = subprocess.Popen(runteleserver, shell=True)
+quit = 'Open'
 unpacker = struct.Struct('d i d d d d d')
 client, info = s.accept()
-while True:
+while quit != 'Close':
     data = client.recv(unpacker.size)
     pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
     tempfilename = 'tempfiles/tempteledata.txt'
@@ -24,10 +25,10 @@ while True:
     tempfile.write(str(dec)+' ')
     tempfile.write(str(time))
     tempfile.close()
-    #quittempfilename = 'tempfiles/quittele.txt'
-    #quittempfile = open(quittempfilename, 'r')
-    #quit = quittempfile.read().strip()
-    #quittempfile.close()
+    quittempfilename = 'tempfiles/quittele.txt'
+    quittempfile = open(quittempfilename, 'r')
+    quit = quittempfile.read().strip()
+    quittempfile.close()
     #print('Data Received')
     #print(pa,time)
 s.close()
