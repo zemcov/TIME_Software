@@ -10,6 +10,7 @@ class netgui(QtGui.QWidget):
     def __init__(self):
         super(netgui, self).__init__()
         self.init_ui()
+        self.qt_connections()
 
 
     def init_ui(self):
@@ -22,8 +23,40 @@ class netgui(QtGui.QWidget):
         self.show()
 
 
-    def getparameters(self):
+    def qt_connections(self):
+        self.quitbutton.clicked.connect(self.quitgui)
 
+
+    def quitgui(self):
+        print('Quitting Application')
+
+        sys.exit()
+
+
+    def getparameters(self):
         self.parametersquit = QtGui.QVBoxLayout()
 
-        self.entertest = QtGui.QComboBox()
+        self.entertime = QtGui.QLineEdit()
+        self.entertimeinterval = QtGui.QLineEdit()
+
+        self.parameters = QtGui.QFormLayout()
+
+        self.parameters.addRow('Time:', self.entertime)
+        self.parameters.addRow('Time Interval:', self.entertimeinterval)
+
+        self.parametersquit.addLayout(self.parameters)
+
+        self.quitbutton = QtGui.QPushButton('Quit')
+
+        self.parametersquit.addWidget(self.quitbutton)
+
+
+def main():
+    app = QtGui.QApplication(sys.argv)
+    app.setApplicationName('NETCDF TIME Data')
+    ex = netgui()
+    sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()
