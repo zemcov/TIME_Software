@@ -744,7 +744,11 @@ class mcegui(QtGui.QWidget):
 
         #print(self.fftdata)
 
-        self.fftdata[0] = self.fftdata[1]
+        self.fftdata[0] = self.fftdata[-1]
+
+        #self.fftdata = self.fftdata[0, (self.fftdata.shape[0] // 2) + 1]
+
+        #x = self.x[0, (len(self.x) // 2) + 1]
 
         self.fftgraphdata.setData(self.x, self.fftdata)
 
