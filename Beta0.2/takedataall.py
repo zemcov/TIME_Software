@@ -43,18 +43,18 @@ def readdataall(f,mce_file_name, frameperfile, mce, head):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
 
-    if st.a == 1:
-	mce = nc.new_file(st.n, h.shape, head)
-    if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
-	nc.data_all(h,d,st.n,st.a,head)
-    else:
-	st.n = st.n + 1
+    #if st.a == 1:
+    #    mce = nc.new_file(st.n, h.shape, head)
+    #if os.stat(tempfiledir + "/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
+    #    nc.data_all(h,d,st.n,st.a,head)
+    #else:
+    #    st.n = st.n + 1
         #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
-	mce.close()
-	print('----------New File----------')
-	mce = nc.new_file(st.n, h.shape, head)
-	nc.data_all(h,d,st.n,st.a,head)
-    return d, mce
+    #    mce.close()
+    #    print('----------New File----------')
+    #    mce = nc.new_file(st.n, h.shape, head)
+    #    nc.data_all(h,d,st.n,st.a,head)
+    #return d, mce
 
 def readgraphall(y,f,mce_file_name,a,ch,rc,row):
     h = f.Read(row_col=True, unfilter='DC').data

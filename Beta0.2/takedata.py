@@ -27,13 +27,14 @@ def takedata(a, ch, n_files, frameperfile, mce, row):
         mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
         mce_file = os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
         if mce_file:
-            print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
+            #print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
             for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
-		mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
+                mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
                 a = a + 1
                 st.a = a
                 f = mce_data.SmallMCEFile(mce_file_name)
-                header = read_header(f)
+                #header = read_header(f)
+                header = 22
                 z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
                 graphdata = readgraph(y, f, mce_file_name, a, ch, row)
                 allgraphdata.append(graphdata)
@@ -49,17 +50,18 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
 
-    if st.a == 1:
-    	mce = nc.new_file(st.n, h.shape, head)
-    if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
-        nc.data(h,d,st.n,st.a,head)
-    else:
-        st.n = st.n + 1
+    #tempfiledir = os.path.expanduser('~/Desktop/mce_files')
+    #if st.a == 1:
+    #	mce = nc.new_file(st.n, h.shape, head)
+    #if os.stat(tempfiledir + "/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
+    #    nc.data(h,d,st.n,st.a,head)
+    #else:
+    #    st.n = st.n + 1
         #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
-        mce.close()
-        print('----------New File----------')
-        mce = nc.new_file(st.n, h.shape, head)
-        nc.data(h,d,st.n,st.a,head)
+    #    mce.close()
+    #    print('----------New File----------')
+    #    mce = nc.new_file(st.n, h.shape, head)
+    #    nc.data(h,d,st.n,st.a,head)
     return d, mce
 
 def readgraph(y, f, mce_file_name, a, ch, row):

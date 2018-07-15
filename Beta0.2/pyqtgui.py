@@ -11,6 +11,7 @@ import takedataall as tda
 import random as rm
 import netcdf_trial as nc
 import settings as st
+import socket, struct, threading
 sys.path.append('/data/cryo/current_data')
 
 #class of all components of GUI
@@ -24,14 +25,21 @@ class mcegui(QtGui.QWidget):
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
+        tempfiledir = os.path.expanduser('~/Desktop/mce_files')
+        if os.path.exists(tempfiledir):
+            print('Hello!')
+        else:
+            mce_dir = ["mkdir ~/Desktop/mce_files"] #% (self.datamode)]
+            subprocess.Popen(mce_dir, shell=True)
+
         self.timeinterval = 1
         #deleting old gui_data_test files
-        for i in range(len(os.listdir('tempfiles'))):
-            tempfilename = 'tempfiles/gui_data_test%s.nc' % (i)
-            tempfile = os.path.exists(tempfilename)
-            if tempfile:
-                delete_file = ['rm ' + tempfilename]
-                subprocess.Popen(delete_file,shell=True)
+        #for i in range(len(os.listdir('tempfiles'))):
+        #    tempfilename = 'tempfiles/gui_data_test%s.nc' % (i)
+        #    tempfile = os.path.exists(tempfilename)
+        #    if tempfile:
+        #        delete_file = ['rm ' + tempfilename]
+        #        subprocess.Popen(delete_file,shell=True)
         #setting all variables
         self.observer = ''
         self.datamode = ''
@@ -67,14 +75,28 @@ class mcegui(QtGui.QWidget):
     def on_quitbutton_clicked(self):
         print('Quitting Application')
         #stop mce with subprocess
-        if self.readoutcard == 'All':
-            run = ['mce_cmd -x stop rcs ret_dat']
-        else:
-            run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
-        a = subprocess.Popen(run, shell=True)
-        #delete all MCE temp files still in directory
-        deletetemp = ['rm /data/cryo/current_data/temp.*']
-        b = subprocess.Popen(deletetemp, shell=True)
+        if self.showmcedata == 'Yes':
+            if self.readoutcard == 'All':
+                run = ['mce_cmd -x stop rcs ret_dat']
+            else:
+                run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
+            a = subprocess.Popen(run, shell=True)
+            #delete all MCE temp files still in directory
+            deletetemp = ['rm /data/cryo/current_data/temp.*']
+            b = subprocess.Popen(deletetemp, shell=True)
+
+        #self.runtele.terminate()
+        self.runnetcdf.terminate()
+
+        runteleserver = './runteleserver.sh stop'
+        run = subprocess.Popen(runteleserver, shell=True)
+
+        tempfilename = 'tempfiles/quittele.txt'
+        tempfile = open(tempfilename, 'w')
+        tempfile.write('Close')
+        tempfile.close()
+
+
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -102,6 +124,7 @@ class mcegui(QtGui.QWidget):
         self.datarate = self.enterdatarate.text()
         self.timeinterval = self.entertimeinterval.text()
         self.channeldelete = self.enterchanneldelete.currentText()
+        self.showmcedata = self.entershowmcedata.currentText()
         self.timestarted = datetime.datetime.utcnow()
         self.timestarted = self.timestarted.isoformat()
         #check if parameters are valid - will create warning box if invalid
@@ -115,6 +138,9 @@ class mcegui(QtGui.QWidget):
             self.parameterwarning.setWindowTitle('Parameter Warning')
             self.parameterwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             self.parameterwarning.exec_()
+        elif self.showmcedata == 'No':
+            self.submitbutton.setEnabled(False)
+            self.inittelescope()
         else:
             parafile = open('tempfiles/tempparameters.txt', 'w')
             parafile.write(self.observer+' ')
@@ -181,7 +207,10 @@ class mcegui(QtGui.QWidget):
             print('Frame per file: %s' % (self.frameperfile))
 
             self.submitbutton.setEnabled(False)
+
             self.initplot()
+
+            self.inittelescope()
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
@@ -212,6 +241,8 @@ class mcegui(QtGui.QWidget):
         self.entertimeinterval = QtGui.QLineEdit('120')
         self.enterchanneldelete = QtGui.QComboBox()
         self.enterchanneldelete.addItems(['No', 'Yes'])
+        self.entershowmcedata = QtGui.QComboBox()
+        self.entershowmcedata.addItems(['Yes', 'No'])
         self.submitbutton = QtGui.QPushButton('Submit')
 
         self.parameters = QtGui.QFormLayout()
@@ -222,6 +253,7 @@ class mcegui(QtGui.QWidget):
         self.parameters.addRow('Data Rate', self.enterdatarate)
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
+        self.parameters.addRow('Show MCE Data', self.entershowmcedata)
         self.parameters.addRow(self.submitbutton)
 
         self.parametersquit.addLayout(self.parameters)
@@ -233,6 +265,144 @@ class mcegui(QtGui.QWidget):
         self.readoutcardselect = QtGui.QComboBox()
         self.selectchannel = QtGui.QComboBox()
         self.selectrow = QtGui.QComboBox()
+
+
+    def inittelescope(self):
+        tempfilename = 'tempfiles/quittele.txt'
+        tempfile = open(tempfilename, 'w')
+        tempfile.write('Open')
+        tempfile.close()
+        self.telescopewindow = QtGui.QWidget()
+        self.telescopewindow.setWindowTitle('Telescope Data')
+        self.inittelescopedata()
+        self.telegrid = QtGui.QGridLayout()
+        self.telegrid.addLayout(self.telescopedata, 1, 1, 1, 1)
+        self.telegrid.addWidget(self.altazgraph, 1, 2, 2, 2)
+        self.telegrid.addWidget(self.radecgraph, 1, 4, 2, 2)
+        self.telescopewindow.setGeometry(50, 50, 100, 100)
+        self.telescopewindow.setLayout(self.telegrid)
+        self.telescopewindow.show()
+
+        self.teletimer = pg.QtCore.QTimer()
+        self.teletimer.timeout.connect(self.updatetelescopedata)
+        self.teletimer.start(1000)
+
+
+    def inittelescopedata(self):
+        #self.teleintervals = 1
+        altazcolor = pg.mkBrush('b')
+        radeccolor = pg.mkBrush('r')
+        #return
+        runtelecollect = 'python readteledata.py'
+        self.runtele = subprocess.Popen(runtelecollect, shell=True)
+
+        runteleserver = './runteleserver.sh start'
+        run = subprocess.Popen(runteleserver, shell=True)
+
+        tempfile = open('tempfiles/tempteledata.txt', 'r')
+        while not os.path.exists('tempfiles/tempteledata.txt'):
+            time.sleep(0.1)
+        teledata = tempfile.read().strip().split()
+
+        print(teledata)
+
+        self.telescopedata = QtGui.QVBoxLayout()
+        #self.telescopetest = QtGui.QLabel('Hello!')
+        #self.telescopedata.addWidget(self.telescopetest)
+
+        self.altazgraph = pg.PlotWidget()
+        self.altazgraphdata = pg.ScatterPlotItem()
+        self.altazgraph.addItem(self.altazgraphdata)
+        self.altazgraph.showGrid(x=True, y=True)
+        self.altazgraph.setTitle('Alt-Az Graph')
+        self.altazgraph.setLabel('left', 'alt')
+        self.altazgraph.setLabel('bottom', 'az')
+
+        self.radecgraph = pg.PlotWidget()
+        self.radecgraphdata = pg.ScatterPlotItem()
+        self.radecgraph.addItem(self.radecgraphdata)
+        self.radecgraph.showGrid(x=True, y=True)
+        self.radecgraph.setTitle('Ra-Dec Graph')
+        self.radecgraph.setLabel('left', 'DEC (deg)')
+        self.radecgraph.setLabel('bottom', 'RA (deg)')
+
+        alt = [float(teledata[2])]
+        az = [float(teledata[3])]
+
+        dec = [float(teledata[5])]
+        ra = [float(teledata[4])]
+
+        #print(az, alt)
+
+        self.altazgraphdata.setData(x=az, y=alt, brush=altazcolor)
+        self.radecgraphdata.setData(x=ra, y=dec, brush=radeccolor)
+
+        self.patext = QtGui.QLabel('PA: %s' % teledata[0])
+        self.slewtext = QtGui.QLabel('Slew Flag: %s' % teledata[1])
+        self.alttext = QtGui.QLabel('Alt: %s'%teledata[2])
+        self.aztext = QtGui.QLabel('Az: %s'%teledata[3])
+        self.ratext = QtGui.QLabel('RA: %s'%teledata[4])
+        self.dectext = QtGui.QLabel('Dec: %s'%teledata[5])
+        self.timetext = QtGui.QLabel('UTC Time: %s'%teledata[6])
+
+        self.telescopedata.addWidget(self.patext)
+        self.telescopedata.addWidget(self.slewtext)
+        self.telescopedata.addWidget(self.alttext)
+        self.telescopedata.addWidget(self.aztext)
+        self.telescopedata.addWidget(self.ratext)
+        self.telescopedata.addWidget(self.dectext)
+        self.telescopedata.addWidget(self.timetext)
+
+
+    def updatetelescopedata(self):
+        tempfile = open('tempfiles/tempteledata.txt', 'r')
+        if os.path.exists('tempfiles/tempteledata.txt'):
+            teledata = tempfile.read().strip().split()
+
+        #self.teleintervals += 1
+        '''
+        if self.teleintervals % 8 == 1:
+            telecolor = pg.mkBrush('b')
+        elif self.teleintervals % 8 == 2:
+            telecolor = pg.mkBrush('r')
+        elif self.teleintervals % 8 == 3:
+            telecolor = pg.mkBrush('g')
+        elif self.teleintervals % 8 == 4:
+            telecolor = pg.mkBrush('y')
+        elif self.teleintervals % 8 == 5:
+            telecolor = pg.mkBrush('c')
+        elif self.teleintervals % 8 == 6:
+            telecolor = pg.mkBrush('m')
+        elif self.teleintervals % 8 == 7:
+            telecolor = pg.mkBrush('k')
+        elif self.teleintervals % 8 == 0:
+            telecolor = pg.mkBrush('w')
+        '''
+        telecolor = pg.mkBrush('b')
+        radeccolor = pg.mkBrush('r')
+
+        self.patext.setText('PA: %s' % teledata[0])
+        self.slewtext.setText('Slew Flag: %s' % teledata[1])
+        self.alttext.setText('Alt: %s'%teledata[2])
+        self.aztext.setText('Az: %s'%teledata[3])
+        self.ratext.setText('RA: %s'%teledata[4])
+        self.dectext.setText('Dec: %s'%teledata[5])
+        self.timetext.setText('UTC Time: %s'%teledata[6])
+
+        alt = [float(teledata[2])]
+        az = [float(teledata[3])]
+        dec = [float(teledata[5])]
+        ra = [float(teledata[4])]
+
+        #print(az, alt)
+
+        self.altazgraphdata.addPoints(x=az, y=alt, brush=telecolor)
+        self.radecgraphdata.addPoints(x=ra, y=dec, brush=radeccolor)
+
+
+
+
+        #print(teledata)
 
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
@@ -263,7 +433,8 @@ class mcegui(QtGui.QWidget):
     #changes channel of live graph when user changes channel
     def changechannel(self):
         self.currentchannel = int(self.selectchannel.currentText()) + 1
-	self.changereadoutcard()
+        if self.readoutcard == 'All':
+	           self.changereadoutcard()
         #print(self.currentchannel)
 
 
@@ -273,20 +444,20 @@ class mcegui(QtGui.QWidget):
 
     #changes readout card of live graph when user changes readout card
     def changereadoutcard(self):
-	if self.currentchannel < 9:
-	   self.currentreadoutcard = 1
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 1'
-	elif self.currentchannel >= 9 and self.currentchannel < 17:
-	   self.currentreadoutcard = 2
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 2'
-	elif self.currentchannel >= 17 and self.currentchannel < 25:
-	   self.currentreadoutcard = 3
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 3'
-	elif self.currentchannel >= 25:
-	   self.currentreadoutcard = 4
-	   self.currentreadoutcarddisplay = 'MCE 1 RC 4'
-	self.currentreadoutcardtext.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
-        #self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
+    	if self.currentchannel < 9:
+    	   self.currentreadoutcard = 1
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 1'
+    	elif self.currentchannel >= 9 and self.currentchannel < 17:
+    	   self.currentreadoutcard = 2
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 2'
+    	elif self.currentchannel >= 17 and self.currentchannel < 25:
+    	   self.currentreadoutcard = 3
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 3'
+    	elif self.currentchannel >= 25:
+    	   self.currentreadoutcard = 4
+    	   self.currentreadoutcarddisplay = 'MCE 1 RC 4'
+    	self.currentreadoutcardtext.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
+            #self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
 
     #adds location for K-mirror data, currently has place holder data
     def initkmirrordata(self):
@@ -345,11 +516,17 @@ class mcegui(QtGui.QWidget):
         #calls takedata or takedata depending on 1 or all readout cards respectfully,
         #passes variables to let takedata/takedataall correctly parse data and
         #gets data for graohing back
+        netcdfcmd = ['python runnetcdf.py %s' % (self.n_files)]
+        print(netcdfcmd)
+        self.runnetcdf = subprocess.Popen(netcdfcmd, shell=True)
+
         if self.readoutcard == 'All':
             self.z, self.allgraphdata, self.mce = tda.takedataall(self.n_intervals, self.currentchannel, self.currentreadoutcard, self.n_files, self.frameperfile, self.mce, \
             self.row)
         else:
             self.z, self.allgraphdata, self.mce = td.takedata(self.n_intervals, self.currentchannel, self.n_files, self.frameperfile, self.mce, self.row)
+
+
 
         #initalize data list
         self.data = [0, 0, 0]
@@ -376,6 +553,7 @@ class mcegui(QtGui.QWidget):
         #call other init functions and begin updating graph
         self.initheatmap()
         self.initkmirrordata()
+        self.initfftgraph()
         self.updateplot()
 
         #timer for updating graph
@@ -398,6 +576,7 @@ class mcegui(QtGui.QWidget):
 
         self.updateheatmap()
         self.updatekmirrordata()
+        self.updatefftgraph()
         self.updateplot()
 
     #writes and updates data to both live graph and old graph
@@ -410,6 +589,7 @@ class mcegui(QtGui.QWidget):
             a = self.graphdata[0]
             ch = self.graphdata[1]
             y = self.graphdata[2][:self.frameperfile]
+            self.y = y
             #visual watchdog to make sure everything is in-sync with everything else
             print('gui %s %s' % (self.n_intervals, a))
             #creates x values for current time interval and colors points based
@@ -447,6 +627,7 @@ class mcegui(QtGui.QWidget):
                         pointsymbol.append('t')
                     elif self.currentreadoutcard % 4 == 0:
                         pointsymbol.append('d')
+            self.x = x
             #initializes old data list on either the first update or the first one after
             #the current total time interval, otherwise adds to current list
             if self.n_intervals == 1 or self.n_intervals % self.totaltimeinterval == 2:
@@ -527,8 +708,7 @@ class mcegui(QtGui.QWidget):
         #     self.heatmap.setLevels(60, 260)
         # else:
         #     self.heatmap.setLevels(100, 190)
-        self.grid.addWidget(self.heatmap, 3, 2, 2, 5)
-
+        self.grid.addWidget(self.heatmap, 3, 2, 2, 3)
 
     #updates heatmap
     def updateheatmap(self):
@@ -543,6 +723,35 @@ class mcegui(QtGui.QWidget):
         #     self.heatmap.setLevels(60, 260)
         # else:
         #     self.heatmap.setLevels(100, 190)
+
+
+    def initfftgraph(self):
+        self.fftgraph = pg.PlotWidget()
+        self.fftgraphdata = pg.ScatterPlotItem()
+        self.fftgraph.addItem(self.fftgraphdata)
+
+        self.fftgraph.setLabel('bottom', 'Time', 's')
+        self.fftgraph.setLabel('left', 'Counts')
+        self.fftgraph.setTitle('FFT Data')
+
+        self.grid.addWidget(self.fftgraph, 3, 5, 2, 3)
+
+
+    def updatefftgraph(self):
+        self.fftdata = np.fft.fft(self.y)
+
+        self.fftdata = np.asarray(self.fftdata, dtype=np.float32)
+
+        #print(self.fftdata)
+
+        self.fftdata[0] = self.fftdata[-1]
+
+        #self.fftdata = self.fftdata[0, (self.fftdata.shape[0] // 2) + 1]
+
+        #x = self.x[0, (len(self.x) // 2) + 1]
+
+        self.fftgraphdata.setData(self.x, self.fftdata)
+
 
 #calls mcegui class to start GUI
 def main():
