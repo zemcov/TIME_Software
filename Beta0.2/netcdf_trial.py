@@ -12,7 +12,7 @@ from netCDF4 import num2date, date2num
 
 def new_file(n, h_size, head):
     tempfiledir = os.path.expanduser('~/Desktop/mce_files')
-    mce = Dataset(tempfiledir + "/gui_data_test{n}.nc".format(n=st.n),"w",format="NETCDF4")
+    mce = Dataset(tempfiledir + "/gui_data_test{n}.nc".format(n=n),"w",format="NETCDF4")
 
     # create the gui parameters group
     guiparams = mce.createGroup('guiparams')
