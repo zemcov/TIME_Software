@@ -152,7 +152,8 @@ class mcegui(QtGui.QWidget):
             parafile.write(self.timestarted+' ')
             parafile.close()
 
-            editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
+            #editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
+            editdatarate = ['./mce1_cdr.sh %s' %(self.datarate)], shell=True)
             a = subprocess.call(editdatarate, shell=True)
 
             parameteroutput = QtGui.QVBoxLayout()
@@ -209,7 +210,7 @@ class mcegui(QtGui.QWidget):
 
             self.initplot()
 
-            self.inittelescope()
+            #self.inittelescope()
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
@@ -494,15 +495,23 @@ class mcegui(QtGui.QWidget):
         print(self.n_files)
         #changes commands to start mce if All readout cards are to be read
         if self.readoutcard == 'All':
-            changedatamode = ["mce_cmd -x wb rca data_mode %s" % (self.datamode)]
-            b = subprocess.Popen(changedatamode, shell=True)
-            run = ["mce_run temp %s s --sequence=%s" %(self.framenumber, self.frameperfile)]
-            c = subprocess.Popen(run, shell=True)
+            changedatamode1 = ["./mce1_cdm.sh a %s" % (self.datamode)]
+            b = subprocess.Popen(changedatamode1, shell=True)
+            run1 = ["./mce1_run.sh %s a %s" %(self.framenumber, self.frameperfile)]
+            c = subprocess.Popen(run1, shell=True)
+            #changedatamode2 = ["./mce1_cdm.sh %s" % (self.datamode)]
+            #d = subprocess.Popen(changedatamode2, shell=True)
+            #run2 = ["./mce1_run.sh %s a %s" %(self.framenumber, self.frameperfile)]
+            #e = subprocess.Popen(run2, shell=True)
         else:
-            changedatamode = ["mce_cmd -x wb rc%s data_mode %s" % (self.readoutcard, self.datamode)]
-            b = subprocess.Popen(changedatamode, shell=True)
-            run = ["mce_run temp %s %s --sequence=%s" %(self.framenumber, self.readoutcard, self.frameperfile)]
-            c = subprocess.Popen(run, shell=True)
+            changedatamode1 = ["./mce1_cdm.sh %s %s" % (self.readoutcard, self.datamode)]
+            b = subprocess.Popen(changedatamode1, shell=True)
+            run1 = ["./mce1_run.sh %s %s %s" %(self.framenumber, self.readoutcard, self.frameperfile)]
+            c = subprocess.Popen(run1, shell=True)
+            #changedatamode2 = ["./mce1_cdm.sh %s %s" % (self.readoutcard, self.datamode)]
+            #d = subprocess.Popen(changedatamode2, shell=True)
+            #run2 = ["./mce1_run.sh %s %s %s" %(self.framenumber, self.readoutcard, self.frameperfile)]
+            #e = subprocess.Popen(run2, shell=True)
 
         #initialize time
         self.n_intervals = 1
