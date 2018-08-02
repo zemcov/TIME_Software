@@ -25,12 +25,12 @@ class mcegui(QtGui.QWidget):
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
-        tempfiledir = os.path.expanduser('~/Desktop/mce_files')
-        if os.path.exists(tempfiledir):
-            print('Hello!')
-        else:
-            mce_dir = ["mkdir ~/Desktop/mce_files"] #% (self.datamode)]
-            subprocess.Popen(mce_dir, shell=True)
+        #tempfiledir = os.path.expanduser('~/Desktop/mce_files')
+        #if os.path.exists(tempfiledir):
+        #    print('Hello!')
+        #else:
+        #    mce_dir = ["mkdir ~/Desktop/mce_files"] #% (self.datamode)]
+        #    subprocess.Popen(mce_dir, shell=True)
 
         self.timeinterval = 1
         #deleting old gui_data_test files
@@ -77,24 +77,39 @@ class mcegui(QtGui.QWidget):
         #stop mce with subprocess
         if self.showmcedata == 'Yes':
             if self.readoutcard == 'All':
-                run = ['mce_cmd -x stop rcs ret_dat']
+                run1 = ['./mce1_stop.sh s']
+                a = subprocess.Popen(run1, shell=True)
+                #run2 = ['./mce2_stop.sh s']
+                #b = subprocess.Popen(run2, shell=True)
             else:
-                run = ['mce_cmd -x stop rc%s ret_dat' %(self.readoutcard)]
-            a = subprocess.Popen(run, shell=True)
+                run1 = ['./mce1_stop.sh %s' %(self.readoutcard)]
+                a = subprocess.Popen(run1, shell=True)
+                #run2 = ['./mce2_stop.sh %s' %(self.readoutcard)']
+                #b = subprocess.Popen(run2, shell=True)
+
             #delete all MCE temp files still in directory
-            deletetemp = ['rm /data/cryo/current_data/temp.*']
-            b = subprocess.Popen(deletetemp, shell=True)
+            deletetemp1 = ['rm /home/pilot1/ssh_stuff/mce1/temp.*']
+            c = subprocess.Popen(deletetemp1, shell=True)
+
+            #deletetemp = ['ssh -T pilot2@timemce.rit.edu "rm /home/pilot2/data/cryo/current_data/temp.*"']
+            #e = subprocess.Popen(deletetemp, shell=True)
+
+            #deletetemp2 = ['rm /home/pilot1/ssh_stuff/mce2/temp.*']
+            #d = subprocess.Popen(deletetemp2, shell=True)
 
         #self.runtele.terminate()
         self.runnetcdf.terminate()
 
-        runteleserver = './runteleserver.sh stop'
-        run = subprocess.Popen(runteleserver, shell=True)
+        runkill = ['./mce1_stop_sftp.sh']
+        kill = subprocess.Popen(runkill, shell=True)
 
-        tempfilename = 'tempfiles/quittele.txt'
-        tempfile = open(tempfilename, 'w')
-        tempfile.write('Close')
-        tempfile.close()
+        #runteleserver = './runteleserver.sh stop'
+        #run = subprocess.Popen(runteleserver, shell=True)
+
+        #tempfilename = 'tempfiles/quittele.txt'
+        #tempfile = open(tempfilename, 'w')
+        #tempfile.write('Close')
+        #tempfile.close()
 
 
         sys.exit()
@@ -154,7 +169,7 @@ class mcegui(QtGui.QWidget):
             parafile.close()
 
             #editdatarate = ['mce_cmd -x wb cc data_rate %s' % (self.datarate)]
-            editdatarate = ['./mce1_cdr.sh %s' %(self.datarate)], shell=True)
+            editdatarate = ['./mce1_cdr.sh %s' %(self.datarate)]
             a = subprocess.call(editdatarate, shell=True)
 
             parameteroutput = QtGui.QVBoxLayout()
@@ -204,7 +219,7 @@ class mcegui(QtGui.QWidget):
             # print('Delete Old Columns: %s' % (self.channeldelete))
             print('Time Started: %s' % (self.timestarted))
 
-            self.frameperfile = (50 * 10 ** 6) / (33 * 90 * int(self.datarate))
+            self.frameperfile = int((50 * 10 ** 6) / (33 * 90 * int(self.datarate)))
             print('Frame per file: %s' % (self.frameperfile))
 
             self.submitbutton.setEnabled(False)
@@ -491,7 +506,7 @@ class mcegui(QtGui.QWidget):
     def initplot(self):
         #counts number of files in current_data for later checks of number of
         #temp files
-        self.n_files = len(os.listdir("/data/cryo/current_data"))
+        self.n_files = 8 #len(os.listdir("ssh -T pilot2@timemce.rit.edu:/data/cryo/current_data"))
         print(self.n_files)
         #changes commands to start mce if All readout cards are to be read
         if self.readoutcard == 'All':
@@ -525,7 +540,7 @@ class mcegui(QtGui.QWidget):
         #calls takedata or takedata depending on 1 or all readout cards respectfully,
         #passes variables to let takedata/takedataall correctly parse data and
         #gets data for graohing back
-        netcdfcmd = ['python runnetcdf.py %s' % (self.n_files)]
+        netcdfcmd = ['python run_netcdf.py %s' % (self.n_files)]
         print(netcdfcmd)
         self.runnetcdf = subprocess.Popen(netcdfcmd, shell=True)
 
@@ -542,8 +557,8 @@ class mcegui(QtGui.QWidget):
 
         #initialize graph GUI item
         self.mcegraphdata = pg.ScatterPlotItem()
-    	self.mcegraph = pg.PlotWidget()
-    	self.grid.addWidget(self.mcegraph, 1, 5, 2, 3)
+        self.mcegraph = pg.PlotWidget()
+        self.grid.addWidget(self.mcegraph, 1, 5, 2, 3)
 
         #add labels to graph
         self.mcegraph.setLabel('bottom', 'Time', 's')
@@ -594,7 +609,7 @@ class mcegui(QtGui.QWidget):
         #allgraphdata's length is based on the number of tempfiles takedata read
     	for g in range(len(self.allgraphdata)):
             #take out data from allgraphdata
-    	    self.graphdata = self.allgraphdata[g]
+            self.graphdata = self.allgraphdata[g]
             a = self.graphdata[0]
             ch = self.graphdata[1]
             y = self.graphdata[2][:self.frameperfile]
@@ -687,7 +702,7 @@ class mcegui(QtGui.QWidget):
             self.endtime = datetime.datetime.utcnow()
             self.timetaken = self.endtime - self.starttime
             #if updating multiple intervals, add to n_intervals to keep time in-sync
-    	    if len(self.allgraphdata) > 1 and g != len(self.allgraphdata) - 1:
+            if len(self.allgraphdata) > 1 and g != len(self.allgraphdata) - 1:
                 self.n_intervals += 1
             print('Time taken: %s' % (self.timetaken))
 

@@ -23,7 +23,7 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce, row):
         if mce_file:
             print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
             for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
-		mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
+                mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
                 a = a + 1
                 st.a = a
                 f = mce_data.SmallMCEFile(mce_file_name)

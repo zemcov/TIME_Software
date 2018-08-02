@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 import subprocess
 import time
 sys.path.append('/usr/lib/python2.7')
-sys.path.append('/data/cryo/current_data')
+sys.path.append('/home/pilot1/ssh_stuff/mce1')
 import mce_data
 #from pathlib2 import Path
 import datetime
@@ -24,12 +24,12 @@ def takedata(a, ch, n_files, frameperfile, mce, row):
     y = []
     allgraphdata = []
     while True:
-        mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
-        mce_file = os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
+        mce_file_name = "/home/pilot1/ssh_stuff/mce1/temp.%0.3i" %(a)
+        mce_file = os.path.exists("/home/pilot1/ssh_stuff/mce1/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
         if mce_file:
-            #print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
-            for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
-                mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
+            #print(len(os.listdir("/home/pilot1/ssh_stuff/mce1")) - 2 - n_files)
+            while mce_file:
+                mce_file_name = "/home/pilot1/ssh_stuff/mce1/temp.%0.3i" %(a)
                 a = a + 1
                 st.a = a
                 f = mce_data.SmallMCEFile(mce_file_name)
@@ -38,6 +38,7 @@ def takedata(a, ch, n_files, frameperfile, mce, row):
                 z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
                 graphdata = readgraph(y, f, mce_file_name, a, ch, row)
                 allgraphdata.append(graphdata)
+                mce_file = os.path.exists("/home/pilot1/ssh_stuff/mce1/temp.%0.3i" %(a+1))
             break
         else:
             pass
@@ -66,8 +67,6 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
 
 def readgraph(y, f, mce_file_name, a, ch, row):
     h = f.Read(row_col=True, unfilter='DC').data
-    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-    subprocess.Popen(delete_file,shell=True)
     d = h[:,ch - 1]
     y.append(np.reshape(d,d.shape[0]*d.shape[1])) #should output every row, and only 1 channel or column for all frame data
     '''
