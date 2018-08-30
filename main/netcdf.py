@@ -10,7 +10,7 @@ from netCDF4 import num2date, date2num
 
 
 def new_file(n, h_size, head, filestarttime):
-    tempfiledir = os.path.expanduser('netcdffiles')
+    tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
     mce = Dataset(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime),"w",format="NETCDF4")
 
     # create the gui parameters group
@@ -40,7 +40,7 @@ def new_file(n, h_size, head, filestarttime):
     heatmap.createDimension('t',None)
 
     mce_header.createDimension('k',2)
-    mce_header.createDimension('v',16)
+    mce_header.createDimension('v',17)
     mce_header.createDimension('t',None)
 
     # creating variables --------------------------------------------------------------------------------
@@ -79,16 +79,14 @@ def new_file(n, h_size, head, filestarttime):
 
     return mce
 
-def data_all(h,d,n,a,head):#,xvalues):
+def data_all(h,d,n,a,head):
     Time[a] = str(now.datetime.utcnow())
-    Rms_Noise_All[a,:,:] = d # can use datetime from gui...
+    #Rms_Noise_All[a,:,:] = d
     Raw_Data_All[a,:,:,:] = h
     Header[a,:,:] = head
 
-def data(h,d,n,a,head):#,xvalues):
+def data(h,d,n,a,head):
     Time[a] = str(now.datetime.utcnow())
-    #print(d.shape)
-    #Rms_Noise.shape()
-    Rms_Noise[a,:,:] = d
+    #Rms_Noise[a,:,:] = d
     Raw_Data[a,:,:,:] = h
     Header[a,:,:] = head

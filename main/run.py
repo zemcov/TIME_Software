@@ -5,20 +5,20 @@ import os
 import subprocess
 import time
 
-def main(observer='JMB', datamode='0', readoutcard='2', framenumber='13500000', datarate='45'):
-    netcdfdir = ('netcdffiles')
+def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', datarate='45'):
+    netcdfdir = ('/home/time/Desktop/time-data/netcdffiles')
     if os.path.exists(netcdfdir):
         print('Hello!')
     else:
         print('Making NETCDF File Directory')
-        netcdf_dir = ['mkdir netcdffiles']
+        netcdf_dir = ['mkdir /home/time/Desktop/time-data/netcdffiles']
         subprocess.Popen(netcdf_dir, shell=True).wait()
-    mcedir = ('mce1')
+    mcedir = ('/home/time/Desktop/time-data/mce1')
     if os.path.exists(mcedir):
         print('Hello!')
     else:
         print('Making MCE File Directory')
-        mce_dir = ['mkdir mce1']
+        mce_dir = ['mkdir /home/time/Desktop/time-data/mce1']
         subprocess.Popen(mce_dir, shell=True).wait()
 
     print('Observer: %s' % (observer))
@@ -62,7 +62,7 @@ def startmce(observer, datamode, readoutcard, framenumber, datarate):
         #run2 = ["./mce1_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]
         #e = subprocess.Popen(run2, shell=True)
 
-    netcdfcmd = ['python run_netcdf.py']
+    netcdfcmd = ['python read_files.py']
     subprocess.Popen(netcdfcmd, shell=True)
 
 if __name__ == '__main__':
