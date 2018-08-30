@@ -7,37 +7,22 @@ import netcdf as nc
 import subprocess
 import datetime
 
+a = 0
+mce = 1
+n = 0
+filestarttime = 0
 
-def netcdfdata():
-    print('HELLO!')
-    #n_files = len(os.listdir("/data/cryo/current_data"))
-    a = 0
-    mce = 1
-    n = 0
-    n_files = 8
-    filestarttime = 0
-    while True:
-        #mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
-        #mce_file = os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
-        #if mce_file:
-            #print('NETCDF IS WORKING')
-            #print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
-        subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py %s %s' % (a, n_files)], shell=True)
-        mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
-        print("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
-        if mce_file:
-            print(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2)
-            for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2):
-                print('netcdf: %s' % (a))
-                mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a)
-                a = a + 1
-                f = mce_data.SmallMCEFile(mce_file_name)
-                header = read_header(f)
-                mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
-                mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
-            #else:
-            #    pass
-
+while True:
+    mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
+    if mce_file:
+        print("items in directory:",len(os.listdir("/home/time/Desktop/time-data/mce1")))# - 2)
+        for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1"))):# - 2):
+            mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a)
+            a = a + 1
+            f = mce_data.SmallMCEFile(mce_file_name)
+            header = read_header(f)
+            mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
+# -----------------------------------------------------------------------------------------------------
 
 def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
     h = f.Read(row_col=True, unfilter='DC').data
@@ -46,11 +31,12 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
 
-    old_mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a - 1)
-    subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
+    if a != 0 :
+        old_mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a - 1)
+        subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
 
     tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
-    if a == 1:
+    if a == 0:
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
@@ -91,4 +77,4 @@ def read_header(f):
     return head
 
 if __name__ == '__main__':
-    netcdfdata()
+    subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'], shell=True)
