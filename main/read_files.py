@@ -51,10 +51,10 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
 
     tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
     if a == 1:
-        filestarttime1 = datetime.datetime.utcnow()
-        filestarttime2 = filestarttime1.isoformat()
-        mce = nc.new_file(n, h.shape, head, filestarttime2)
-    elif os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime2)).st_size < 20 * 10**6: # of bytes here
+        filestarttime = datetime.datetime.utcnow()
+        filestarttime = filestarttime1.isoformat()
+        mce = nc.new_file(n, h.shape, head, filestarttime)
+    elif os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
         nc.data(h,d,n,a,head)
         #subprocess.Popen(['rm %s' % (mce_file_name)], shell=True)
     else:
@@ -62,11 +62,11 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
         #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
         mce.close()
         print('----------New File----------')
-        filestarttime1 = datetime.datetime.utcnow()
-        filestarttime2 = filestarttime1.isoformat()
-        mce = nc.new_file(n, h.shape, head, filestarttime2)
+        filestarttime = datetime.datetime.utcnow()
+        filestarttime = filestarttime1.isoformat()
+        mce = nc.new_file(n, h.shape, head, filestarttime)
         nc.data(h,d,n,a,head)
-    return mce, n, filestarttime2
+    return mce, n, filestarttime
 
 
 def read_header(f):
