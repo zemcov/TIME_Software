@@ -52,7 +52,7 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
     tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
     if a == 1:
         filestarttime = datetime.datetime.utcnow()
-        filestarttime = filestarttime1.isoformat()
+        filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
     elif os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
         nc.data(h,d,n,a,head)
@@ -63,7 +63,7 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
         mce.close()
         print('----------New File----------')
         filestarttime = datetime.datetime.utcnow()
-        filestarttime = filestarttime1.isoformat()
+        filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
         nc.data(h,d,n,a,head)
     return mce, n, filestarttime
