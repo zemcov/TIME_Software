@@ -12,8 +12,8 @@ def filetransfer():
     mce = 1
     n = 0
     filestarttime = 0
-    subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'], shell=True)
     while True:
+        subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'], shell=True)
         mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
         if mce_file:
             print("items in directory:",len(os.listdir("/home/time/Desktop/time-data/mce1")))# - 2)

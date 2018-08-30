@@ -6,12 +6,6 @@ import sys
 
 def main():
     a = 0
-
-    '''
-    a is being internally created in the MCE computer, meaning that all of the
-    gui scripts on the other computer don't know which files it's checking
-    '''
-
     while True:
         mce_file = os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
         if mce_file:
