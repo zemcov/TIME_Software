@@ -8,14 +8,14 @@ import time
 def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', datarate='45'):
     netcdfdir = ('/home/time/Desktop/time-data/netcdffiles')
     if os.path.exists(netcdfdir):
-        print('Hello!')
+        print('netcdfdir exists')
     else:
         print('Making NETCDF File Directory')
         netcdf_dir = ['mkdir /home/time/Desktop/time-data/netcdffiles']
         subprocess.Popen(netcdf_dir, shell=True).wait()
     mcedir = ('/home/time/Desktop/time-data/mce1')
     if os.path.exists(mcedir):
-        print('Hello!')
+        print('mcedir exists')
     else:
         print('Making MCE File Directory')
         mce_dir = ['mkdir /home/time/Desktop/time-data/mce1']
