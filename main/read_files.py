@@ -7,7 +7,7 @@ import netcdf as nc
 import subprocess
 import datetime
 
-def filetransfer():
+def filetransfer(rc):
     a = 0
     mce = 1
     n = 0
@@ -36,22 +36,45 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
     subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
 
     tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
-    if a == 1:
+
+    if a == 0:
+        print('------- New File -------')
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
-    elif os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
-        nc.data(h,d,n,a,head)
-        #subprocess.Popen(['rm %s' % (mce_file_name)], shell=True)
-    else:
-        n = n + 1
-        #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
-        mce.close()
-        print('----------New File----------')
-        filestarttime = datetime.datetime.utcnow()
-        filestarttime = filestarttime.isoformat()
-        mce = nc.new_file(n, h.shape, head, filestarttime)
-        nc.data(h,d,n,a,head)
+        if rc = 's' :
+            nc.data_all(h,d,n,a,head)
+        else :
+            nc.data(h,d,n,a,head)
+
+    else :
+        if os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
+            filestarttime = datetime.datetime.utcnow()
+            filestarttime = filestarttime.isoformat()
+            if rc = 's' :
+                nc.data_all(h,d,n,a,head)
+            else :
+                nc.data(h,d,n,a,head)
+
+        else :
+            print('-------- New File --------')
+            mce = nc.new_file(n, h.shape, head, filestarttime)
+            if rc = 's' :
+                nc.data_all(h,d,n,a,head)
+            else :
+                nc.data(h,d,n,a,head)
+
+    # if a == 1:
+    #     filestarttime = datetime.datetime.utcnow()
+    #     filestarttime = filestarttime.isoformat()
+    #     mce = nc.new_file(n, h.shape, head, filestarttime)
+    # elif os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
+    #     nc.data(h,d,n,a,head)
+    #     #subprocess.Popen(['rm %s' % (mce_file_name)], shell=True)
+    # else:
+    #     n = n + 1
+    #     mce.close()
+
     return mce, n, filestarttime
 
 def read_header(f):
@@ -76,4 +99,4 @@ def read_header(f):
     return head
 
 if __name__ == '__main__':
-    filetransfer()
+    filetransfer(sys.argv[1])
