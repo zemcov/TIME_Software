@@ -42,7 +42,7 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
-        if rc = 's' :
+        if rc == 's' :
             nc.data_all(h,d,n,a,head)
         else :
             nc.data(h,d,n,a,head)
