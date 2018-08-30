@@ -32,12 +32,11 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
 
-    if a != 0 :
-        old_mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a - 1)
-        subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
+    old_mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a - 1)
+    subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
 
     tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
-    if a == 0:
+    if a == 1:
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
@@ -54,7 +53,6 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
         mce = nc.new_file(n, h.shape, head, filestarttime)
         nc.data(h,d,n,a,head)
     return mce, n, filestarttime
-
 
 def read_header(f):
     keys = []

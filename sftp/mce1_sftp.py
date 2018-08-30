@@ -12,7 +12,7 @@ def main():
             #shutil.move('/data/cryo/current_data/temp.%0.3i' % (a), 'pilot1@time.rit.edu:/home/pilot1/ssh_stuff/mce1/temp.%0.3i' % (a))
             print('sftp: %s' % (a))
             mce_file_name = '/data/cryo/current_data/temp.%0.3i' % (a)
-            if a == 0:
+            if a == 1:
                 subprocess.Popen(['scp', '/data/cryo/current_data/temp.run',  'time-master:/home/time/Desktop/time-data/mce1/temp.run']).wait()
                 delete_file = ['rm %s' % ('/data/cryo/current_data/temp.run')]
                 subprocess.Popen(delete_file,shell=True)
