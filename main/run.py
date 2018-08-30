@@ -43,10 +43,11 @@ def startmce(observer, datamode, readoutcard, framenumber, datarate):
     editdatarate = ['./mce1_cdr.sh %s' %(datarate)]
     a = subprocess.call(editdatarate, shell=True)
 
-    if readoutcard == 'All':
+    if readoutcard == 's':
         changedatamode1 = ["./mce1_cdm.sh a %s" % (datamode)]
         b = subprocess.Popen(changedatamode1, shell=True)
         run1 = ["./mce1_run.sh %s a %s" %(framenumber, frameperfile)]
+        print("starting mce1")
         c = subprocess.Popen(run1, shell=True)
         #changedatamode2 = ["./mce1_cdm.sh %s" % (datamode)]
         #d = subprocess.Popen(changedatamode2, shell=True)
@@ -55,6 +56,7 @@ def startmce(observer, datamode, readoutcard, framenumber, datarate):
     else:
         changedatamode1 = ["./mce1_cdm.sh %s %s" % (readoutcard, datamode)]
         b = subprocess.Popen(changedatamode1, shell=True)
+        print("starting mce1")
         run1 = ["./mce1_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]
         c = subprocess.Popen(run1, shell=True)
         #changedatamode2 = ["./mce1_cdm.sh %s %s" % (readoutcard, datamode)]
