@@ -19,49 +19,54 @@ def filetransfer(rc):
             print("items in directory:",len(os.listdir("/home/time/Desktop/time-data/mce1")))# - 2)
             for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1"))):# - 2):
                 mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a)
-                a = a + 1
                 f = mce_data.SmallMCEFile(mce_file_name)
                 header = read_header(f)
                 mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
+                a = a + 1
     # -----------------------------------------------------------------------------------------------------
 
 def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
+    print('readdata started')
+    tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
     h = f.Read(row_col=True, unfilter='DC').data
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
 
-    old_mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a - 1)
-    subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
-
-    tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
-
     if a == 0:
-        print('------- New File -------')
+        print('------- New File 0 -------')
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
         if rc == 's' :
+            print('data append')
             nc.data_all(h,d,n,a,head)
         else :
+            print('data append')
             nc.data(h,d,n,a,head)
 
     else :
-        if os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
-            filestarttime = datetime.datetime.utcnow()
-            filestarttime = filestarttime.isoformat()
+        old_mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a - 1)
+        subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
+        filestarttime = datetime.datetime.utcnow()
+        filestarttime = filestarttime.isoformat()
+        if os.stat(tempfiledir + "/mce_netcdf-%s.nc" %(filestarttime)).st_size < 20 * 10**6: # of bytes here
             if rc == 's' :
+                print('data append 1')
                 nc.data_all(h,d,n,a,head)
             else :
+                print('data append 2')
                 nc.data(h,d,n,a,head)
 
         else :
             print('-------- New File --------')
             mce = nc.new_file(n, h.shape, head, filestarttime)
             if rc == 's' :
+                print('data append 3')
                 nc.data_all(h,d,n,a,head)
             else :
+                print('data append 4')
                 nc.data(h,d,n,a,head)
 
     # if a == 1:
