@@ -21,6 +21,7 @@ def main():
             subprocess.Popen(delete_file,shell=True)
             a += 1
         else:
+            print("no new files, exiting")
             sys.exit()
 
 if __name__ == '__main__':

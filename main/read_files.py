@@ -12,20 +12,29 @@ def filetransfer(rc):
     mce = 1
     n = 0
     filestarttime = 0
+    subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'], shell=True)
     while True:
-        subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'], shell=True)
-        mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
-        if mce_file:
-            print("items in directory:",len(os.listdir("/home/time/Desktop/time-data/mce1")))# - 2)
-            for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1"))):# - 2):
-                mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a)
-                f = mce_data.SmallMCEFile(mce_file_name)
-                header = read_header(f)
-                mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
-                a = a + 1
+        files = [os.path.join('/home/time/Desktop/time-data/mce1', x) for x in os.listdir('home/time/Desktop/time-data/mce1')]
+        oldest = min(files,key=os.path.getctime)
+        print("oldest file:", oldest)
+        f = mce_data.SmallMCEFile(oldest)
+        header = read_header(f)
+        mce,n,filestarttime = readdata(f,oldest,header,n, a, filestarttime, rc)
+        subprocess.Popen(['rm %s' % (mce_file)], shell=True)
+        a = a + 1
+        # ================================================================================================
+        # mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
+        # if mce_file:
+        #     print("items in directory:",len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2)
+        #     for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2):
+        #         mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a)
+        #         f = mce_data.SmallMCEFile(mce_file_name)
+        #         header = read_header(f)
+        #         mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
+        #         a = a + 1
     # -----------------------------------------------------------------------------------------------------
 
-def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
+def readdata(f, mce_file, head, n, a, filestarttime, rc):
     print('readdata started')
     tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
     h = f.Read(row_col=True, unfilter='DC').data
@@ -40,33 +49,31 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
         if rc == 's' :
-            print('data append')
+            print('data appended')
             nc.data_all(h,d,n,a,head)
         else :
-            print('data append')
+            print('data appended')
             nc.data(h,d,n,a,head)
 
     else :
-        old_mce_file_name = "/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a - 1)
-        subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         if os.stat(tempfiledir + "/mce_netcdf-%s.nc" %(filestarttime)).st_size < 20 * 10**6: # of bytes here
             if rc == 's' :
-                print('data append 1')
+                print('data appended 1')
                 nc.data_all(h,d,n,a,head)
             else :
-                print('data append 2')
+                print('data appended 2')
                 nc.data(h,d,n,a,head)
 
         else :
             print('-------- New File --------')
             mce = nc.new_file(n, h.shape, head, filestarttime)
             if rc == 's' :
-                print('data append 3')
+                print('data appended 3')
                 nc.data_all(h,d,n,a,head)
             else :
-                print('data append 4')
+                print('data appended 4')
                 nc.data(h,d,n,a,head)
 
     # if a == 1:
