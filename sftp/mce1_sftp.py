@@ -13,7 +13,7 @@ def main():
         if len(os.listdir("/data/cryo/current_data")) > numfiles :
             for x in os.listdir('/data/cryo/current_data'):
                 print(x)
-                if x.startswith('temp.')
+                if x.startswith('temp.') :
                     files.append(os.path.join('/data/cryo/current_data', x))
             oldest = min(files,key=os.path.getctime)
             oldfile = oldest[len(oldest)-9:len(oldest)-1]
