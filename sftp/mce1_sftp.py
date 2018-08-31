@@ -16,10 +16,10 @@ def main(a, n_files):
                 mce_file_name = '/data/cryo/current_data/temp.%0.3i' % (a)
                 if os.path.exists(mce_file_name):
                     if a == 1:
-                        subprocess.Popen(['scp', '/data/cryo/current_data/temp.run',  'pilot1@time.rit.edu:/home/pilot1/netcdf_stuff/mce1/temp.run']).wait()
+                        subprocess.Popen(['scp', '/data/cryo/current_data/temp.run',  'time-master:/home/time/Desktop/time-data/mce1/temp.run']).wait()
                         delete_file = ['rm %s' % ('/data/cryo/current_data/temp.run')]
                         subprocess.Popen(delete_file,shell=True)
-                    subprocess.Popen(['scp', mce_file_name,  'pilot1@time.rit.edu:/home/pilot1/netcdf_stuff/mce1/temp.%0.3i' % (a)]).wait()
+                    subprocess.Popen(['scp', mce_file_name,  'time-master:/home/time/Desktop/time-data/mce1/temp.%0.3i' % (a)]).wait()
                     delete_file = ['rm %s' % (mce_file_name)]
                     subprocess.Popen(delete_file,shell=True)
                     a += 1
