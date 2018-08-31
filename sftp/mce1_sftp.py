@@ -9,7 +9,7 @@ def main():
     print("starting sftp")
     numfiles = len(os.listdir("/data/cryo/current_data"))
     while a < 100:
-        if len(os.listdir("/data/cryo/current_data")) == numfiles + 1 :
+        if len(os.listdir("/data/cryo/current_data")) > numfiles :
             files = [os.path.join('/data/cryo/current_data', x) for x in os.listdir('/data/cryo/current_data') if x.startswith('temp.')]
             print(files)
             oldest = min(files,key=os.path.getctime)
