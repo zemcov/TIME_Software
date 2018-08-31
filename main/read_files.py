@@ -7,7 +7,7 @@ import netcdf as nc
 import subprocess
 import datetime
 
-def netcdfdata():
+def netcdfdata(rc):
     print('HELLO!')
     #n_files = len(os.listdir("/data/cryo/current_data"))
     a = 0
@@ -33,13 +33,13 @@ def netcdfdata():
                 a = a + 1
                 f = mce_data.SmallMCEFile(mce_file_name)
                 header = read_header(f)
-                mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
+                mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime, rc)
                 mce_file = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
             #else:
             #    pass
 
 
-def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
+def readdata(f, mce_file_name, mce, head, n, a, filestarttime, rc):
     h = f.Read(row_col=True, unfilter='DC').data
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
@@ -55,11 +55,12 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime):
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
     elif os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
-        nc.data(h,d,n,a,head)
-        #subprocess.Popen(['rm %s' % (mce_file_name)], shell=True)
+        if rc == 's'
+            nc.data_all(h,d,n,a,head)
+        else :
+            nc.data(h,d,n,a,head)
     else:
         n = n + 1
-        #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
         mce.close()
         print('----------New File----------')
         filestarttime = datetime.datetime.utcnow()
@@ -91,4 +92,4 @@ def read_header(f):
     return head
 
 if __name__ == '__main__':
-    netcdfdata()
+    netcdfdata(sys.argv[1])
