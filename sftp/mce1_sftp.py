@@ -17,11 +17,11 @@ def main():
             if os.path.exists('/data/cryo/current_data/temp.001') :
                 a = 1
                 subprocess.Popen(['scp', path + 'temp.%0.3i' %(a-1), 'time-master:~/time/Desktop/time-data/mce1/%s' %(path + 'temp.%0.3i' %(a-1))])
-                subprocess.Popen(['rm' , x], shell=True)
+                subprocess.Popen(['rm' , path + 'temp.%0.3i' %(a-1)], shell=True)
                 print('temp.000 transfered')
             elif os.path.exists('/data/cryo/current_data/temp.%0.3i' %(a)) :
                 subprocess.Popen(['scp', path + 'temp.%0.3i' %(a-1), 'time-master:~/time/Desktop/time-data/mce1/%s' %(path + 'temp.00%0.3i' %(a-1))])
-                subprocess.Popen(['rm' , x], shell=True)
+                subprocess.Popen(['rm' , path + 'temp.%0.3i' %(a-1)], shell=True)
                 print('files transfered')
                 a = a + 1
             else :
