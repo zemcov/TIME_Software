@@ -14,9 +14,9 @@ def main():
     numfiles = len(os.listdir('/data/cryo/current_data')) - l
 
     print('numfiles:',numfiles)
-    files = []
     time.sleep(1.0)
     while a < 100:
+        files = []
         if len(os.listdir('/data/cryo/current_data')) > numfiles :
             for x in os.listdir('/data/cryo/current_data'):
                 print(x)
@@ -27,7 +27,7 @@ def main():
             print('oldfile:', oldfile)
             print('sftp: %s' % (a))
             print('oldest:', oldest)
-            subprocess.Popen(['scp', oldest, 'time-master:/home/time/Desktop/time-data/mce1/%s' %(oldfile)])
+            subprocess.Popen(['scp', oldest, 'time-master:~/time/Desktop/time-data/mce1/%s' %(oldfile)])
             delete_file = ['rm %s' %(oldest)]
             subprocess.Popen(delete_file, shell=True)
 
