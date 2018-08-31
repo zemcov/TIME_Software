@@ -63,7 +63,6 @@ def startmce(observer, datamode, readoutcard, framenumber, datarate):
         #d = subprocess.Popen(changedatamode2, shell=True)
         #run2 = ["./mce1_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]
         #e = subprocess.Popen(run2, shell=True)
-
     netcdfcmd = ['python read_files.py %s' %(readoutcard)]
     subprocess.Popen(netcdfcmd, shell=True)
 
