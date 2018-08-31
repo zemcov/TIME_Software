@@ -14,7 +14,7 @@ def filetransfer(rc):
     filestarttime = 0
     path = '/home/time/Desktop/time-data/mce1'
     subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py '], shell=True)
-    while True:
+    while a < 100:
         if os.path.exists(path + 'temp.run') :
             if os.path.exists('/data/cryo/current_data/temp.000') :
                 mce_file_name = path + 'temp.000'
@@ -32,8 +32,8 @@ def filetransfer(rc):
                 pass
                 print('waiting for new files')
         else :
-            pass
             print('temp.run does not exist')
+            sys.exit()
         # ================================================================================================
         # mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
         # if mce_file:

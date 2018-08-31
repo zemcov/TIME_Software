@@ -9,17 +9,20 @@ def main():
     print("starting sftp")
     path = '/data/cryo/current_data/'
     time.sleep(1.0)
-    while True:
+    while a < 100:
         if os.path.exists(path + 'temp.run') :
             if a == 0 :
                 subprocess.Popen(['scp', path + 'temp.run', 'time-master:~/time/Desktop/time-data/mce1/temp.run'])
+                print('temp.run transfered')
             if os.path.exists('/data/cryo/current_data/temp.001') :
                 a = 1
                 subprocess.Popen(['scp', path + 'temp.%0.3i' %(a-1), 'time-master:~/time/Desktop/time-data/mce1/%s' %(path + 'temp.%0.3i' %(a-1))])
                 subprocess.Popen(['rm' , x], shell=True)
+                print('temp.000 transfered')
             elif os.path.exists('/data/cryo/current_data/temp.%0.3i' %(a)) :
                 subprocess.Popen(['scp', path + 'temp.%0.3i' %(a-1), 'time-master:~/time/Desktop/time-data/mce1/%s' %(path + 'temp.00%0.3i' %(a-1))])
                 subprocess.Popen(['rm' , x], shell=True)
+                print('files transfered')
                 a = a + 1
             else :
                 pass
