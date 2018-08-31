@@ -6,8 +6,13 @@ import sys
 
 def main():
     a = 0
+    l = 0
     print("starting sftp")
-    numfiles = len(os.listdir('/data/cryo/current_data')) - len(os.listdir('/data/cryo/current_data/temp*'))
+    for x in os.listdir('/data/cryo/current_data'):
+        if x.startswith('temp.'):
+            l = l + 1
+    numfiles = len(os.listdir('/data/cryo/current_data')) - l
+    
     print('numfiles:',numfiles)
     files = []
     time.sleep(1.0)
