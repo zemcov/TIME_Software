@@ -11,10 +11,11 @@ def filetransfer(rc):
     a = 0
     mce = 1
     n = 0
+    l = 0
     filestarttime = 0
     path = '/home/time/Desktop/time-data/mce1'
     subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py '], shell=True)
-    while a < 100:
+    while l < 100:
         if os.path.exists(path + 'temp.run') :
             if os.path.exists(path + 'temp.%0.3i' %(a)) :
                 mce_file_name = path + 'temp.%0.3i' %(a)
@@ -22,11 +23,14 @@ def filetransfer(rc):
                 header = read_header(f)
                 mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
                 a = a + 1
+                l = l + 1
             else :
                 pass
                 print('waiting for new files')
+                l = l + 1
         else :
             print('temp.run does not exist')
+            l = l + 1
             sys.exit()
         # ================================================================================================
         # mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
