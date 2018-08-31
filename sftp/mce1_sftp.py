@@ -11,16 +11,16 @@ def main():
     while a < 100:
         if len(os.listdir("/data/cryo/current_data")) == numfiles + 1 :
             files = [os.path.join('/data/cryo/current_data', x) for x in os.listdir('/data/cryo/current_data') if x.startswith('temp.')]
+            print(files)
             oldest = min(files,key=os.path.getctime)
             oldfile = oldest[len(oldest)-9:len(oldest)-1]
             print('sftp: %s' % (a))
-            subprocess.Popen(['scp', oldest, 'time-master:/home/time/Desktop/time-data/mce1/%s' %(oldfile)]).wait()
+            subprocess.Popen(['scp', oldest, 'time-master:/home/time/Desktop/time-data/mce1/%s' %(oldfile)])
             delete_file = ['rm %s' %(oldest)]
-            subprocess.Popen(delete_file, shell=True).wait()
+            subprocess.Popen(delete_file, shell=True)
 
         else :
             print("waiting for new files")
-            time.sleep(1)
             pass
         a = a + 1
     # else:
