@@ -9,7 +9,7 @@ def main():
     print("starting sftp")
     numfiles = len(os.listdir("/data/cryo/current_data"))
     while True:
-        if numfiles == numfiles + 1 :
+        if len(os.listdir("/data/cryo/current_data")) == numfiles + 1 :
             files = [os.path.join('/data/cryo/current_data', x) for x in os.listdir('/data/cryo/current_data') if x.startswith('temp.')]
             oldest = min(files,key=os.path.getctime)
             print('sftp: %s' % (a))
