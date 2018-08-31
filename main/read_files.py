@@ -3,7 +3,7 @@ from os import stat
 import os
 import sys
 import mce_data
-import netcdf_trial as nc
+import netcdf as nc
 import subprocess
 import datetime
 
