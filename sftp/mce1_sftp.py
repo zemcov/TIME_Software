@@ -8,18 +8,20 @@ def main():
     a = 0
     print("starting sftp")
     numfiles = len(os.listdir("/data/cryo/current_data"))
-    while True:
+    while a < 100:
         if len(os.listdir("/data/cryo/current_data")) == numfiles + 1 :
             files = [os.path.join('/data/cryo/current_data', x) for x in os.listdir('/data/cryo/current_data') if x.startswith('temp.')]
             oldest = min(files,key=os.path.getctime)
             print('sftp: %s' % (a))
             subprocess.Popen(['scp', oldest, 'time-master:/home/time/Desktop/time-data/mce1/%s' %(oldest)]).wait()
             delete_file = ['rm %s' %(oldest)]
-            subprocess.Popen(delete_file, shell=True)
-            a = a + 1
+            subprocess.Popen(delete_file, shell=True).wait()
+
         else :
             print("waiting for new files")
+            time.sleep(1)
             pass
+        a = a + 1
     # else:
     #     print("no new files, exiting")
     #     sys.exit()
