@@ -7,10 +7,12 @@ import sys
 def main():
     a = 0
     print("starting sftp")
-    numfiles = len(os.listdir("/data/cryo/current_data"))
+    numfiles = len(os.listdir('/data/cryo/current_data'))
+    print(numfiles)
     files = []
+    time.sleep(1.0)
     while a < 100:
-        if len(os.listdir("/data/cryo/current_data")) > numfiles :
+        if len(os.listdir('/data/cryo/current_data')) > numfiles :
             for x in os.listdir('/data/cryo/current_data'):
                 print(x)
                 if x.startswith('temp.') :
