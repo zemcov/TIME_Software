@@ -24,9 +24,9 @@ def main():
                     files.append(os.path.join('/data/cryo/current_data/', x))
             oldest = min(files,key=os.path.getctime)
             oldfile = oldest[len(oldest)-8:len(oldest)]
-            print('oldfile:' oldfile)
+            print('oldfile:', oldfile)
             print('sftp: %s' % (a))
-            print('oldest:' oldest)
+            print('oldest:', oldest)
             subprocess.Popen(['scp', oldest, 'time-master:/home/time/Desktop/time-data/mce1/%s' %(oldfile)])
             delete_file = ['rm %s' %(oldest)]
             subprocess.Popen(delete_file, shell=True)
