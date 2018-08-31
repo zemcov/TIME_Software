@@ -12,7 +12,7 @@ def main():
         if x.startswith('temp.'):
             l = l + 1
     numfiles = len(os.listdir('/data/cryo/current_data')) - l
-    
+
     print('numfiles:',numfiles)
     files = []
     time.sleep(1.0)
@@ -21,11 +21,12 @@ def main():
             for x in os.listdir('/data/cryo/current_data'):
                 print(x)
                 if x.startswith('temp.') :
-                    files.append(os.path.join('/data/cryo/current_data', x))
+                    files.append(os.path.join('/data/cryo/current_data/', x))
             oldest = min(files,key=os.path.getctime)
             oldfile = oldest[len(oldest)-8:len(oldest)]
-            print(oldfile)
+            print('oldfile:' oldfile)
             print('sftp: %s' % (a))
+            print('oldest:' oldest)
             subprocess.Popen(['scp', oldest, 'time-master:/home/time/Desktop/time-data/mce1/%s' %(oldfile)])
             delete_file = ['rm %s' %(oldest)]
             subprocess.Popen(delete_file, shell=True)
