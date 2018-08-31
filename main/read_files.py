@@ -14,7 +14,7 @@ def filetransfer(rc):
     filestarttime = 0
     subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'], shell=True)
     while True:
-        files = [os.path.join('/home/time/Desktop/time-data/mce1', x) for x in os.listdir('/home/time/Desktop/time-data/mce1') if ! x.endswith('.run')]
+        files = [os.path.join('/home/time/Desktop/time-data/mce1', x) for x in os.listdir('/home/time/Desktop/time-data/mce1')] #if ! x.endswith('.run')]
         oldest = min(files,key=os.path.getctime)
         print("oldest file:", oldest)
         f = mce_data.SmallMCEFile(oldest)
