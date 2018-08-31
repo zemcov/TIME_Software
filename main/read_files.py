@@ -22,6 +22,7 @@ def filetransfer(rc):
         mce,n,filestarttime = readdata(f,oldest,header,n, a, filestarttime, rc)
         subprocess.Popen(['rm %s' % (mce_file)], shell=True)
         a = a + 1
+        print('data appended')
         # ================================================================================================
         # mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
         # if mce_file:
@@ -35,13 +36,13 @@ def filetransfer(rc):
     # -----------------------------------------------------------------------------------------------------
 
 def readdata(f, mce_file, head, n, a, filestarttime, rc):
-    print('readdata started')
     tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
     h = f.Read(row_col=True, unfilter='DC').data
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
+    print(h.shape())
 
     if a == 0:
         print('------- New File 0 -------')
@@ -49,10 +50,8 @@ def readdata(f, mce_file, head, n, a, filestarttime, rc):
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
         if rc == 's' :
-            print('data appended')
             nc.data_all(h,d,n,a,head)
         else :
-            print('data appended')
             nc.data(h,d,n,a,head)
 
     else :
@@ -60,20 +59,16 @@ def readdata(f, mce_file, head, n, a, filestarttime, rc):
         filestarttime = filestarttime.isoformat()
         if os.stat(tempfiledir + "/mce_netcdf-%s.nc" %(filestarttime)).st_size < 20 * 10**6: # of bytes here
             if rc == 's' :
-                print('data appended 1')
                 nc.data_all(h,d,n,a,head)
             else :
-                print('data appended 2')
                 nc.data(h,d,n,a,head)
 
         else :
             print('-------- New File --------')
             mce = nc.new_file(n, h.shape, head, filestarttime)
             if rc == 's' :
-                print('data appended 3')
                 nc.data_all(h,d,n,a,head)
             else :
-                print('data appended 4')
                 nc.data(h,d,n,a,head)
 
     # if a == 1:
