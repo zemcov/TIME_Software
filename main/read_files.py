@@ -12,17 +12,28 @@ def filetransfer(rc):
     mce = 1
     n = 0
     filestarttime = 0
-    subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'], shell=True)
+    path = '/home/time/Desktop/time-data/mce1'
+    subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py '], shell=True)
     while True:
-        files = [os.path.join('/home/time/Desktop/time-data/mce1', x) for x in os.listdir('/home/time/Desktop/time-data/mce1')] #if ! x.endswith('.run')]
-        oldest = min(files,key=os.path.getctime)
-        print("oldest file:", oldest)
-        f = mce_data.SmallMCEFile(oldest)
-        header = read_header(f)
-        mce,n,filestarttime = readdata(f,oldest,header,n, a, filestarttime, rc)
-        subprocess.Popen(['rm %s' % (mce_file)], shell=True)
-        a = a + 1
-        print('data appended')
+        if os.path.exists(path + 'temp.run') :
+            if os.path.exists('/data/cryo/current_data/temp.000') :
+                mce_file_name = path + 'temp.000'
+                f = mce_data.SmallMCEFile(mce_file_name)
+                header = read_header(f)
+                mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
+                a = 1
+            elif os.path.exists(path + 'temp.%0.3i' %(a)) :
+                mce_file_name = path + 'temp.%0.3i' %(a)
+                f = mce_data.SmallMCEFile(mce_file_name)
+                header = read_header(f)
+                mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
+                a = a + 1
+            else :
+                pass
+                print('waiting for new files')
+        else :
+            pass
+            print('temp.run does not exist')
         # ================================================================================================
         # mce_file = os.path.exists("/home/time/Desktop/time-data/mce1/temp.%0.3i" %(a+1))
         # if mce_file:
