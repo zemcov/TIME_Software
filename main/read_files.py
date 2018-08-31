@@ -55,7 +55,7 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime, rc):
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(n, h.shape, head, filestarttime)
     elif os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
-        if rc == 's'
+        if rc == 's' :
             nc.data_all(h,d,n,a,head)
         else :
             nc.data(h,d,n,a,head)
