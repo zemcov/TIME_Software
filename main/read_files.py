@@ -16,13 +16,7 @@ def filetransfer(rc):
     subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py '], shell=True)
     while a < 100:
         if os.path.exists(path + 'temp.run') :
-            if os.path.exists('/data/cryo/current_data/temp.000') :
-                mce_file_name = path + 'temp.000'
-                f = mce_data.SmallMCEFile(mce_file_name)
-                header = read_header(f)
-                mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime)
-                a = 1
-            elif os.path.exists(path + 'temp.%0.3i' %(a)) :
+            if os.path.exists(path + 'temp.%0.3i' %(a)) :
                 mce_file_name = path + 'temp.%0.3i' %(a)
                 f = mce_data.SmallMCEFile(mce_file_name)
                 header = read_header(f)
