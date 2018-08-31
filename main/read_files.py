@@ -24,10 +24,10 @@ def netcdfdata():
             #print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
         mcea = subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py %s %s' % (mcea, n_files)], shell=True)
         mce_file = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
-        print("/home/pilot1/netcdf_stuff/mce1/temp.%0.3i" %(a+1))
+        print('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         if mce_file:
-            print(len(os.listdir("/home/pilot1/netcdf_stuff/mce1")) - 2)
-            for i in range(len(os.listdir("/home/pilot1/netcdf_stuff/mce1")) - 2):
+            print(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2)
+            for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2):
                 print('netcdf: %s' % (a))
                 mce_file_name = '/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a)
                 a = a + 1
