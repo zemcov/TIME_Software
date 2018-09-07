@@ -16,18 +16,19 @@ def netcdfdata(rc):
     n = 0
     n_files = 8
     filestarttime = 0
+    mcea = subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py %s %s' % (a, n_files)], shell=True)
     while True:
         #mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
         #mce_file = os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
         #if mce_file:
             #print('NETCDF IS WORKING')
             #print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
-        mcea = subprocess.call(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py %s %s' % (mcea, n_files)], shell=True)
+        
         mce_file = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
-        print('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
+        #print('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         if mce_file:
-            print(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2)
-            for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2):
+            #print(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 2)
+            for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 3):
                 print('netcdf: %s' % (a))
                 mce_file_name = '/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a)
                 a = a + 1
@@ -37,6 +38,11 @@ def netcdfdata(rc):
                 mce_file = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
             #else:
             #    pass
+        if os.path.exists('tempfiles/stop.txt'):
+            subprocess.call(["ssh -T time@time-mce-0.caltech.edu /usr/mce/bin/mce_cmd '-x stop rcs ret_dat'"], shell=True)
+            subprocess.call(['ssh -T time@time-mce-0.caltech.edu "rm /data/cryo/current_data/temp.*"'], shell=True)
+            subprocess.call(['rm /home/time/Desktop/time-data/mce1/temp.*'], shell=True)
+            sys.exit()
 
 
 def readdata(f, mce_file_name, mce, head, n, a, filestarttime, rc):
@@ -45,9 +51,9 @@ def readdata(f, mce_file_name, mce, head, n, a, filestarttime, rc):
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
-
-    old_mce_file_name = '/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a - 1)
-    subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
+    if a > 1:
+        old_mce_file_name = '/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a - 2)
+        subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
 
     tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
     if a == 1:
