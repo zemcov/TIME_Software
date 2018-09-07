@@ -6,6 +6,7 @@ import subprocess
 import time
 
 def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', datarate='45'):
+    run = input('Press enter to run')
     netcdfdir = ('/home/time/Desktop/time-data/netcdffiles')
     if os.path.exists(netcdfdir):
         print('netcdfdir exists')
@@ -20,6 +21,9 @@ def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', 
         print('Making MCE File Directory')
         mce_dir = ['mkdir /home/time/Desktop/time-data/mce1']
         subprocess.Popen(mce_dir, shell=True).wait()
+    
+    if os.path.exists('tempfiles/stop.txt'):
+        subprocess.call('rm tempfiles/stop.txt', shell=True)
 
     print('Observer: %s' % (observer))
     print('Datamode: %s' % (datamode))
@@ -65,6 +69,10 @@ def startmce(observer, datamode, readoutcard, framenumber, datarate):
         #e = subprocess.Popen(run2, shell=True)
     netcdfcmd = ['python read_files.py %s' %(readoutcard)]
     subprocess.Popen(netcdfcmd, shell=True)
+    
+    while True:
+        if os.path.exists('tempfiles/stop.txt'):
+            sys.exit()
 
 if __name__ == '__main__':
     main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
