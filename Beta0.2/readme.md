@@ -78,3 +78,18 @@
   would also be a dropdown menu for changing the current readout card. The bottom
   left is data from the K-Mirror, however currently it just outputs random integers
   as that has not been fully implemented yet.
+
+# NetCDF4 Data Storage
+  To see how data from the MCE's, Telescope, and K-Mirror is stored, view the file
+  "netcdf_trial.py"
+
+  The netcdf file is created and formatted using the "new_file" function
+
+  Data is added to the created file in a specific defined variable using "data" and "data_all"
+  
+  The file is closed by the gui after a defined amount of time (currently set to 5 min)
+
+# NetCDF4 Data retrieval
+  1. Go to the directory where the netcdf files are stored in a terminal
+  2. Choose whether to read from a single file or multiple Files
+  3.

@@ -23,6 +23,7 @@ def takedataall(a, ch, rc, n_files, frameperfile, mce, row):
         if mce_file:
             print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
             for i in range(len(os.listdir("/data/cryo/current_data")) - 2 - n_files):
+                mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
                 a = a + 1
                 st.a = a
                 f = mce_data.SmallMCEFile(mce_file_name)
@@ -42,31 +43,38 @@ def readdataall(f,mce_file_name, frameperfile, mce, head):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
 
-	if st.a == 1:
-		mce = nc.new_file(st.n, h.shape, head)
-	if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
-		nc.data_all(h,d,st.n,st.a,head)
-	else:
-		st.n = st.n + 1
+    #if st.a == 1:
+    #    mce = nc.new_file(st.n, h.shape, head)
+    #if os.stat(tempfiledir + "/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
+    #    nc.data_all(h,d,st.n,st.a,head)
+    #else:
+    #    st.n = st.n + 1
         #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
-		mce.close()
-		print('----------New File----------')
-		mce = nc.new_file(st.n, h.shape, head)
-		nc.data_all(h,d,st.n,st.a,head)
-	return d, mce
+    #    mce.close()
+    #    print('----------New File----------')
+    #    mce = nc.new_file(st.n, h.shape, head)
+    #    nc.data_all(h,d,st.n,st.a,head)
+    #return d, mce
 
 def readgraphall(y,f,mce_file_name,a,ch,rc,row):
-	h = f.Read(row_col=True, unfilter='DC').data
-	delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-	subprocess.Popen(delete_file,shell=True)
-	d = h[:,ch + ((rc) * 8) - 1]
-	y.append(np.reshape(h[:,ch + ((rc) * 8) - 1],d.shape[0]*d.shape[1]))
-	newy = []
+    h = f.Read(row_col=True, unfilter='DC').data
+    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
+    subprocess.Popen(delete_file,shell=True)
+    d = h[:,ch - 1]# + ((rc-1) * 8) - 1]
+    new_array = []
+    for j in range(d.shape[1]):
+        new_array.append(d[row - 1][j])
 
-	for j in range(row, d.shape[0]*d.shape[1], 33):
-		newy.append(y[len(y)-1][j])
-	graphdata = [a, ch, newy]
-	return graphdata
+    graphdata = [a,ch,new_array]
+    return graphdata
+
+	# y.append(np.reshape(d , d.shape[0]*d.shape[1]))
+    #
+    # newy = []
+	# for j in range(row-1, d.shape[0]*d.shape[1], 33):
+	# 	newy.append(y[len(y)-1][j])
+	# graphdata = [a, ch, newy]
+	# return graphdata
 
 def read_header(f):
     keys = []
