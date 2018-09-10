@@ -12,7 +12,7 @@ from netCDF4 import num2date, date2num
 def new_file(n, h_size, head, filestarttime):
     tempfiledir = os.path.expanduser('netcdffiles')
     mce = Dataset(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime),"w",format="NETCDF4")
-
+    
     # create the gui parameters group
     guiparams = mce.createGroup('guiparams')
     stream = mce.createGroup('stream')

@@ -14,6 +14,7 @@ import settings as st
 import socket, struct, threading
 sys.path.append('/data/cryo/current_data')
 
+
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
     #initializes mcegui class and calls other init functions
@@ -25,6 +26,7 @@ class mcegui(QtGui.QWidget):
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
+
         #tempfiledir = os.path.expanduser('~/Desktop/mce_files')
         #if os.path.exists(tempfiledir):
         #    print('Hello!')
@@ -110,8 +112,6 @@ class mcegui(QtGui.QWidget):
         #tempfile = open(tempfilename, 'w')
         #tempfile.write('Close')
         #tempfile.close()
-
-
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -506,8 +506,23 @@ class mcegui(QtGui.QWidget):
     def initplot(self):
         #counts number of files in current_data for later checks of number of
         #temp files
+
         self.n_files = 8 #len(os.listdir("ssh -T pilot2@timemce.rit.edu:/data/cryo/current_data"))
+
         print(self.n_files)
+        #----------------------------------------------------------------------------------
+        # start the mce1 file system check (rit mce)
+        sftp1 = ['sshpass -p "time-pilot2" ssh -o StrictHostKeyChecking=no\
+            pilot2@timemce.rit.edu ; python /Desktop/mce1_sftp.py]
+        process = subprocess.Popen(sftp1,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+        #----------------------------------------------------------------------------------
+        # start the mce2 file system check (caltech mce)
+        sftp2 = ['sshpass -p "CII@zof7" ssh -o StrictHostKeyChecking=no\
+            time@time-mce-0.caltech.edu ; python /Desktop/mce2_sftp.py]
+        process = subprocess.Popen(sftp2,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+        #----------------------------------------------------------------------------------
         #changes commands to start mce if All readout cards are to be read
         if self.readoutcard == 'All':
             changedatamode1 = ["./mce1_cdm.sh a %s" % (self.datamode)]

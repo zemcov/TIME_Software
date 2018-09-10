@@ -1,5 +1,5 @@
 import os
-import subprocess
+import subproces
 import time
 import shutil
 import sys
@@ -29,11 +29,9 @@ def main(a, n_files):
             sys.exit(a)
         else:
             pass
-
 '''
 need some good way to stop this process from happening at the end of the gui
 maybe put in a wait for 10 seconds timer and then if newfile isn't found, just give up on it
 '''
-
 if __name__ == '__main__':
     main(sys.argv[1], sys.argv[2])
