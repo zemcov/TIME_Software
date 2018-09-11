@@ -7,6 +7,10 @@ spi.open(0,0)
 spi.max_speed_hz = 7629
 
 
+max_pos = -45.0
+min_pos = -135.0
+home_pos = -50.1
+
 def get_pos():
     '''
     Returns the absolute rotational position of the encoder in degrees.  Accurate to about 0.005 degrees

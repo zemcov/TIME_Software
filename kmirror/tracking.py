@@ -17,7 +17,7 @@ CONTROL_PORT = 8888
 
 NUM_SAMPLES = 800
 STEP_OFFSET = 150
-DEMO = True
+DEMO = False
 
 
 class KMirror():

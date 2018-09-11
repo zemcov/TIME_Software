@@ -14,7 +14,7 @@ class Home(State):
     The state which indicates that the K-Mirror is home.
     """
 
-    def __init__(self, verified=0):
+    def __init__(self,verified=0):
         """
         Initialize Home state.
         """
@@ -91,13 +91,15 @@ class EmergencyStop(State):
         """
         if event == 'turn_on':
             return Ready(self.verified)
+        if event == 'reset':
+            return Home()
         return self
 
     def events(self):
         """
         Give string list of applicable events for current state.
         """
-        return ['turn_on']
+        return ['turn_on','reset']
 
 class Verification(State):
     """
@@ -111,15 +113,15 @@ class Verification(State):
         """
         super(Verification, self).__init__(verified)
         from rotate_motor import rotate_motor
-        from encoder import get_pos
-        from util import *
+        from encoder import get_pos, home_pos
+        from util import deg_to_step
         import time
 
-        while get_pos() < 32.1 - 0.1 or get_pos() > 32.1 + 0.1:
-            steps = deg_to_step(32.1) - deg_to_step(get_pos())
+        problem = false
+        while get_pos() < home_pos - 0.1 or get_pos() > home_pos + 0.1:
+            steps = deg_to_step(home_pos) - deg_to_step(get_pos())
             rotate_motor(int(steps), 2000)
             time.sleep(abs(steps)/2000.0 + 0.1)
-            
         print get_pos()
         self.auto_next_event = 'finished_verifying'
 
@@ -164,6 +166,8 @@ class Tracking(State):
         if event == 'end_tracking':
             return Ready(self.verified)
         if event == 'error':
+            return EmergencyStop()
+        if safety.get_state[2]:
             return EmergencyStop()
         return self
 

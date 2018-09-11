@@ -2,6 +2,7 @@
 import minimalmodbus
 import serial
 import time
+from kmirror_device import Device
 
 driver = minimalmodbus.Instrument('/dev/ttyUSB0', 1)
 driver.serial.baudrate = 9600

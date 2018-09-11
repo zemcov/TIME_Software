@@ -7,6 +7,7 @@ https://dev.to/karn/building-a-simple-state-machine-in-python
 """
 
 from kmirror_states import Home
+import state
 
 class Device(object):
     """

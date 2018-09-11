@@ -1,2 +1,0 @@
-#!/bin/sh
-/usr/bin/rsync -v /home/pilot1/pictures/wallpapers /media/pilot1/62665E397FD17984
