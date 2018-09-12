@@ -16,7 +16,7 @@ def netcdfdata(rc):
     n = 0
     n_files = 8
     filestarttime = 0
-    mcea = subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py %s %s' % (a, n_files)], shell=True)
+    mcea = subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py %s %s' % (a, n_files)], shell=True)
     while True:
         #mce_file_name = "/data/cryo/current_data/temp.%0.3i" %(a)
         #mce_file = os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
@@ -39,8 +39,8 @@ def netcdfdata(rc):
             #else:
             #    pass
         if os.path.exists('tempfiles/stop.txt'):
-            subprocess.call(["ssh -T time@time-mce-0.caltech.edu /usr/mce/bin/mce_cmd '-x stop rcs ret_dat'"], shell=True)
-            subprocess.call(['ssh -T time@time-mce-0.caltech.edu "rm /data/cryo/current_data/temp.*"'], shell=True)
+            subprocess.call(["ssh -T time@time-mce-1.caltech.edu /usr/mce/bin/mce_cmd '-x stop rcs ret_dat'"], shell=True)
+            subprocess.call(['ssh -T time@time-mce-1.caltech.edu "rm /data/cryo/current_data/temp.*"'], shell=True)
             subprocess.call(['rm /home/time/Desktop/time-data/mce1/temp.*'], shell=True)
             sys.exit()
 
