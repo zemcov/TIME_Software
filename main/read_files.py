@@ -23,7 +23,7 @@ def netcdfdata(rc):
         #if mce_file:
             #print('NETCDF IS WORKING')
             #print(len(os.listdir("/data/cryo/current_data")) - 2 - n_files)
-        
+
         mce_file = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         #print('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         if mce_file:
@@ -47,6 +47,9 @@ def netcdfdata(rc):
 
 def readdata(f, mce_file_name, mce, head, n, a, filestarttime, rc):
     h = f.Read(row_col=True, unfilter='DC').data
+    print('++++++++ H Array +++++++++')
+    print(h[0][0][:])
+    print('++++++++++++++++++++++++++')
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
         for c in range(h.shape[1]):
