@@ -4,6 +4,5 @@ def main():
     file.close()
     print('Program Stopped')
 
-
 if __name__ == '__main__':
     main()

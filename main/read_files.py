@@ -8,7 +8,7 @@ import subprocess
 import datetime
 
 def netcdfdata(rc):
-    print('HELLO!')
+    #print('HELLO!')
     #n_files = len(os.listdir("/data/cryo/current_data"))
     a = 0
     mcea = 0
@@ -39,9 +39,9 @@ def netcdfdata(rc):
             #else:
             #    pass
         if os.path.exists('tempfiles/stop.txt'):
-            subprocess.call(["ssh -T time@time-mce-1.caltech.edu /usr/mce/bin/mce_cmd '-x stop rcs ret_dat'"], shell=True)
-            subprocess.call(['ssh -T time@time-mce-1.caltech.edu "rm /data/cryo/current_data/temp.*"'], shell=True)
-            subprocess.call(['rm /home/time/Desktop/time-data/mce1/temp.*'], shell=True)
+            subprocess.Popen(["ssh -T time@time-mce-1.caltech.edu /usr/mce/bin/mce_cmd '-x stop rcs ret_dat'"], shell=True)
+            subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu "rm /data/cryo/current_data/temp.*"'], shell=True)
+            subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp.*'], shell=True)
             sys.exit()
 
 

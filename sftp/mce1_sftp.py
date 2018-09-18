@@ -7,7 +7,7 @@ import datetime as dt
 
 def main(a, n_files):
     a = int(a)
-    print('Hello!')
+    print('=========== FILE TRANSFER STARTED =============')
     begintimer = dt.datetime.utcnow()
     while True:
         mce_file = os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
