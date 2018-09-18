@@ -35,6 +35,9 @@ def netcdfdata(rc):
             subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp.*'], shell=True)
             sys.exit()
 
+        else :
+            pass
+
 
 def readdata(f, mce_file_name, mce, head, n, a, filestarttime, rc):
     h = f.Read(row_col=True, unfilter='DC').data
