@@ -17,10 +17,10 @@ def netcdfdata(rc):
     n = 0
     filestarttime = 0
     dir = '/home/pilot1/Desktop/time-data/mce1/'
-    subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/time/time-software/sftp/mce1_sftp.py'], shell=True)
+    subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME-Software/mce1_sftp.py'], shell=True)
 
     while True:
-        mce_file = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
+        mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         if mce_file:
             files = [dir + x for x in os.listdir(dir) if (x.startswith("temp") and not x.endswith('.run'))]
             if len(files) != 0:
