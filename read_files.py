@@ -16,7 +16,7 @@ def netcdfdata(rc):
     n = 0
     filestarttime = 0
     dir = '/home/pilot1/Desktop/time-data/mce1/'
-    subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME-Software/mce1_sftp.py'], shell=True)
+    subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/mce1_sftp.py'], shell=True)
 
     while True:
         mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
