@@ -88,7 +88,7 @@ def read_header(f):
                 elif value[i] == False:
                     value[i] = "0"
                 else:
-                    print "I don't know what I am..."
+                    print("I don't know what I am...")
             value = ''.join(map(str,value))
         value = str(value)
         keys.append(key)
