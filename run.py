@@ -4,7 +4,6 @@ import datetime
 import os
 import subprocess
 import time
-import settings as st
 
 def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', datarate='45'):
     netcdfdir = ('/home/pilot1/Desktop/time-data/netcdffiles')
