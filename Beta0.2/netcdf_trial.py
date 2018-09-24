@@ -3,16 +3,16 @@ from netCDF4 import MFDataset
 import os
 import sys
 #import takedata_test as td
-import settings as st
 import datetime as now
 from netCDF4 import num2date, date2num
 
 #from multipagegui import parameters
 
 
-def new_file(n, h_size, head):
-        mce = Dataset("~/Desktop/mce_files/gui_data_test{n}.nc".format(n=st.n),"w",format="NETCDF4")
-
+def new_file(n, h_size, head, filestarttime):
+    tempfiledir = os.path.expanduser('netcdffiles')
+    mce = Dataset(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime),"w",format="NETCDF4")
+    
     # create the gui parameters group
     guiparams = mce.createGroup('guiparams')
     stream = mce.createGroup('stream')
@@ -40,7 +40,7 @@ def new_file(n, h_size, head):
     heatmap.createDimension('t',None)
 
     mce_header.createDimension('k',2)
-    mce_header.createDimension('v',17)
+    mce_header.createDimension('v',16)
     mce_header.createDimension('t',None)
 
     # creating variables --------------------------------------------------------------------------------
@@ -67,12 +67,12 @@ def new_file(n, h_size, head):
     Header = mce_header.createVariable('header','S3',('t','v','k'))
 
 
-    parafilename = (os.pardir + '/cryo/tempfiles/tempparameters.txt')
+    parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
     parameters = parafile.readline().strip().split()
     Observer[0] = parameters[0]
     Frames[0] = parameters[3]
-    Datetime[0] = parameters[6]
+    #Datetime[0] = parameters[6]
     Datamode[0] = parameters[1]
     Rc[0] = parameters[2]
     parafile.close()
@@ -87,7 +87,7 @@ def data_all(h,d,n,a,head):#,xvalues):
 
 def data(h,d,n,a,head):#,xvalues):
     Time[a] = str(now.datetime.utcnow())
-    print(d.shape)
+    #print(d.shape)
     #Rms_Noise.shape()
     Rms_Noise[a,:,:] = d
     Raw_Data[a,:,:,:] = h

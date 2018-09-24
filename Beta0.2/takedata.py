@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 import subprocess
 import time
 sys.path.append('/usr/lib/python2.7')
-sys.path.append('/data/cryo/current_data')
+sys.path.append('/home/pilot1/ssh_stuff/mce1')
 import mce_data
 #from pathlib2 import Path
 import datetime
@@ -24,18 +24,21 @@ def takedata(a, ch, n_files, frameperfile, mce, row):
     y = []
     allgraphdata = []
     while True:
-        mce_file_name = "tempfiles/mce1/temp.%0.3i" %(a)
-        mce_file = os.path.exists("tempfiles/mce1/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
+        mce_file_name = "/home/pilot1/ssh_stuff/mce1/temp.%0.3i" %(a)
+        mce_file = os.path.exists("/home/pilot1/ssh_stuff/mce1/temp.%0.3i" %(a+1)) #wait to read new file until old file is complete
         if mce_file:
-            print(len(os.listdir("~tempfiles/mce1")) - 2 - n_files)
-            for i in range(len(os.listdir("~tempfiles/mce1")) - 2 - n_files):
+            #print(len(os.listdir("/home/pilot1/ssh_stuff/mce1")) - 2 - n_files)
+            while mce_file:
+                mce_file_name = "/home/pilot1/ssh_stuff/mce1/temp.%0.3i" %(a)
                 a = a + 1
                 st.a = a
                 f = mce_data.SmallMCEFile(mce_file_name)
-                header = read_header(f)
+                #header = read_header(f)
+                header = 22
                 z, mce = readdata(f, mce_file_name, frameperfile, mce, header)
                 graphdata = readgraph(y, f, mce_file_name, a, ch, row)
                 allgraphdata.append(graphdata)
+                mce_file = os.path.exists("/home/pilot1/ssh_stuff/mce1/temp.%0.3i" %(a+1))
             break
         else:
             pass
@@ -48,27 +51,33 @@ def readdata(f, mce_file_name, frameperfile, mce, head):
         for c in range(h.shape[1]):
             d[b][c] = (np.std(h[b][c][:],dtype=float))
 
-    if st.a == 1:
-    	mce = nc.new_file(st.n, h.shape, head)
-    if os.stat("tempfiles/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
-        nc.data(h,d,st.n,st.a,head)
-    else:
-        st.n = st.n + 1
+    #tempfiledir = os.path.expanduser('~/Desktop/mce_files')
+    #if st.a == 1:
+    #	mce = nc.new_file(st.n, h.shape, head)
+    #if os.stat(tempfiledir + "/gui_data_test{n}.nc".format(n=st.n)).st_size < 20 * 10**6: # of bytes here
+    #    nc.data(h,d,st.n,st.a,head)
+    #else:
+    #    st.n = st.n + 1
         #mce = 'tempfiles/gui_data_test%s.nc' % (n - 1)
-        mce.close()
-        print('----------New File----------')
-        mce = nc.new_file(st.n, h.shape, head)
-        nc.data(h,d,st.n,st.a,head)
+    #    mce.close()
+    #    print('----------New File----------')
+    #    mce = nc.new_file(st.n, h.shape, head)
+    #    nc.data(h,d,st.n,st.a,head)
     return d, mce
 
 def readgraph(y, f, mce_file_name, a, ch, row):
     h = f.Read(row_col=True, unfilter='DC').data
-    delete_file = ["rm %s" %(mce_file_name)] #to keep temp files from piling up in memory
-    subprocess.Popen(delete_file,shell=True)
     d = h[:,ch - 1]
-    y.append(np.reshape(h[:,ch - 1],d.shape[0]*d.shape[1])) #should output every row, and only 1 channel or column for all frame data
-    newy = []
+    y.append(np.reshape(d,d.shape[0]*d.shape[1])) #should output every row, and only 1 channel or column for all frame data
+    '''
+    for ch = 0, h.shape = (33,8,374), d.shape = (33,374), y.shape = (33*374,)
 
+    can't we just do this to index the correct row of data...?
+    new_array = []
+    for j in range(d.shape[1]):
+        new_array.append(d[row][j])
+    '''
+    newy = []
     for j in range(row - 1, d.shape[0]*d.shape[1], 33):
         newy.append(y[len(y)-1][j])
 
