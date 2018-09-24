@@ -28,11 +28,11 @@ def netcdfdata(rc):
                 f = mce_data.SmallMCEFile(mce_file)
                 header = read_header(f)
                 mce, n, filestarttime = readdata(f, mce_file, mce, header, n, a, filestarttime, rc)
-                print 'File Read: %s' %(mce_file.replace(dir,''))
+                print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
 
     else :
-        print 'No More Files'
+        print('No More Files')
         subprocess.Popen(['rm /home/pilot1/Desktop/time-data/mce1/temp.run'], shell=True)
         sys.exit()
 
@@ -50,7 +50,7 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
     if n == 0:
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
-        print '------------ New File -------------'
+        print('------------ New File -------------')
         mce = nc.new_file(h.shape, head, filestarttime)
         if rc == 's' :
             nc.data_all(h,n,head,filestarttime)
@@ -59,7 +59,7 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
 
     elif os.stat(netcdfdir + "/mce1_%s.nc" % (filestarttime)).st_size >= 20 * 10**6:
         n = 0
-        print '----------- New File ------------'
+        print('----------- New File ------------')
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(h.shape, head, filestarttime)
