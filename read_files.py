@@ -38,10 +38,10 @@ def netcdfdata(rc):
 # ===========================================================================================================================
 def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
     h = f.Read(row_col=True, unfilter='DC').data
-    # d = np.empty([h.shape[0],h.shape[1]],dtype=float)
-    # for b in range(h.shape[0]):
-    #     for c in range(h.shape[1]):
-    #         d[b][c] = (np.std(h[b][c][:],dtype=float))
+    d = np.empty([h.shape[0],h.shape[1]],dtype=float)
+    for b in range(h.shape[0]):
+        for c in range(h.shape[1]):
+            d[b][c] = (np.std(h[b][c][:],dtype=float))
 
     subprocess.Popen(['rm %s' % (mce_file)], shell=True)
     netcdfdir = '/home/pilot1/Desktop/time-data/netcdffiles'
@@ -52,9 +52,9 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
         print('------------ New File -------------')
         mce = nc.new_file(h.shape, head, filestarttime)
         if rc == 's' :
-            nc.data_all(h,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime)
         else :
-            nc.data(h,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime)
 
     elif os.stat(netcdfdir + "/mce1_%s.nc" % (filestarttime)).st_size >= 20 * 10**6:
         n = 0
@@ -63,15 +63,15 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(h.shape, head, filestarttime)
         if rc == 's' :
-            nc.data_all(h,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime)
         else :
-            nc.data(h,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime)
 
     else:
         if rc == 's' :
-            nc.data_all(h,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime)
         else :
-            nc.data(h,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime)
     n = n + 1
     return mce, n, filestarttime
 

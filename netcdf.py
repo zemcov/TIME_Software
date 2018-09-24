@@ -29,6 +29,9 @@ def new_file(h_size, head, filestarttime):
     mce.createDimension('raw_cols',8)
     mce.createDimension('raw_cols_all',32)
     mce.createDimension('raw_num', h_size[2])
+    mce.createDimension('rms_rows',h_size[0])
+    mce.createDimension('rms_cols',8)
+    mce.createDimension('rms_cols_all',32)
     mce.createDimension('k',2)
     mce.createDimension('v',16)
 
@@ -47,6 +50,10 @@ def new_file(h_size, head, filestarttime):
     global Raw_Data
     Raw_Data = mce.createVariable('raw_data','f8',('t','raw_rows','raw_cols','raw_num'))
     Raw_Data_All = mce.createVariable('raw_data_all','f8',('t','raw_rows','raw_cols_all','raw_num'))
+    global Rms_Noise_All
+    global Rms_Noise
+    Rms_Noise_All = mce.createVariable('rms_noise_all','f8',('t','rms_rows','rms_cols_all'))
+    Rms_Noise = mce.createVariable('rms_noise','f8',('t','rms_rows','rms_cols'))
 
     global Header
     Header = mce.createVariable('header','S1',('t','v','k'))
@@ -75,6 +82,7 @@ def data_all(h,n,head,filestarttime):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data_All[n,:,:,:] = h
+    Rms_Noise_All[n,:,:] = d
     #print Raw_Data_All.shape
     #new_head = np.array([head],dtype='S15').reshape((2,16))
     #Header[a,:,:] = new_head
@@ -83,7 +91,8 @@ def data_all(h,n,head,filestarttime):
 def data(h,n,head,filestarttime):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
-    #Raw_Data[a,:,:,:] = h
+    Raw_Data[n,:,:,:] = h
+    Rms_Noise[n,:,:] = d
     #new_head = np.array([head],dtype='S3')
     #print new_head
     #Header[a,:,:] = new_head
