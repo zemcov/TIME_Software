@@ -88,7 +88,7 @@ def data_all(h,n,head,filestarttime):
     #Header[a,:,:] = new_head
     mce.close()
 
-def data(h,n,head,filestarttime):
+def data(h,d,n,head,filestarttime):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data[n,:,:,:] = h
