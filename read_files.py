@@ -22,18 +22,20 @@ def netcdfdata(rc):
         mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         if mce_file:
             files = [dir + x for x in os.listdir(dir) if (x.startswith("temp") and not x.endswith('.run'))]
-            if len(files) != 0:
+            if (len(files) != 0 and mce_file != old_mce_file):
                 mce_file = min(files, key = os.path.getctime)
                 f = mce_data.SmallMCEFile(mce_file)
                 header = read_header(f)
-                mce, n, filestarttime = readdata(f, mce_file, mce, header, n, a, filestarttime, rc)
+                mce, n, filestarttime = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
-
-    else :
-        print('No More Files')
-        subprocess.Popen(['rm /home/pilot1/Desktop/time-data/mce1/temp.run'], shell=True)
-        sys.exit()
+                old_mce_file = mce_file
+            else :
+                subprocess.Popen(['python -c "import readteledata; stop_sock()"'],shell=True)
+                time.sleep(2.0)
+                subprocess.Popen(['pkill -f /home/pilot2/TIME_Software/readteledata.py']
+                print('Tel Server Stopped')
+                sys.exit()
 
 # ===========================================================================================================================
 def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):

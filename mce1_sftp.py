@@ -29,10 +29,10 @@ def main():
         end = dt.datetime.utcnow()
     else :
         print('File Transfer Stopped')
-        #subprocess.Popen(['rm temp*'],shell=True)
-        #subprocess.Popen(['rm /data/cryo/current_data/temp*'],shell=True)
-        subprocess.Popen(["ssh -t pilot1@time.rit.edu 'pkill -f /home/pilot1/time-software/main/read_files.py'"],shell=True)
-        print('File Read Stopped')
+        subprocess.Popen(["python -c 'import tel_sock; tel_sock.stop_sock()'"],shell=True)
+        time.sleep(2.0)
+        print('Tel Client Stopped')
+        subprocess.Popen(['pkill -f /home/pilot2/TIME_Software/tel_sock.py'])
         sys.exit()
 
 if __name__ == '__main__':
