@@ -65,8 +65,8 @@ def startmce(observer, datamode, readoutcard, framenumber, datarate):
         #e = subprocess.Popen(run2, shell=True)
     subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/tel_sock.py'], shell=True)
     print('Tel Server Started')
-    netcdfcmd = ['python read_files.py %s' %(readoutcard)]
-    subprocess.Popen(netcdfcmd, shell=True)
+    subprocess.Popen(['python readteledata.py'],shell=True)
+    subprocess.Popen(['python read_files.py %s' %(readoutcard)], shell=True)
 
 if __name__ == '__main__':
     main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
