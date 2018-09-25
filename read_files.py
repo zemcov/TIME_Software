@@ -33,7 +33,7 @@ def netcdfdata(rc):
             else :
                 subprocess.Popen(['python -c "import readteledata; stop_sock()"'],shell=True)
                 time.sleep(2.0)
-                subprocess.Popen(['pkill -f /home/pilot2/TIME_Software/readteledata.py']
+                subprocess.Popen(['pkill -f /home/pilot2/TIME_Software/readteledata.py'],shell=True)
                 print('Tel Server Stopped')
                 sys.exit()
 
