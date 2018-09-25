@@ -20,7 +20,7 @@ def stop_sock():
 while run == True:
     data = client.recv(unpacker.size)
     pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
-    tempfilename = 'tempfiles/tempteledata.txt'
+    tempfilename = '/home/pilot1/TIME_Software/tempfiles/tempteledata.txt'
     tempfile = open(tempfilename, 'w')
     tempfile.write(str(pa)+' ')
     tempfile.write(str(slew_flag)+' ')
