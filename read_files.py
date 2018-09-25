@@ -15,6 +15,7 @@ def netcdfdata(rc):
     mce = 0
     n = 0
     filestarttime = 0
+    old_mce_file = 0
     dir = '/home/pilot1/Desktop/time-data/mce1/'
     subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/mce1_sftp.py'], shell=True)
 
