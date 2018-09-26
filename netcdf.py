@@ -88,15 +88,15 @@ def data_all(h,n,head,filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
-    f = open('tempfiles/tempteledata.txt')
-    for word in f.read().split():
-        tele.append(float(word))
-    Tel[n,:,:] = tele
-    #Tel[n,:,:] = np.array([[float(i) for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read()])
+    # f = open('tempfiles/tempteledata.txt')
+    # for word in f.read().split():
+    #     tele.append(float(word))
+    # Tel[n,:,:] = tele
+    Tel[n,:,:] = np.array([[i for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read()])
     #print Raw_Data_All.shape
     #new_head = np.array([head],dtype='S15').reshape((2,16))
     #Header[a,:,:] = new_head
-    tele = []
+    # tele = []
     mce.close()
 
 def data(h,d,n,head,filestarttime):
@@ -104,15 +104,14 @@ def data(h,d,n,head,filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
-    f = open('tempfiles/tempteledata.txt')
-    for word in f.read().split():
-        print(word)
-        tele.append(float(word))
-    print('=========================')
-    Tel[n,:,:] = tele
-    #Tel[n,:,:] = np.array([[float(i) for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read()])
+    # f = open('tempfiles/tempteledata.txt')
+    # for word in f.read().split():
+    #     print(word)
+    #     tele.append(float(word))
+    # Tel[n,:,:] = tele
+    Tel[n,:,:] = np.array([[i for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read()])
     #new_head = np.array([head],dtype='S3')
     #print new_head
     #Header[a,:,:] = new_head
-    tele = []
+    # tele = []
     mce.close()
