@@ -22,10 +22,9 @@ while run == True:
     data = client.recv(unpacker.size)
     pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
     tempfilename = '/home/pilot1/TIME_Software/tempfiles/tempteledata.txt'
-    tele.extend([pa,slew_flag,alt,az,ra,dec,time])
     f = open(tempfilename,'w')
-    f.write(tele)
+    f.write("%d , %d , %d , %d , %d , %d" , pa, slew_flag, alt, az, ra, dec)
     f.close()
-    tele = []
+
     #print('Data Received')
     #print('Tel Server:',pa,slew_flag,alt,az,ra,dec)
