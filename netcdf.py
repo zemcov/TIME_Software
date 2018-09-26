@@ -8,6 +8,8 @@ import numpy as np
 tele = []
 tempfiledir = '/home/pilot1/Desktop/time-data/netcdffiles'
 def new_file(h_size, head, filestarttime, tel_size):
+    f = open('tempfiles/tempteledata.txt','w')
+    f.close()
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # create the gui parameters group
