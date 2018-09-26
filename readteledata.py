@@ -8,7 +8,7 @@ s.bind(('',PORT))
 print('Server listening on port %i' %(PORT))
 s.listen(5)
 
-unpacker = struct.Struct('d i d d d d d')
+unpacker = struct.Struct('d d d d d d d')
 client, info = s.accept()
 run = True
 
@@ -31,4 +31,4 @@ while run == True:
     #tempfile.write(str(time))
     tempfile.close()
     #print('Data Received')
-    print('Tel Server:',pa,slew_flag,alt,az,ra,dec)
+    print('Tel Server:',pa)

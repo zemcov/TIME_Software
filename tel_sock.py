@@ -19,7 +19,7 @@ update = int((3600.0/(speeds[0]-15.0))*(area)*rate)
 n = 0
 i = 0
 z = 0
-slew_flag = 0 #starts the simulation tracking up to starting position
+slew_flag = 0.0 #starts the simulation tracking up to starting position
 dec_start = 20.0 # static, for loop limits
 ra = 20 # static
 dec = 20 # static
@@ -57,7 +57,7 @@ def tel_move(RA,DEC,n,COLOR):
     pa = np.degrees(np.arctan2(sina,cosa))
 
     #s.send(message.encode('utf-8'))
-    packer = struct.Struct('d i d d d d d')
+    packer = struct.Struct('d d d d d d d')
     data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
     s.send(data)
 
@@ -65,7 +65,7 @@ def tel_move(RA,DEC,n,COLOR):
 t = [] # to keep track of the last scan, either up or down
 # ----------MOVING UP TO SCANNING POSITION---------------------------------------------------------------------------
 while True:
-    if slew_flag == 0:
+    if slew_flag == 0.0:
         while dec <= (dec_start + 2) :
             dec = dec + track
             if ra <= 360.0:
@@ -84,11 +84,11 @@ while True:
             z = z + 1
         else:
             t.append(slew_flag)
-            slew_flag = 2
+            slew_flag = 2.0
             COLOR = 'red'
 
 # ---------MOVING DOWN TO SCANNING POSITION--------------------------------------------------------------------
-    if slew_flag == 1:
+    if slew_flag == 1.0:
         while dec >= dec_start :
             dec = dec - track
             if ra <= 360.0 :
@@ -105,11 +105,11 @@ while True:
 
         else:
             t.append(slew_flag)
-            slew_flag = 2
+            slew_flag = 2.0
             COLOR = 'red'
 
 # -------------MOVE BACK AND FORTH IN SCAN----------------------------------------------------------
-    if slew_flag == 2:
+    if slew_flag == 2.0:
         ra_init = ra
         dec_init = dec
         loops = loops_deg*2*np.pi
@@ -126,7 +126,7 @@ while True:
         else:
             COLOR = 'black'
             if t[len(t)-1] == 0: # do the opposite of the last slew
-                slew_flag = 1
+                slew_flag = 1.0
             if t[len(t)-1] == 1:
-                slew_flag = 0
+                slew_flag = 0.0
 #---------------------------------------------------------------------------------------------------------------------
