@@ -22,8 +22,8 @@ while run == True:
     data = client.recv(unpacker.size)
     pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
     tempfilename = '/home/pilot1/TIME_Software/tempfiles/tempteledata.txt'
-    f = open(tempfilename,'w')
-    f.write("%.06f,%.06f,%.06f,%.06f,%.06f,%.06f" %(pa, slew_flag, alt, az, ra, dec))
+    f = open(tempfilename,'a')
+    f.write("%.06f,%.06f,%.06f,%.06f,%.06f,%.06f \n" %(pa, slew_flag, alt, az, ra, dec))
     f.close()
 
     #print('Data Received')

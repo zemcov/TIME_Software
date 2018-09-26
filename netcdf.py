@@ -61,7 +61,7 @@ def new_file(h_size, head, filestarttime):
     Header = mce.createVariable('header','S1',('t','v','k'))
 
     global Tel
-    Tel = mce.createVariable('tel','f8',('t','r','tel_array'))
+    Tel = mce.createVariable('tel','f8',('t','r','tel_array','t'))
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
@@ -88,8 +88,8 @@ def data_all(h,n,head,filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
-    pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
-    Tel[n,:,:] = [pa,slew_flag,alt,az,ra,dec]
+    tele = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',')
+    Tel[n,:,:,:] = tele
 
     #print Raw_Data_All.shape
     #new_head = np.array([head],dtype='S15').reshape((2,16))
@@ -102,8 +102,8 @@ def data(h,d,n,head,filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
-    pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
-    Tel[n,:,:] = [pa,slew_flag,alt,az,ra,dec]
+    tele = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',')
+    Tel[n,:,:,:] = tele
     #new_head = np.array([head],dtype='S3')
     #print new_head
     #Header[a,:,:] = new_head

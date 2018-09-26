@@ -5,6 +5,7 @@ import shutil
 import sys
 import datetime as dt
 
+global c
 c = sys.path.append('/home/pilot2/TIME_Software')
 
 def main():
