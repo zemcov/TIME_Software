@@ -31,7 +31,8 @@ def main():
         end = dt.datetime.utcnow()
     else :
         print('File Transfer Stopped')
-        subprocess.Popen(["python -c 'import sys; sys.path.append('/home/pilot2/TIME_Software'); import tel_sock; tel_sock.stop_sock()'"],shell=True)
+        #subprocess.Popen(['python -c "import sys; sys.path.append(str(/home/pilot2/TIME_Software)); import tel_sock; tel_sock.stop_sock()"'],shell=True)
+        subprocess.Popen(['python -c "import tel_sock; tel_sock.stop_sock()"'],shell=True)
         time.sleep(2.0)
         print('Tel Client Stopped')
         subprocess.Popen(['pkill -9 -f tel_sock.py'],shell=True)
