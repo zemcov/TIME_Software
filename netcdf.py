@@ -92,7 +92,7 @@ def data_all(h,n,head,filestarttime):
     Rms_Noise_All[n,:,:] = d
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
     tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
-    print(tt.shape())
+    print(tt.shape)
     Tel[n,:,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
@@ -110,7 +110,7 @@ def data(h,d,n,head,filestarttime):
     Rms_Noise[n,:,:] = d
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
     tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
-    print(tt.shape())
+    print(tt.shape)
     Tel[n,:,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
