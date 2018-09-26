@@ -61,7 +61,7 @@ def new_file(h_size, head, filestarttime, tel_size):
     Header = mce.createVariable('header','S1',('t','v','k'))
 
     global Tel
-    Tel = mce.createVariable('tel','f8',('t','tel_array','tel_len'))
+    Tel = mce.createVariable('tel','f8',('t','tel_len','tel_array'))
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
