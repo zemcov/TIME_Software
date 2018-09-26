@@ -61,7 +61,7 @@ def new_file(h_size, head, filestarttime):
     Header = mce.createVariable('header','S1',('t','v','k'))
 
     global Tel
-    Tel = mce.createVariable('tel','f8',('t','r','tel_array'))
+    Tel = mce.createVariable('tel','f8',('t','tel_array','t'))
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
@@ -89,7 +89,7 @@ def data_all(h,n,head,filestarttime):
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
-    Tel[n,:,:] = [pa,slew_flag,alt,az,ra,dec]
+    Tel[n,:,:] = np.column_stack((pa,slew_flag,alt,az,ra,dec))
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
 
@@ -105,7 +105,7 @@ def data(h,d,n,head,filestarttime):
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
-    Tel[n,:,:] = [pa,slew_flag,alt,az,ra,dec]
+    Tel[n,:,:] = np.column_stack((pa,slew_flag,alt,az,ra,dec))
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
     #new_head = np.array([head],dtype='S3')
