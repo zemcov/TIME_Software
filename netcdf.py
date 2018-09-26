@@ -88,8 +88,8 @@ def data_all(h,n,head,filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
-    tele = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',')
-    Tel[n,:,:,:] = tele
+    pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
+    Tel[n,:,:,:] = [pa,slew_flag,alt,az,ra,dec]
     f = open('tempfiles/tempteledata.txt','w')
     f.write("")
     f.close()
@@ -105,8 +105,8 @@ def data(h,d,n,head,filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
-    tele = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',')
-    Tel[n,:,:,:] = tele
+    pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
+    Tel[n,:,:,:] = [pa,slew_flag,alt,az,ra,dec]
     f = open('tempfiles/tempteledata.txt','w')
     f.write("")
     f.close()
