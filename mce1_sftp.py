@@ -5,6 +5,8 @@ import shutil
 import sys
 import datetime as dt
 
+sys.path.append('/home/pilot2/TIME_Software')
+
 def main():
     dir = '/data/cryo/current_data/'
     print('------- Starting Data Transfer -------')
@@ -32,7 +34,7 @@ def main():
         subprocess.Popen(["python -c 'import tel_sock; tel_sock.stop_sock()'"],shell=True)
         time.sleep(2.0)
         print('Tel Client Stopped')
-        subprocess.Popen(['pkill -f -9 tel_sock.py'])
+        subprocess.Popen(['pkill -9 -f tel_sock.py'],shell=True)
         sys.exit()
 
 if __name__ == '__main__':
