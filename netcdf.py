@@ -91,7 +91,6 @@ def data_all(h,n,head,filestarttime):
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
     Tel[n,:,:,:] = [pa,slew_flag,alt,az,ra,dec]
     f = open('tempfiles/tempteledata.txt','w')
-    f.write("")
     f.close()
 
     #print Raw_Data_All.shape
@@ -108,7 +107,6 @@ def data(h,d,n,head,filestarttime):
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
     Tel[n,:,:,:] = [pa,slew_flag,alt,az,ra,dec]
     f = open('tempfiles/tempteledata.txt','w')
-    f.write("")
     f.close()
     #new_head = np.array([head],dtype='S3')
     #print new_head
