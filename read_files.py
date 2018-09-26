@@ -16,6 +16,7 @@ def netcdfdata(rc):
     n = 0
     filestarttime = 0
     old_mce_file = 0
+    tel_size = 0
     dir = '/home/pilot1/Desktop/time-data/mce1/'
     subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/mce1_sftp.py'], shell=True)
 
@@ -27,7 +28,7 @@ def netcdfdata(rc):
                 mce_file = min(files, key = os.path.getctime)
                 f = mce_data.SmallMCEFile(mce_file)
                 header = read_header(f)
-                mce, n, filestarttime = readdata(f, mce_file, mce, header, n, a, filestarttime, rc)
+                mce, n, filestarttime, tel_size = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel_size)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
                 old_mce_file = mce_file
@@ -39,7 +40,7 @@ def netcdfdata(rc):
                 sys.exit()
 
 # ===========================================================================================================================
-def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
+def readdata(f, mce_file, mce, head, n, a, filestarttime, rc, tel_size):
     h = f.Read(row_col=True, unfilter='DC').data
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
@@ -49,11 +50,14 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
     subprocess.Popen(['rm %s' % (mce_file)], shell=True)
     netcdfdir = '/home/pilot1/Desktop/time-data/netcdffiles'
 
+    pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
+    tel_size = len(pa)
+
     if n == 0:
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         print('------------ New File -------------')
-        mce = nc.new_file(h.shape, head, filestarttime)
+        mce = nc.new_file(h.shape, head, filestarttime, tel_size)
         if rc == 's' :
             nc.data_all(h,d,n,head,filestarttime)
         else :
@@ -64,7 +68,7 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
         print('----------- New File ------------')
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
-        mce = nc.new_file(h.shape, head, filestarttime)
+        mce = nc.new_file(h.shape, head, filestarttime, tel_size)
         if rc == 's' :
             nc.data_all(h,d,n,head,filestarttime)
         else :
@@ -76,7 +80,7 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
         else :
             nc.data(h,d,n,head,filestarttime)
     n = n + 1
-    return mce, n, filestarttime
+    return mce, n, filestarttime, tel_size
 
 # =========================================================================================================
 def read_header(f):

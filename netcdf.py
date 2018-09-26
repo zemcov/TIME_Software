@@ -7,7 +7,7 @@ import numpy as np
 
 tele = []
 tempfiledir = '/home/pilot1/Desktop/time-data/netcdffiles'
-def new_file(h_size, head, filestarttime):
+def new_file(h_size, head, filestarttime, tel_size):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # create the gui parameters group
@@ -36,7 +36,7 @@ def new_file(h_size, head, filestarttime):
     mce.createDimension('v',16)
     # Telescope Data -------------------------------------------------------------------------------
     mce.createDimension('tel_array',6)
-
+    mce.createDimension('tel_len',tel_size)
 
     # creating variables --------------------------------------------------------------------------------
     Observer = mce.createVariable("observer","S1",("obs",))
@@ -61,7 +61,7 @@ def new_file(h_size, head, filestarttime):
     Header = mce.createVariable('header','S1',('t','v','k'))
 
     global Tel
-    Tel = mce.createVariable('tel','f8',('t','tel_array','t'))
+    Tel = mce.createVariable('tel','f8',('t','tel_array','tel_len'))
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
