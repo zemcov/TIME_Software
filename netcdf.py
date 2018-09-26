@@ -92,7 +92,7 @@ def data_all(h,n,head,filestarttime):
     # for word in f.read().split():
     #     tele.append(float(word))
     # Tel[n,:,:] = tele
-    Tel[n,:,:] = np.array([[float(i) for i in line.strip().split(' ')] for line in open('tempfiles/tempteledata.txt').read()])
+    Tel[n,:,:] = np.array([[float(i) for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read()])
     #print Raw_Data_All.shape
     #new_head = np.array([head],dtype='S15').reshape((2,16))
     #Header[a,:,:] = new_head
@@ -108,7 +108,7 @@ def data(h,d,n,head,filestarttime):
     # for word in f.read().split():
     #     tele.append(float(word))
     # Tel[n,:,:] = tele
-    Tel[n,:,:] = np.array([[float(i) for i in line.strip().split(' ')] for line in open('tempfiles/tempteledata.txt').read()])
+    Tel[n,:,:] = np.array([[float(i) for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read()])
     #new_head = np.array([head],dtype='S3')
     #print new_head
     #Header[a,:,:] = new_head
