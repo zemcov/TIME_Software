@@ -111,6 +111,7 @@ def data(h,d,n,head,filestarttime):
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
     tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
     print(tt.shape)
+    print(tt)
     Tel[n,:,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
