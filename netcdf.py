@@ -89,7 +89,7 @@ def data_all(h,n,head,filestarttime):
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
     f = open('tempfiles/tempteledata.txt')
-    for word in f.read.split():
+    for word in f.read().split():
         tele.append(float(word))
     Tel[n,:,:] = tele
     #Tel[n,:,:] = np.array([[float(i) for i in line.strip.split('')] for line in open('tempfiles/tempteledata.txt').read()])
@@ -105,7 +105,7 @@ def data(h,d,n,head,filestarttime):
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
     f = open('tempfiles/tempteledata.txt')
-    for word in f.read.split():
+    for word in f.read().split():
         tele.append(float(word))
     Tel[n,:,:] = tele
     #Tel[n,:,:] = np.array([[float(i) for i in line.strip.split('')] for line in open('tempfiles/tempteledata.txt').read()])
