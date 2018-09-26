@@ -109,7 +109,8 @@ def data(h,d,n,head,filestarttime):
     #     print(word)
     #     tele.append(float(word))
     # Tel[n,:,:] = tele
-    Tel[n,:,:] = np.array([[i for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read()])
+    print([i for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read())
+    #Tel[n,:,:] = np.array([[i for i in line.strip().split(',')] for line in open('tempfiles/tempteledata.txt').read()])
     #new_head = np.array([head],dtype='S3')
     #print new_head
     #Header[a,:,:] = new_head
