@@ -31,4 +31,4 @@ while run == True:
     #tempfile.write(str(time))
     tempfile.close()
     #print('Data Received')
-    print('Tel Server:',pa)
+    print('Tel Server:',pa,slew_flag,alt,az,ra,dec)
