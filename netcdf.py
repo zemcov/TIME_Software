@@ -89,7 +89,6 @@ def data_all(h,n,head,filestarttime):
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
-    print(pa)
     Tel[n,:,:] = [pa,slew_flag,alt,az,ra,dec]
 
     #print Raw_Data_All.shape
@@ -104,9 +103,7 @@ def data(h,d,n,head,filestarttime):
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
-    print(pa,slew_flag,alt,az,ra,dec)
     Tel[n,:,:] = [pa,slew_flag,alt,az,ra,dec]
-    print(Tel)
     #new_head = np.array([head],dtype='S3')
     #print new_head
     #Header[a,:,:] = new_head
