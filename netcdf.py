@@ -88,7 +88,7 @@ def data_all(h,n,head,filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
-    Tel[n,:,:] = np.array([[float(i) for i in line.strip.split('')] for line in open('tempfiles/tempteledata.txt').readlines()])
+    Tel[n,:,:] = np.array([[float(i) for i in line.strip.split()] for line in open('tempfiles/tempteledata.txt').readlines()])
     #print Raw_Data_All.shape
     #new_head = np.array([head],dtype='S15').reshape((2,16))
     #Header[a,:,:] = new_head
@@ -99,7 +99,7 @@ def data(h,d,n,head,filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
-    Tel[n,:,:] = np.array([[float(i) for i in line.strip.split('')] for line in open('tempfiles/tempteledata.txt').readlines()])
+    Tel[n,:,:] = np.array([[float(i) for i in line.strip.split()] for line in open('tempfiles/tempteledata.txt').readlines()])
     #new_head = np.array([head],dtype='S3')
     #print new_head
     #Header[a,:,:] = new_head
