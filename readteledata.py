@@ -32,5 +32,5 @@ def stop_sock():
 
     #print('Data Received')
     #print('Tel Server:',pa,slew_flag,alt,az,ra,dec)
-if __name__==__main__:
+if __name__=='__main__':
     main()
