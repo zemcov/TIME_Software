@@ -14,6 +14,7 @@ run = True
 tele = []
 
 def stop_sock():
+    print("Socket Shutting Down")
     s.shutdown(socket.SHUT_RDWR)
     s.close()
     run = False
