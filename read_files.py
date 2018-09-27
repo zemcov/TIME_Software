@@ -29,8 +29,8 @@ def netcdfdata(rc):
                 header = read_header(f)
                 #++++++++++++++++++++++++++++++++ TELESCOPE DATA +++++++++++++++++++++++++++++++++++++++++++++++++++
                 pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
-                f = open('tempfiles/tempteledata.txt','w')
-                f.close()
+                t = open('tempfiles/tempteledata.txt','w')
+                t.close()
                 tel_size = len(pa)
                 tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
                 print(tt.shape)
