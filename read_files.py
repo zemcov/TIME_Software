@@ -10,6 +10,7 @@ import time
 import logging
 import datetime as dt
 
+sys.path.append('/home/pilot1/TIME_Software')
 def netcdfdata(rc):
     a = 0
     mce = 0
@@ -18,11 +19,12 @@ def netcdfdata(rc):
     old_mce_file = 0
     dir = '/home/pilot1/Desktop/time-data/mce1/'
     subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/mce1_sftp.py'], shell=True)
-
-    while True:
-        mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
+    before = 0
+    after = 0
+    while before != after:
         before = dict([(l,None) for l in os.listdir(dir)])
-        if mce_file and before != after:
+        mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
+        if mce_file:
             files = [dir + x for x in os.listdir(dir) if (x.startswith("temp") and not x.endswith('.run'))]
             if len(files) != 0:
                 mce_file = min(files, key = os.path.getctime)
@@ -40,14 +42,14 @@ def netcdfdata(rc):
                 mce, n, filestarttime, tel_size, tt = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel_size, tt)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
-                after = dict([(l,None) for l in os.listdir(dir)])
-            before = after
-        else :
-            subprocess.Popen(['python /home/pilot1/TIME_Software/stop_server.py'],shell=True)
-            time.sleep(2.0)
-            #subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
-            print('Tel Client Stopped')
-            sys.exit()
+            after = dict([(l,None) for l in os.listdir(dir)])
+
+    else :
+        subprocess.Popen(['python stop_server.py'],shell=True)
+        time.sleep(2.0)
+        #subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
+        print('Tel Client Stopped')
+        sys.exit()
 
 # ===========================================================================================================================
 def readdata(f, mce_file, mce, head, n, a, filestarttime, rc, tel_size, tt):
