@@ -45,6 +45,7 @@ def netcdfdata(rc):
         after = dict([(l,None) for l in os.listdir(dir)])
 
     else :
+        print("while loop isn't working")
         subprocess.Popen(['python stop_server.py'],shell=True)
         time.sleep(2.0)
         #subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
