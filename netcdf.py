@@ -36,7 +36,7 @@ def new_file(h_size, head, filestarttime, tel_size):
     mce.createDimension('v',16)
     # Telescope Data -------------------------------------------------------------------------------
     mce.createDimension('tel_array',6)
-    mce.createDimension('tel_len',tel_size)
+    mce.createDimension('tel_len',None)
 
     # creating variables --------------------------------------------------------------------------------
     Observer = mce.createVariable("observer","S1",("obs",))
@@ -91,7 +91,7 @@ def data_all(h,n,head,filestarttime):
     pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
     tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
     print(tt.shape)
-    Tel[n,:,:] = tt
+    Tel[n,0:tel_size,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
 
@@ -110,7 +110,7 @@ def data(h,d,n,head,filestarttime):
     tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
     print(tt.shape)
     print(tt)
-    Tel[n,:,:] = tt
+    Tel[n,0:tel_size,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
     #new_head = np.array([head],dtype='S3')
