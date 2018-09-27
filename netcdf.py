@@ -36,7 +36,6 @@ def new_file(h_size, head, filestarttime):
     mce.createDimension('v',16)
     # Telescope Data -------------------------------------------------------------------------------
     mce.createDimension('tel_array',6)
-    mce.createDimension('tel_len',None)
 
     # creating variables --------------------------------------------------------------------------------
     Observer = mce.createVariable("observer","S1",("obs",))
@@ -61,7 +60,7 @@ def new_file(h_size, head, filestarttime):
     Header = mce.createVariable('header','S1',('t','v','k'))
 
     global Tel
-    Tel = mce.createVariable('tel','f8',('t','tel_len','tel_array'))
+    Tel = mce.createVariable('tel','f8',('t','t','tel_array'))
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
