@@ -20,7 +20,9 @@ def netcdfdata(rc):
     dir = '/home/pilot1/Desktop/time-data/mce1/'
     subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/mce1_sftp.py'], shell=True)
 
-    while True:
+    begin = dt.datetime.utcnow()
+    end = dt.datetime.utcnow()
+    while end - begin < dt.timedelta(seconds=3):
         mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         if mce_file:
             files = [dir + x for x in os.listdir(dir) if (x.startswith("temp") and not x.endswith('.run'))]
@@ -40,13 +42,15 @@ def netcdfdata(rc):
                 mce, n, filestarttime, tel_size, tt = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel_size, tt)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
+            begin = dt.datetime.utcnow()
+        end = dt.datetime.utcnow()
 
-        else :
-            subprocess.Popen(['/home/pilot1/anaconda3/bin/python /home/pilot1/TIME_Software/stop_server.py'],shell=True)
-            time.sleep(2.0)
-            subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
-            # print('Tel Server Stopped')
-            sys.exit()
+    else :
+        subprocess.Popen(['/home/pilot1/anaconda3/bin/python /home/pilot1/TIME_Software/stop_server.py'],shell=True)
+        time.sleep(2.0)
+        subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
+        # print('Tel Server Stopped')
+        sys.exit()
 
 # ===========================================================================================================================
 def readdata(f, mce_file, mce, head, n, a, filestarttime, rc, tel_size, tt):
