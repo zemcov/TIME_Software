@@ -37,6 +37,7 @@ def stop_sock():
     print("Server Socket Shutdown")
     s.shutdown(socket.SHUT_RDWR)
     s.close()
+    sys.exit()
 
 def tel_move(RA,DEC,n,COLOR):
     #initialize  and update position coordinates

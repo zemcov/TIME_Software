@@ -43,10 +43,9 @@ def netcdfdata(rc):
                 after = dict([(l,None) for l in os.listdir(dir)])
             before = after
         else :
-            subprocess.Popen(["python -c 'import sys'", "python -c 'sys.path.append('/home/pilot1/TIME_Software')'", "python -c 'import readteledata ; readteledata.stop_sock()'"],shell=True)
-            #subprocess.Popen(['python -c "import /home/pilot1/TIME_Software/readteledata"; readteledata.stop_sock()"'],shell=True)
+            subprocess.Popen(['python /home/pilot1/TIME_Software/stop_server.py'],shell=True)
             time.sleep(2.0)
-            subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
+            #subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
             print('Tel Client Stopped')
             sys.exit()
 

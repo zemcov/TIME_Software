@@ -17,6 +17,7 @@ def stop_sock():
     print("Client Socket Shutdown")
     s.shutdown(socket.SHUT_RDWR)
     s.close()
+    sys.exit()
     run = False
 
 while run == True:
