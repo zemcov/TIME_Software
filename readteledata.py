@@ -2,16 +2,17 @@ import socket, struct, subprocess
 
 PORT = 8888
 # I am accepting tel socket packets as server
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(('',PORT))
-print('Server listening on port %i' %(PORT))
-s.listen(5)
-
-unpacker = struct.Struct('d d d d d d d')
-client, info = s.accept()
 run = True
 tele = []
+
+def main():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('',PORT))
+    print('Server listening on port %i' %(PORT))
+    s.listen(5)
+
+    unpacker = struct.Struct('d d d d d d d')
+    client, info = s.accept()
 
 def stop_sock():
     print("Client Socket Shutdown")
@@ -30,3 +31,5 @@ while run == True:
 
     #print('Data Received')
     #print('Tel Server:',pa,slew_flag,alt,az,ra,dec)
+if __name__==__main__:
+    main()
