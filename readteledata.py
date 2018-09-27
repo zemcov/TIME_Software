@@ -14,6 +14,14 @@ def main():
     unpacker = struct.Struct('d d d d d d d')
     client, info = s.accept()
 
+    while run == True:
+        data = client.recv(unpacker.size)
+        pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
+        tempfilename = '/home/pilot1/TIME_Software/tempfiles/tempteledata.txt'
+        f = open(tempfilename,'a')
+        f.write("\n%.06f,%.06f,%.06f,%.06f,%.06f,%.06f" %(pa, slew_flag, alt, az, ra, dec))
+        f.close()
+
 def stop_sock():
     print("Client Socket Shutdown")
     s.shutdown(socket.SHUT_RDWR)
@@ -21,13 +29,6 @@ def stop_sock():
     sys.exit()
     run = False
 
-while run == True:
-    data = client.recv(unpacker.size)
-    pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
-    tempfilename = '/home/pilot1/TIME_Software/tempfiles/tempteledata.txt'
-    f = open(tempfilename,'a')
-    f.write("\n%.06f,%.06f,%.06f,%.06f,%.06f,%.06f" %(pa, slew_flag, alt, az, ra, dec))
-    f.close()
 
     #print('Data Received')
     #print('Tel Server:',pa,slew_flag,alt,az,ra,dec)
