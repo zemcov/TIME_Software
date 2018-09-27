@@ -6,7 +6,7 @@ import sys
 import datetime as dt
 
 c = 0
-
+sys.path.append('/home/pilot2/TIME_Software')
 def main():
     dir = '/data/cryo/current_data/'
     print('------- Starting Data Transfer -------')
@@ -31,7 +31,7 @@ def main():
         end = dt.datetime.utcnow()
     else :
         print('File Transfer Stopped')
-        subprocess.Popen(['python /home/pilot2/TIME_Software/stop_client.py'],shell=True)
+        subprocess.Popen(['python stop_client.py'],shell=True)
         print('Tel Server Stopped')
         #subprocess.Popen(['pkill -9 -f tel_sock.py'],shell=True)
         sys.exit()
