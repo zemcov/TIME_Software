@@ -27,11 +27,15 @@ def netcdfdata(rc):
                 mce_file = min(files, key = os.path.getctime)
                 f = mce_data.SmallMCEFile(mce_file)
                 header = read_header(f)
+                #++++++++++++++++++++++++++++++++ TELESCOPE DATA +++++++++++++++++++++++++++++++++++++++++++++++++++
                 pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
+                f = open('tempfiles/tempteledata.txt','w')
+                f.close()
                 tel_size = len(pa)
                 tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
                 print(tt.shape)
                 print(tt)
+                #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                 mce, n, filestarttime, tel_size, tt = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel_size, tt)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
