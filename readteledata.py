@@ -13,7 +13,7 @@ def main():
     st.s.listen(5)
 
     unpacker = struct.Struct('d d d d d d d')
-    client, info = s.accept()
+    client, info = st.s.accept()
 
     while run == True:
         data = client.recv(unpacker.size)
