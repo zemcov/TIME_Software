@@ -27,7 +27,12 @@ def netcdfdata(rc):
                 mce_file = min(files, key = os.path.getctime)
                 f = mce_data.SmallMCEFile(mce_file)
                 header = read_header(f)
-                mce, n, filestarttime = readdata(f, mce_file, mce, header, n, a, filestarttime, rc)
+                pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
+                tel_size = len(pa)
+                tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
+                print(tt.shape)
+                print(tt)
+                mce, n, filestarttime, tel_size, tt = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel_size, tt)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
                 old_mce_file = mce_file
@@ -39,7 +44,7 @@ def netcdfdata(rc):
                 sys.exit()
 
 # ===========================================================================================================================
-def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
+def readdata(f, mce_file, mce, head, n, a, filestarttime, rc, tel_size, tt):
     h = f.Read(row_col=True, unfilter='DC').data
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
@@ -55,9 +60,9 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
         print('------------ New File -------------')
         mce = nc.new_file(h.shape, head, filestarttime)
         if rc == 's' :
-            nc.data_all(h,d,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime,tel_size,tt)
         else :
-            nc.data(h,d,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime,tel_size,tt)
 
     elif os.stat(netcdfdir + "/mce1_%s.nc" % (filestarttime)).st_size >= 20 * 10**6:
         n = 0
@@ -66,17 +71,17 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(h.shape, head, filestarttime)
         if rc == 's' :
-            nc.data_all(h,d,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime,tel_size,tt)
         else :
-            nc.data(h,d,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime,tel_size,tt)
 
     else:
         if rc == 's' :
-            nc.data_all(h,d,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime,tel_size,tt)
         else :
-            nc.data(h,d,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime,tel_size,tt)
     n = n + 1
-    return mce, n, filestarttime
+    return mce, n, filestarttime, tel_size, tt
 
 # =========================================================================================================
 def read_header(f):

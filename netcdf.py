@@ -82,15 +82,11 @@ def new_file(h_size, head, filestarttime):
     mce.close()
     return mce
 
-def data_all(h,n,head,filestarttime):
+def data_all(h,n,head,filestarttime,tel_size,tt):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
-    pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',',unpack=True)
-    tel_size = len(pa)
-    tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
-    print(tt.shape)
     Tel[n,0:tel_size,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
@@ -101,16 +97,11 @@ def data_all(h,n,head,filestarttime):
     # tele = []
     mce.close()
 
-def data(h,d,n,head,filestarttime):
+def data(h,d,n,head,filestarttime,tel_size,tt):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
-    pa,slew_flag,alt,az,ra,dec = np.loadtxt('tempfiles/tempteledata.txt',delimiter = ',', unpack=True)
-    tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
-    tel_size = len(pa)
-    print(tt.shape)
-    print(tt)
     Tel[n,0:tel_size,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
