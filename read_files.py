@@ -39,7 +39,7 @@ def netcdfdata(rc):
                 sys.exit()
 
 # ===========================================================================================================================
-def readdata(f, mce_file, mce, head, n, a, filestarttime, rc, tel_size):
+def readdata(f, mce_file, mce, head, n, a, filestarttime, rc):
     h = f.Read(row_col=True, unfilter='DC').data
     d = np.empty([h.shape[0],h.shape[1]],dtype=float)
     for b in range(h.shape[0]):
