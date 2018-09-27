@@ -21,7 +21,7 @@ def netcdfdata(rc):
     subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/mce1_sftp.py'], shell=True)
     before = 0
     after = 1
-    while before != after:
+    while True:
         before = dict([(l,None) for l in os.listdir(dir)])
         mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         if mce_file:
