@@ -8,7 +8,6 @@ from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
 from astroplan import Observer
 import socket, struct, threading
-import settings as st
 
 # --------SPEEDS AND PARAMETERS---------------------------------------------
 speeds = [315.0,3615.0] # arcseconds per second, 3600 arcseconds per degree
@@ -30,14 +29,14 @@ COLOR = 'black'
 PILOT1_PORT = 8888
 PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
 
-st.ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-st.ss.connect((PILOT1, PILOT1_PORT))
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((PILOT1, PILOT1_PORT))
 message = 'Hello!'
 
 def stop_sock(ss):
     print("Server Socket Shutdown")
-    st.ss.shutdown(socket.SHUT_RDWR)
-    st.ss.close()
+    s.shutdown(socket.SHUT_RDWR)
+    s.close()
     sys.exit()
 
 def tel_move(RA,DEC,n,COLOR):
@@ -62,7 +61,7 @@ def tel_move(RA,DEC,n,COLOR):
     #s.send(message.encode('utf-8'))
     packer = struct.Struct('d d d d d d d')
     data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-    st.ss.send(data)
+    s.send(data)
 
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down

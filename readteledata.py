@@ -13,10 +13,10 @@ def main():
 
     unpacker = struct.Struct('d d d d d d d')
     client, info = s.accept()
-    loop()
+    loop(client)
     return s
 
-def loop():
+def loop(client):
     while run == True:
         data = client.recv(unpacker.size)
         pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
