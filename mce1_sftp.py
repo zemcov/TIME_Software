@@ -32,7 +32,7 @@ def main():
     else :
         print('File Transfer Stopped')
         subprocess.Popen(['python stop_client.py'],shell=True)
-        print('Tel Server Stopped')
+        print('Tel Client Stopped')
         #subprocess.Popen(['pkill -9 -f tel_sock.py'],shell=True)
         sys.exit()
 

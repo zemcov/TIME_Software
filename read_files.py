@@ -42,13 +42,13 @@ def netcdfdata(rc):
                 mce, n, filestarttime, tel_size, tt = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel_size, tt)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
-            after = dict([(l,None) for l in os.listdir(dir)])
+        after = dict([(l,None) for l in os.listdir(dir)])
 
     else :
         subprocess.Popen(['python stop_server.py'],shell=True)
         time.sleep(2.0)
         #subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
-        print('Tel Client Stopped')
+        print('Tel Server Stopped')
         sys.exit()
 
 # ===========================================================================================================================
