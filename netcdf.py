@@ -36,7 +36,7 @@ def new_file(h_size, head, filestarttime):
     mce.createDimension('v',16)
     # Telescope Data -------------------------------------------------------------------------------
     mce.createDimension('tel_array',6)
-    mce.createDimension('tel_len',8)
+    mce.createDimension('tel_len',10)
 
     # creating variables --------------------------------------------------------------------------------
     Observer = mce.createVariable("observer","S1",("obs",))
@@ -88,7 +88,7 @@ def data_all(h,n,head,filestarttime,tel_size,tt):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data_All[n,:,:,:] = h
     Rms_Noise_All[n,:,:] = d
-    Tel[n,:,:] = tt
+    Tel[n,0:tel_size,:] = tt
 
     #print Raw_Data_All.shape
     #new_head = np.array([head],dtype='S15').reshape((2,16))
@@ -101,7 +101,7 @@ def data(h,d,n,head,filestarttime,tel_size,tt):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data[n,:,:,:] = h
     Rms_Noise[n,:,:] = d
-    Tel[n,:,:] = tt
+    Tel[n,0:tel_size,:] = tt
     #new_head = np.array([head],dtype='S3')
     #print new_head
     #Header[a,:,:] = new_head
