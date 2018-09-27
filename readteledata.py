@@ -23,11 +23,11 @@ def main():
         f.write("\n%.06f,%.06f,%.06f,%.06f,%.06f,%.06f" %(pa, slew_flag, alt, az, ra, dec))
         f.close()
 
-def stop_sock(s):
+def stop_sock():
     run = False
     print("Client Socket Shutdown")
-    s.shutdown(socket.SHUT_RDWR)
-    s.close()
+    st.s.shutdown(socket.SHUT_RDWR)
+    st.s.close()
     sys.exit()
 
 
