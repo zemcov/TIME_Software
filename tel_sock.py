@@ -26,11 +26,10 @@ dec = 20 # static
 loops_deg = 2 #number of loops per degrees = loops_deg
 COLOR = 'black'
 # -------------------------------------------------------------------------
-PILOT1_PORT = 8555
+PILOT1_PORT = 8888
 PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.connect((PILOT1, PILOT1_PORT))
 message = 'Hello!'
 

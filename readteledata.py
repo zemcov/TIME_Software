@@ -1,10 +1,9 @@
 import socket, struct, subprocess
 
-PORT = 8555
+PORT = 8888
 # I am accepting tel socket packets as server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.bind(('',PORT))
 print('Server listening on port %i' %(PORT))
 s.listen(5)
