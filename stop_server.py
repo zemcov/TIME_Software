@@ -1,8 +1,8 @@
 import sys
 sys.path.append('/home/pilot1/TIME_Software')
 from readteledata import stop_sock
-from settings import s
+import settings as st
 import readteledata
-stop_sock()
+stop_sock(st.s)
 sys.stdout.write('I also did a thing')
 sys.exit()
