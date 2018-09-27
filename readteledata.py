@@ -16,7 +16,7 @@ def main():
     loop(client,unpacker)
     return s
 
-def loop(client):
+def loop(client,unpacker):
     while run == True:
         data = client.recv(unpacker.size)
         pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
