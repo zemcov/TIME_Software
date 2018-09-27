@@ -33,8 +33,7 @@ def main():
         print('File Transfer Stopped')
         subprocess.Popen(["python -c 'import sys'", "python -c 'sys.path.append('/home/pilot2/TIME_Software')'", "python -c 'import tel_sock ; tel_sock.stop_sock()'"],shell=True)
         #subprocess.Popen(['python -c "import tel_sock; tel_sock.stop_sock()"'],shell=True)
-        time.sleep(2.0)
-        print('Tel Client Stopped')
+        print('Tel Server Stopped')
         subprocess.Popen(['pkill -9 -f tel_sock.py'],shell=True)
         sys.exit()
 

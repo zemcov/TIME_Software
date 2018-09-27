@@ -21,9 +21,10 @@ def netcdfdata(rc):
 
     while True:
         mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
-        if mce_file:
+        before = dict([(l,None) for l in os.listdir(dir)])
+        if mce_file and before != after:
             files = [dir + x for x in os.listdir(dir) if (x.startswith("temp") and not x.endswith('.run'))]
-            if (len(files) != 0 and mce_file != old_mce_file):
+            if len(files) != 0:
                 mce_file = min(files, key = os.path.getctime)
                 f = mce_data.SmallMCEFile(mce_file)
                 header = read_header(f)
@@ -39,13 +40,14 @@ def netcdfdata(rc):
                 mce, n, filestarttime, tel_size, tt = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel_size, tt)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
                 a = a + 1
-                old_mce_file = mce_file
-            else :
-                subprocess.Popen(["python -c 'import /home/pilot1/TIME_Software/readteledata; readteledata.stop_sock()'"],shell=True)
-                time.sleep(2.0)
-                subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
-                print('Tel Server Stopped')
-                sys.exit()
+                after = dict([(l,None) for l in os.listdir(dir)])
+            before = after
+        else :
+            subprocess.Popen(["python -c 'import /home/pilot1/TIME_Software/readteledata; readteledata.stop_sock()'"],shell=True)
+            time.sleep(2.0)
+            subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
+            print('Tel Client Stopped')
+            sys.exit()
 
 # ===========================================================================================================================
 def readdata(f, mce_file, mce, head, n, a, filestarttime, rc, tel_size, tt):

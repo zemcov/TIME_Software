@@ -34,8 +34,9 @@ s.connect((PILOT1, PILOT1_PORT))
 message = 'Hello!'
 
 def stop_sock():
-        s.shutdown(socket.SHUT_RDWR)
-        s.close()
+    print("Server Socket Shutdown")
+    s.shutdown(socket.SHUT_RDWR)
+    s.close()
 
 def tel_move(RA,DEC,n,COLOR):
     #initialize  and update position coordinates
