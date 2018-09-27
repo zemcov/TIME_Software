@@ -91,7 +91,7 @@ def data_all(h,n,head,filestarttime):
     tel_size = len(pa)
     tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
     print(tt.shape)
-    Tel[n,tel_size,:] = tt
+    Tel[n,0:tel_size,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
 
@@ -111,7 +111,7 @@ def data(h,d,n,head,filestarttime):
     tel_size = len(pa)
     print(tt.shape)
     print(tt)
-    Tel[n,tel_size,:] = tt
+    Tel[n,0:tel_size,:] = tt
     f = open('tempfiles/tempteledata.txt','w')
     f.close()
     #new_head = np.array([head],dtype='S3')
