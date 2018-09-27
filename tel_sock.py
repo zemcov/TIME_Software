@@ -62,7 +62,7 @@ def tel_move(RA,DEC,n,COLOR):
     #s.send(message.encode('utf-8'))
     packer = struct.Struct('d d d d d d d')
     data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-    s.send(data)
+    st.ss.send(data)
 
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down
