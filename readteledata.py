@@ -1,4 +1,5 @@
 import socket, struct, subprocess
+import settings as st
 
 PORT = 8888
 # I am accepting tel socket packets as server
@@ -6,10 +7,10 @@ run = True
 tele = []
 
 def main():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('',PORT))
+    st.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    st.s.bind(('',PORT))
     print('Server listening on port %i' %(PORT))
-    s.listen(5)
+    st.s.listen(5)
 
     unpacker = struct.Struct('d d d d d d d')
     client, info = s.accept()
@@ -22,12 +23,12 @@ def main():
         f.write("\n%.06f,%.06f,%.06f,%.06f,%.06f,%.06f" %(pa, slew_flag, alt, az, ra, dec))
         f.close()
 
-def stop_sock():
+def stop_sock(s):
+    run = False
     print("Client Socket Shutdown")
     s.shutdown(socket.SHUT_RDWR)
     s.close()
     sys.exit()
-    run = False
 
 
     #print('Data Received')
