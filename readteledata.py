@@ -1,6 +1,6 @@
 import socket, struct, subprocess
 
-PORT = 8000
+PORT = 8555
 # I am accepting tel socket packets as server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
