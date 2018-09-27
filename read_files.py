@@ -57,28 +57,28 @@ def readdata(f, mce_file, mce, head, n, a, filestarttime, rc, tel_size):
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         print('------------ New File -------------')
-        mce = nc.new_file(h.shape, head, filestarttime, tel_size)
+        mce = nc.new_file(h.shape, head, filestarttime)
         if rc == 's' :
-            nc.data_all(h,d,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime,tel_size)
         else :
-            nc.data(h,d,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime,tel_size)
 
     elif os.stat(netcdfdir + "/mce1_%s.nc" % (filestarttime)).st_size >= 20 * 10**6:
         n = 0
         print('----------- New File ------------')
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
-        mce = nc.new_file(h.shape, head, filestarttime, tel_size)
+        mce = nc.new_file(h.shape, head, filestarttime)
         if rc == 's' :
-            nc.data_all(h,d,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime,tel_size)
         else :
-            nc.data(h,d,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime,tel_size)
 
     else:
         if rc == 's' :
-            nc.data_all(h,d,n,head,filestarttime)
+            nc.data_all(h,d,n,head,filestarttime,tel_size)
         else :
-            nc.data(h,d,n,head,filestarttime)
+            nc.data(h,d,n,head,filestarttime,tel_size)
     n = n + 1
     return mce, n, filestarttime, tel_size
 

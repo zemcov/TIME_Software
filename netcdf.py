@@ -7,7 +7,7 @@ import numpy as np
 
 tele = []
 tempfiledir = '/home/pilot1/Desktop/time-data/netcdffiles'
-def new_file(h_size, head, filestarttime, tel_size):
+def new_file(h_size, head, filestarttime):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # create the gui parameters group
@@ -83,7 +83,7 @@ def new_file(h_size, head, filestarttime, tel_size):
     mce.close()
     return mce
 
-def data_all(h,n,head,filestarttime):
+def data_all(h,n,head,filestarttime,tel_size):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data_All[n,:,:,:] = h
@@ -101,7 +101,7 @@ def data_all(h,n,head,filestarttime):
     # tele = []
     mce.close()
 
-def data(h,d,n,head,filestarttime):
+def data(h,d,n,head,filestarttime,tel_size):
     mce = nc.Dataset(tempfiledir + "/mce1_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Raw_Data[n,:,:,:] = h
