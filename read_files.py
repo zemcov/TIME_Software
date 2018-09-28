@@ -47,10 +47,12 @@ def netcdfdata(rc):
 
     else :
         subprocess.Popen(['/home/pilot1/anaconda3/bin/python /home/pilot1/TIME_Software/stop_server.py'],shell=True)
-        subprocess.Popen(['pkill -9 -f readteledata.py'],shell=True)
         print('Tel Server Stopped')
-        subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/stop_client.py'],shell=True)
+        subprocess.Popen(['ssh -T pilot2@timemce.rit.edu /home/pilot2/anaconda3/bin/python /home/pilot2/TIME_Software/stop_client.py'],shell=True)
         print('Tel Client Stopped')
+        time.sleep(2.0)
+        subprocess.Popen(['pkill -9 -f readteledata.py'],shell=True)
+        subprocess.Popen(['ssh -T pilot2@timemce.rit.edu pkill -9 -f tel_sock.py'],shell=True)
         sys.exit()
 
 # ===========================================================================================================================
