@@ -31,13 +31,13 @@ PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((PILOT1, PILOT1_PORT))
-message = 'Hello!'
+#message = 'Hello!'
 
-def stop_sock(ss):
-    print("Server Socket Shutdown")
-    s.shutdown(socket.SHUT_RDWR)
-    s.close()
-    sys.exit()
+# def stop_sock(ss):
+#     print("Server Socket Shutdown")
+#     s.shutdown(socket.SHUT_RDWR)
+#     s.close()
+#     sys.exit()
 
 def tel_move(RA,DEC,n,COLOR):
     #initialize  and update position coordinates

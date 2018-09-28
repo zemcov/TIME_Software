@@ -13,7 +13,7 @@ def main():
     a = 0
     begin = dt.datetime.utcnow()
     end = dt.datetime.utcnow()
-    while end - begin < dt.timedelta(seconds=5):
+    while end - begin < dt.timedelta(seconds=3):
         if os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) :
             mce_file_name = '/data/cryo/current_data/temp.%0.3i' %(a)
             if a == 0:
@@ -31,8 +31,8 @@ def main():
         end = dt.datetime.utcnow()
     else :
         print('File Transfer Stopped')
-        # subprocess.Popen(['/home/pilot2/anaconda3/bin/python /home/pilot2/TIME_Software/stop_client.py'],shell=True)
-        # print('Tel Client Stopped')
+        subprocess.Popen(['/home/pilot2/anaconda3/bin/python /home/pilot2/TIME_Software/stop_client.py'],shell=True)
+        print('Tel Client Stopped')
         time.sleep(2.0)
         subprocess.Popen(['pkill -9 -f tel_sock.py'],shell=True)
         sys.exit()
