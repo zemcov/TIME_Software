@@ -4,9 +4,8 @@ PORT = 8888
 # I am accepting tel socket packets as server
 run = True
 tele = []
-s = 0
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 def main():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))
     print('Server listening on port %i' %(PORT))
     s.listen(5)
