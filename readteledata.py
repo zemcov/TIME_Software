@@ -17,16 +17,13 @@ def main():
 
 def loop(client,unpacker):
     while True:
-        try:
-            data = client.recv(unpacker.size)
-            pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
-            tempfilename = '/home/pilot1/TIME_Software/tempfiles/tempteledata.txt'
-            f = open(tempfilename,'a')
-            f.write("\n%.06f,%.06f,%.06f,%.06f,%.06f,%.06f" %(pa, slew_flag, alt, az, ra, dec))
-            f.close()
-        except socket.error,(value,msg):
-            if value != 11:
-                raise
+        data = client.recv(unpacker.size)
+        pa,slew_flag,alt,az,ra,dec,time = unpacker.unpack(data)
+        tempfilename = '/home/pilot1/TIME_Software/tempfiles/tempteledata.txt'
+        f = open(tempfilename,'a')
+        f.write("\n%.06f,%.06f,%.06f,%.06f,%.06f,%.06f" %(pa, slew_flag, alt, az, ra, dec))
+        f.close()
+
 
 # def stop_sock(s):
 #     run = False
