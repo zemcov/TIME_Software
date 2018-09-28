@@ -71,7 +71,7 @@ while True:
                 ra = ra + track
             else :
                 ra = ra - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
-            tel_move(ra,dec,n,COLOR)
+            tel_move(ra,dec,n,COLOR,s)
 
             n = n + (1/rate)
             # plt.ion
@@ -94,7 +94,7 @@ while True:
                 ra = ra + track
             else :
                 ra = ra - 360.0 + track
-            tel_move(ra,dec,n,COLOR)
+            tel_move(ra,dec,n,COLOR,s)
 
             n = n + (1/rate)
             #plt.ion
@@ -115,7 +115,7 @@ while True:
         while ra <= ra_init + area:
             dec = dec_init + np.sin(loops*(ra-ra_init))
             ra = ra + (speeds[0]/3600.0/rate)
-            tel_move(ra,dec,n,COLOR)
+            tel_move(ra,dec,n,COLOR,s)
             n = n + (1/rate)
             #plt.ion
             #plt.scatter(ra,dec,color='red')
