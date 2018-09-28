@@ -36,8 +36,8 @@ def netcdfdata(rc):
                 t.close()
                 tel_size = len(pa)
                 tt = np.column_stack((pa,slew_flag,alt,az,ra,dec))
-                print(tt.shape)
-                print(tt)
+                #print(tt.shape)
+                #print(tt)
                 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                 mce, n, filestarttime, tel_size, tt = readdata(f, mce_file, mce, header, n, a, filestarttime, rc, tel_size, tt)
                 print('File Read: %s' %(mce_file.replace(dir,'')))
@@ -46,10 +46,11 @@ def netcdfdata(rc):
         end = dt.datetime.utcnow()
 
     else :
-        subprocess.Popen(['pkill -9 -f readteledata.py'],shell=True)
         subprocess.Popen(['/home/pilot1/anaconda3/bin/python /home/pilot1/TIME_Software/stop_server.py'],shell=True)
-        #time.sleep(2.0)
+        subprocess.Popen(['pkill -9 -f readteledata.py'],shell=True)
         print('Tel Server Stopped')
+        subprocess.Popen(['ssh -T pilot2@timemce.rit.edu python /home/pilot2/TIME_Software/stop_client.py'],shell=True)
+        print('Tel Client Stopped')
         sys.exit()
 
 # ===========================================================================================================================
