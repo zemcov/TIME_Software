@@ -11,7 +11,6 @@ def main():
 
     unpacker = struct.Struct('d d d d d d d')
     client, info = s.accept()
-    client.setblocking(0)
     loop(client,unpacker)
     return s
 
