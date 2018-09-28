@@ -26,18 +26,14 @@ dec = 20 # static
 loops_deg = 2 #number of loops per degrees = loops_deg
 COLOR = 'black'
 # -------------------------------------------------------------------------
-PILOT1_PORT = 8888
-PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
+def main():
+    PILOT1_PORT = 8888
+    PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((PILOT1, PILOT1_PORT))
-#message = 'Hello!'
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((PILOT1, PILOT1_PORT))
+    #message = 'Hello!'
 
-# def stop_sock(ss):
-#     print("Server Socket Shutdown")
-#     s.shutdown(socket.SHUT_RDWR)
-#     s.close()
-#     sys.exit()
 
 def tel_move(RA,DEC,n,COLOR):
     #initialize  and update position coordinates
@@ -132,3 +128,5 @@ while True:
             if t[len(t)-1] == 1:
                 slew_flag = 0.0
 #---------------------------------------------------------------------------------------------------------------------
+if __name__=='__main__':
+    main()
