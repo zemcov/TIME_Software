@@ -34,7 +34,7 @@ s.connect((PILOT1, PILOT1_PORT))
 
 
 
-def tel_move(RA,DEC,n,COLOR):
+def tel_move(RA,DEC,n,COLOR,s):
     #initialize  and update position coordinates
     location = EarthLocation.from_geodetic(lon =-111.5947*u.deg, lat =31.95844*u.deg, height=2097.024*u.m)
     kittpeak = Observer(location=location, name='kitt peak')
@@ -57,6 +57,7 @@ def tel_move(RA,DEC,n,COLOR):
     packer = struct.Struct('d d d d d d d')
     data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
     s.send(data)
+    return s
 
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down
