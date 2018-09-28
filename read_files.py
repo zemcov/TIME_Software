@@ -22,7 +22,7 @@ def netcdfdata(rc):
 
     begin = dt.datetime.utcnow()
     end = dt.datetime.utcnow()
-    while end - begin < dt.timedelta(seconds=3):
+    while end - begin < dt.timedelta(seconds=5):
         mce_file = os.path.exists('/home/pilot1/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
         if mce_file:
             files = [dir + x for x in os.listdir(dir) if (x.startswith("temp") and not x.endswith('.run'))]

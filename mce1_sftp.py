@@ -13,7 +13,7 @@ def main():
     a = 0
     begin = dt.datetime.utcnow()
     end = dt.datetime.utcnow()
-    while end - begin < dt.timedelta(seconds=5):
+    while end - begin < dt.timedelta(seconds=3):
         if os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) :
             mce_file_name = '/data/cryo/current_data/temp.%0.3i' %(a)
             if a == 0:
