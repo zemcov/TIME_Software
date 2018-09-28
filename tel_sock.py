@@ -27,11 +27,10 @@ loops_deg = 2 #number of loops per degrees = loops_deg
 COLOR = 'black'
 # -------------------------------------------------------------------------
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-def main():
-    PILOT1_PORT = 8888
-    PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
-    s.connect((PILOT1, PILOT1_PORT))
-    #message = 'Hello!'
+PILOT1_PORT = 8888
+PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
+s.connect((PILOT1, PILOT1_PORT))
+#message = 'Hello!'
 
 
 def tel_move(RA,DEC,n,COLOR):
