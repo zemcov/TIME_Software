@@ -30,6 +30,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 PILOT1_PORT = 8888
 PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
 s.connect((PILOT1, PILOT1_PORT))
+return s
 #message = 'Hello!'
 
 
@@ -61,6 +62,7 @@ def tel_move(RA,DEC,n,COLOR):
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down
 # ----------MOVING UP TO SCANNING POSITION---------------------------------------------------------------------------
+
 while True:
     if slew_flag == 0.0:
         while dec <= (dec_start + 2) :
