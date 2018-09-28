@@ -31,10 +31,10 @@ def main():
         end = dt.datetime.utcnow()
     else :
         print('File Transfer Stopped')
-        subprocess.Popen(['/home/pilot2/anaconda3/bin/python /home/pilot2/TIME_Software/stop_client.py'],shell=True)
-        print('Tel Client Stopped')
-        time.sleep(2.0)
-        subprocess.Popen(['pkill -9 -f tel_sock.py'],shell=True)
+        #subprocess.Popen(['/home/pilot2/anaconda3/bin/python /home/pilot2/TIME_Software/stop_client.py'],shell=True)
+        #print('Tel Client Stopped')
+        #time.sleep(2.0)
+        #subprocess.Popen(['pkill -9 -f tel_sock.py'],shell=True)
         sys.exit()
 
 if __name__ == '__main__':
