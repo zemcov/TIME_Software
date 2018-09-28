@@ -4,6 +4,6 @@ from tel_sock import s
 import socket
 
 print("Client Socket Shutdown")
-#s.shutdown(socket.SHUT_RDWR)
+s.shutdown(socket.SHUT_RDWR)
 s.close()
 sys.exit()

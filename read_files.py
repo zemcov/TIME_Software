@@ -46,7 +46,7 @@ def netcdfdata(rc):
         end = dt.datetime.utcnow()
 
     else :
-        subprocess.Popen(['pkill -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
+        subprocess.Popen(['pkill -9 -f /home/pilot1/TIME_Software/readteledata.py'],shell=True)
         #subprocess.Popen(['/home/pilot1/anaconda3/bin/python /home/pilot1/TIME_Software/stop_server.py'],shell=True)
         #time.sleep(2.0)
         print('Tel Server Stopped')
