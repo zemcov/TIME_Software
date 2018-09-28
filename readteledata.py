@@ -23,6 +23,8 @@ def loop(client,unpacker,on):
         f = open(tempfilename,'a')
         f.write("\n%.06f,%.06f,%.06f,%.06f,%.06f,%.06f" %(pa, slew_flag, alt, az, ra, dec))
         f.close()
+    else :
+        sys.exit()
 
     #print('Data Received')
     #print('Tel Server:',pa,slew_flag,alt,az,ra,dec)

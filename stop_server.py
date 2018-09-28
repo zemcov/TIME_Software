@@ -1,9 +1,10 @@
 import sys
 sys.path.append('/home/pilot1/TIME_Software')
-from readteledata import s
+import readteledata
 import socket
 
 print("Server Socket Shutdown")
+readteledata.on = False
 #s.shutdown(socket.SHUT_RDWR)
-s.close()
+readteledata.s.close()
 sys.exit()
