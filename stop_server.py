@@ -4,7 +4,7 @@ import readteledata
 import socket
 
 print("Server Socket Shutdown")
-readteledata.on = False
+#readteledata.on = False
 #s.shutdown(socket.SHUT_RDWR)
 readteledata.s.close()
 sys.exit()
