@@ -32,6 +32,7 @@ def main():
     PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
     s.connect((PILOT1, PILOT1_PORT))
     #message = 'Hello!'
+    return s
 
 
 def tel_move(RA,DEC,n,COLOR):
@@ -58,6 +59,7 @@ def tel_move(RA,DEC,n,COLOR):
     data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
     s.send(data)
 
+    return s
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down
 # ----------MOVING UP TO SCANNING POSITION---------------------------------------------------------------------------
