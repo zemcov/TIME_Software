@@ -25,7 +25,7 @@ def main():
         end = dt.datetime.utcnow()
 
     else :
-        print 'SFTP0 Stopped'
+        print 'SFTP1 Stopped'
         subprocess.Popen(['rm /data/cryo/current_data/temp*'],shell=True)
         sys.exit()
 
