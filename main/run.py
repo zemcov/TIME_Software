@@ -10,18 +10,27 @@ def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', 
     print('\n')
     netcdfdir = ('/home/time/Desktop/time-data/netcdffiles')
     if os.path.exists(netcdfdir):
-        print('netcdfdir exists')
+        print 'netcdfdir exists'
     else:
-        print('Making NETCDF File Directory')
+        print 'Making NETCDF File Directory'
         netcdf_dir = ['mkdir /home/time/Desktop/time-data/netcdffiles']
         subprocess.Popen(netcdf_dir, shell=True).wait()
-    mcedir = ('/home/time/Desktop/time-data/mce1')
-    if os.path.exists(mcedir):
-        print('mcedir exists')
+
+    mcedir1 = ('/home/time/Desktop/time-data/mce1')
+    if os.path.exists(mcedir1):
+        print 'mcedir1 exists'
     else:
-        print('Making MCE File Directory')
-        mce_dir = ['mkdir /home/time/Desktop/time-data/mce1']
-        subprocess.Popen(mce_dir, shell=True).wait()
+        print 'Making MCE0 File Directory'
+        mce_dir1 = ['mkdir /home/time/Desktop/time-data/mce1']
+        subprocess.Popen(mce_dir1, shell=True).wait()
+
+    mcedir2 = ('/home/time/Desktop/time-data/mce2')
+    if os.path.exists(mcedir2):
+        print 'mcedir2 exists'
+    else :
+        print 'Making MCE1 File Directory'
+        mce_dir2 = ['mkdir /home/time/Desktop/time-data/mce2']
+        subprocess.Popen(mce_dir2, shell=True).wait()
 
     if os.path.exists('tempfiles/stop.txt'):
         subprocess.Popen('rm tempfiles/stop.txt', shell=True)
@@ -45,25 +54,35 @@ def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', 
 def startmce(observer, datamode, readoutcard, framenumber, datarate):
     frameperfile = int((50 * 10 ** 6) / (33 * 90 * int(datarate)))
 
-    editdatarate = ['./mce1_cdr.sh %s' %(datarate)]
-    a = subprocess.call(editdatarate, shell=True)
+    editdatarate1 = ['./mce0_cdr.sh %s' %(datarate)]
+    subprocess.call(editdatarate1, shell=True)
+    editdatarate2 = ['./mce1_cdr.sh %s' %(datarate)]
+    subprocess.call(editdatarate2, shell=True)
 
     if readoutcard == 's':
-        changedatamode1 = ["./mce1_cdm.sh a %s" % (datamode)]
-        b = subprocess.Popen(changedatamode1, shell=True)
-        run1 = ["./mce1_run.sh %s s %s" %(framenumber, frameperfile)]
-        print("starting mce1")
-        c = subprocess.Popen(run1, shell=True)
+        changedatamode1 = ["./mce0_cdm.sh a %s" % (datamode)]
+        subprocess.Popen(changedatamode1, shell=True)
+        changedatamode2 = ["./mce1_cdm.sh a %s" % (datamode)]
+        subprocess.Popen(changedatamode2, shell=True)
+        run1 = ["./mce0_run.sh %s s %s" %(framenumber, frameperfile)]
+        run2 = ["./mce1_run.sh %s s %s" %(framenumber, frameperfile)]
+        print "starting MCE0 & MCE1"
+        subprocess.Popen(run1, shell=True)
+        subprocess.Popen(run2, shell=True)
         #changedatamode2 = ["./mce1_cdm.sh %s" % (datamode)]
         #d = subprocess.Popen(changedatamode2, shell=True)
         #run2 = ["./mce1_run.sh %s a %s" %(framenumber, frameperfile)]
         #e = subprocess.Popen(run2, shell=True)
     else:
-        changedatamode1 = ["./mce1_cdm.sh %s %s" % (readoutcard, datamode)]
-        b = subprocess.Popen(changedatamode1, shell=True)
-        print("starting mce1")
-        run1 = ["./mce1_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]
-        c = subprocess.Popen(run1, shell=True)
+        changedatamode1 = ["./mce0_cdm.sh %s %s" % (readoutcard, datamode)]
+        subprocess.Popen(changedatamode1, shell=True)
+        changedatamode2 = ["./mce1_cdm.sh %s %s" % (readoutcard, datamode)]
+        subprocess.Popen(changedatamode2, shell=True)
+        run1 = ["./mce0_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]
+        run2 = ["./mce1_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]
+        print "starting MCE0 & MCE1"
+        subprocess.Popen(run1, shell=True)
+        subprocess.Popen(run2, shell=True)
         #changedatamode2 = ["./mce1_cdm.sh %s %s" % (readoutcard, datamode)]
         #d = subprocess.Popen(changedatamode2, shell=True)
         #run2 = ["./mce1_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]

@@ -8,71 +8,78 @@ import subprocess
 import datetime
 
 def netcdfdata(rc):
-    #print('HELLO!')
-    #n_files = len(os.listdir("/data/cryo/current_data"))
     a = 0
-    mcea = 0
-    mce = 1
+    mce = 0
     n = 0
-    n_files = 8
     filestarttime = 0
-    mcea = subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py %s %s' % (a, n_files)], shell=True)
+    dir1 = '/home/time/Desktop/time-data/mce1/'
+    dir2 = '/home/time/Desktop/time-data/mce0/'
+    subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'] , shell=True)
+    subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce0_sftp.py'], shell=True)
     while True:
-        mce_file = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
-        if mce_file:
-            for i in range(len(os.listdir("/home/time/Desktop/time-data/mce1")) - 3):
-                print('netcdf: %s' % (a))
-                mce_file_name = '/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a)
+        mce_file1 = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
+        mce_file2 = os.path.exists('/home/time/Desktop/time-data/mce0/temp.%0.3i' %(a+1))
+        if (mce_file1 and mce_file2):
+            files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
+            files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
+            if (len(files1) and len(files2)) != 0:
+                mce_file1 = min(files1, key = os.path.getctime)
+                mce_file2 = min(files2, key = os.path.getctime)
+                f1 = mce_data.SmallMCEFile(mce_file1)
+                f2 = mce_data.SmallMCEFile(mce_file2)
+                header1 = read_header(f1)
+                header2 = read_header(f2)
+                mce, n, filestarttime = readdata(f1, f2, mce, header1, header2, n, a, filestarttime, rc)
+                print 'File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''))
                 a = a + 1
-                f = mce_data.SmallMCEFile(mce_file_name)
-                header = read_header(f)
-                mce, n, filestarttime = readdata(f, mce_file_name, mce, header, n, a, filestarttime, rc)
-                mce_file = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
 
-        elif os.path.exists('tempfiles/stop.txt'):
-            subprocess.Popen(["ssh -T time@time-mce-1.caltech.edu /usr/mce/bin/mce_cmd '-x stop rcs ret_dat'"], shell=True)
-            subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu "rm /data/cryo/current_data/temp.*"'], shell=True)
-            subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp.*'], shell=True)
-            sys.exit()
+    else :
+        print 'No More Files'
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp.run'], shell=True)
+        sys.exit()
 
-        else :
-            pass
-
-
-def readdata(f, mce_file_name, mce, head, n, a, filestarttime, rc):
-    h = f.Read(row_col=True, unfilter='DC').data
-    d = np.empty([h.shape[0],h.shape[1]],dtype=float)
-    for b in range(h.shape[0]):
-        for c in range(h.shape[1]):
-            d[b][c] = (np.std(h[b][c][:],dtype=float))
-    if a > 1:
-        old_mce_file_name = '/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a - 2)
-        subprocess.Popen(['rm %s' % (old_mce_file_name)], shell=True)
-
-    tempfiledir = os.path.expanduser('/home/time/Desktop/time-data/netcdffiles')
-    if a == 1:
+# ===========================================================================================================================
+def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc):
+    h1 = f1.Read(row_col=True, unfilter='DC').data
+    h2 = f2.Read(row_col=True, unfilter='DC').data
+    # d1 = np.empty([h.shape[0],h.shape[1]],dtype=float)
+    # for b in range(h.shape[0]):
+    #     for c in range(h.shape[1]):
+    #         d1[b][c] = (np.std(h1[b][c][:],dtype=float))
+    # d2 = np.empty([h.shape[0],h.shape[1]],dtype=float)
+    # for b in range(h.shape[0]):
+    #     for c in range(h.shape[1]):
+    #         d2[b][c] = (np.std(h2[b][c][:],dtype=float))
+    if n == 0:
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
-        mce = nc.new_file(n, h.shape, head, filestarttime)
-    elif os.stat(tempfiledir + "/mce_netcdf-%s.nc" % (filestarttime)).st_size < 20 * 10**6: # of bytes here
+        print '------------ New File -------------'
+        mce = nc.new_file(h1.shape, head1, head2, filestarttime)
         if rc == 's' :
-            nc.data_all(h,d,n,a,head)
+            nc.data_all(h1, h2, n, head1, head2, filestarttime)
         else :
-            nc.data(h,d,n,a,head)
+            nc.data(h1, h2, n, head1, head2, filestarttime)
+
+    elif os.stat(netcdfdir + "/raw_%s.nc" % (filestarttime)).st_size >= 20 * 10**6:
+        n = 0
+        print '----------- New File ------------'
+        filestarttime = datetime.datetime.utcnow()
+        filestarttime = filestarttime.isoformat()
+        mce = nc.new_file(h1.shape, head1, head2, filestarttime)
+        if rc == 's' :
+            nc.data_all(h1, h2, n, head1, head2, filestarttime)
+        else :
+            nc.data(h1, h2, n, head1, head2, filestarttime)
+
     else:
-        n = n + 1
-        mce.close()
-        print('----------New File----------')
-        filestarttime = datetime.datetime.utcnow()
-        filestarttime = filestarttime.isoformat()
-        mce = nc.new_file(n, h.shape, head, filestarttime)
         if rc == 's' :
-            nc.data_all(h,d,n,a,head)
+            nc.data_all(h1, h2, n, head1, head2, filestarttime)
         else :
-            nc.data(h,d,n,a,head)
+            nc.data(h1, h2, n, head1, head2, filestarttime)
+    n = n + 1
     return mce, n, filestarttime
 
-
+# ===========================================================================
 def read_header(f):
     keys = []
     values = []
