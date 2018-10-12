@@ -10,7 +10,7 @@ def main():
     print '----- Starting MCE1 Data Transfer -----'
     begin = dt.datetime.utcnow()
     end = dt.datetime.utcnow()
-    while end - begin < dt.timedelta(seconds = 3):
+    while end - begin < dt.timedelta(seconds = 5):
         if os.path.exists("/data/cryo/current_data/temp.%0.3i" %(a+1)) : #wait to read new file until old file is complete
             mce_file_name = '/data/cryo/current_data/temp.%0.3i' % (a)
             if a == 0:
