@@ -13,12 +13,12 @@ def netcdfdata(rc):
     n = 0
     filestarttime = 0
     dir1 = '/home/time/Desktop/time-data/mce1/'
-    dir2 = '/home/time/Desktop/time-data/mce0/'
-    subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software/sftp/mce1_sftp.py'] , shell=True)
-    subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software/sftp/mce0_sftp.py'], shell=True)
+    dir2 = '/home/time/Desktop/time-data/mce2/'
+    subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'] , shell=True)
+    subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
     while True:
         mce_file1 = os.path.exists('/home/time/Desktop/time-data/mce1/temp.%0.3i' %(a+1))
-        mce_file2 = os.path.exists('/home/time/Desktop/time-data/mce0/temp.%0.3i' %(a+1))
+        mce_file2 = os.path.exists('/home/time/Desktop/time-data/mce2/temp.%0.3i' %(a+1))
         if (mce_file1 and mce_file2):
             files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
             files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
@@ -36,6 +36,7 @@ def netcdfdata(rc):
     else :
         print 'No More Files'
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp.run'], shell=True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp.run'], shell=True)
         sys.exit()
 
 # ===========================================================================================================================

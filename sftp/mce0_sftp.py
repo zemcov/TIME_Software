@@ -21,7 +21,7 @@ def main():
                         subprocess.Popen(['scp', '/data/cryo/current_data/temp.run',  'time-master:/home/time/Desktop/time-data/mce0/temp.run']).wait()
                         delete_file = ['rm %s' % ('/data/cryo/current_data/temp.run')]
                         subprocess.Popen(delete_file,shell=True)
-                    subprocess.Popen(['scp', mce_file_name,  'time-master:/home/time/Desktop/time-data/mce0/temp.%0.3i' % (a)]).wait()
+                    subprocess.Popen(['scp', mce_file_name,  'time-master:/home/time/Desktop/time-data/mce1/temp.%0.3i' % (a)]).wait()
                     delete_file = ['rm %s' % (mce_file_name)]
                     subprocess.Popen(delete_file,shell=True)
                     a += 1
