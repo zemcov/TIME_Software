@@ -17,10 +17,10 @@ def main():
                 subprocess.Popen(['scp', '/data/cryo/current_data/temp.run',  'time-master:/home/time/Desktop/time-data/mce1/temp.run']).wait()
                 subprocess.Popen(['rm %s' % ('/data/cryo/current_data/temp.run')],shell=True)
             elif os.path.exists(mce_file_name) :
-            subprocess.Popen(['scp', mce_file_name,  'time-master:/home/time/Desktop/time-data/mce1/temp.%0.3i' % (a)]).wait()
-            delete_file = ['rm %s' % (mce_file_name)]
-            a += 1
-            begin = dt.datetime.utcnow()
+                subprocess.Popen(['scp', mce_file_name,  'time-master:/home/time/Desktop/time-data/mce1/temp.%0.3i' % (a)]).wait()
+                delete_file = ['rm %s' % (mce_file_name)]
+                a += 1
+                begin = dt.datetime.utcnow()
             else:
                 print "File Doesn't Exist!"
         end = dt.datetime.utcnow()
