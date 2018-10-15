@@ -103,11 +103,11 @@ def read_header(f):
                 else:
                     print("I don't know what I am...")
             value = ''.join(map(str,value))
-        value = str(value)
+        #value = str(value)
         keys.append(key)
         values.append(value)
-    keys = np.asarray(keys,dtype='S240')
-    values = np.asarray(values,dtype='S240')
+    keys = np.asarray(keys,dtype='object')
+    values = np.asarray(values,dtype='object')
     head = np.array((keys,values)).T
     return head
 
