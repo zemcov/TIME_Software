@@ -31,7 +31,7 @@ def netcdfdata(rc):
                 f2 = mce_data.SmallMCEFile(mce_file2)
                 header1 = read_header(f1)
                 header2 = read_header(f2)
-                mce, n, filestarttime = readdata(f1, f2, mce, header1, header2, n, a, filestarttime, rc)
+                mce, n, filestarttime = readdata(f1, f2, mce, header1, header2, n, a, filestarttime, rc, mce_file1, mce_file2)
                 print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,'')),'yellow')
                 a = a + 1
 
@@ -42,7 +42,7 @@ def netcdfdata(rc):
         sys.exit()
 
 # ===========================================================================================================================
-def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc):
+def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_file2):
     h1 = f1.Read(row_col=True, unfilter='DC').data
     h2 = f2.Read(row_col=True, unfilter='DC').data
     # d1 = np.empty([h.shape[0],h.shape[1]],dtype=float)
