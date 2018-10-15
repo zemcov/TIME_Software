@@ -65,7 +65,8 @@ def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_
         if rc == 's' :
             nc.data_all(h1, h2, n, head1, head2, filestarttime)
         else :
-            nc.data(h1, h2, n, head1, head2, filestarttime)
+            #nc.data(h1, h2, n, head1, head2, filestarttime)
+            print colored('Wrong RC Input!','red')
 
     elif os.stat(netcdfdir + "/raw_%s.nc" % (filestarttime)).st_size >= 20 * 10**6:
         n = 0
@@ -76,13 +77,15 @@ def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_
         if rc == 's' :
             nc.data_all(h1, h2, n, head1, head2, filestarttime)
         else :
-            nc.data(h1, h2, n, head1, head2, filestarttime)
+            #nc.data(h1, h2, n, head1, head2, filestarttime)
+            print colored('Wrong RC Input!','red')
 
     else:
         if rc == 's' :
             nc.data_all(h1, h2, n, head1, head2, filestarttime)
         else :
-            nc.data(h1, h2, n, head1, head2, filestarttime)
+            #nc.data(h1, h2, n, head1, head2, filestarttime)
+            print colored('Wrong RC Input!','red')
     n = n + 1
     return mce, n, filestarttime
 
