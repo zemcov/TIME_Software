@@ -65,8 +65,8 @@ def new_file(h_size, head1, head2, filestarttime):
 
     global MCE0_Header
     global MCE1_Header
-    MCE0_Header = mce.createVariable('mce0_header','S1',('t','v','k'))
-    MCE1_Header = mce.createVariable('mce1_header','S1',('t','v','k'))
+    MCE0_Header = mce.createVariable('mce0_header','S1',('t','k','v'))
+    MCE1_Header = mce.createVariable('mce1_header','S1',('t','k','v'))
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
@@ -94,8 +94,8 @@ def data_all(h1, h2, n, head1, head2, filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     MCE0_Raw_Data_All[n,:,:,:] = h1
     MCE1_Raw_Data_All[n,:,:,:] = h2
-    new_head1 = np.array([head1],dtype='S15').reshape((2,16))
-    new_head2 = np.array([head2],dtype='S15').reshape((2,16))
+    new_head1 = np.array([head1],dtype='S15').reshape((16,2))
+    new_head2 = np.array([head2],dtype='S15').reshape((16,2))
     print head1
     print '-----------------------------'
     print new_head1
