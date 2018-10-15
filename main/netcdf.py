@@ -65,8 +65,8 @@ def new_file(h_size, head1, head2, filestarttime):
 
     global MCE0_Header
     global MCE1_Header
-    MCE0_Header = mce.createVariable('mce0_header','S1',('t','t','t'))
-    MCE1_Header = mce.createVariable('mce1_header','S1',('t','t','t'))
+    MCE0_Header = mce.createVariable('mce0_header','S1',('t','v','k'))
+    MCE1_Header = mce.createVariable('mce1_header','S1',('t','v','k'))
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
