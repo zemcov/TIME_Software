@@ -34,8 +34,8 @@ def new_file(h_size, head1, head2, filestarttime):
     mce.createDimension('rms_rows',h_size[0])
     mce.createDimension('rms_cols',8)
     mce.createDimension('rms_cols_all',32)
-    mce.createDimension('k',2)
-    mce.createDimension('v',16)
+    mce.createDimension('k',1)
+    mce.createDimension('v',32)
 
 
     # creating variables --------------------------------------------------------------------------------
@@ -94,8 +94,8 @@ def data_all(h1, h2, n, head1, head2, filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     MCE0_Raw_Data_All[n,:,:,:] = h1
     MCE1_Raw_Data_All[n,:,:,:] = h2
-    new_head1 = np.array([head1],dtype='S15').reshape((16,2))
-    new_head2 = np.array([head2],dtype='S15').reshape((16,2))
+    new_head1 = np.array([head1],dtype='S15').reshape((1,32))
+    new_head2 = np.array([head2],dtype='S15').reshape((1,32))
     print head1
     print '-----------------------------'
     print new_head1
