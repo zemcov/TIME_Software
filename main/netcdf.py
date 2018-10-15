@@ -72,7 +72,8 @@ def new_file(h_size, head1, head2, filestarttime):
     parafile = open(parafilename, 'r')
     parameters = parafile.readline().strip().split()
 
-    Header._Encoding = 'ascii'
+    MCE0_Header._Encoding = 'ascii'
+    MCE1_Header._Encoding = 'ascii'
     Observer._Encoding = 'ascii'
     Frames._Encoding = 'ascii'
     Datamode._Encoding = 'ascii'
