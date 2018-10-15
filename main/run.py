@@ -69,7 +69,7 @@ def startmce(observer, datamode, readoutcard, framenumber, datarate):
         subprocess.Popen(changedatamode2, shell=True)
         run1 = ["./mce0_run.sh %s s %s" %(framenumber, frameperfile)]
         run2 = ["./mce1_run.sh %s s %s" %(framenumber, frameperfile)]
-        print colored("starting MCE0 & MCE1",'purple')
+        print colored("starting MCE0 & MCE1",'magenta')
         subprocess.Popen(run1, shell=True)
         subprocess.Popen(run2, shell=True)
         #changedatamode2 = ["./mce1_cdm.sh %s" % (datamode)]
@@ -83,7 +83,7 @@ def startmce(observer, datamode, readoutcard, framenumber, datarate):
         subprocess.Popen(changedatamode2, shell=True)
         run1 = ["./mce0_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]
         run2 = ["./mce1_run.sh %s %s %s" %(framenumber, readoutcard, frameperfile)]
-        print colored("starting MCE0 & MCE1",'purple')
+        print colored("starting MCE0 & MCE1",'magenta')
         subprocess.Popen(run1, shell=True)
         subprocess.Popen(run2, shell=True)
         #changedatamode2 = ["./mce1_cdm.sh %s %s" % (readoutcard, datamode)]
