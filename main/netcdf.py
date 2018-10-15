@@ -96,6 +96,9 @@ def data_all(h1, h2, n, head1, head2, filestarttime):
     MCE1_Raw_Data_All[n,:,:,:] = h2
     new_head1 = np.array([head1],dtype='S15').reshape((2,16))
     new_head2 = np.array([head2],dtype='S15').reshape((2,16))
+    print head1
+    print '-----------------------------'
+    print new_head1
     MCE0_Header[n,:,:] = new_head1
     MCE1_Header[n,:,:] = new_head2
     mce.close()
