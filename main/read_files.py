@@ -53,6 +53,9 @@ def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc):
     # for b in range(h.shape[0]):
     #     for c in range(h.shape[1]):
     #         d2[b][c] = (np.std(h2[b][c][:],dtype=float))
+
+    subprocess.Popen(['rm %s' % (mce_file1)], shell=True)
+    subprocess.Popen(['rm %s' % (mce_file2)], shell=True)
     netcdfdir = '/home/time/Desktop/time-data/netcdffiles'
     if n == 0:
         filestarttime = datetime.datetime.utcnow()
