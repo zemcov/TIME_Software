@@ -4,13 +4,14 @@ import time
 import shutil
 import sys
 import datetime as dt
+from termcolor import colored
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
 def main():
     a = 0
     dir = '/data/cryo/current_data/'
-    print '----- Starting MCE1 Data Transfer -----'
+    print colored('----- Starting MCE1 Data Transfer -----','green')
     begin = dt.datetime.utcnow()
     end = dt.datetime.utcnow()
     while end - begin < dt.timedelta(seconds = 5):
@@ -29,7 +30,7 @@ def main():
         end = dt.datetime.utcnow()
 
     else :
-        print 'SFTP1 Stopped'
+        print colored('SFTP1 Stopped','red')
         subprocess.Popen(['rm /data/cryo/current_data/temp*'],shell=True)
         sys.exit()
 

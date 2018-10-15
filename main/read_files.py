@@ -6,7 +6,9 @@ import mce_data
 import netcdf as nc
 import subprocess
 import datetime
+from termcolor import colored
 
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 def netcdfdata(rc):
     a = 0
     mce = 0
@@ -30,11 +32,11 @@ def netcdfdata(rc):
                 header1 = read_header(f1)
                 header2 = read_header(f2)
                 mce, n, filestarttime = readdata(f1, f2, mce, header1, header2, n, a, filestarttime, rc)
-                print 'File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''))
+                print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,'')),'orange')
                 a = a + 1
 
     else :
-        print 'No More Files'
+        print colored('No More Files','red')
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp.run'], shell=True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp.run'], shell=True)
         sys.exit()
@@ -54,7 +56,7 @@ def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc):
     if n == 0:
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
-        print '------------ New File -------------'
+        print colored('------------ New File -------------','green')
         mce = nc.new_file(h1.shape, head1, head2, filestarttime)
         if rc == 's' :
             nc.data_all(h1, h2, n, head1, head2, filestarttime)
@@ -63,7 +65,7 @@ def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc):
 
     elif os.stat(netcdfdir + "/raw_%s.nc" % (filestarttime)).st_size >= 20 * 10**6:
         n = 0
-        print '----------- New File ------------'
+        print colored('----------- New File ------------','green')
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(h1.shape, head1, head2, filestarttime)
