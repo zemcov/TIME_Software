@@ -32,7 +32,7 @@ def netcdfdata(rc):
                 header1 = read_header(f1)
                 header2 = read_header(f2)
                 mce, n, filestarttime = readdata(f1, f2, mce, header1, header2, n, a, filestarttime, rc)
-                print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,'')),'orange')
+                print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,'')),'yellow')
                 a = a + 1
 
     else :
