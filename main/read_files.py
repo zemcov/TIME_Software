@@ -8,7 +8,7 @@ import subprocess
 import datetime
 from termcolor import colored
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
+#sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 def netcdfdata(rc):
     a = 0
     mce = 0

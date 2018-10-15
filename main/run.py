@@ -6,7 +6,7 @@ import subprocess
 import time
 from termcolor import colored
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
+#sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
 def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', datarate='45'):
     run = raw_input('Press enter to run')

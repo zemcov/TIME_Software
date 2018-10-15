@@ -6,7 +6,7 @@ import datetime as now
 import numpy as np
 from termcolor import colored
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
+#sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
 tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
 def new_file(h_size, head1, head2, filestarttime):
