@@ -34,7 +34,7 @@ def new_file(h_size, head1, head2, filestarttime):
     mce.createDimension('rms_rows',h_size[0])
     mce.createDimension('rms_cols',8)
     mce.createDimension('rms_cols_all',32)
-    mce.createDimension('k',2)
+    mce.createDimension('k',1)
     mce.createDimension('v',16)
 
 
