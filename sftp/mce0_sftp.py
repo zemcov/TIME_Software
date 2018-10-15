@@ -5,8 +5,11 @@ import shutil
 import sys
 import datetime as dt
 
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
+
 def main():
     a = 0
+    dir = '/data/cryo/current_data/'
     print '----- Starting MCE0 Data Transfer -----'
     begin = dt.datetime.utcnow()
     end = dt.datetime.utcnow()
@@ -17,7 +20,8 @@ def main():
                 subprocess.Popen(['scp', '/data/cryo/current_data/temp.run',  'time-master:/home/time/Desktop/time-data/mce1/temp.run']).wait()
             elif os.path.exists(mce_file_name) :
                 subprocess.Popen(['scp', mce_file_name,  'time-master:/home/time/Desktop/time-data/mce1/temp.%0.3i' % (a)]).wait()
-                delete_file = ['rm %s' % (mce_file_name)]
+                subprocess.Popen(['rm %s' % (mce_file_name)],shell=True)
+                print 'File Transfered (MCE0):',(mce_file_name.replace(dir,''))
                 a += 1
                 begin = dt.datetime.utcnow()
             else:
