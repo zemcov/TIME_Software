@@ -106,8 +106,8 @@ def read_header(f):
         value = str(value)
         keys.append(key)
         values.append(value)
-    keys = np.asarray(keys,dtype='S15')
-    values = np.asarray(values,dtype='S15')
+    keys = np.asarray(keys,dtype='S240')
+    values = np.asarray(values,dtype='S240')
     head = np.array((keys,values)).T
     return head
 
