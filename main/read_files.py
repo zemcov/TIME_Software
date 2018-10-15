@@ -97,19 +97,19 @@ def read_header(f):
         if key == '_rc_present':
             for i in range(len(value)):
                 if value[i] == True:
-                    value[i] = "1"
+                    value[i] = 1
                 elif value[i] == False:
-                    value[i] = "0"
+                    value[i] = 0
                 else:
                     print("I don't know what I am...")
             value = ''.join(map(str,value))
-        #value = str(value)
-        keys.append(key)
+        #value = int(value)
+        #keys.append(key)
         values.append(value)
-    keys = np.asarray(keys,dtype='object')
-    values = np.asarray(values,dtype='object')
-    head = np.array((keys,values)).T
-    return head
+    #keys = np.asarray(keys,dtype='object')
+    values = np.asarray(values)
+    #head = np.array((keys,values)).T
+    return values
 
 if __name__ == '__main__':
     netcdfdata(sys.argv[1])

@@ -65,15 +65,15 @@ def new_file(h_size, head1, head2, filestarttime):
 
     global MCE0_Header
     global MCE1_Header
-    MCE0_Header = mce.createVariable('mce0_header','S1',('t','v','k'))
-    MCE1_Header = mce.createVariable('mce1_header','S1',('t','v','k'))
+    MCE0_Header = mce.createVariable('mce0_header','i4',('t','v','k'))
+    MCE1_Header = mce.createVariable('mce1_header','i4',('t','v','k'))
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
     parameters = parafile.readline().strip().split()
 
-    MCE0_Header._Encoding = 'ascii'
-    MCE1_Header._Encoding = 'ascii'
+    #MCE0_Header._Encoding = 'ascii'
+    #MCE1_Header._Encoding = 'ascii'
     Observer._Encoding = 'ascii'
     Frames._Encoding = 'ascii'
     Datamode._Encoding = 'ascii'
@@ -96,13 +96,13 @@ def data_all(h1, h2, n, head1, head2, filestarttime):
     MCE1_Raw_Data_All[n,:,:,:] = h2
     print head2.shape
     print MCE0_Header.shape
-    new_head1 = np.array([head1],dtype='object')#.reshape((2,16))
-    new_head2 = np.array([head2],dtype='object')#.reshape((2,16))
+    #new_head1 = np.array([head1],dtype='object')#.reshape((2,16))
+    #new_head2 = np.array([head2],dtype='object')#.reshape((2,16))
     print head1
     #print '-----------------------------'
     #print new_head1
-    MCE0_Header[n,:,:] = new_head1
-    MCE1_Header[n,:,:] = new_head2
+    MCE0_Header[n,:,:] = head1
+    MCE1_Header[n,:,:] = head2
     mce.close()
 
 # def data(h1, h2, n, head1, head2, filestarttime):
