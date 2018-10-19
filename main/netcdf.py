@@ -94,11 +94,11 @@ def data_all(h1, h2, n, head1, head2, filestarttime):
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     MCE0_Raw_Data_All[n,:,:,:] = h1
     MCE1_Raw_Data_All[n,:,:,:] = h2
-    print head2.shape
-    print MCE0_Header.shape
+    #print head2.shape
+    #print MCE0_Header.shape
     #new_head1 = np.array([head1],dtype='object')#.reshape((2,16))
     #new_head2 = np.array([head2],dtype='object')#.reshape((2,16))
-    print head1
+    #print head1
     #print '-----------------------------'
     #print new_head1
     MCE0_Header[n,:,:] = head1
