@@ -36,6 +36,7 @@ def new_file(h_size, head1, head2, filestarttime):
     mce.createDimension('rms_cols_all',32)
     mce.createDimension('k',1)
     mce.createDimension('v',16)
+    mce.createDimension('hks',20)
 
 
     # creating variables --------------------------------------------------------------------------------
@@ -48,6 +49,7 @@ def new_file(h_size, head1, head2, filestarttime):
     global Time
     Time = mce.createVariable('time','S1',('t','date'))
 
+    # MCE DATA =============================================================================================
     global MCE0_Raw_Data_All
     # global MCE0_Raw_Data
     global MCE1_Raw_Data_All
@@ -62,18 +64,26 @@ def new_file(h_size, head1, head2, filestarttime):
     # global Rms_Noise
     # Rms_Noise_All = mce.createVariable('rms_noise_all','f8',('t','rms_rows','rms_cols_all'))
     # Rms_Noise = mce.createVariable('rms_noise','f8',('t','rms_rows','rms_cols'))
+    # =========================================================================================================
 
+    # MCE HEADER INFO =========================================================
     global MCE0_Header
     global MCE1_Header
     MCE0_Header = mce.createVariable('mce0_header','i4',('t','v','k'))
     MCE1_Header = mce.createVariable('mce1_header','i4',('t','v','k'))
+    # =========================================================================
+
+    # Housekeeping ============================================================
+    global HK_sen
+    HK_sen = mce.createVariable('hk_sensor','i4',('t','hks'))
+    global HK_data
+    HK_data = mce.createVariable('hk_data', 'f8',('t','hks'))
+    # =========================================================================
 
     parafilename = ('tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
     parameters = parafile.readline().strip().split()
 
-    #MCE0_Header._Encoding = 'ascii'
-    #MCE1_Header._Encoding = 'ascii'
     Observer._Encoding = 'ascii'
     Frames._Encoding = 'ascii'
     Datamode._Encoding = 'ascii'
@@ -89,20 +99,15 @@ def new_file(h_size, head1, head2, filestarttime):
     mce.close()
     return mce
 
-def data_all(h1, h2, n, head1, head2, filestarttime):
+def data_all(h1, h2, n, head1, head2, filestarttime, hk_sensors, house_data):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     MCE0_Raw_Data_All[n,:,:,:] = h1
     MCE1_Raw_Data_All[n,:,:,:] = h2
-    #print head2.shape
-    #print MCE0_Header.shape
-    #new_head1 = np.array([head1],dtype='object')#.reshape((2,16))
-    #new_head2 = np.array([head2],dtype='object')#.reshape((2,16))
-    #print head1
-    #print '-----------------------------'
-    #print new_head1
     MCE0_Header[n,:,:] = head1
     MCE1_Header[n,:,:] = head2
+    HK_sen[n,:] = hk_sensors
+    HK_data[n,:] = house_data
     mce.close()
 
 # def data(h1, h2, n, head1, head2, filestarttime):
