@@ -13,31 +13,39 @@ def main(observer='VLB', datamode='0', readoutcard='s', framenumber='13500000', 
     print('\n')
     netcdfdir = ('/home/time/Desktop/time-data/netcdffiles')
     if os.path.exists(netcdfdir):
-        print colored('netcdfdir exists','blue')
+        continue
+        #print colored('netcdfdir exists','blue')
     else:
-        print colored('Making NETCDF File Directory','green')
-        netcdf_dir = ['mkdir /home/time/Desktop/time-data/netcdffiles']
-        subprocess.Popen(netcdf_dir, shell=True).wait()
+        #print colored('Making NETCDF File Directory','green')
+        subprocess.Popen(['mkdir /home/time/Desktop/time-data/netcdffiles'], shell=True).wait()
 
     mcedir1 = ('/home/time/Desktop/time-data/mce1')
     if os.path.exists(mcedir1):
-        print colored('mcedir1 exists','blue')
+        continue
+        #print colored('mcedir1 exists','blue')
     else:
-        print colored('Making MCE0 File Directory','green')
-        mce_dir1 = ['mkdir /home/time/Desktop/time-data/mce1']
-        subprocess.Popen(mce_dir1, shell=True).wait()
+        #print colored('Making MCE0 File Directory','green')
+        subprocess.Popen(['mkdir /home/time/Desktop/time-data/mce1'], shell=True).wait()
 
     mcedir2 = ('/home/time/Desktop/time-data/mce2')
     if os.path.exists(mcedir2):
-        print colored('mcedir2 exists','blue')
+        continue
+        #print colored('mcedir2 exists','blue')
     else :
-        print colored('Making MCE1 File Directory','green')
-        mce_dir2 = ['mkdir /home/time/Desktop/time-data/mce2']
-        subprocess.Popen(mce_dir2, shell=True).wait()
+        #print colored('Making MCE1 File Directory','green')
+        subprocess.Popen(['mkdir /home/time/Desktop/time-data/mce2'], shell=True).wait()
+
+    hkdir = ('/home/time/Desktop/time-data/hk')
+    if os.path.exists(mcedir2):
+        continue
+        #print colored('mcedir2 exists','blue')
+    else :
+        #print colored('Making HK File Directory','green')
+        subprocess.Popen(['mkdir /home/time/Desktop/time-data/hk'], shell=True).wait()
 
     if os.path.exists('tempfiles/stop.txt'):
         subprocess.Popen('rm tempfiles/stop.txt', shell=True)
-
+        
     # print('Observer: %s' % (observer))
     # print('Datamode: %s' % (datamode))
     # print('Readout Card: %s' % (readoutcard))
