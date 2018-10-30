@@ -14,6 +14,8 @@ def netcdfdata(rc):
     mce = 0
     n = 0
     filestarttime = 0
+    h1_shape = 0
+    h2_shape = 0
     dir1 = '/home/time/Desktop/time-data/mce1/'
     dir2 = '/home/time/Desktop/time-data/mce2/'
     #dir3 = '#add hk tempfile directory here'
@@ -37,7 +39,7 @@ def netcdfdata(rc):
                 hk_sensors, hk_data = hk_read(hk_file)
                 header1 = read_header(f1)
                 header2 = read_header(f2)
-                mce, n, filestarttime = readdata(f1, f2, mce, header1, header2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_sensors, hk_data)
+                mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_sensors, hk_data)
                 print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''),hk_file.replace(dir3,'')),'yellow')
                 a = a + 1
 
@@ -48,9 +50,20 @@ def netcdfdata(rc):
         sys.exit()
 
 # ===========================================================================================================================
-def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_file2, , hk_sensors, hk_data):
+def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_file2, , hk_sensors, hk_data):
     h1 = f1.Read(row_col=True, unfilter='DC').data
     h2 = f2.Read(row_col=True, unfilter='DC').data
+    # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
+    if n != 0 :
+        if (h1.shape == h1_shape and h2.shape == h2_shape) :
+            continue
+        elif h1.shape != h1_shape :
+            print colored('WARNING! MCE0 Frame Size Has Changed','red')
+        else :
+            print colored('WARNING! MCE1 Frame Size Has Changed','red')
+    h1_shape = h1.shape
+    h2_shape = h2.shape
+    # -----------------------------------------------------------------
     # d1 = np.empty([h.shape[0],h.shape[1]],dtype=float)
     # for b in range(h.shape[0]):
     #     for c in range(h.shape[1]):
@@ -59,7 +72,7 @@ def readdata(f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_
     # for b in range(h.shape[0]):
     #     for c in range(h.shape[1]):
     #         d2[b][c] = (np.std(h2[b][c][:],dtype=float))
-
+    # -----------------------------------------------------------------
     subprocess.Popen(['rm %s' % (mce_file1)], shell=True)
     subprocess.Popen(['rm %s' % (mce_file2)], shell=True)
     netcdfdir = '/home/time/Desktop/time-data/netcdffiles'
@@ -107,11 +120,8 @@ def read_header(f):
                     print("I don't know what I am...")
             value = ''.join(map(str,value))
         value = int(value)
-        #keys.append(key)
         values.append(value)
-    #keys = np.asarray(keys,dtype='object')
     values = np.asarray(values)
-    #head = np.array((keys,values)).T
     return values
 
 # ============================================================================
