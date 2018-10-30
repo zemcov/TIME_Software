@@ -55,8 +55,8 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
     h2 = f2.Read(row_col=True, unfilter='DC').data
     # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
     if n != 0 :
-        if (h1.shape == h1_shape and h2.shape == h2_shape) :
-            continue
+        if (h1.shape != h1_shape and h2.shape != h2_shape) :
+            print colored('WARNING! Both MCE Frame Size Has Changed','red')
         elif h1.shape != h1_shape :
             print colored('WARNING! MCE0 Frame Size Has Changed','red')
         else :
