@@ -6,6 +6,7 @@ import mce_data
 import netcdf as nc
 import subprocess
 import datetime
+import gzip
 from termcolor import colored
 
 #sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
@@ -37,10 +38,11 @@ def netcdfdata(rc):
                 hk_file = min(files3, key = os.path.getctime)
                 f1 = mce_data.SmallMCEFile(mce_file1)
                 f2 = mce_data.SmallMCEFile(mce_file2)
-                hk_data = hk_read(hk_file)
+                hk_data, hk_time, hk_sensors, tele_time, hk_size = hk_read(hk_file)
                 header1 = read_header(f1)
                 header2 = read_header(f2)
-                mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_data)
+                mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc,
+                                                    mce_file1, mce_file2, hk_data, hk_time, hk_sensors, tele_time, hk_size)
                 print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''),hk_file.replace(dir3,'')),'yellow')
                 a = a + 1
 
@@ -51,7 +53,7 @@ def netcdfdata(rc):
         sys.exit()
 
 # ===========================================================================================================================
-def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_data):
+def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_data, hk_sensors, hk_time, tele_time, hk_size):
     h1 = f1.Read(row_col=True, unfilter='DC').data
     h2 = f2.Read(row_col=True, unfilter='DC').data
     # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
@@ -81,9 +83,9 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         print colored('------------ New File -------------','green')
-        mce = nc.new_file(h1.shape, head1, head2, filestarttime)
+        mce = nc.new_file(h1.shape, head1, head2, filestarttime, hk_size)
         if rc == 's' :
-            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data)
+            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data, hk_sensors, hk_time, tele_time)
         else :
             print colored('Wrong RC Input!','red')
 
@@ -92,15 +94,15 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
         print colored('----------- New File ------------','green')
         filestarttime = datetime.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
-        mce = nc.new_file(h1.shape, head1, head2, filestarttime)
+        mce = nc.new_file(h1.shape, head1, head2, filestarttime, hk_size)
         if rc == 's' :
-            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data)
+            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data, hk_sensors, hk_time, tele_time)
         else :
             print colored('Wrong RC Input!','red')
 
     else:
         if rc == 's' :
-            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data)
+            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data, hk_sensors, hk_time, tele_time)
         else :
             print colored('Wrong RC Input!','red')
     n = n + 1
@@ -128,12 +130,28 @@ def read_header(f):
 # ============================================================================
 def hk_read(hk):
     hk_sensor = []
-    time,sensor,name,data = [x.split(',') for x in gzip.open(hk).readlines()]
+    tele_time = 0.0
+    file = gzip.open(hk)
+    hk_sensor = []
+    time = []
+    sensor = []
+    name = []
+    data = []
+    tele_time = (0.0,0.0)
+    file = open(hk)
+    for line in file:
+        fields = line.strip().split(',')
+        time.append(fields[0])
+        sensor.append(fields[1])
+        name.append(fields[2])
+        data.append(float(fields[3]))
+    # telling netcdf how many sensors to account for in the array size
+    hk_size = len(sensor)
     for i in range(len(sensor)):
-        hk_sensor.append(sensor[i] + '_' + name[i])
-    hk_data = np.array([time,hk_sensor,data]).T
-    print hk_data[0,:,:]
-    return hk_data
+        hk_sensor.append((sensor[i] + "_" + name[i]).replace('"',''))
+        if hk_sensor[i] == 'HKMBv1b0_SYNC_number' :
+            tele_time = time[i],data[i]
+    return data, time, hk_sensor, tele_time, hk_size
 
 # ============================================================================
 if __name__ == '__main__':

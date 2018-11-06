@@ -9,7 +9,7 @@ from termcolor import colored
 #sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
 tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
-def new_file(h_size, head1, head2, filestarttime):
+def new_file(h_size, head1, head2, filestarttime, hk_size):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # create the gui parameters group
@@ -36,7 +36,7 @@ def new_file(h_size, head1, head2, filestarttime):
     mce.createDimension('rms_cols_all',32)
     mce.createDimension('k',1)
     mce.createDimension('v',16)
-    mce.createDimension('hks',20)
+    mce.createDimension('hks',hk_size)
 
 
     # creating variables --------------------------------------------------------------------------------
@@ -48,6 +48,8 @@ def new_file(h_size, head1, head2, filestarttime):
     Rc = mce.createVariable('rc','S1',('r',)) # can either use rc name or integer used by gui
     global Time
     Time = mce.createVariable('time','S1',('t','date'))
+    global Tele_time
+    Tele_time = mce.createVariable('tele_time','f8',('t','mode'))
 
     # MCE DATA =============================================================================================
     global MCE0_Raw_Data_All
@@ -76,6 +78,10 @@ def new_file(h_size, head1, head2, filestarttime):
     # Housekeeping ============================================================
     global HK_data
     HK_data = mce.createVariable('hk_data', 'f8',('t','hks'))
+    global HK_sensor
+    HK_sensor = mce.createVariable('hk_sensor','S1',('t','hks'))
+    global HK_time
+    HK_time = mce.createVariable('hk_time','f8',('t','hks'))
     # =========================================================================
 
     parafilename = ('tempfiles/tempparameters.txt')
@@ -97,14 +103,17 @@ def new_file(h_size, head1, head2, filestarttime):
     mce.close()
     return mce
 
-def data_all(h1, h2, n, head1, head2, filestarttime, house_data):
+def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_time, tele_time):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
+    Tele_time[n,:] = tele_time
     MCE0_Raw_Data_All[n,:,:,:] = h1
     MCE1_Raw_Data_All[n,:,:,:] = h2
     MCE0_Header[n,:,:] = head1
     MCE1_Header[n,:,:] = head2
     HK_data[n,:] = house_data
+    HK_sensor[n,:] = hk_sensors
+    HK_time[n,:] = hk_time
     mce.close()
 
 # def data(h1, h2, n, head1, head2, filestarttime):
