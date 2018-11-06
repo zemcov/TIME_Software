@@ -25,7 +25,7 @@ def main():
         if os.path.exists(dir + "omnilog.%i.txt.gz" %(a+1)) : #wait to read new file until old file is complete
             file_name = dir + 'omnilog.%i.txt.gz' % (a)
             if os.path.exists(file_name) :
-                subprocess.Popen(['scp', file_name,  'time-master:/home/time/Desktop/time-data/hk/omnilog.%i.txt.gz' % (a)]).wait()
+                subprocess.Popen(['scp', file_name,  'time@time-master.caltech.edu:/home/time/Desktop/time-data/hk/omnilog.%i.txt.gz' % (a)]).wait()
                 a += 1
                 begin = dt.datetime.utcnow()
             else:
