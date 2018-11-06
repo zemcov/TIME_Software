@@ -18,7 +18,7 @@ def main():
     end = dt.datetime.utcnow()
     files = [dir + x for x in os.listdir(dir) if (x.startswith("omnilog") and x.endswith('.gz'))]
     hk_file = min(files, key = os.path.getctime)
-    a = int(hk_file.replace('dir','').replace('omnilog.','').replace('.txt.gz',''))
+    a = int(hk_file.replace(dir,'').replace('omnilog.','').replace('.txt.gz',''))
     print colored('HK starting file = %i' %(a),'green')
 
     while end - begin < dt.timedelta(seconds = 5):
