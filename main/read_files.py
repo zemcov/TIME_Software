@@ -9,6 +9,7 @@ import datetime
 from termcolor import colored
 
 #sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
+
 def netcdfdata(rc):
     a = 0
     mce = 0
@@ -18,28 +19,28 @@ def netcdfdata(rc):
     h2_shape = 0
     dir1 = '/home/time/Desktop/time-data/mce1/'
     dir2 = '/home/time/Desktop/time-data/mce2/'
-    #dir3 = '#add hk tempfile directory here'
+    dir3 = '/home/time/Desktop/time-data/hk/'
     subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'] , shell=True)
     subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
-    #subprocess.Popen(['ssh -T time@time-hk.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
+    subprocess.Popen(['ssh -T time@time.pyhk.net python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
     while True:
         mce_file1 = os.path.exists(dir1 + 'temp.%0.3i' %(a+1))
         mce_file2 = os.path.exists(dir2 + 'temp.%0.3i' %(a+1))
-        #hk_file = os.path.exists()
+        hk_file = os.path.exists(dir3 + 'omnilog.'+'*'+'.txt.gz')
         if (mce_file1 and mce_file2 and hk_file):
             files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
             files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
-            #files3 = [dir3 + x for x in os.listdir(dir3) if (x.starswith('hk_temp'))]
+            files3 = [dir3 + x for x in os.listdir(dir3) if (x.starswith('omnilog'))]
             if (len(files1) and len(files2) and len(files3)) != 0:
                 mce_file1 = min(files1, key = os.path.getctime)
                 mce_file2 = min(files2, key = os.path.getctime)
                 hk_file = min(files3, key = os.path.getctime)
                 f1 = mce_data.SmallMCEFile(mce_file1)
                 f2 = mce_data.SmallMCEFile(mce_file2)
-                hk_sensors, hk_data = hk_read(hk_file)
+                hk_data = hk_read(hk_file)
                 header1 = read_header(f1)
                 header2 = read_header(f2)
-                mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_sensors, hk_data)
+                mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_data)
                 print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''),hk_file.replace(dir3,'')),'yellow')
                 a = a + 1
 
@@ -50,7 +51,7 @@ def netcdfdata(rc):
         sys.exit()
 
 # ===========================================================================================================================
-def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_sensors, hk_data):
+def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_file2, hk_data):
     h1 = f1.Read(row_col=True, unfilter='DC').data
     h2 = f2.Read(row_col=True, unfilter='DC').data
     # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
@@ -82,7 +83,7 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
         print colored('------------ New File -------------','green')
         mce = nc.new_file(h1.shape, head1, head2, filestarttime)
         if rc == 's' :
-            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_sensors, hk_data)
+            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data)
         else :
             print colored('Wrong RC Input!','red')
 
@@ -93,13 +94,13 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(h1.shape, head1, head2, filestarttime)
         if rc == 's' :
-            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_sensors, hk_data)
+            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data)
         else :
             print colored('Wrong RC Input!','red')
 
     else:
         if rc == 's' :
-            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_sensors, hk_data)
+            nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data)
         else :
             print colored('Wrong RC Input!','red')
     n = n + 1
@@ -126,8 +127,13 @@ def read_header(f):
 
 # ============================================================================
 def hk_read(hk):
-    # stuff to parse hk data
-    return hk_sensors, hk_data
+    hk_sensor = []
+    time,sensor,name,data = [x.split(',') for x in gzip.open(hk).readlines()]
+    for i in range(len(sensor)):
+        hk_sensor.append(sensor[i] + '_' + name[i])
+    hk_data = np.array([time,hk_sensor,data]).T
+    print hk_data[0,:,:]
+    return hk_data
 
 # ============================================================================
 if __name__ == '__main__':

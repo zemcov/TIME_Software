@@ -74,8 +74,6 @@ def new_file(h_size, head1, head2, filestarttime):
     # =========================================================================
 
     # Housekeeping ============================================================
-    global HK_sen
-    HK_sen = mce.createVariable('hk_sensor','i4',('t','hks'))
     global HK_data
     HK_data = mce.createVariable('hk_data', 'f8',('t','hks'))
     # =========================================================================
@@ -99,14 +97,13 @@ def new_file(h_size, head1, head2, filestarttime):
     mce.close()
     return mce
 
-def data_all(h1, h2, n, head1, head2, filestarttime, hk_sensors, house_data):
+def data_all(h1, h2, n, head1, head2, filestarttime, house_data):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     MCE0_Raw_Data_All[n,:,:,:] = h1
     MCE1_Raw_Data_All[n,:,:,:] = h2
     MCE0_Header[n,:,:] = head1
     MCE1_Header[n,:,:] = head2
-    HK_sen[n,:] = hk_sensors
     HK_data[n,:] = house_data
     mce.close()
 
