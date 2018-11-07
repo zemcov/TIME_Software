@@ -9,7 +9,6 @@ import fnmatch
 from termcolor import colored
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
-
 def main():
     a = 0
     dir = '/data/hk/omnilog/'
