@@ -44,7 +44,6 @@ def netcdfdata(rc):
                 header1 = read_header(f1)
                 header2 = read_header(f2)
                 print colored('Reading Headers','red')
-                ))
                 mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc,
                                                     mce_file1, mce_file2, hk_data, hk_time, hk_sensors, tele_time, hk_size)
                 print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''),hk_file.replace(dir3,'')),'yellow')
