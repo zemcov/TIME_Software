@@ -133,15 +133,12 @@ def read_header(f):
 # ============================================================================
 def hk_read(hk):
     hk_sensor = []
-    tele_time = 0.0
-    file = gzip.open(hk)
-    hk_sensor = []
     time = []
     sensor = []
     name = []
     data = []
     tele_time = (0.0,0.0)
-    file = open(hk)
+    file = gzip.open(hk)
     for line in file:
         fields = line.strip().split(',')
         time.append(fields[0])
