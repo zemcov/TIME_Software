@@ -103,7 +103,7 @@ def new_file(h_size, head1, head2, filestarttime, hk_size):
     mce.close()
     return mce
 
-def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_time, tele_time):
+def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_time, tele_time, t_type):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     Tele_time[n,:] = tele_time
@@ -113,7 +113,7 @@ def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_
     MCE1_Header[n,:,:] = head2
     HK_data[n,:] = house_data
     HK_sensor[n,:] = hk_sensors
-    HK_time[n,:] = hk_time
+    HK_time[n,:] = (hk_time)
     mce.close()
 
 # def data(h1, h2, n, head1, head2, filestarttime):
