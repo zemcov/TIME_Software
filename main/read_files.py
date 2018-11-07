@@ -32,7 +32,6 @@ def netcdfdata(rc):
             files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
             files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
             files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
-            print colored('First if is good','red')
             if (len(files1) and len(files2)) != 0:
                 mce_file1 = min(files1, key = os.path.getctime)
                 mce_file2 = min(files2, key = os.path.getctime)
@@ -40,10 +39,8 @@ def netcdfdata(rc):
                 f1 = mce_data.SmallMCEFile(mce_file1)
                 f2 = mce_data.SmallMCEFile(mce_file2)
                 hk_data, hk_time, hk_sensors, tele_time, hk_size = hk_read(hk_file)
-                print colored('Reading HK Files','red')
                 header1 = read_header(f1)
                 header2 = read_header(f2)
-                print colored('Reading Headers','red')
                 mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc,
                                                     mce_file1, mce_file2, hk_data, hk_time, hk_sensors, tele_time, hk_size)
                 print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''),hk_file.replace(dir3,'')),'yellow')
@@ -150,7 +147,8 @@ def hk_read(hk):
     for i in range(len(sensor)):
         hk_sensor.append((sensor[i] + "_" + name[i]).replace('"',''))
         if hk_sensor[i] == 'HKMBv1b0_SYNC_number' :
-            tele_time = time[i],data[i]
+            tele_time = float(time[i]),float(data[i])
+            print colored(tele_time,'red')
     return data, time, hk_sensor, tele_time, hk_size
 
 # ============================================================================
