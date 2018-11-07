@@ -23,7 +23,7 @@ def netcdfdata(rc):
     dir3 = '/home/time/Desktop/time-data/hk/'
     subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'] , shell=True)
     subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
-    subprocess.Popen(['ssh-keyscan -H 131.215.193.74 >> ~/.ssh/known_hosts'],shell=True)
+    #subprocess.Popen(['ssh-keyscan -H 131.215.193.74 >> ~/.ssh/known_hosts'],shell=True)
     subprocess.Popen(['ssh -T time@time.pyhk.net python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
     while True:
         mce_file1 = os.path.exists(dir1 + 'temp.%0.3i' %(a+1))
