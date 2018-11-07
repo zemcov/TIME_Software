@@ -54,7 +54,7 @@ def netcdfdata(rc):
 
 # ===========================================================================================================================
 def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, rc, mce_file1, mce_file2,
-             hk_data, hk_sensors, hk_time, tele_time, hk_size, t_type):
+             hk_data, hk_time,hk_sensors, tele_time, hk_size, t_type):
     h1 = f1.Read(row_col=True, unfilter='DC').data
     h2 = f2.Read(row_col=True, unfilter='DC').data
     # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
