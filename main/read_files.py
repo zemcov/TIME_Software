@@ -9,7 +9,7 @@ import datetime
 import gzip
 from termcolor import colored
 
-#sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
 def netcdfdata(rc):
     a = 0
@@ -23,25 +23,28 @@ def netcdfdata(rc):
     dir3 = '/home/time/Desktop/time-data/hk/'
     subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'] , shell=True)
     subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
-    #subprocess.Popen(['ssh-keyscan -H 131.215.193.74 >> ~/.ssh/known_hosts'],shell=True)
     subprocess.Popen(['ssh -T time@time.pyhk.net python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
     while True:
         mce_file1 = os.path.exists(dir1 + 'temp.%0.3i' %(a+1))
         mce_file2 = os.path.exists(dir2 + 'temp.%0.3i' %(a+1))
         hk_file = os.path.exists(dir3 + 'omnilog.'+'*'+'.txt.gz')
-        if (mce_file1 and mce_file2 and hk_file):
+        if (mce_file1 and mce_file2):
             files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
             files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
             files3 = [dir3 + x for x in os.listdir(dir3) if (x.starswith('omnilog'))]
-            if (len(files1) and len(files2) and len(files3)) != 0:
+            print colored('First if is good','red')
+            if (len(files1) and len(files2)) != 0:
                 mce_file1 = min(files1, key = os.path.getctime)
                 mce_file2 = min(files2, key = os.path.getctime)
                 hk_file = min(files3, key = os.path.getctime)
                 f1 = mce_data.SmallMCEFile(mce_file1)
                 f2 = mce_data.SmallMCEFile(mce_file2)
                 hk_data, hk_time, hk_sensors, tele_time, hk_size = hk_read(hk_file)
+                print colored('Reading HK Files','red')
                 header1 = read_header(f1)
                 header2 = read_header(f2)
+                print colored('Reading Headers','red')
+                ))
                 mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc,
                                                     mce_file1, mce_file2, hk_data, hk_time, hk_sensors, tele_time, hk_size)
                 print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''),hk_file.replace(dir3,'')),'yellow')
