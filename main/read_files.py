@@ -27,15 +27,16 @@ def netcdfdata(rc):
     while True:
         mce_file1 = os.path.exists(dir1 + 'temp.%0.3i' %(a+1))
         mce_file2 = os.path.exists(dir2 + 'temp.%0.3i' %(a+1))
-        hk_file = os.path.exists(dir3 + 'omnilog.'+'*'+'.txt.gz')
-        if (mce_file1 and mce_file2):
+        hk_file = os.path.exists(dir3 + 'omnilog'+'*')
+        if (mce_file1 and mce_file2 and hk_file):
             files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
             files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
             files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
-            if (len(files1) and len(files2)) != 0:
+            if (len(files1) and len(files2) and len(files3)) != 0:
                 mce_file1 = min(files1, key = os.path.getctime)
                 mce_file2 = min(files2, key = os.path.getctime)
                 hk_file = min(files3, key = os.path.getctime)
+                print hk_file
                 f1 = mce_data.SmallMCEFile(mce_file1)
                 f2 = mce_data.SmallMCEFile(mce_file2)
                 hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type = hk_read(hk_file)
