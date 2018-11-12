@@ -29,16 +29,13 @@ def netcdfdata(rc):
         mce_file2 = os.path.exists(dir2 + 'temp.%0.3i' %(a+1))
         hk_file = os.path.exists(dir3 + 'omnilog'+'*')
         if (mce_file1 and mce_file2):
-            print colored('first if statement passed','red')
             files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
             files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
             files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
             if (len(files1) and len(files2)) != 0:
-                print colored('second if statement passed','red')
                 mce1 = min(files1, key = os.path.getctime)
                 mce2 = min(files2, key = os.path.getctime)
                 hk = min(files3, key = os.path.getctime)
-                print hk
                 f1 = mce_data.SmallMCEFile(mce1)
                 f2 = mce_data.SmallMCEFile(mce1)
                 hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type = hk_read(hk)
@@ -154,7 +151,9 @@ def hk_read(hk):
         hk_sensor.append((sensor[i] + "_" + name[i]).replace('"',''))
         if hk_sensor[i] == 'HKMBv1b0_SYNC_number' :
             tele_time = float(time[i]),data[i]
-            print colored(tele_time,'red')
+            #print colored(tele_time,'red')
+    # delete old hk file
+    subprocess.Popen(['rm %s' % (hk)], shell=True)
     return data, time, hk_sensor, tele_time, hk_size, t_type
 
 # ============================================================================
