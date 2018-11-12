@@ -35,18 +35,18 @@ def netcdfdata(rc):
             files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
             if (len(files1) and len(files2)) != 0:
                 print colored('second if statement passed','red')
-                mce_file1 = min(files1, key = os.path.getctime)
-                mce_file2 = min(files2, key = os.path.getctime)
-                hk_file = min(files3, key = os.path.getctime)
-                print hk_file
-                f1 = mce_data.SmallMCEFile(mce_file1)
-                f2 = mce_data.SmallMCEFile(mce_file2)
-                hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type = hk_read(hk_file)
+                mce1 = min(files1, key = os.path.getctime)
+                mce2 = min(files2, key = os.path.getctime)
+                hk = min(files3, key = os.path.getctime)
+                print hk
+                f1 = mce_data.SmallMCEFile(mce1)
+                f2 = mce_data.SmallMCEFile(mce1)
+                hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type = hk_read(hk)
                 header1 = read_header(f1)
                 header2 = read_header(f2)
                 mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc,
-                                                    mce_file1, mce_file2, hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type)
-                print colored('File Read: %s , %s' %(mce_file1.replace(dir1,''),mce_file2.replace(dir2,''),hk_file.replace(dir3,'')),'yellow')
+                                                    mce1, mce2, hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type)
+                print colored('File Read: %s , %s' %(mce1.replace(dir1,''),mce1.replace(dir2,''),hk.replace(dir3,'')),'yellow')
                 a = a + 1
 
     else :
@@ -153,7 +153,7 @@ def hk_read(hk):
     for i in range(len(sensor)):
         hk_sensor.append((sensor[i] + "_" + name[i]).replace('"',''))
         if hk_sensor[i] == 'HKMBv1b0_SYNC_number' :
-            tele_time = time[i],data[i]
+            tele_time = float(time[i]),data[i]
             print colored(tele_time,'red')
     return data, time, hk_sensor, tele_time, hk_size, t_type
 
