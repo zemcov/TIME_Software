@@ -9,7 +9,7 @@ from termcolor import colored
 #sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
 tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
-def new_file(h_size, head1, head2, filestarttime, hk_size):
+def new_file(h_size, head1, head2, filestarttime, hk_size, hk_files):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # create the gui parameters group
@@ -37,6 +37,7 @@ def new_file(h_size, head1, head2, filestarttime, hk_size):
     mce.createDimension('k',1)
     mce.createDimension('v',16)
     mce.createDimension('hks',hk_size)
+    mce.createDimension('hknumfile',hk_files)
 
 
     # creating variables --------------------------------------------------------------------------------
@@ -77,11 +78,11 @@ def new_file(h_size, head1, head2, filestarttime, hk_size):
 
     # Housekeeping ============================================================
     global HK_data
-    HK_data = mce.createVariable('hk_data', 'f8',('t','hks'))
+    HK_data = mce.createVariable('hk_data', 'f8',('t','hknumfile','hks'))
     global HK_sensor
-    HK_sensor = mce.createVariable('hk_sensor','S1',('t','hks'))
+    HK_sensor = mce.createVariable('hk_sensor','S1',('t','hknumfile','hks'))
     global HK_time
-    HK_time = mce.createVariable('hk_time','f8',('t','hks'))
+    HK_time = mce.createVariable('hk_time','f8',('t','hknumfile','hks'))
     # =========================================================================
 
     parafilename = ('tempfiles/tempparameters.txt')
@@ -111,18 +112,7 @@ def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_
     MCE1_Raw_Data_All[n,:,:,:] = h2
     MCE0_Header[n,:,:] = head1
     MCE1_Header[n,:,:] = head2
-    HK_data[n,:] = house_data
-    HK_sensor[n,:] = hk_sensors
-    HK_time[n,:] = (hk_time)
+    HK_data[n,:,:] = house_data
+    HK_sensor[n,:,:] = hk_sensors
+    HK_time[n,:,:] = hk_time
     mce.close()
-
-# def data(h1, h2, n, head1, head2, filestarttime):
-#     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
-#     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
-#     MCE0_Raw_Data[n,:,:,:] = h1
-#     MCE1_Raw_Data[n,:,:,:] = h2
-#     #new_head1 = np.array([head1],dtype='S15').reshape((2,16))
-#     #new_head2 = np.array([head2],dtype='S15').reshape((2,16))
-#     #MCE0_Header[a,:,:] = new_head1
-#     #MCE1_Header[a,:,:] = new_head2
-#     mce.close()
