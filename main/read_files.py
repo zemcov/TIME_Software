@@ -151,11 +151,11 @@ def hk_read(hk):
         for line in file:
             #fields = line.strip().split(',')
             a,b,c,d,e = line.strip().split(',')
-            t_type[i] = a
-            time[i] = b
-            sensor[i] = c
-            name[i] = d
-            data[i] = e
+            t_type.append(a)
+            time.append(b)
+            sensor.append(c)
+            name.append(d)
+            data.append(e)
 
             # t_type.append(fields[0])
             # time.append(fields[1])
