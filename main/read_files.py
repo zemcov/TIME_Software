@@ -24,7 +24,9 @@ def netcdfdata(rc):
     subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'] , shell=True)
     subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
     subprocess.Popen(['ssh -T time@time.pyhk.net python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
-    while True:
+    begin = dt.datetime.utcnow()
+    end = dt.datetime.utcnow()
+    while end - begin < dt.timedelta(seconds = 5):
         mce_file1 = os.path.exists(dir1 + 'temp.%0.3i' %(a+1))
         mce_file2 = os.path.exists(dir2 + 'temp.%0.3i' %(a+1))
         hk_file = len(os.listdir(dir3))
@@ -46,11 +48,14 @@ def netcdfdata(rc):
                                                     mce1, mce2, hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type, hk_files)
                 #print colored('File Read: mce1:%s , mce2:%s , hk:%s' %(str(mce1).replace(dir1,''),str(mce1).replace(dir2,''),str(hk).replace(dir3,'')),'yellow')
                 a = a + 1
+                begin = dt.datetime.utcnow()
+        end = dt.datetime.utcnow()
 
     else :
         print colored('No More Files','red')
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp.run'], shell=True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp.run'], shell=True)
+        subprocess.Popen(['ssh -T time@time.pyhk.net pkill -9 -f hk_sftp.py'], shell=True)
         sys.exit()
 
 # ===========================================================================================================================
