@@ -5,7 +5,7 @@ import sys
 import mce_data
 import netcdf as nc
 import subprocess
-import datetime
+import datetime as dt
 import gzip
 from termcolor import colored
 
