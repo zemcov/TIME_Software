@@ -87,7 +87,7 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
     subprocess.Popen(['rm %s' % (mce_file2)], shell=True)
     netcdfdir = '/home/time/Desktop/time-data/netcdffiles'
     if n == 0:
-        filestarttime = datetime.datetime.utcnow()
+        filestarttime = dt.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         print colored('------------ New File -------------','green')
         mce = nc.new_file(h1.shape, head1, head2, filestarttime, hk_size, hk_files)
@@ -99,7 +99,7 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
     elif os.stat(netcdfdir + "/raw_%s.nc" % (filestarttime)).st_size >= 20 * 10**6:
         n = 0
         print colored('----------- New File ------------','green')
-        filestarttime = datetime.datetime.utcnow()
+        filestarttime = dt.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         mce = nc.new_file(h1.shape, head1, head2, filestarttime, hk_size, hk_files)
         if rc == 's' :
@@ -156,8 +156,6 @@ def hk_read(hk):
             sensor.append(c)
             name.append(d)
             data.append(e)
-        print sensor[0:10]
-        print name[0:10]
 
             # t_type.append(fields[0])
             # time.append(fields[1])
