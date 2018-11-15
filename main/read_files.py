@@ -151,11 +151,11 @@ def hk_read(hk):
         for line in file:
             #fields = line.strip().split(',')
             a,b,c,d,e = line.strip().split(',')
-            t_type.append(a)
-            time.append(b)
-            sensor.append(c)
-            name.append(d)
-            data.append(e)
+            t_type.append([a])
+            time.append([b])
+            sensor.append([c])
+            name.append([d])
+            data.append([e])
 
             # t_type.append(fields[0])
             # time.append(fields[1])
@@ -165,11 +165,11 @@ def hk_read(hk):
 
     # telling netcdf how many sensors to account for in the array size
         if len(sensor) != 0 :
-            hk_size = len(sensor)
+            hk_size = len(sensor[i])
             for j in range(len(sensor)-1):
-                hk_sensor.append((sensor[j] + "_" + name[j]).replace('"',''))
-                if hk_sensor[j] == 'HKMBv1b0_SYNC_number' :
-                    tele_time = float(time[j]),data[j]
+                hk_sensor.append([sensor[i][j] + "_" + name[i][j]].replace('"',''))
+                if hk_sensor[i][j] == 'HKMBv1b0_SYNC_number' :
+                    tele_time = float(time[i][j]),data[i][j]
                     #print colored(tele_time,'red')
         else :
             print colored('NO HK DATA THIS TIME','red')
@@ -177,7 +177,6 @@ def hk_read(hk):
     # delete old hk files
     for i in range(len(hk)) :
         subprocess.Popen(['rm %s' % (hk[i])], shell=True)
-    print sensor.shape
     return data, time, hk_sensor, tele_time, hk_size, t_type, hk_files
 
 # ============================================================================
