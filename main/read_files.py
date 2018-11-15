@@ -167,7 +167,10 @@ def hk_read(hk):
         if len(sensor) != 0 :
             hk_size = len(sensor[i])
             for j in range(len(sensor)-1):
-                hk_sensor.append([sensor[i][j] + "_" + name[i][j]].replace('"',''))
+                print sensor[i][j]
+                things = [sensor[i][j] + "_" + name[i][j]]
+                things = [item.replace('"','') for item in things]
+                hk_sensor.append(things)
                 if hk_sensor[i][j] == 'HKMBv1b0_SYNC_number' :
                     tele_time = float(time[i][j]),data[i][j]
                     #print colored(tele_time,'red')
