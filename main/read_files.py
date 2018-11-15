@@ -156,6 +156,7 @@ def hk_read(hk):
             sensor.append(c)
             name.append(d)
             data.append(e)
+            print sensor
 
             # t_type.append(fields[0])
             # time.append(fields[1])
@@ -164,13 +165,16 @@ def hk_read(hk):
             # data.append(float(fields[4]))
 
     # telling netcdf how many sensors to account for in the array size
-        hk_size = len(sensor)
-        for j in range(len(sensor)-1):
-            print sensor[i]
-            hk_sensor.append((sensor[i,j] + "_" + name[i,j]).replace('"',''))
-            if hk_sensor[i,j] == 'HKMBv1b0_SYNC_number' :
-                tele_time = float(time[i,j]),data[i,j]
-                #print colored(tele_time,'red')
+        if len(sensor) != 0 :
+            hk_size = len(sensor)
+            for j in range(len(sensor)-1):
+                print sensor[i]
+                hk_sensor.append((sensor[i,j] + "_" + name[i,j]).replace('"',''))
+                if hk_sensor[i,j] == 'HKMBv1b0_SYNC_number' :
+                    tele_time = float(time[i,j]),data[i,j]
+                    #print colored(tele_time,'red')
+        else :
+            print colored('NO HK DATA THIS TIME','red')
 
     # delete old hk files
     for i in range(len(hk)) :
