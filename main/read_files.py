@@ -156,7 +156,7 @@ def hk_read(hk):
             sensor.append([c])
             name.append([d])
             data.append([e])
-
+        print len(sensor[i]),sensor[i]
             # t_type.append(fields[0])
             # time.append(fields[1])
             # sensor.append(fields[2])
