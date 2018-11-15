@@ -156,7 +156,8 @@ def hk_read(hk):
             sensor.append(c)
             name.append(d)
             data.append(e)
-        print sensor
+        print sensor[0:10]
+        print name[0:10]
 
             # t_type.append(fields[0])
             # time.append(fields[1])
@@ -168,10 +169,9 @@ def hk_read(hk):
         if len(sensor) != 0 :
             hk_size = len(sensor)
             for j in range(len(sensor)-1):
-                print sensor[i]
-                hk_sensor.append((sensor[i,j] + "_" + name[i,j]).replace('"',''))
-                if hk_sensor[i,j] == 'HKMBv1b0_SYNC_number' :
-                    tele_time = float(time[i,j]),data[i,j]
+                hk_sensor.append((sensor[j] + "_" + name[j]).replace('"',''))
+                if hk_sensor[j] == 'HKMBv1b0_SYNC_number' :
+                    tele_time = float(time[j]),data[j]
                     #print colored(tele_time,'red')
         else :
             print colored('NO HK DATA THIS TIME','red')
