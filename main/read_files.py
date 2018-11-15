@@ -167,7 +167,7 @@ def hk_read(hk):
         if len(sensor) != 0 :
             hk_size = len(sensor[i])
             for j in range(hk_size - 1):
-                print sensor.shape
+                print colored(sensor.shape,'red')
                 things = [sensor[i][j] + "_" + name[i][j]]
                 things = [item.replace('"','') for item in things]
                 hk_sensor.append(things)
