@@ -166,8 +166,8 @@ def hk_read(hk):
     # telling netcdf how many sensors to account for in the array size
         if len(sensor) != 0 :
             hk_size = len(sensor[i])
-            for j in range(len(sensor)-1):
-                print sensor[i][j]
+            for j in range(hk_size - 1):
+                print sensor.shape
                 things = [sensor[i][j] + "_" + name[i][j]]
                 things = [item.replace('"','') for item in things]
                 hk_sensor.append(things)
