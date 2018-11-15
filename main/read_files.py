@@ -136,12 +136,12 @@ def read_header(f):
 
 # ============================================================================
 def hk_read(hk):
-    hk_sensor = [[]]
-    time = [[]]
-    sensor = [[]]
-    name = [[]]
-    data = [[]]
-    t_type = [[]]
+    hk_sensor = []
+    time = []
+    sensor = []
+    name = []
+    data = []
+    t_type = []
     tele_time = [(0.0,0.0)]
 
     # telling netcdf how many files worth of hk data to expect
@@ -156,7 +156,7 @@ def hk_read(hk):
             sensor.append(c)
             name.append(d)
             data.append(e)
-            print sensor
+        print sensor
 
             # t_type.append(fields[0])
             # time.append(fields[1])
