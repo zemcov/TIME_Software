@@ -159,7 +159,7 @@ def hk_read(hk):
             B.append(fields[1])
             C.append(fields[2])
             D.append(fields[3])
-            E.append(float(fields[4])])
+            E.append(float(fields[4]))
         t_type.append[A]
         time.append[B]
         sensor.append[C]
