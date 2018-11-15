@@ -148,13 +148,23 @@ def hk_read(hk):
     hk_files = len(hk)
     for i in range(len(hk)-1):
         file = gzip.open(hk[i])
+        A = []
+        B = []
+        C = []
+        D = []
+        E = []
         for line in file:
             fields = line.strip().split(',')
-            t_type.append([fields[0]])
-            time.append([fields[1]])
-            sensor.append([fields[2]])
-            name.append([fields[3]])
-            data.append([float(fields[4])])
+            A.append(fields[0])
+            B.append(fields[1])
+            C.append(fields[2])
+            D.append(fields[3])
+            E.append(float(fields[4])])
+        t_type.append[A]
+        time.append[B]
+        sensor.append[C]
+        name.append[D]
+        data.append[E]
         print len(sensor[i]),sensor[i]
 
     # telling netcdf how many sensors to account for in the array size
