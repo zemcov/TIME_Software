@@ -166,6 +166,7 @@ def hk_read(hk):
     # telling netcdf how many sensors to account for in the array size
         hk_size = len(sensor)
         for j in range(len(sensor)-1):
+            print sensor[i]
             hk_sensor.append((sensor[i,j] + "_" + name[i,j]).replace('"',''))
             if hk_sensor[i,j] == 'HKMBv1b0_SYNC_number' :
                 tele_time = float(time[i,j]),data[i,j]
