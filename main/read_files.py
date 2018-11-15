@@ -177,7 +177,7 @@ def hk_read(hk):
     # delete old hk files
     for i in range(len(hk)) :
         subprocess.Popen(['rm %s' % (hk[i])], shell=True)
-
+    print sensor.shape
     return data, time, hk_sensor, tele_time, hk_size, t_type, hk_files
 
 # ============================================================================
