@@ -166,7 +166,7 @@ def hk_read(hk):
         sensor.append([C])
         name.append([D])
         data.append([E])
-        print E
+        print data
 
     # telling netcdf how many sensors to account for in the array size
         if len(sensor) != 0 :
