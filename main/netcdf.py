@@ -113,7 +113,7 @@ def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_
     MCE0_Header[n,:,:] = head1
     MCE1_Header[n,:,:] = head2
     HK_data[n,:,:] = house_data
-    print colored(HK_data,'green')
     HK_sensor[n,:,:] = hk_sensors
+    print colored(HK_sensor,'green')
     HK_time[n,:,:] = hk_time
     mce.close()

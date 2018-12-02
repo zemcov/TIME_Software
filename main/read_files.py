@@ -136,7 +136,7 @@ def read_header(f):
 
 # ============================================================================
 def hk_read(hk):
-    print "hk is parsing files"
+    print colored(len(hk),'red')
     hk_sensor = []
     time = []
     sensor = []
@@ -175,8 +175,8 @@ def hk_read(hk):
                     tele_time = float(time[i][j],data[i][j])
         else :
             print colored('NO HK DATA THIS TIME','red')
-    hk_files = len(data)
-    hk_size = len(data[0][:])
+    hk_files = len(sensor)
+    hk_size = len(sensor[0][:])
     print hk_files,hk_size
     # delete old hk files
     for i in range(len(hk)) :
