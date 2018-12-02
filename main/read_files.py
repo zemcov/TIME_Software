@@ -149,30 +149,29 @@ def hk_read(hk):
     for i in range(hk_files):
         file = gzip.open(hk[i])
         print colored(hk[i],'red')
-        A = np.array([])
-        B = np.array([])
-        C = np.array([])
-        D = np.array([])
-        E = np.array([])
+        A = []
+        B = []
+        C = []
+        D = []
+        E = []
         for line in file:
             a,b,c,d,e = line.strip().split(',')
-            np.append(A,a)
-            np.append(B,b)
-            np.append(C,c)
-            np.append(D,d)
-            np.append(E,float(e))
-            print E
+            A.append(a)
+            B.append(b)
+            C.append(c)
+            D.append(d)
+            E.append(float(e))
         t_type.append(A)
         time.append(B)
         sensor.append(C)
         name.append(D)
         data.append(E)
-        t_type = np.array(t_type)
-        time = np.array(time)
-        sensor = np.array(sensor)
-        name = np.array(name)
-        data = np.array(data)
-        print colored(data.shape,'magenta')
+    t_type = np.array(t_type)
+    time = np.array(time)
+    sensor = np.array(sensor)
+    name = np.array(name)
+    data = np.array(data)
+    print colored(data.shape,'magenta')
 
     # telling netcdf how many sensors to account for in the array size
         print len(sensor)
