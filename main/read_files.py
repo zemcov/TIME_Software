@@ -145,7 +145,7 @@ def hk_read(hk):
     t_type = []
     tele_time = [(0.0,0.0)]
     # telling netcdf how many files worth of hk data to expect
-    for i in range(len(hk) - 1):
+    for i in range(len(hk)):
         file = gzip.open(hk[i])
         print colored(hk[i],'red')
         A = []
@@ -167,7 +167,7 @@ def hk_read(hk):
         data.append(E)
         print "data :",len(data)
     # telling netcdf how many sensors to account for in the array size
-        for j in range(len(sensor[0][:]) - 1):
+        for j in range(len(sensor[0][:])):
             things = [sensor[i][j] + "_" + name[i][j]]
             things = [item.replace('"','') for item in things]
             hk_sensor.append(things)
