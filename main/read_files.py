@@ -166,7 +166,6 @@ def hk_read(hk):
         np.append(sensor,C,axis=0)
         np.append(name,D,axis=0)
         np.append(data,E,axis=0)
-    print colored(data.shape,'magenta')
 
     # telling netcdf how many sensors to account for in the array size
         print len(sensor)
@@ -182,7 +181,7 @@ def hk_read(hk):
                     #print colored(tele_time,'red')
         else :
             print colored('NO HK DATA THIS TIME','red')
-
+    print colored(data.shape,'magenta')
     # delete old hk files
     for i in range(len(hk)) :
         subprocess.Popen(['rm %s' % (hk[i])], shell=True)
