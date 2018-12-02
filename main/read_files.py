@@ -155,12 +155,12 @@ def hk_read(hk):
         D = np.array([])
         E = np.array([])
         for line in file:
-            fields = line.strip().split(',')
-            np.append(A,np.array(fields[0]))
-            np.append(B,np.array(fields[1]))
-            np.append(C,np.array(fields[2]))
-            np.append(D,np.array(fields[3]))
-            np.append(E,np.array(float(fields[4])))
+            a,b,c,d,e = line.strip().split(',')
+            np.append(A,a)
+            np.append(B,b)
+            np.append(C,c)
+            np.append(D,d)
+            np.append(E,float(e))
             print E
             print fields[4]
         np.append(t_type,A)
