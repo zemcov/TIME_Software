@@ -137,13 +137,13 @@ def read_header(f):
 # ============================================================================
 def hk_read(hk):
     print "hk is parsing files"
-    hk_sensor = np.array([])
-    time = np.array([])
-    sensor = np.array([])
-    name = np.array([])
-    data = np.array([])
-    t_type = np.array([])
-    tele_time = np.array([(0.0,0.0)])
+    hk_sensor = []
+    time = []
+    sensor = []
+    name = []
+    data = []
+    t_type = []
+    tele_time = [(0.0,0.0)]
     # telling netcdf how many files worth of hk data to expect
     hk_files = len(hk)
     for i in range(hk_files):
@@ -161,17 +161,11 @@ def hk_read(hk):
             C.append(c)
             D.append(d)
             E.append(float(e))
-        A = np.array(A)
-        B = np.array(B)
-        C = np.array(C)
-        D = np.array(D)
-        E = np.array(E)
-        np.append(t_type,A,axis=0)
-        np.append(time,B,axis=0)
-        np.append(sensor,C,axis=0)
-        np.append(name,D,axis=0)
-        np.append(data,E,axis=0)
-        print colored(E,'red')
+        t_type.append(A)
+        time.append(B)
+        sensor.append(C)
+        name.append(D)
+        data.append(E)
     # telling netcdf how many sensors to account for in the array size
         print len(sensor)
         if len(sensor) != 0 :
@@ -186,7 +180,7 @@ def hk_read(hk):
                     #print colored(tele_time,'red')
         else :
             print colored('NO HK DATA THIS TIME','red')
-    print colored(data.shape,'magenta')
+    print colored(E.reshape(hk_files,len(A)),'red')
     # delete old hk files
     for i in range(len(hk)) :
         subprocess.Popen(['rm %s' % (hk[i])], shell=True)
