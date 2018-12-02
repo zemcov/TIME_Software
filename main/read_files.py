@@ -137,37 +137,42 @@ def read_header(f):
 # ============================================================================
 def hk_read(hk):
     print "hk is parsing files"
-    hk_sensor = np.array([])
-    time = np.array([])
-    sensor = np.array([])
-    name = np.array([])
-    data = np.array([])
-    t_type = np.array([])
+    hk_sensor = []
+    time = []
+    sensor = []
+    name = []
+    data = []
+    t_type = []
     tele_time = [(0.0,0.0)]
     # telling netcdf how many files worth of hk data to expect
     hk_files = len(hk)
     for i in range(hk_files):
         file = gzip.open(hk[i])
         print colored(hk[i],'red')
-        A = []
-        B = []
-        C = []
-        D = []
-        E = []
+        A = np.array([])
+        B = np.array([])
+        C = np.array([])
+        D = np.array([])
+        E = np.array([])
         for line in file:
             a,b,c,d,e = line.strip().split(',')
-            A.append(a)
-            B.append(b)
-            C.append(c)
-            D.append(d)
-            E.append(float(e))
-        print colored(len(E),'magenta')
-        print colored(len(data),'magenta')
-        np.append(t_type,A)
-        np.append(time,B)
-        np.append(sensor,C)
-        np.append(name,D)
-        np.append(data,E)
+            np.append(A,a)
+            np.append(B,b)
+            np.append(C,c)
+            np.append(D,d)
+            np.append(E,float(e))
+            print E
+        t_type.append(A)
+        time.append(B)
+        sensor.append(C)
+        name.append(D)
+        data.append(E)
+        t_type = np.array(t_type)
+        time = np.array(time)
+        sensor = np.array(sensor)
+        name = np.array(name)
+        data = np.array(data)
+        print colored(data.shape,'magenta')
 
     # telling netcdf how many sensors to account for in the array size
         print len(sensor)
