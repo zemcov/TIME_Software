@@ -145,8 +145,7 @@ def hk_read(hk):
     t_type = []
     tele_time = [(0.0,0.0)]
     # telling netcdf how many files worth of hk data to expect
-    hk_files = len(hk)
-    for i in range(hk_files):
+    for i in range(len(hk)):
         file = gzip.open(hk[i])
         print colored(hk[i],'red')
         A = []
@@ -168,8 +167,7 @@ def hk_read(hk):
         data.append(E)
     # telling netcdf how many sensors to account for in the array size
         if len(sensor[0][:]) != 0 :
-            hk_size = len(sensor[0][:])
-            for j in range(hk_size - 1):
+            for j in range(len(sensor[0][:]) - 1):
                 things = [sensor[i][j] + "_" + name[i][j]]
                 things = [item.replace('"','') for item in things]
                 hk_sensor.append(things)
@@ -177,7 +175,9 @@ def hk_read(hk):
                     tele_time = float(time[i][j],data[i][j])
         else :
             print colored('NO HK DATA THIS TIME','red')
-
+    hk_files = len(data)
+    hk_size = len(data[0][:])
+    print hk_files,hk_size
     # delete old hk files
     for i in range(len(hk)) :
         subprocess.Popen(['rm %s' % (hk[i])], shell=True)
