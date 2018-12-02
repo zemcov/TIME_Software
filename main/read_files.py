@@ -165,7 +165,7 @@ def hk_read(hk):
         sensor.append(C)
         name.append(D)
         data.append(E)
-        print colored('data:'data,'red')
+        print colored(data,'red')
     # telling netcdf how many sensors to account for in the array size
         for j in range(len(A)):
             things = [sensor[i][j] + "_" + name[i][j]]
