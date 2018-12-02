@@ -149,18 +149,18 @@ def hk_read(hk):
     hk_files = len(hk)
     for i in range(hk_files):
         file = gzip.open(hk[i])
-        A = []
-        B = []
-        C = []
-        D = []
-        E = []
+        A = np.array([])
+        B = np.array([])
+        C = np.array([])
+        D = np.array([])
+        E = np.array([])
         for line in file:
             fields = line.strip().split(',')
-            A.append(fields[0])
-            B.append(fields[1])
-            C.append(fields[2])
-            D.append(fields[3])
-            E.append(float(fields[4]))
+            A.append(np.array(fields[0]))
+            B.append(np.array(fields[1]))
+            C.append(np.array(fields[2]))
+            D.append(np.array(fields[3]))
+            E.append(np.array(float(fields[4])))
         t_type.append([A])
         time.append([B])
         sensor.append([C])
