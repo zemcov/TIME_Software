@@ -165,7 +165,6 @@ def hk_read(hk):
         sensor.append(C)
         name.append(D)
         data.append(E)
-        print colored(data,'red')
     # telling netcdf how many sensors to account for in the array size
         for j in range(len(A)):
             things = [sensor[i][j] + "_" + name[i][j]]
@@ -173,7 +172,7 @@ def hk_read(hk):
             hk_sensor.append(things)
             if things == 'HKMBv1b0_SYNC_number' :
                 tele_time = float(time[i][j],data[i][j])
-
+    print colored(data,'red')
     hk_files = len(hk)
     hk_size = len(sensor[0][:])
     print hk_files,hk_size
