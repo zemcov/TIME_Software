@@ -171,7 +171,7 @@ def hk_read(hk):
         print colored(data,'magenta')
 
     # telling netcdf how many sensors to account for in the array size
-    print len(sensor)
+        print len(sensor)
         if len(sensor) != 0 :
             hk_size = len(sensor[i])
             for j in range(hk_size ):
