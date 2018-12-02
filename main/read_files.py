@@ -144,17 +144,16 @@ def hk_read(hk):
     data = np.array([])
     t_type = np.array([])
     tele_time = [(0.0,0.0)]
-    print data
     # telling netcdf how many files worth of hk data to expect
     hk_files = len(hk)
     for i in range(hk_files):
         file = gzip.open(hk[i])
+        print colored(hk[i],'red')
         A = np.array([])
         B = np.array([])
         C = np.array([])
         D = np.array([])
         E = np.array([])
-        print E
         for line in file:
             fields = line.strip().split(',')
             np.append(A,np.array(fields[0]))
@@ -163,6 +162,7 @@ def hk_read(hk):
             np.append(D,np.array(fields[3]))
             np.append(E,np.array(float(fields[4])))
             print E
+            print fields[4]
         np.append(t_type,A)
         np.append(time,B)
         np.append(sensor,C)
