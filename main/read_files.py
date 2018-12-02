@@ -147,7 +147,7 @@ def hk_read(hk):
 
     # telling netcdf how many files worth of hk data to expect
     hk_files = len(hk)
-    for i in range(len(hk)-1):
+    for i in range(hk_files):
         file = gzip.open(hk[i])
         A = []
         B = []
@@ -166,6 +166,7 @@ def hk_read(hk):
         sensor.append([C])
         name.append([D])
         data.append([E])
+        print E
 
     # telling netcdf how many sensors to account for in the array size
         if len(sensor) != 0 :
