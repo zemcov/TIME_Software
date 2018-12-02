@@ -145,7 +145,7 @@ def hk_read(hk):
     t_type = []
     tele_time = [(0.0,0.0)]
     # telling netcdf how many files worth of hk data to expect
-    for i in range(len(hk)):
+    for i in range(len(hk) - 1):
         file = gzip.open(hk[i])
         print colored(hk[i],'red')
         A = []
