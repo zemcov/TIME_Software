@@ -137,13 +137,13 @@ def read_header(f):
 # ============================================================================
 def hk_read(hk):
     print "hk is parsing files"
-    hk_sensor = []
-    time = []
-    sensor = []
-    name = []
-    data = []
-    t_type = []
-    tele_time = [(0.0,0.0)]
+    hk_sensor = np.array([])
+    time = np.array([])
+    sensor = np.array([])
+    name = np.array([])
+    data = np.array([])
+    t_type = np.array([])
+    tele_time = np.array([(0.0,0.0)])
     # telling netcdf how many files worth of hk data to expect
     hk_files = len(hk)
     for i in range(hk_files):
@@ -161,16 +161,11 @@ def hk_read(hk):
             C.append(c)
             D.append(d)
             E.append(float(e))
-        t_type.append(A)
-        time.append(B)
-        sensor.append(C)
-        name.append(D)
-        data.append(E)
-    t_type = np.array(t_type)
-    time = np.array(time)
-    sensor = np.array(sensor)
-    name = np.array(name)
-    data = np.array(data)
+        np.append(t_type,A,axis=0)
+        np.append(time,B,axis=0)
+        np.append(sensor,C,axis=0)
+        np.append(name,D,axis=0)
+        np.append(data,E,axis=0)
     print colored(data.shape,'magenta')
 
     # telling netcdf how many sensors to account for in the array size
