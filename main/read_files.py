@@ -161,17 +161,16 @@ def hk_read(hk):
             C.append(c)
             D.append(d)
             E.append(float(e))
-        print(A)
         t_type.append(A)
         time.append(B)
         sensor.append(C)
         name.append(D)
         data.append(E)
-        print(t_type)
     # telling netcdf how many sensors to account for in the array size
-        print len(sensor)
-        if len(sensor) != 0 :
-            hk_size = len(sensor[i])
+        sensor = np.array(sensor)
+        print(sensor.ndim)
+        if len(sensor[0][:]) != 0 :
+            hk_size = len(sensor[0][:])
             for j in range(hk_size):
                 things = [sensor[i][j] + "_" + name[i][j]]
                 things = [item.replace('"','') for item in things]
@@ -181,6 +180,7 @@ def hk_read(hk):
                     #print colored(tele_time,'red')
         else :
             print colored('NO HK DATA THIS TIME','red')
+
     print colored(E.reshape(hk_files,len(A)),'red')
     # delete old hk files
     for i in range(len(hk)) :
