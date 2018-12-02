@@ -148,11 +148,11 @@ def hk_read(hk):
     for i in range(len(hk)):
         file = gzip.open(hk[i])
         print colored(hk[i],'red')
-        A = []
-        B = []
-        C = []
-        D = []
-        E = []
+        A = ()
+        B = ()
+        C = ()
+        D = ()
+        E = ()
         for line in file:
             a,b,c,d,e = line.strip().split(",")
             A.append(a)
@@ -176,8 +176,8 @@ def hk_read(hk):
 
     print colored(data,'red')
     print len(data)
-    data = np.split(data,len(data))
-    print colored(data,'green')
+    # data = np.split(data,len(data))
+    # print colored(data,'green')
     hk_files = len(hk)
     hk_size = len(sensor[0][:])
     print hk_files,hk_size
