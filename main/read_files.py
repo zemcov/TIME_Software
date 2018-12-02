@@ -166,7 +166,7 @@ def hk_read(hk):
         np.append(sensor,C,axis=0)
         np.append(name,D,axis=0)
         np.append(data,E,axis=0)
-
+        print colored(E,'red')
     # telling netcdf how many sensors to account for in the array size
         print len(sensor)
         if len(sensor) != 0 :
