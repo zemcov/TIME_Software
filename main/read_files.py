@@ -174,7 +174,9 @@ def hk_read(hk):
                 tele_time = float(time[i][j],data[i][j])
         print colored("finished with file",'magenta')
         print colored(data,'green')
+        print len(data)
     print colored(data,'red')
+    print len(data)
     hk_files = len(hk)
     hk_size = len(sensor[0][:])
     print hk_files,hk_size
