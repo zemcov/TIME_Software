@@ -156,7 +156,6 @@ def hk_read(hk):
         E = []
         for line in file:
             a,b,c,d,e = line.strip().split(",")
-            type(a) is str
             A.append(a)
             B.append(b)
             C.append(c)
@@ -168,6 +167,7 @@ def hk_read(hk):
         sensor.append(C)
         name.append(D)
         data.append(E)
+        print(t_type)
     # telling netcdf how many sensors to account for in the array size
         print len(sensor)
         if len(sensor) != 0 :
