@@ -156,17 +156,17 @@ def hk_read(hk):
         E = np.array([])
         for line in file:
             fields = line.strip().split(',')
-            A.append(np.array(fields[0]))
-            B.append(np.array(fields[1]))
-            C.append(np.array(fields[2]))
-            D.append(np.array(fields[3]))
-            E.append(np.array(float(fields[4])))
-        t_type.append([A])
-        time.append([B])
-        sensor.append([C])
-        name.append([D])
-        data.append([E])
-        print data
+            np.append(A,np.array(fields[0]))
+            np.append(B,np.array(fields[1]))
+            np.append(C,np.array(fields[2]))
+            np.append(D,np.array(fields[3]))
+            np.append(E,np.array(float(fields[4])))
+        np.append(t_type,A)
+        np.append(time,B)
+        np.append(sensor,C)
+        np.append(name,D)
+        np.append(data,E)
+        print colored(data,'magenta')
 
     # telling netcdf how many sensors to account for in the array size
         if len(sensor) != 0 :
