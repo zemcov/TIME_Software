@@ -137,12 +137,12 @@ def read_header(f):
 # ============================================================================
 def hk_read(hk):
     print "hk is parsing files"
-    hk_sensor = []
-    time = []
-    sensor = []
-    name = []
-    data = []
-    t_type = []
+    hk_sensor = np.array([])
+    time = np.array([])
+    sensor = np.array([])
+    name = np.array([])
+    data = np.array([])
+    t_type = np.array([])
     tele_time = [(0.0,0.0)]
 
     # telling netcdf how many files worth of hk data to expect
