@@ -174,14 +174,13 @@ def hk_read(hk):
             for j in range(hk_size):
                 things = [sensor[i][j] + "_" + name[i][j]]
                 things = [item.replace('"','') for item in things]
-                print things
                 hk_sensor.append(things)
                 if things == 'HKMBv1b0_SYNC_number' :
                     tele_time = float(time[i][j],data[i][j])
         else :
             print colored('NO HK DATA THIS TIME','red')
+        sensor = sensor.tolist()
 
-    print colored(E.reshape(hk_files,len(A)),'red')
     # delete old hk files
     for i in range(len(hk)) :
         subprocess.Popen(['rm %s' % (hk[i])], shell=True)
