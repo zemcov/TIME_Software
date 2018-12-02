@@ -136,6 +136,7 @@ def read_header(f):
 
 # ============================================================================
 def hk_read(hk):
+    print "hk is parsing files"
     hk_sensor = []
     time = []
     sensor = []
@@ -165,12 +166,11 @@ def hk_read(hk):
         sensor.append([C])
         name.append([D])
         data.append([E])
-        print len(sensor[i]),sensor[i]
 
     # telling netcdf how many sensors to account for in the array size
         if len(sensor) != 0 :
             hk_size = len(sensor[i])
-            for j in range(hk_size - 1):
+            for j in range(hk_size ):
                 print colored(sensor.shape,'red')
                 things = [sensor[i][j] + "_" + name[i][j]]
                 things = [item.replace('"','') for item in things]
