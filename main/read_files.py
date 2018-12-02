@@ -155,7 +155,7 @@ def hk_read(hk):
         D = []
         E = []
         for line in file:
-            a,b,c,d,e = line.strip().split(","")
+            a,b,c,d,e = line.strip().split(",")
             type(a) is str
             A.append(a)
             B.append(b)
