@@ -155,12 +155,14 @@ def hk_read(hk):
         D = []
         E = []
         for line in file:
-            a,b,c,d,e = line.strip().split(',')
+            a,b,c,d,e = line.strip().split(","")
+            type(a) is str
             A.append(a)
             B.append(b)
             C.append(c)
             D.append(d)
             E.append(float(e))
+        print(A)
         t_type.append(A)
         time.append(B)
         sensor.append(C)
@@ -170,7 +172,7 @@ def hk_read(hk):
         print len(sensor)
         if len(sensor) != 0 :
             hk_size = len(sensor[i])
-            for j in range(hk_size ):
+            for j in range(hk_size):
                 things = [sensor[i][j] + "_" + name[i][j]]
                 things = [item.replace('"','') for item in things]
                 hk_sensor.append(things)
