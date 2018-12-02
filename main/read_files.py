@@ -162,7 +162,6 @@ def hk_read(hk):
             np.append(D,d)
             np.append(E,float(e))
             print E
-            print fields[4]
         np.append(t_type,A)
         np.append(time,B)
         np.append(sensor,C)
