@@ -37,7 +37,7 @@ def new_file(h_size, head1, head2, filestarttime, hk_size, hk_files):
     mce.createDimension('k',1)
     mce.createDimension('v',16)
     mce.createDimension('hks',hk_size)
-    mce.createDimension('hknumfile',hk_files)
+    # mce.createDimension('hknumfile',hk_files)
 
 
     # creating variables --------------------------------------------------------------------------------
@@ -78,11 +78,11 @@ def new_file(h_size, head1, head2, filestarttime, hk_size, hk_files):
 
     # Housekeeping ============================================================
     global HK_data
-    HK_data = mce.createVariable('hk_data', 'f8',('t','hknumfile','hks'))
+    HK_data = mce.createVariable('hk_data', 'f8',('t','hks'))
     global HK_sensor
-    HK_sensor = mce.createVariable('hk_sensor','S1',('t','hknumfile','hks'))
+    HK_sensor = mce.createVariable('hk_sensor','S1',('t','hks'))
     global HK_time
-    HK_time = mce.createVariable('hk_time','f8',('t','hknumfile','hks'))
+    HK_time = mce.createVariable('hk_time','f8',('t','hks'))
     # =========================================================================
 
     parafilename = ('tempfiles/tempparameters.txt')
@@ -112,8 +112,8 @@ def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_
     MCE1_Raw_Data_All[n,:,:,:] = h2
     MCE0_Header[n,:,:] = head1
     MCE1_Header[n,:,:] = head2
-    HK_data[n,:,:] = house_data
-    HK_sensor[n,:,:] = hk_sensors
+    HK_data[n,:] = house_data
+    HK_sensor[n,:] = hk_sensors
     print colored(HK_sensor,'green')
-    HK_time[n,:,:] = hk_time
+    HK_time[n,:] = hk_time
     mce.close()

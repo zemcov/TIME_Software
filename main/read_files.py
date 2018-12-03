@@ -41,11 +41,11 @@ def netcdfdata(rc):
                 #hk = min(files3, key = os.path.getctime)
                 f1 = mce_data.SmallMCEFile(mce1)
                 f2 = mce_data.SmallMCEFile(mce1)
-                hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type, hk_files = hk_read(files3)
+                hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type = hk_read(files3)
                 header1 = read_header(f1)
                 header2 = read_header(f2)
                 mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc,
-                                                    mce1, mce2, hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type, hk_files)
+                                                    mce1, mce2, hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type)
                 #print colored('File Read: mce1:%s , mce2:%s , hk:%s' %(str(mce1).replace(dir1,''),str(mce1).replace(dir2,''),str(hk).replace(dir3,'')),'yellow')
                 a = a + 1
                 begin = dt.datetime.utcnow()
@@ -90,7 +90,7 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
         filestarttime = dt.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
         print colored('------------ New File -------------','green')
-        mce = nc.new_file(h1.shape, head1, head2, filestarttime, hk_size, hk_files)
+        mce = nc.new_file(h1.shape, head1, head2, filestarttime, hk_size)
         if rc == 's' :
             nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data, hk_sensors, hk_time, tele_time, t_type)
         else :
@@ -101,7 +101,7 @@ def readdata(h1_shape,h2_shape,f1, f2, mce, head1, head2, n, a, filestarttime, r
         print colored('----------- New File ------------','green')
         filestarttime = dt.datetime.utcnow()
         filestarttime = filestarttime.isoformat()
-        mce = nc.new_file(h1.shape, head1, head2, filestarttime, hk_size, hk_files)
+        mce = nc.new_file(h1.shape, head1, head2, filestarttime, hk_size)
         if rc == 's' :
             nc.data_all(h1, h2, n, head1, head2, filestarttime, hk_data, hk_sensors, hk_time, tele_time, t_type)
         else :
@@ -160,30 +160,25 @@ def hk_read(hk):
             C.append(c)
             D.append(d)
             E.append(float(e))
-        t_type.append(A)
-        time.append(B)
-        sensor.append(C)
-        name.append(D)
-        data.append(E)
+        t_type.extend(A)
+        time.extend(B)
+        sensor.extend(C)
+        name.extend(D)
+        data.extend(E)
     # telling netcdf how many sensors to account for in the array size
-        for j in range(len(A)):
-            things = [sensor[i][j] + "_" + name[i][j]]
-            things = [item.replace('"','') for item in things]
-            hk_sensor.append(things)
-            if things == 'HKMBv1b0_SYNC_number' :
-                tele_time = float(time[i][j],data[i][j])
+    for j in range(len(data)):
+        things = [sensor[j] + "_" + name[j]]
+        things = [item.replace('"','') for item in things]
+        hk_sensor.append(things)
+        if things == 'HKMBv1b0_SYNC_number' :
+            tele_time = float(time[j],data[j])
 
-    print colored(len(data[0][:]),'red')
     print colored(len(data),'magenta')
-    # data = np.split(data,len(data))
-    # print colored(data,'green')
-    hk_files = len(hk)
-    hk_size = len(sensor[0][:])
-    print hk_files,hk_size
+    print hk_size
     # delete old hk files
     for i in range(len(hk)) :
         subprocess.Popen(['rm %s' % (hk[i])], shell=True)
-    return data, time, hk_sensor, tele_time, hk_size, t_type, hk_files
+    return data, time, hk_sensor, tele_time, hk_size, t_type
 
 # ============================================================================
 if __name__ == '__main__':
