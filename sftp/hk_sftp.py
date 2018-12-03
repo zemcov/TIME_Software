@@ -18,7 +18,8 @@ while True:
         files = [dir + x for x in os.listdir(dir) if (x.startswith("omnilog") and x.endswith('.gz'))]
         hk_file = max(files, key = os.path.getctime)
         a = int(hk_file.replace(dir,'').replace('omnilog.','').replace('.txt.gz',''))
-        print colored('HK starting file = %i' %(a),'green')
+        print colored('HK starting file = %i' %(a),'green')]
+        a = a + 1
     else :
         if os.path.exists(dir + "omnilog.%i.txt.gz" %(a+1)) : #wait to read new file until old file is complete
             file_name = dir + 'omnilog.%i.txt.gz' % (a)
@@ -28,4 +29,3 @@ while True:
                 a = a + 1
             else:
                 print "HK File Doesn't Exist!"
-                
