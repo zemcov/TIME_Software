@@ -21,34 +21,43 @@ def netcdfdata(rc):
     dir1 = '/home/time/Desktop/time-data/mce1/'
     dir2 = '/home/time/Desktop/time-data/mce2/'
     dir3 = '/home/time/Desktop/time-data/hk/'
+    subprocess.Popen(['ssh -T time@time.pyhk.net python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
     subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'] , shell=True)
     subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
-    subprocess.Popen(['ssh -T time@time.pyhk.net python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
     begin = dt.datetime.utcnow()
     end = dt.datetime.utcnow()
     while end - begin < dt.timedelta(seconds = 5):
-        mce_file1 = os.path.exists(dir1 + 'temp.%0.3i' %(a+1))
-        mce_file2 = os.path.exists(dir2 + 'temp.%0.3i' %(a+1))
-        hk_file = len(os.listdir(dir3))
-        if (mce_file1 and mce_file2 and hk_file != 0):
+        if a > 0 :
+            mce_file1 = os.path.exists(dir1 + 'temp.%0.3i' %(a+1))
+            mce_file2 = os.path.exists(dir2 + 'temp.%0.3i' %(a+1))
+            hk_file = len(os.listdir(dir3))
+            if (mce_file1 and mce_file2 and hk_file != 0):
+                files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
+                files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
+                files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
+                print colored('num of hk files : %s' %(len(files3)),'magenta')
+                if (len(files1) and len(files2)) != 0:
+                    mce1 = min(files1, key = os.path.getctime)
+                    mce2 = min(files2, key = os.path.getctime)
+                    #hk = min(files3, key = os.path.getctime)
+                    f1 = mce_data.SmallMCEFile(mce1)
+                    f2 = mce_data.SmallMCEFile(mce1)
+                    hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type = hk_read(files3)
+                    header1 = read_header(f1)
+                    header2 = read_header(f2)
+                    mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc,
+                                                        mce1, mce2, hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type)
+                    #print colored('File Read: mce1:%s , mce2:%s , hk:%s' %(str(mce1).replace(dir1,''),str(mce1).replace(dir2,''),str(hk).replace(dir3,'')),'yellow')
+                    a = a + 1
+                    begin = dt.datetime.utcnow()
+        else :
             files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
             files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
             files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
-            print colored('num of hk files : %s' %(len(files3)),'magenta')
-            if (len(files1) and len(files2)) != 0:
-                mce1 = min(files1, key = os.path.getctime)
-                mce2 = min(files2, key = os.path.getctime)
-                #hk = min(files3, key = os.path.getctime)
-                f1 = mce_data.SmallMCEFile(mce1)
-                f2 = mce_data.SmallMCEFile(mce1)
-                hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type = hk_read(files3)
-                header1 = read_header(f1)
-                header2 = read_header(f2)
-                mce, n, filestarttime = readdata(h1_shape,h2_shape,f1, f2, mce, header1, header2, n, a, filestarttime, rc,
-                                                    mce1, mce2, hk_data, hk_time, hk_sensors, tele_time, hk_size, t_type)
-                #print colored('File Read: mce1:%s , mce2:%s , hk:%s' %(str(mce1).replace(dir1,''),str(mce1).replace(dir2,''),str(hk).replace(dir3,'')),'yellow')
-                a = a + 1
-                begin = dt.datetime.utcnow()
+            subprocess.Popen(['rm' files1], shell=True)
+            subprocess.Popen(['rm' files2], shell=True)
+            subprocess.Popen(['rm' files3], shell=True)
+            a = a + 1
         end = dt.datetime.utcnow()
 
     else :

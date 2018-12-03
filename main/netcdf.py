@@ -107,11 +107,15 @@ def new_file(h_size, head1, head2, filestarttime, hk_size):
 def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_time, tele_time, t_type):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
-    Tele_time[n,:] = tele_time
     MCE0_Raw_Data_All[n,:,:,:] = h1
     MCE1_Raw_Data_All[n,:,:,:] = h2
     MCE0_Header[n,:,:] = head1
     MCE1_Header[n,:,:] = head2
+    mce.close()
+
+def hk_append():
+    mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
+    Tele_time[n,:] = tele_time
     HK_data[n,:] = house_data
     HK_sensor[n,:] = hk_sensors
     print colored(HK_sensor,'green')
