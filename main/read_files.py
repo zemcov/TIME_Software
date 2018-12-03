@@ -54,9 +54,9 @@ def netcdfdata(rc):
             files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
             files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
             files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
-            subprocess.Popen(['rm' files1], shell=True)
-            subprocess.Popen(['rm' files2], shell=True)
-            subprocess.Popen(['rm' files3], shell=True)
+            subprocess.Popen(['rm' , files1], shell=True)
+            subprocess.Popen(['rm' , files2], shell=True)
+            subprocess.Popen(['rm' , files3], shell=True)
             a = a + 1
         end = dt.datetime.utcnow()
 
