@@ -148,11 +148,11 @@ def hk_read(hk):
     for i in range(len(hk)):
         file = gzip.open(hk[i])
         print colored(hk[i],'red')
-        A = ()
-        B = ()
-        C = ()
-        D = ()
-        E = ()
+        A = []
+        B = []
+        C = []
+        D = []
+        E = []
         for line in file:
             a,b,c,d,e = line.strip().split(",")
             A.append(a)
@@ -173,9 +173,8 @@ def hk_read(hk):
             if things == 'HKMBv1b0_SYNC_number' :
                 tele_time = float(time[i][j],data[i][j])
 
-
-    print colored(data,'red')
-    print len(data)
+    print colored(len(data[0][:]),'red')
+    print colored(len(data),'magenta')
     # data = np.split(data,len(data))
     # print colored(data,'green')
     hk_files = len(hk)
