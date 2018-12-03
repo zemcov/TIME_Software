@@ -172,7 +172,7 @@ def hk_read(hk):
         hk_sensor.append(things)
         if things == 'HKMBv1b0_SYNC_number' :
             tele_time = float(time[j],data[j])
-
+    hk_size = len(data)
     print colored(len(data),'magenta')
     print hk_size
     # delete old hk files
