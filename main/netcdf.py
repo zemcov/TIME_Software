@@ -9,7 +9,7 @@ from termcolor import colored
 #sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
 tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
-def new_file(h_size, head1, head2, filestarttime, hk_size, hk_files):
+def new_file(h_size, head1, head2, filestarttime, hk_size):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # create the gui parameters group
