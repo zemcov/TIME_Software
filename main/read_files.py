@@ -137,41 +137,41 @@ def read_header(f):
 # ============================================================================
 def hk_read(hk):
     print colored(len(hk),'red')
-    hk_sensor = []
-    time = []
-    sensor = []
-    name = []
-    data = []
-    t_type = []
+    hk_sensor = [1.0]
+    time = [1.0]
+    sensor = [1.0]
+    name = [1.0]
+    data = [1.0]
+    t_type = [1.0]
     tele_time = [(0.0,0.0)]
     # telling netcdf how many files worth of hk data to expect
-    for i in range(len(hk)):
-        file = gzip.open(hk[i])
-        print colored(hk[i],'red')
-        A = []
-        B = []
-        C = []
-        D = []
-        E = []
-        for line in file:
-            a,b,c,d,e = line.strip().split(",")
-            A.append(a)
-            B.append(b)
-            C.append(c)
-            D.append(d)
-            E.append(float(e))
-        t_type.extend(A)
-        time.extend(B)
-        sensor.extend(C)
-        name.extend(D)
-        data.extend(E)
-    # telling netcdf how many sensors to account for in the array size
-    for j in range(len(data)):
-        things = [sensor[j] + "_" + name[j]]
-        things = [item.replace('"','') for item in things]
-        hk_sensor.append(things)
-        if things == 'HKMBv1b0_SYNC_number' :
-            tele_time = float(time[j],data[j])
+    # for i in range(len(hk)):
+    #     file = gzip.open(hk[i])
+    #     print colored(hk[i],'red')
+    #     A = []
+    #     B = []
+    #     C = []
+    #     D = []
+    #     E = []
+    #     for line in file:
+    #         a,b,c,d,e = line.strip().split(",")
+    #         A.append(a)
+    #         B.append(b)
+    #         C.append(c)
+    #         D.append(d)
+    #         E.append(float(e))
+    #     t_type.extend(A)
+    #     time.extend(B)
+    #     sensor.extend(C)
+    #     name.extend(D)
+    #     data.extend(E)
+    # # telling netcdf how many sensors to account for in the array size
+    # for j in range(len(data)):
+    #     things = [sensor[j] + "_" + name[j]]
+    #     things = [item.replace('"','') for item in things]
+    #     hk_sensor.append(things)
+    #     if things == 'HKMBv1b0_SYNC_number' :
+    #         tele_time = float(time[j],data[j])
     hk_size = len(data)
     print colored(len(data),'magenta')
     print hk_size
