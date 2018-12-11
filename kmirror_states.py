@@ -340,7 +340,9 @@ class Stop_Checker():
         print('listening for connection')
         unpacker = struct.Struct('d i')
         while not self.thread1Stop.is_set():
-            pa_file = open('pa.txt', 'w+')
+            pa_file = open('pa.txt','w')
+            pa_file.close()
+            pa_file = open('pa.txt', 'a')
             connection = None
             connection,client= s.accept()
             print('Socket connected')
@@ -350,8 +352,7 @@ class Stop_Checker():
                     pa,flag = unpacker.unpack(data)
                     update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
                     self.masterlist.append(update)
-                    pa_file.write(str(pa) + ' ')
-                    pa_file.write(str((get_pos() - home_pos)/2.0) + ' ')
+                    pa_file.write(%r \n, %r \n) %(str(pa),str((get_pos() - home_pos)/2.0))
                     # self.pa = pa
                     # self.slew_flag = flag
             except KeyboardInterrupt:
