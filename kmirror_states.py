@@ -382,15 +382,14 @@ class Stop_Checker():
         packer = packer = struct.Struct('d d d i')
         while not self.thread1Stop.is_set():
             try:
-    		    data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
-        		s.send(data)
-    		    time.sleep(0.05)
-        	    print 'PA Sent to Gui',time.time()
+                data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
+                s.send(data)
+                time.sleep(0.05)
+                print 'PA Sent to Gui',time.time()
             except KeyboardInterrupt:
                 self.thread1stop.set()
-                return
-	    s.close()
-	    print 'vic_socket closed'
+        s.close()
+        print 'vic_socket closed'
 
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
