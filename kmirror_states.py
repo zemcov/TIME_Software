@@ -249,9 +249,9 @@ class Stop_Checker():
                     set_point *= ang_subtract_sign(self.masterlist[-1].abs_degree_pos, encoder_pos_d)
                     steps_to_move = int(set_point) + STEP_OFFSET * sign(kmirror.speed)
                     kmirror.move_cmd(steps_to_move, set_point, kalman_speed[-1])
-                ''' debug stuff '''
-                if len(debug_vars['speed_list']) >= NUM_SAMPLES:
-                    self.thread1Stop.set()
+                # ''' debug stuff '''
+                # if len(debug_vars['speed_list']) >= NUM_SAMPLES:
+                #     self.thread1Stop.set()
         except KeyboardInterrupt():
             self.thread1Stop.set()
             print("Tracking has stopped")
