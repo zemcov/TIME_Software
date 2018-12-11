@@ -342,20 +342,19 @@ class Stop_Checker():
         while not self.thread1Stop.is_set():
             pa_file = open('pa.txt', 'w+')
             connection = None
+            connection,client= s.accept()
+            print('Socket connected')
             try:
-                connection,client= s.accept()
-                print('Socket connected')
-                data = connection.recv(unpacker.size)
-                if not data :
-                    self.thread1Stop.set()
-                pa,flag = unpacker.unpack(data)
-                update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
-                self.masterlist.append(update)
-                pa_file.write(str(pa) + ' ')
-                pa_file.write(str((get_pos() - home_pos)/2.0) + ' ')
-                pa_file.close()
-                # self.pa = pa
-                # self.slew_flag = flag
+                while not self.thread1Stop.is_set():
+                    data = connection.recv(unpacker.size)
+                    pa,flag = unpacker.unpack(data)
+                    update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
+                    self.masterlist.append(update)
+                    pa_file.write(str(pa) + ' ')
+                    pa_file.write(str((get_pos() - home_pos)/2.0) + ' ')
+                    pa_file.close()
+                    # self.pa = pa
+                    # self.slew_flag = flag
             except KeyboardInterrupt:
                 if connection :
                     connection.close()
