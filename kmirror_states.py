@@ -350,6 +350,8 @@ class Stop_Checker():
                 pa,flag = unpacker.unpack(data)
                 update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
                 self.masterlist.append(update)
+                self.pa = pa
+                self.slew_flag = flag
             except KeyboardInterrupt:
                 if connection :
                     connection.close()
@@ -374,11 +376,11 @@ class Stop_Checker():
                 break
         self.thread1Stop.set()
 #########################################################################
-    def vic_socket(self,pa,slew_flag):
+    def vic_socket(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((CONTROL_HOST, CONTROL_PORT))
         packer = packer = struct.Struct('d d d i')
-	    while not self.thread1Stop.is_set():
+        while not self.thread1Stop.is_set():
             try:
     		    data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
         		s.send(data)
@@ -393,6 +395,8 @@ class Stop_Checker():
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
         self.masterlist = Manager().list()
+        self.pa = Manager().Value('d',0.0)
+        self.slew_flag = Manager().Value('i',0)
         if arg1 == 'go_to':
             t1 = mp.Process(target=self.go_to,args = (arg2,))
             t2 = mp.Process(target=self.limits,args = (arg3,))
@@ -407,7 +411,7 @@ class Stop_Checker():
             t1 = mp.Process(target=self.limits,args=(arg3,))
             t2 = mp.Process(target=self.run)
             t3 = mp.Process(target=self.track)
-            t4 = mp.Process(target=self.vic_socket,args=(self.pa.value,self.slew_flag.value,))
+            t4 = mp.Process(target=self.vic_socket)
             t1.start()
             t2.start()
             t3.start()
