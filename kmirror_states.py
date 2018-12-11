@@ -352,12 +352,12 @@ class Stop_Checker():
                     self.masterlist.append(update)
                     pa_file.write(str(pa) + ' ')
                     pa_file.write(str((get_pos() - home_pos)/2.0) + ' ')
-                    pa_file.close()
                     # self.pa = pa
                     # self.slew_flag = flag
             except KeyboardInterrupt:
                 if connection :
                     connection.close()
+                pa_file.close()
                 self.thread1Stop.set()
 
         s.close()
