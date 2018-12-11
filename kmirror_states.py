@@ -213,10 +213,10 @@ class Stop_Checker():
         'motor_set_point': [],
         }
 
-        try:
+        old_len = len(self.masterlist)
+        while not self.thread1Stop.is_set():
+            try:
             # ===================================== TRACKING ALGORITHM MAIN LOOP =====================================
-            old_len = len(self.masterlist)
-            while not self.thread1Stop.is_set():
                 # Wait for a new update to come in
                 while len(self.masterlist) <= old_len:
                     time.sleep(0.02)
@@ -250,7 +250,7 @@ class Stop_Checker():
                     kmirror.move_cmd(steps_to_move, set_point, kalman_speed[-1])
                 ''' debug stuff '''
                 if len(debug_vars['speed_list']) >= NUM_SAMPLES:
-                    break
+                    self.thread1Stop.set()
             # ========================================================================================================
             # ====================================== OPTIONAL CODE FOR DEBUGGING ======================================
             errors = np.array(debug_vars['abs_err_arcsec_list'])
@@ -287,18 +287,16 @@ class Stop_Checker():
 
             f2, axarr2 = plt.subplots(2, sharex=True)
             plt.subplots_adjust(left=.04, right=.95, bottom=.04, top=.95, wspace=.20, hspace=.20)
-            try:
-                del measured_speed[:2]
-                del kalman_speed[0]
-                if len(measured_speed) > len(x_axis):
-                    axarr2[0].plot(x_axis, measured_speed[:len(x_axis)])
-                else:
-                    axarr2[0].plot(x_axis[:len(measured_speed)], measured_speed)
-                axarr2[0].plot(x_axis, kalman_speed[:len(x_axis)])
-                axarr2[0].set(ylabel='degrees/sec')
-                axarr2[0].set_title('Kalman Response to Velocity')
-            except Exception as e:
-                print e
+
+            del measured_speed[:2]
+            del kalman_speed[0]
+            if len(measured_speed) > len(x_axis):
+                axarr2[0].plot(x_axis, measured_speed[:len(x_axis)])
+            else:
+                axarr2[0].plot(x_axis[:len(measured_speed)], measured_speed)
+            axarr2[0].plot(x_axis, kalman_speed[:len(x_axis)])
+            axarr2[0].set(ylabel='degrees/sec')
+            axarr2[0].set_title('Kalman Response to Velocity')
 
             axarr2[1].plot(x_axis, packet_lag)
             axarr2[1].plot(np.zeros(len(x_axis)))
@@ -306,10 +304,9 @@ class Stop_Checker():
             axarr2[1].set_title('Packet lag')
             plt.show()
 
-	except KeyboardInterrupt():
+    	except KeyboardInterrupt():
             self.thread1Stop.set()
-	finally:
-            print("Tracking has stopped")
+    print("Tracking has stopped")
             # ========================================================================================================
     def update_debugs(self,debug_vars, kmirror, last_update):
         error_s = deg_to_step(last_update.abs_degree_pos) - kmirror.encoder_pos_s
@@ -342,24 +339,21 @@ class Stop_Checker():
         print('listening for connection')
         unpacker = struct.Struct('d i')
         while not self.thread1Stop.is_set():
-            connection,client= s.accept()
-            print('Socket connected')
+            connection = None
             try:
-                while not self.thread1Stop.is_set():
-                   data = connection.recv(unpacker.size)
-                   if data :
-                       pa,flag = unpacker.unpack(data)
-                       update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
-		       self.pa = pa
-		       self.flag = flag
-                       self.masterlist.append(update)
-                   else : #no more data
-                       break
-            except Exception as e:
-                print e
-                s.close()
-            finally :
+                connection,client= s.accept()
+                print('Socket connected')
+                data = connection.recv(unpacker.size)
+                if not data :
+                    self.thread1Stop.set()
+                pa,flag = unpacker.unpack(data)
+                update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
+                self.masterlist.append(update)
+            except KeyboardInterrupt:
+                if connection :
                     connection.close()
+                self.thread1Stop.set()
+        s.close()
 ################################################################################################################################
     def step_overload(self,num_steps) :
         steps = num_steps
@@ -383,19 +377,21 @@ class Stop_Checker():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((CONTROL_HOST, CONTROL_PORT))
         packer = packer = struct.Struct('d d d i')
-	while not self.thread1Stop.is_set():
-		data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
-    		s.send(data)
-		time.sleep(0.05)
-        	print 'PA Sent to Gui',time.time()
-	s.close()
-	print 'vic_socket closed'
+	    while not self.thread1Stop.is_set():
+            try:
+    		    data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
+        		s.send(data)
+    		    time.sleep(0.05)
+        	    print 'PA Sent to Gui',time.time()
+            except KeyboardInterrupt:
+                self.thread1stop.set()
+                return
+	    s.close()
+	    print 'vic_socket closed'
 
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
         self.masterlist = Manager().list()
-	self.pa = Manager().Value('d',0.0)
-	self.slew_flag = Manager().Value('i',0)
         if arg1 == 'go_to':
             t1 = mp.Process(target=self.go_to,args = (arg2,))
             t2 = mp.Process(target=self.limits,args = (arg3,))
