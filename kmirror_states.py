@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 
 TELESCOPE_HOST = '0.0.0.0'
 TELESCOPE_PORT = 8888
-CONTROL_HOST = '192.168.0.102'
+CONTROL_HOST = '192.168.0.101'
 CONTROL_PORT = 8000
 
 NUM_SAMPLES = 800
@@ -220,7 +220,7 @@ class Stop_Checker():
                 # Wait for a new update to come in
                 while len(self.masterlist) <= old_len:
                     time.sleep(0.02)
-		        print("updating...")
+		        #print("updating...")
                 old_len = len(self.masterlist)
 
                 # NEW UPDATE
@@ -242,7 +242,7 @@ class Stop_Checker():
                     if len(self.masterlist) >= 3:
                         kmirror.update()
                         ''' debug stuff '''
-                        update_debugs(debug_vars, kmirror, self.masterlist[-1])
+                        self.update_debugs(debug_vars, kmirror, self.masterlist[-1])
                     encoder_pos_d = step_to_deg(kmirror.encoder_pos_s)
                     set_point = deg_to_step(ang_subtract(self.masterlist[-1].abs_degree_pos, encoder_pos_d))
                     set_point *= ang_subtract_sign(self.masterlist[-1].abs_degree_pos, encoder_pos_d)
@@ -252,10 +252,6 @@ class Stop_Checker():
                 if len(debug_vars['speed_list']) >= NUM_SAMPLES:
                     break
             # ========================================================================================================
-        except KeyboardInterrupt:
-            self.thread1Stop.set()
-        finally:
-            print("Tracking has stopped")
             # ====================================== OPTIONAL CODE FOR DEBUGGING ======================================
             errors = np.array(debug_vars['abs_err_arcsec_list'])
             errors = np.absolute(errors)
@@ -309,8 +305,13 @@ class Stop_Checker():
             axarr2[1].set(ylabel='ms')
             axarr2[1].set_title('Packet lag')
             plt.show()
+
+	except KeyboardInterrupt():
+            self.thread1Stop.set()
+	finally:
+            print("Tracking has stopped")
             # ========================================================================================================
-    def update_debugs(debug_vars, kmirror, last_update):
+    def update_debugs(self,debug_vars, kmirror, last_update):
         error_s = deg_to_step(last_update.abs_degree_pos) - kmirror.encoder_pos_s
         error_arcsec = deg_to_arcsec(step_to_deg(error_s))
         #print "Error (steps, arcsec): {:3.3f}, {:3.3f}".format(error_s, error_arcsec)
@@ -349,7 +350,8 @@ class Stop_Checker():
                    if data :
                        pa,flag = unpacker.unpack(data)
                        update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
-##                       print(pa,flag,pa_enc(float(pa)))
+		       self.pa = pa
+		       self.flag = flag
                        self.masterlist.append(update)
                    else : #no more data
                        break
@@ -377,20 +379,23 @@ class Stop_Checker():
                 break
         self.thread1Stop.set()
 #########################################################################
-#    def vic_socket():
-#        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#        s.connect((CONTROL_HOST, CONTROL_PORT))
-#        packer = packer = struct.Struct('d i')
-#	while not self.thread1Stop.is_set():
-#		data = packer.pack(float(pa),int(slew_flag))
-#    		s.send(data)
-#        	print 'PA Sent to Gui',time.time()
-#	s.close()
-#	print 'vic_socket closed'
+    def vic_socket(self,pa,slew_flag):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((CONTROL_HOST, CONTROL_PORT))
+        packer = packer = struct.Struct('d d d i')
+	while not self.thread1Stop.is_set():
+		data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
+    		s.send(data)
+		time.sleep(0.05)
+        	print 'PA Sent to Gui',time.time()
+	s.close()
+	print 'vic_socket closed'
 
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
         self.masterlist = Manager().list()
+	self.pa = Manager().Value('d',0.0)
+	self.slew_flag = Manager().Value('i',0)
         if arg1 == 'go_to':
             t1 = mp.Process(target=self.go_to,args = (arg2,))
             t2 = mp.Process(target=self.limits,args = (arg3,))
@@ -405,13 +410,12 @@ class Stop_Checker():
             t1 = mp.Process(target=self.limits,args=(arg3,))
             t2 = mp.Process(target=self.run)
             t3 = mp.Process(target=self.track)
- #           t4 = mp.Process(target=self.vic_socket)
+            t4 = mp.Process(target=self.vic_socket,args=(self.pa.value,self.slew_flag.value,))
             t1.start()
             t2.start()
             t3.start()
-#            t4.start()
+            t4.start()
         self.stop_check()
-
 
 # ====================================================================================================
 # Start of our states.
