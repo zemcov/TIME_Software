@@ -12,7 +12,7 @@ https://dev.to/karn/building-a-simple-state-machine-in-python
 from state import *
 import RPi.GPIO as GPIO
 from safety import *
-from encoder import get_pos, home_pos, minimum, maximum, pa_enc
+from encoder import get_pos, home_pos, minimum, maximum, pa_enc, enc_pa
 from util import *
 from rotate_motor import rotate_motor, twos_comp
 import sys, subprocess
@@ -351,7 +351,7 @@ class Stop_Checker():
                     pa,flag = unpacker.unpack(data)
                     update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
                     self.masterlist.append(update)
-                    pa_file.writelines([str(pa) + ' , ',str((get_pos() - home_pos)/2.0) + '\n'])
+                    pa_file.writelines([str(pa) + ' , ',str(enc_pa(get_pos())) + '\n'])
                     # self.pa = pa
                     # self.slew_flag = flag
             except KeyboardInterrupt:

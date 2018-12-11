@@ -19,7 +19,7 @@ def get_pos():
     data = spi.readbytes(5)
     for i in range(0,5):
         data[i] = bin(data[i])[2:].rjust(8,'0')
-    new_data = data[0] + data[1] + data[2] + data[3] + data[4] 
+    new_data = data[0] + data[1] + data[2] + data[3] + data[4]
     enc_pos = new_data[1:21]
     #print("Encoder position:" , float((360.0/1048575)*int(enc_pos,2))+22.95)
     return float((360.0/1048575)*int(enc_pos,2))
@@ -30,6 +30,10 @@ def pa_enc(pa):
         ang = abs(pa/2.0) + home_pos
     else :
         ang = -(pa/2) + home_pos
+    return ang
+
+def enc_pa(enc):
+    ang = (enc - home_pos) * 2.0
     return ang
 
 
