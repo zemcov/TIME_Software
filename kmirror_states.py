@@ -340,6 +340,7 @@ class Stop_Checker():
         print('listening for connection')
         unpacker = struct.Struct('d i')
         while not self.thread1Stop.is_set():
+            pa_file = open('pa.txt', 'w+')
             connection = None
             try:
                 connection,client= s.accept()
@@ -350,12 +351,16 @@ class Stop_Checker():
                 pa,flag = unpacker.unpack(data)
                 update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
                 self.masterlist.append(update)
-                self.pa = pa
-                self.slew_flag = flag
+                pa_file.write(str(pa) + ' ')
+                pa_file.write(str((get_pos() - home_pos)/2.0) + ' ')
+                pa_file.close()
+                # self.pa = pa
+                # self.slew_flag = flag
             except KeyboardInterrupt:
                 if connection :
                     connection.close()
                 self.thread1Stop.set()
+
         s.close()
 ################################################################################################################################
     def step_overload(self,num_steps) :
@@ -376,20 +381,20 @@ class Stop_Checker():
                 break
         self.thread1Stop.set()
 #########################################################################
-    def vic_socket(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((CONTROL_HOST, CONTROL_PORT))
-        packer = packer = struct.Struct('d d d i')
-        while not self.thread1Stop.is_set():
-            try:
-                data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
-                s.send(data)
-                time.sleep(0.05)
-                print 'PA Sent to Gui',time.time()
-            except KeyboardInterrupt:
-                self.thread1stop.set()
-        s.close()
-        print 'vic_socket closed'
+    # def vic_socket(self):
+    #     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #     s.connect((CONTROL_HOST, CONTROL_PORT))
+    #     packer = packer = struct.Struct('d d d i')
+    #     while not self.thread1Stop.is_set():
+    #         try:
+    #             data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
+    #             s.send(data)
+    #             time.sleep(0.05)
+    #             print 'PA Sent to Gui',time.time()
+    #         except KeyboardInterrupt:
+    #             self.thread1stop.set()
+    #     s.close()
+    #     print 'vic_socket closed'
 
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
@@ -410,11 +415,11 @@ class Stop_Checker():
             t1 = mp.Process(target=self.limits,args=(arg3,))
             t2 = mp.Process(target=self.run)
             t3 = mp.Process(target=self.track)
-            t4 = mp.Process(target=self.vic_socket)
+            # t4 = mp.Process(target=self.vic_socket)
             t1.start()
             t2.start()
             t3.start()
-            t4.start()
+            # t4.start()
         self.stop_check()
 
 # ====================================================================================================
