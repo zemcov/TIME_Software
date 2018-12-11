@@ -242,7 +242,7 @@ class Stop_Checker():
 
                     if len(self.masterlist) >= 3:
                         kmirror.update()
-                    ''' debug stuff '''
+                        ''' debug stuff '''
                         self.update_debugs(debug_vars, kmirror, self.masterlist[-1])
                     encoder_pos_d = step_to_deg(kmirror.encoder_pos_s)
                     set_point = deg_to_step(ang_subtract(self.masterlist[-1].abs_degree_pos, encoder_pos_d))
