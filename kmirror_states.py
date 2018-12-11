@@ -231,7 +231,8 @@ class Stop_Checker():
                     tele_vel = self.masterlist[-1].abs_degree_pos - self.masterlist[-2].abs_degree_pos
                     time_delta = self.masterlist[-1].when_sent - self.masterlist[-2].when_sent
                     if time_delta == 0.0 :
-		    	tele_vel /= 0.1
+		    	        tele_vel /= 0.1
+
                     if (tele_vel > 0 and measured_speed[-1] < 0) or (tele_vel < 0 and measured_speed[-1] > 0) or \
                         self.masterlist[-1].flag != self.masterlist[-2].flag:
                         kalman_filter.reset(tele_vel)
@@ -249,64 +250,64 @@ class Stop_Checker():
                     steps_to_move = int(set_point) + STEP_OFFSET * sign(kmirror.speed)
                     kmirror.move_cmd(steps_to_move, set_point, kalman_speed[-1])
                 ''' debug stuff '''
-                if len(debug_vars['speed_list']) >= NUM_SAMPLES:
-                    self.thread1Stop.set()
-            # ========================================================================================================
-            # ====================================== OPTIONAL CODE FOR DEBUGGING ======================================
-            errors = np.array(debug_vars['abs_err_arcsec_list'])
-            errors = np.absolute(errors)
-            print "Average error (arcsec): {:3.3f}".format(np.mean(errors))
+                    if len(debug_vars['speed_list']) >= NUM_SAMPLES:
+                        self.thread1Stop.set()
+            except KeyboardInterrupt():
+                self.thread1Stop.set()
+                print("Tracking has stopped")
 
-            x_axis = range(len(debug_vars['speed_list']))
-            packet_lag = [(update.when_received - update.when_sent)*1000.0 for update in self.masterlist[:len(x_axis)]]
-            print "Average Packet Lag (ms): {:3.3f}".format(np.mean(np.absolute(np.array(packet_lag))))
-            print "Std Packet Lag (ms): {:3.3f}".format(np.std(np.absolute(np.array(packet_lag))))
+        # ====================================== OPTIONAL CODE FOR DEBUGGING ======================================
+        errors = np.array(debug_vars['abs_err_arcsec_list'])
+        errors = np.absolute(errors)
+        print "Average error (arcsec): {:3.3f}".format(np.mean(errors))
 
-            # attempt to clean encoder signal
-            avg_encoder = np.mean(np.absolute(np.array(debug_vars['abs_encoder_degs_list'])))
-            encoder_signal = [val if abs(val) < avg_encoder * 10 else avg_encoder for val in debug_vars['abs_encoder_degs_list']]
-            print "Deleted %s outlier values" % np.sum(np.array([0 if abs(val) < avg_encoder * 10 else 1 for val in debug_vars['abs_encoder_degs_list']]))
+        x_axis = range(len(debug_vars['speed_list']))
+        packet_lag = [(update.when_received - update.when_sent)*1000.0 for update in self.masterlist[:len(x_axis)]]
+        print "Average Packet Lag (ms): {:3.3f}".format(np.mean(np.absolute(np.array(packet_lag))))
+        print "Std Packet Lag (ms): {:3.3f}".format(np.std(np.absolute(np.array(packet_lag))))
 
-            # graph debug stuff
-            f, axarr = plt.subplots(3, sharex=True)
+        # attempt to clean encoder signal
+        avg_encoder = np.mean(np.absolute(np.array(debug_vars['abs_encoder_degs_list'])))
+        encoder_signal = [val if abs(val) < avg_encoder * 10 else avg_encoder for val in debug_vars['abs_encoder_degs_list']]
+        print "Deleted %s outlier values" % np.sum(np.array([0 if abs(val) < avg_encoder * 10 else 1 for val in debug_vars['abs_encoder_degs_list']]))
 
-            line, = axarr[0].plot(x_axis, encoder_signal)
-            line, = axarr[0].plot(x_axis, debug_vars['abs_update_degs_list'])
-            axarr[0].set(ylabel='degrees')
-            axarr[0].set_title('Absolute Rotational Position')
+        # graph debug stuff
+        f, axarr = plt.subplots(3, sharex=True)
 
-            line, = axarr[1].plot(x_axis, debug_vars['abs_err_arcsec_list'])
-            line, = axarr[1].plot(np.zeros(len(x_axis)))
-            axarr[1].set(ylabel='arcsec')
-            axarr[1].set_title('Error')
+        line, = axarr[0].plot(x_axis, encoder_signal)
+        line, = axarr[0].plot(x_axis, debug_vars['abs_update_degs_list'])
+        axarr[0].set(ylabel='degrees')
+        axarr[0].set_title('Absolute Rotational Position')
 
-            line, = axarr[2].plot(x_axis, debug_vars['speed_list'])
-            line, = axarr[2].plot(np.zeros(len(x_axis)))
-            axarr[2].set(ylabel='steps/sec')
-            axarr[2].set_title('Motor Speed')
+        line, = axarr[1].plot(x_axis, debug_vars['abs_err_arcsec_list'])
+        line, = axarr[1].plot(np.zeros(len(x_axis)))
+        axarr[1].set(ylabel='arcsec')
+        axarr[1].set_title('Error')
 
-            f2, axarr2 = plt.subplots(2, sharex=True)
-            plt.subplots_adjust(left=.04, right=.95, bottom=.04, top=.95, wspace=.20, hspace=.20)
+        line, = axarr[2].plot(x_axis, debug_vars['speed_list'])
+        line, = axarr[2].plot(np.zeros(len(x_axis)))
+        axarr[2].set(ylabel='steps/sec')
+        axarr[2].set_title('Motor Speed')
 
-            del measured_speed[:2]
-            del kalman_speed[0]
-            if len(measured_speed) > len(x_axis):
-                axarr2[0].plot(x_axis, measured_speed[:len(x_axis)])
-            else:
-                axarr2[0].plot(x_axis[:len(measured_speed)], measured_speed)
-            axarr2[0].plot(x_axis, kalman_speed[:len(x_axis)])
-            axarr2[0].set(ylabel='degrees/sec')
-            axarr2[0].set_title('Kalman Response to Velocity')
+        f2, axarr2 = plt.subplots(2, sharex=True)
+        plt.subplots_adjust(left=.04, right=.95, bottom=.04, top=.95, wspace=.20, hspace=.20)
 
-            axarr2[1].plot(x_axis, packet_lag)
-            axarr2[1].plot(np.zeros(len(x_axis)))
-            axarr2[1].set(ylabel='ms')
-            axarr2[1].set_title('Packet lag')
-            plt.show()
+        del measured_speed[:2]
+        del kalman_speed[0]
+        if len(measured_speed) > len(x_axis):
+            axarr2[0].plot(x_axis, measured_speed[:len(x_axis)])
+        else:
+            axarr2[0].plot(x_axis[:len(measured_speed)], measured_speed)
+        axarr2[0].plot(x_axis, kalman_speed[:len(x_axis)])
+        axarr2[0].set(ylabel='degrees/sec')
+        axarr2[0].set_title('Kalman Response to Velocity')
 
-    	except KeyboardInterrupt():
-            self.thread1Stop.set()
-    print("Tracking has stopped")
+        axarr2[1].plot(x_axis, packet_lag)
+        axarr2[1].plot(np.zeros(len(x_axis)))
+        axarr2[1].set(ylabel='ms')
+        axarr2[1].set_title('Packet lag')
+        plt.show()
+
             # ========================================================================================================
     def update_debugs(self,debug_vars, kmirror, last_update):
         error_s = deg_to_step(last_update.abs_degree_pos) - kmirror.encoder_pos_s
