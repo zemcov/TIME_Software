@@ -352,7 +352,7 @@ class Stop_Checker():
                     pa,flag = unpacker.unpack(data)
                     update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
                     self.masterlist.append(update)
-                    pa_file.write(%r \n, %r \n) %(str(pa),str((get_pos() - home_pos)/2.0))
+                    pa_file.write(str(pa) + '\n', str((get_pos() - home_pos)/2.0  + '\n')
                     # self.pa = pa
                     # self.slew_flag = flag
             except KeyboardInterrupt:
