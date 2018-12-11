@@ -340,9 +340,9 @@ class Stop_Checker():
         print('listening for connection')
         unpacker = struct.Struct('d i')
         while not self.thread1Stop.is_set():
-            pa_file = open('pa.txt','w')
-            pa_file.close()
-            pa_file = open('pa.txt', 'a')
+            # pa_file = open('pa.txt','w')
+            # pa_file.close()
+            # pa_file = open('pa.txt', 'a')
             connection = None
             connection,client= s.accept()
             print('Socket connected')
