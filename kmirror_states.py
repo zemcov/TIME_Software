@@ -249,13 +249,12 @@ class Stop_Checker():
                     set_point *= ang_subtract_sign(self.masterlist[-1].abs_degree_pos, encoder_pos_d)
                     steps_to_move = int(set_point) + STEP_OFFSET * sign(kmirror.speed)
                     kmirror.move_cmd(steps_to_move, set_point, kalman_speed[-1])
-                # ''' debug stuff '''
-                # if len(debug_vars['speed_list']) >= NUM_SAMPLES:
-                #     self.thread1Stop.set()
+                ''' debug stuff '''
+                if len(debug_vars['speed_list']) >= NUM_SAMPLES:
+                    self.thread1Stop.set()
         except KeyboardInterrupt():
             self.thread1Stop.set()
             print("Tracking has stopped")
-        finally:
             # ====================================== OPTIONAL CODE FOR DEBUGGING ======================================
             errors = np.array(debug_vars['abs_err_arcsec_list'])
             errors = np.absolute(errors)
@@ -271,42 +270,42 @@ class Stop_Checker():
             encoder_signal = [val if abs(val) < avg_encoder * 10 else avg_encoder for val in debug_vars['abs_encoder_degs_list']]
             print "Deleted %s outlier values" % np.sum(np.array([0 if abs(val) < avg_encoder * 10 else 1 for val in debug_vars['abs_encoder_degs_list']]))
 
-            # graph debug stuff
-            f, axarr = plt.subplots(3, sharex=True)
-
-            line, = axarr[0].plot(x_axis, encoder_signal)
-            line, = axarr[0].plot(x_axis, debug_vars['abs_update_degs_list'])
-            axarr[0].set(ylabel='degrees')
-            axarr[0].set_title('Absolute Rotational Position')
-
-            line, = axarr[1].plot(x_axis, debug_vars['abs_err_arcsec_list'])
-            line, = axarr[1].plot(np.zeros(len(x_axis)))
-            axarr[1].set(ylabel='arcsec')
-            axarr[1].set_title('Error')
-
-            line, = axarr[2].plot(x_axis, debug_vars['speed_list'])
-            line, = axarr[2].plot(np.zeros(len(x_axis)))
-            axarr[2].set(ylabel='steps/sec')
-            axarr[2].set_title('Motor Speed')
-
-            f2, axarr2 = plt.subplots(2, sharex=True)
-            plt.subplots_adjust(left=.04, right=.95, bottom=.04, top=.95, wspace=.20, hspace=.20)
-
-            del measured_speed[:2]
-            del kalman_speed[0]
-            if len(measured_speed) > len(x_axis):
-                axarr2[0].plot(x_axis, measured_speed[:len(x_axis)])
-            else:
-                axarr2[0].plot(x_axis[:len(measured_speed)], measured_speed)
-            axarr2[0].plot(x_axis, kalman_speed[:len(x_axis)])
-            axarr2[0].set(ylabel='degrees/sec')
-            axarr2[0].set_title('Kalman Response to Velocity')
-
-            axarr2[1].plot(x_axis, packet_lag)
-            axarr2[1].plot(np.zeros(len(x_axis)))
-            axarr2[1].set(ylabel='ms')
-            axarr2[1].set_title('Packet lag')
-            plt.show()
+            # # graph debug stuff
+            # f, axarr = plt.subplots(3, sharex=True)
+            #
+            # line, = axarr[0].plot(x_axis, encoder_signal)
+            # line, = axarr[0].plot(x_axis, debug_vars['abs_update_degs_list'])
+            # axarr[0].set(ylabel='degrees')
+            # axarr[0].set_title('Absolute Rotational Position')
+            #
+            # line, = axarr[1].plot(x_axis, debug_vars['abs_err_arcsec_list'])
+            # line, = axarr[1].plot(np.zeros(len(x_axis)))
+            # axarr[1].set(ylabel='arcsec')
+            # axarr[1].set_title('Error')
+            #
+            # line, = axarr[2].plot(x_axis, debug_vars['speed_list'])
+            # line, = axarr[2].plot(np.zeros(len(x_axis)))
+            # axarr[2].set(ylabel='steps/sec')
+            # axarr[2].set_title('Motor Speed')
+            #
+            # f2, axarr2 = plt.subplots(2, sharex=True)
+            # plt.subplots_adjust(left=.04, right=.95, bottom=.04, top=.95, wspace=.20, hspace=.20)
+            #
+            # del measured_speed[:2]
+            # del kalman_speed[0]
+            # if len(measured_speed) > len(x_axis):
+            #     axarr2[0].plot(x_axis, measured_speed[:len(x_axis)])
+            # else:
+            #     axarr2[0].plot(x_axis[:len(measured_speed)], measured_speed)
+            # axarr2[0].plot(x_axis, kalman_speed[:len(x_axis)])
+            # axarr2[0].set(ylabel='degrees/sec')
+            # axarr2[0].set_title('Kalman Response to Velocity')
+            #
+            # axarr2[1].plot(x_axis, packet_lag)
+            # axarr2[1].plot(np.zeros(len(x_axis)))
+            # axarr2[1].set(ylabel='ms')
+            # axarr2[1].set_title('Packet lag')
+            # plt.show()
 
             # ========================================================================================================
     def update_debugs(self,debug_vars, kmirror, last_update):
@@ -340,9 +339,9 @@ class Stop_Checker():
         print('listening for connection')
         unpacker = struct.Struct('d i')
         while not self.thread1Stop.is_set():
-            # pa_file = open('pa.txt','w')
-            # pa_file.close()
-            # pa_file = open('pa.txt', 'a')
+            pa_file = open('pa.txt','w')
+            pa_file.close()
+            pa_file = open('pa.txt', 'a')
             connection = None
             connection,client= s.accept()
             print('Socket connected')
@@ -352,9 +351,9 @@ class Stop_Checker():
                     pa,flag = unpacker.unpack(data)
                     update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
                     self.masterlist.append(update)
-                    # pa_file.writelines([str(pa) + ' , ',str((get_pos() - home_pos)/2.0) + '\n'])
-                    self.pa = pa
-                    self.slew_flag = flag
+                    pa_file.writelines([str(pa) + ' , ',str((get_pos() - home_pos)/2.0) + '\n'])
+                    # self.pa = pa
+                    # self.slew_flag = flag
             except KeyboardInterrupt:
                 if connection :
                     connection.close()
@@ -381,27 +380,27 @@ class Stop_Checker():
                 break
         self.thread1Stop.set()
 #########################################################################
-    def vic_socket(self):
-        while not self.thread1Stop.is_set():
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((CONTROL_HOST, CONTROL_PORT))
-            packer = packer = struct.Struct('d d d i')
-            try:
-                while not self.thread1Stop.is_set():
-                    data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
-                    s.send(data)
-                    time.sleep(0.05)
-                    print 'PA Sent to Gui',time.time()
-            except KeyboardInterrupt:
-                self.thread1stop.set()
-        s.close()
-        print 'vic_socket closed'
+    # def vic_socket(self):
+    #     while not self.thread1Stop.is_set():
+    #         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #         s.connect((CONTROL_HOST, CONTROL_PORT))
+    #         packer = packer = struct.Struct('d d d i')
+    #         try:
+    #             while not self.thread1Stop.is_set():
+    #                 data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
+    #                 s.send(data)
+    #                 time.sleep(0.05)
+    #                 print 'PA Sent to Gui',time.time()
+    #         except KeyboardInterrupt:
+    #             self.thread1stop.set()
+    #     s.close()
+    #     print 'vic_socket closed'
 
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
         self.masterlist = Manager().list()
-        self.pa = Manager().Value('d',0.0)
-        self.slew_flag = Manager().Value('i',0)
+        # self.pa = Manager().Value('d',0.0)
+        # self.slew_flag = Manager().Value('i',0)
         if arg1 == 'go_to':
             t1 = mp.Process(target=self.go_to,args = (arg2,))
             t2 = mp.Process(target=self.limits,args = (arg3,))
@@ -416,11 +415,11 @@ class Stop_Checker():
             t1 = mp.Process(target=self.limits,args=(arg3,))
             t2 = mp.Process(target=self.run)
             t3 = mp.Process(target=self.track)
-            t4 = mp.Process(target=self.vic_socket)
+            # t4 = mp.Process(target=self.vic_socket)
             t1.start()
             t2.start()
             t3.start()
-            t4.start()
+            # t4.start()
         self.stop_check()
 
 # ====================================================================================================
