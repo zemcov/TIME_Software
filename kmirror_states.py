@@ -382,15 +382,16 @@ class Stop_Checker():
         self.thread1Stop.set()
 #########################################################################
     def vic_socket(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((CONTROL_HOST, CONTROL_PORT))
-        packer = packer = struct.Struct('d d d i')
         while not self.thread1Stop.is_set():
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((CONTROL_HOST, CONTROL_PORT))
+            packer = packer = struct.Struct('d d d i')
             try:
-                data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
-                s.send(data)
-                time.sleep(0.05)
-                print 'PA Sent to Gui',time.time()
+                while not self.thread1Stop.is_set():
+                    data = packer.pack(float(self.pa.value),float(pa_enc(get_pos())),float(time.time()),int(self.slew_flag.value))
+                    s.send(data)
+                    time.sleep(0.05)
+                    print 'PA Sent to Gui',time.time()
             except KeyboardInterrupt:
                 self.thread1stop.set()
         s.close()
