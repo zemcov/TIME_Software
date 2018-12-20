@@ -8,8 +8,9 @@ from termcolor import colored
 
 #sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
-tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
-def new_file(h_size, head1, head2, filestarttime, hk_size):
+#tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
+tempfiledir = '/Users/vlb9398/Desktop'
+def new_file(h_size, filestarttime):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # create the gui parameters group
@@ -36,8 +37,8 @@ def new_file(h_size, head1, head2, filestarttime, hk_size):
     mce.createDimension('rms_cols_all',32)
     mce.createDimension('k',1)
     mce.createDimension('v',16)
-    mce.createDimension('hks',hk_size)
-    # mce.createDimension('hknumfile',hk_files)
+    mce.createDimension('hk',1)
+    mce.createDimension('hks',2)
 
 
     # creating variables --------------------------------------------------------------------------------
@@ -50,7 +51,7 @@ def new_file(h_size, head1, head2, filestarttime, hk_size):
     global Time
     Time = mce.createVariable('time','S1',('t','date'))
     global Tele_time
-    Tele_time = mce.createVariable('tele_time','f8',('t','mode'))
+    Tele_time = mce.createVariable('tele_time','f8',('t','hk','hks'))
 
     # MCE DATA =============================================================================================
     global MCE0_Raw_Data_All
@@ -76,36 +77,27 @@ def new_file(h_size, head1, head2, filestarttime, hk_size):
     MCE1_Header = mce.createVariable('mce1_header','i4',('t','v','k'))
     # =========================================================================
 
-    # Housekeeping ============================================================
-    global HK_data
-    HK_data = mce.createVariable('hk_data', 'f8',('t','hks'))
-    global HK_sensor
-    HK_sensor = mce.createVariable('hk_sensor','S1',('t','hks'))
-    global HK_time
-    HK_time = mce.createVariable('hk_time','f8',('t','hks'))
-    # =========================================================================
+    # parafilename = ('tempfiles/tempparameters.txt')
+    # parafile = open(parafilename, 'r')
+    # parameters = parafile.readline().strip().split()
+    #
+    # Observer._Encoding = 'ascii'
+    # Frames._Encoding = 'ascii'
+    # Datamode._Encoding = 'ascii'
+    # Rc._Encoding = 'ascii'
+    # Time._Encoding = 'ascii'
+    #
+    # Observer[:] = np.array([parameters[0]],dtype='S3')
+    # Frames[:] = np.array([parameters[3]],dtype='S8')
+    # Datamode[:] = np.array([parameters[1]],dtype='S2')
+    # Rc[:] = np.array([parameters[2]],dtype='S1')
+    # parafile.close()
+    #
+    # mce.close()
+    # return mce
 
-    parafilename = ('tempfiles/tempparameters.txt')
-    parafile = open(parafilename, 'r')
-    parameters = parafile.readline().strip().split()
-
-    Observer._Encoding = 'ascii'
-    Frames._Encoding = 'ascii'
-    Datamode._Encoding = 'ascii'
-    Rc._Encoding = 'ascii'
-    Time._Encoding = 'ascii'
-
-    Observer[:] = np.array([parameters[0]],dtype='S3')
-    Frames[:] = np.array([parameters[3]],dtype='S8')
-    Datamode[:] = np.array([parameters[1]],dtype='S2')
-    Rc[:] = np.array([parameters[2]],dtype='S1')
-    parafile.close()
-
-    mce.close()
-    return mce
-
-def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_time, tele_time, t_type):
-    mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
+def mce_append(nc_file, n, h1, h2, head1, head2, filestarttime):
+    mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
     Time[n,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
     MCE0_Raw_Data_All[n,:,:,:] = h1
     MCE1_Raw_Data_All[n,:,:,:] = h2
@@ -113,11 +105,16 @@ def data_all(h1, h2, n, head1, head2, filestarttime, house_data, hk_sensors, hk_
     MCE1_Header[n,:,:] = head2
     mce.close()
 
-def hk_append():
-    mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"a")
-    Tele_time[n,:] = tele_time
-    HK_data[n,:] = house_data
-    HK_sensor[n,:] = hk_sensors
-    print colored(HK_sensor,'green')
-    HK_time[n,:] = hk_time
-    mce.close()
+def hk_append(nc_file, n, time, data, name, tele_time):
+    i = 0
+    hk = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
+    if (name + '_NC') in hk.variables.keys():
+        hk.variables[name + '_NC'][n,:,:] = [float(time),float(data)]
+    else :
+        #trying to make the netcdf name the same as the sensor name
+        name = hk.createVariable(name + '_NC','f8',('t','hk','hks'))
+        name[n,:,:] = [float(time),float(data)]
+    if tele_time != 0 :
+        Tele_time[n,:,:] = tele_time
+    print(hk.variables.keys())
+    hk.close()
