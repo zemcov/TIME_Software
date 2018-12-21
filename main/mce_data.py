@@ -176,23 +176,18 @@ class SmallMCEFile:
     Facilitate the loading of (single channels from) raw MCE
     flat-files.  Extraction and rescaling of data content is performed
     automatically by default.
-
     After instantiation with a data filename, a call to Read() will
     return the detector data as an MCEData object.
-
     See code for 'Reset' method for list of useful attributes.
     """
     def __init__(self, filename=None, runfile=True, basic_info=True):
         """
         Create SmallMCEFile object and load description of the data
         from runfile and header.
-
         filename: path to MCE flatfile
-
         runfile: if True (default), filename.run is used.  If False,
           no runfile is used.  Pass a string here to override the
           runfile filename.
-
         basic_info: if True (default), basic file information is
           loaded from runfile and frame header.
         """
@@ -277,7 +272,6 @@ class SmallMCEFile:
         """
         Using frame header and runfile, determines how the RC data are
         packed into the CC readout frames.
-
         Sets members n_cols, n_rows, divid, data_mode, n_frames.
         """
         if self.runfile == None:
@@ -340,7 +334,6 @@ class SmallMCEFile:
     def _GetPayloadInfo(self):
         """
         Determines payload parameters using the data header and file size.
-
         Sets members n_ro, n_rc, size_ro, frame_bytes, rc_step.
         """
         if self.header == None:
@@ -414,7 +407,6 @@ class SmallMCEFile:
         """
         Load data as CC output frames.  Most users will prefer the
         Read() method, which decodes the data into detector channels.
-
         Returns a (frames x dets) array of integers.
         """
         if self.size_ro <= 0:
@@ -564,7 +556,6 @@ class SmallMCEFile:
              **kwargs):
         """
         Read MCE data, and optionally extract the MCE signals.
-
         count       Number of samples to read per channel (default=None,
                     which means all of them).  Negative numbers are taken
                     relative to the end of the file.
@@ -815,7 +806,6 @@ class MCERunfile:
         Try to find a runfile for the flat file filename.  Can cope with:
             filename     ->    filename.run
             filename.xxx ->    filename.run
-
         If those fail, and filename is a symlink, it will follow the
         symlink and check the real file too.
         """
@@ -865,7 +855,6 @@ def unwrap_array(data, period, in_place=False):
     Removes jumps (due to fixed bit-width windowing, or something)
     from a data array.  "data" should be an array of signed values,
     with possible jumps of size "period" in its right-most dimension.
-
     With in_place=True, the data is unwrapped in place, rather than
     creating a new buffer for the unwrapped data.
     """
@@ -910,11 +899,8 @@ class MCEButterworth(MCEFilter):
     def transfer(self, f, f_samp=1., power=False):
         """
         Return filter transfer function at frequencies f.
-
         f is the array of frequencies at which to evaluate the response.
-
         f_samp is the sampling frequency.
-
         Setting power=True will return the power window function
         (square of the modulus of the transfer function).
         """
@@ -962,13 +948,10 @@ class MCEButterworth(MCEFilter):
         """
         Apply or de-apply filter to the last dimension of array
         "data", using Fourier representation.
-
         decimation      ratio of data frequency (e.g. 400 Hz) to the
                         internal sampling frequency (e.g. 15151 Hz).
-
         inverse         apply inverse of filter (deconvolve its
                         effects)
-
         gain0           by default the application / deapplication
                         will include the DC gain of the filter.  If
                         instead you want the DC gain to be one, pass
@@ -988,7 +971,6 @@ class MCEButterworth(MCEFilter):
                          stages=None):
         """
         Apply filter to data by applying the discrete-time filter.
-
         truncate        If true, intermediate calculations are
                         truncated as they would be in the MCE's fixed
                         point implementation.  This allows for complete
