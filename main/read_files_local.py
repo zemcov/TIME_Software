@@ -58,21 +58,10 @@ class Time_Files:
                         self.a = self.a + 1
                         begin = dt.datetime.utcnow()
                 end = dt.datetime.utcnow()
-            # else :
-            #     files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("temp") and not x.endswith('.run'))]
-            #     files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("temp") and not x.endswith('.run'))]
-            #     files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
-            #     subprocess.Popen(['rm %s' %(files1)], shell=True)
-            #     subprocess.Popen(['rm %s' %(files2)], shell=True)
-            #     subprocess.Popen(['rm %s' %(files3)], shell=True)
-            #     self.a = self.a + 1
 
         else :
             print colored('No More Files','red')
             queue.put(a,'done','done')
-            subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp.run'], shell=True)
-            subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp.run'], shell=True)
-            subprocess.Popen(['ssh -T time@time.pyhk.net pkill -9 -f hk_sftp.py'], shell=True)
             sys.exit()
 
 # ===========================================================================================================================
@@ -111,8 +100,6 @@ class Time_Files:
             self.rc = rc
             self.append_data()
 
-            subprocess.Popen(['rm %s' % (files1[i])], shell=True)
-            subprocess.Popen(['rm %s' % (files2[i])], shell=True)
         return self.rc
 
 # ===========================================================================
@@ -166,8 +153,7 @@ class Time_Files:
 
 # ============================================================================
     def append_data():
-        ''' going to have to change this directory '''
-        netcdfdir = '/Users/vlb9398/Desktop'
+        netcdfdir = '/Users/vlb9398/Desktop/netcdffiles'
         if self.a == 0: # if it's the first file, make a new netcdf file
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()
