@@ -3,7 +3,7 @@ from os import stat
 import os
 import sys
 import mce_data
-import netcdf as nc
+import netcdf_files as nc
 import subprocess
 import datetime as dt
 import gzip
