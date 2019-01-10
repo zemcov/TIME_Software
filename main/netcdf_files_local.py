@@ -45,7 +45,7 @@ def new_file(h_size, filestarttime):
     Detector = mce.createVariable('detector','f8',('det',),zlib=True)
     Rc = mce.createVariable('rc','S1',('r',),zlib=True) # can either use rc name or integer used by gui
     global Time
-    Time = mce.createVariable('time','S1',('t','date'),zlib=True)
+    Time = mce.createVariable('time','S1',('t','k'),zlib=True)
     global Tele_time
     Tele_time = mce.createVariable('tele_time','f8',('t','hk','hk','hk'),zlib=True)
 
@@ -73,21 +73,21 @@ def new_file(h_size, filestarttime):
     MCE1_Header = mce.createVariable('mce1_header','i4',('t','v','k'),zlib=True)
     # =========================================================================
 
-    parafilename = ('tempfiles/tempparameters.txt')
-    parafile = open(parafilename, 'r')
-    parameters = parafile.readline().strip().split()
-
-    Observer._Encoding = 'ascii'
-    Frames._Encoding = 'ascii'
-    Datamode._Encoding = 'ascii'
-    Rc._Encoding = 'ascii'
-    Time._Encoding = 'ascii'
-
-    Observer[:] = np.array([parameters[0]],dtype='S3')
-    Frames[:] = np.array([parameters[3]],dtype='S8')
-    Datamode[:] = np.array([parameters[1]],dtype='S2')
-    Rc[:] = np.array([parameters[2]],dtype='S1')
-    parafile.close()
+    # parafilename = ('tempfiles/tempparameters.txt')
+    # parafile = open(parafilename, 'r')
+    # parameters = parafile.readline().strip().split()
+    #
+    # Observer._Encoding = 'ascii'
+    # Frames._Encoding = 'ascii'
+    # Datamode._Encoding = 'ascii'
+    # Rc._Encoding = 'ascii'
+    # Time._Encoding = 'ascii'
+    #
+    # Observer[:] = np.array([parameters[0]],dtype='S3')
+    # Frames[:] = np.array([parameters[3]],dtype='S8')
+    # Datamode[:] = np.array([parameters[1]],dtype='S2')
+    # Rc[:] = np.array([parameters[2]],dtype='S1')
+    # parafile.close()
 
     mce.close()
     return mce

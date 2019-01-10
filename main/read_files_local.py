@@ -8,19 +8,18 @@ import subprocess
 import datetime as dt
 import gzip
 from termcolor import colored
-import time
+import time as TIME
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
 class Time_Files:
 
     def __init__(self):
-        # self.name = ''
-        # self.data = 0.0
-        # self.time = 0
-        # self.t_type = ''
-        # self.new_time = 0
-        # self.tele_time = (0.0,'',0.0)
+        self.name = ''
+        self.data = 0.0
+        self.time = 0
+        self.new_time = 0
+        self.tele_time = (0.0,'',0.0)
         self.n = 0  # hk file indexer
         self.p = 0  # mce file indexer
         self.filestarttime = 0
@@ -31,6 +30,7 @@ class Time_Files:
         self.h2 = 0
         self.head1 = 0
         self.head2 = 0
+        self.done = True
 
     def netcdfdata(self,rc):
         self.rc = rc
@@ -47,16 +47,18 @@ class Time_Files:
                 if (mce_file1 and mce_file2 and hk_file != 0):
                     files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("test") and not x.endswith('.run'))]
                     files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("test") and not x.endswith('.run'))]
-                    files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
                     # we want more than just temp.run in the directory
-                    if self.a < mce_file1:
-                        self.hk_read(files3[0],hk_file)
+                    if self.a < mce_file1 - 1: # won't work when directory is having files being deleted after each read
                         self.rc = rc
                         self.readdata(files1[self.a], files2[self.a], 1, 1, rc)
+                        self.done = True
+                        self.rc = 'hk'
+                        self.hk_read(hk_file)
+                        self.done = True
                         self.a = self.a + 1
+                        print(colored("This is a: %s" %(self.a),'red'))
                         begin = dt.datetime.utcnow()
-                        time.sleep(1.0)
-                        print(colored(files1[self.a],'yellow'))
+                        # print(colored(files1[self.a],'yellow'))
                     else :
                         end = dt.datetime.utcnow() + 3.5
                     end = dt.datetime.utcnow()
@@ -67,16 +69,17 @@ class Time_Files:
 
 # ===========================================================================================================================
     def readdata(self, files1, files2, mce_file1, mce_file2, rc):
-        ''' This only works under the assumption that both mces are
-            spitting out the same number of files at any given time'''
-        for i in range(1):
+        if self.done :
+            self.done = False
+            ''' This only works under the assumption that both mces are
+                spitting out the same number of files at any given time'''
+            # for i in range(1):
             f1 = mce_data.SmallMCEFile(files1)
             self.h1 = f1.Read(row_col=True, unfilter='DC').data
             f2 = mce_data.SmallMCEFile(files2)
             self.h2 = f2.Read(row_col=True, unfilter='DC').data
-            # increment indexer for mce files
-            self.p += 1
-        # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
+
+            # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
             if self.a != 0 :
                 if (self.h1.shape != self.h1_shape and self.h2.shape != self.h2_shape) :
                     print(colored('WARNING! Both MCE Frame Size Has Changed','red'))
@@ -88,8 +91,8 @@ class Time_Files:
                 self.h1_shape = self.h1.shape
                 self.h2_shape = self.h2.shape
 
-            self.h1_shape = self.h1.shape
-            self.h2_shape = self.h2.shape
+            # self.h1_shape = self.h1.shape
+            # self.h2_shape = self.h2.shape
             self.head1 = self.read_header(f1)
             self.head2 = self.read_header(f2)
             # -----------------------------------------------------------------
@@ -104,8 +107,12 @@ class Time_Files:
             # -----------------------------------------------------------------
             self.rc = rc
             self.append_data()
-
-        return self.rc
+            self.p += 1
+            print(colored("MCE Append",'red'))
+            return self.rc
+        else :
+            print(colored("I'm broken",'red'))
+            sys.exit()
 
 # ===========================================================================
     def read_header(self, f):
@@ -127,16 +134,18 @@ class Time_Files:
         return values
 
 # ============================================================================
-    def hk_read(self, hk, num_hk):
-        self.rc = 'hk'
-        dir3 = ('/Users/vlb9398/Desktop/test_hk_files/')
-        print(colored(hk,'green'))
-        for i in range(1):
-            file = open(hk)
+    def hk_read(self,num_hk):
+        if self.done :
+            self.done = False
+            self.k = 0
+            dir3 = ('/Users/vlb9398/Desktop/test_hk_files/')
+            files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
+            # print(colored(files3[0],'green'))
+            file = open(files3[0])
             name = []
             data = []
-            t_type = []
             time = []
+            # print(colored("name %s" %(name),'red'))
             for line in file:
                 fields = line.strip().split(",")
                 t_type = str(fields[0])
@@ -144,7 +153,6 @@ class Time_Files:
                 name2 = str(fields[3])
                 names = (name1 + "_" + name2).replace('"','')
                 if t_type == 't': # want to keep exact sync box value
-                    print(colored("I found a sync num!",'magenta'))
                     sync = float(fields[1])
                     self.tele_time = [float(fields[1]),names.replace(' ','_'),float(fields[4])]
                 else :
@@ -161,23 +169,29 @@ class Time_Files:
             sort_time = sorted(time)
             #==============================================
             # only want to append one line at a time to check for new variables
-            for i in range(len(time)):
+            for i in range(len(time)-1):
                 self.time = sort_time[i]
                 self.name = sort_name[i]
                 self.data = sort_data[i]
 
                 # only incremment index for a new timestamp,not for file num or for t =======
-                if self.n == 0 :
+                if self.k == 0 :
                     self.new_time = self.time
                 if self.new_time == self.time:
-                    continue
-                elif (self.new_time != self.time) and (self.t_type[-1] != 't') :
+                    pass
+                elif self.new_time != self.time :
                     self.n += 1
                     self.new_time = self.time
-                print(colored(self.n , self.t_type,'green'))
+                self.k += 1
+
                 self.append_data()
-                #===============================================================
-        return self.rc
+                print(colored("HK Append",'red'))
+            self.k = 0
+                    #===============================================================
+            return self.rc
+        else :
+            print(colored("I'm broken",'red'))
+            sys.exit()
 
 # ============================================================================
     def append_data(self):
@@ -220,9 +234,9 @@ class Time_Files:
             else :
                 print(colored('Wrong RC Input!','red'))
 
-        print(colored(os.stat(netcdfdir + "/raw_%s.nc" %(self.filestarttime)).st_size,'magenta'))
+        # print(colored(os.stat(netcdfdir + "/raw_%s.nc" %(self.filestarttime)).st_size,'magenta'))
         return self.rc
 
 if __name__ == "__main__" :
     tf = Time_Files()
-    tf.netcdfdata(sys.argv[1])
+    tf.netcdfdata('s')
