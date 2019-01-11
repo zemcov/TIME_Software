@@ -111,5 +111,5 @@ def hk_append(nc_file, n, time, data, name, tele_time):
         name[n,:,:] = [float(time),float(data)]
     if tele_time[0] != 0 : # make sure we are only appending real data
         Tele_time[n,:,:,:] = tele_time
-    print(hk.variables.keys())
+    # print(hk.variables.keys())
     hk.close()

@@ -168,6 +168,7 @@ class Time_Files:
             sort_data = [x for _,x in sorted(zip(time,data))]
             sort_time = sorted(time)
             #==============================================
+            print(len(time))
             # only want to append one line at a time to check for new variables
             for i in range(len(time)-1):
                 self.time = sort_time[i]
@@ -185,8 +186,9 @@ class Time_Files:
                 self.k += 1
 
                 self.append_data()
-                print(colored("HK Append",'red'))
+                print(colored("HK Append # %s" %(i),'red'))
             self.k = 0
+            print(colored("End of HK File",'yellow'))
                     #===============================================================
             return self.rc
         else :
