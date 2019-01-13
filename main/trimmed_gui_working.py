@@ -5,8 +5,6 @@ import numpy as np
 import matplotlib.pylab
 import time
 import pyqtgraph
-import sine_wave as sw
-import multiprocessing as mp
 
 class ExampleApp(QtGui.QMainWindow, ui_main.Ui_MainWindow):
     def __init__(self, parent=None):
@@ -43,19 +41,13 @@ class MyThread(QtCore.QThread):
         self.wait()
 
     def run(self):
-        queue = mp.Queue()
-        p = mp.Process(target=sw.wave(queue))
-        p.start()
-        # p.join()
         while not self.exiting :
+            t1=time.clock()
             points=100 #number of data points
             X=np.arange(points)
             Y=np.sin(np.arange(points)/points*3*np.pi+time.time())
-            data = queue.get()
-            if data == 'done':
-                break
-            else :
-                self.new_data.emit(data,X,Y)
+            self.new_data.emit(t1,X,Y)
+            time.sleep(1.0) # dunno if I need this or not
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
