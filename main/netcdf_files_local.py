@@ -6,18 +6,9 @@ import datetime as now
 import numpy as np
 from termcolor import colored
 
-#sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
-
-#tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
 tempfiledir = '/Users/vlb9398/Desktop/netcdffiles'
 def new_file(h_size, filestarttime):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
-
-    # create the gui parameters group
-    # guiparams = mce.createGroup('guiparams')
-    # stream = mce.createGroup('stream')
-    # heatmap = mce.createGroup('heatmap')
-    # mce_header = mce.createGroup('mce_header')
 
      # GUI PARAMETERS ---------------------------------------------------------------------------------
     mce.createDimension('det',1)
@@ -51,19 +42,10 @@ def new_file(h_size, filestarttime):
 
     # MCE DATA =============================================================================================
     global MCE0_Raw_Data_All
-    # global MCE0_Raw_Data
     global MCE1_Raw_Data_All
-    # global MCE1_Raw_Data
-    # MCE0_Raw_Data = mce.createVariable('mce0_raw_data','f8',('t','raw_rows','raw_cols','raw_num'))
     MCE0_Raw_Data_All = mce.createVariable('mce0_raw_data_all','f8',('t','raw_rows','raw_cols','raw_num'),zlib=True)
-
-    # MCE1_Raw_Data = mce.createVariable('mce1_raw_data','f8',('t','raw_rows','raw_cols','raw_num'))
     MCE1_Raw_Data_All = mce.createVariable('mce1_raw_data_all','f8',('t','raw_rows','raw_cols','raw_num'),zlib=True)
 
-    # global Rms_Noise_All
-    # global Rms_Noise
-    # Rms_Noise_All = mce.createVariable('rms_noise_all','f8',('t','rms_rows','rms_cols_all'))
-    # Rms_Noise = mce.createVariable('rms_noise','f8',('t','rms_rows','rms_cols'))
     # =========================================================================================================
 
     # MCE HEADER INFO =========================================================
@@ -88,7 +70,6 @@ def new_file(h_size, filestarttime):
     # Datamode[:] = np.array([parameters[1]],dtype='S2')
     # Rc[:] = np.array([parameters[2]],dtype='S1')
     # parafile.close()
-
     mce.close()
     return mce
 
@@ -112,4 +93,4 @@ def hk_append(nc_file, n, time, data, name, tele_time):
     if tele_time[0] != 0 : # make sure we are only appending real data
         Tele_time[n,:,:,:] = tele_time
     # print(hk.variables.keys())
-    hk.close()
+    # hk.close()

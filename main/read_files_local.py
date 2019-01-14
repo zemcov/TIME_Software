@@ -9,6 +9,7 @@ import datetime as dt
 import gzip
 from termcolor import colored
 import time as TIME
+from multiprocessing import Pipe
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
@@ -32,8 +33,7 @@ class Time_Files:
         self.head2 = 0
         self.done = True
 
-    def netcdfdata(self,rc):
-        self.rc = rc
+    def netcdfdata(self,queue):
         dir3 = ('/Users/vlb9398/Desktop/test_hk_files/')
         dir1 = ('/Users/vlb9398/Desktop/test_mce_files/')
         dir2 = ('/Users/vlb9398/Desktop/test_mce_files_copy/')
@@ -49,14 +49,15 @@ class Time_Files:
                     files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("test") and not x.endswith('.run'))]
                     # we want more than just temp.run in the directory
                     if self.a < mce_file1 - 1: # won't work when directory is having files being deleted after each read
-                        self.rc = rc
-                        self.readdata(files1[self.a], files2[self.a], 1, 1, rc)
+                        self.rc = 'a'
+                        self.readdata(files1[self.a], files2[self.a], 1, 1)
                         self.done = True
-                        self.rc = 'hk'
-                        self.hk_read(hk_file)
-                        self.done = True
+                        queue.send([self.h1,self.p])
+                        TIME.sleep(1.0)
+                        #self.rc = 'hk'
+                        # self.hk_read(hk_file)
+                        # self.done = True
                         self.a = self.a + 1
-                        print(colored("This is a: %s" %(self.a),'red'))
                         begin = dt.datetime.utcnow()
                         # print(colored(files1[self.a],'yellow'))
                     else :
@@ -65,10 +66,12 @@ class Time_Files:
 
         else :
             print(colored('No More Files','red'))
+            queue.send(['done','done'])
+            queue.close()
             sys.exit()
 
 # ===========================================================================================================================
-    def readdata(self, files1, files2, mce_file1, mce_file2, rc):
+    def readdata(self, files1, files2, mce_file1, mce_file2):
         if self.done :
             self.done = False
             ''' This only works under the assumption that both mces are
@@ -105,7 +108,7 @@ class Time_Files:
             #     for c in range(h.shape[1]):
             #         d2[b][c] = (np.std(h2[b][c][:],dtype=float))
             # -----------------------------------------------------------------
-            self.rc = rc
+            self.rc = 'a'
             self.append_data()
             self.p += 1
             print(colored("MCE Append",'red'))
@@ -205,7 +208,7 @@ class Time_Files:
             mce = nc.new_file(self.h1.shape, self.filestarttime)
             self.ncfile = netcdfdir + "/raw_%s.nc" %(self.filestarttime)
 
-            if self.rc == 's' :
+            if self.rc == 'a' :
                 nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2)
             elif self.rc == 'hk':
                 nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
@@ -221,7 +224,7 @@ class Time_Files:
             mce = nc.new_file(self.h1.shape, self.filestarttime)
             self.ncfile = netcdfdir + "/raw_%s.nc" %(self.filestarttime)
 
-            if self.rc == 's' :
+            if self.rc == 'a' :
                 nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2)
             elif self.rc == 'hk':
                 nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
@@ -229,7 +232,7 @@ class Time_Files:
                 print(colored('Wrong RC Input!','red'))
 
         else: # if everything is okay, append data to the file
-            if self.rc == 's' :
+            if self.rc == 'a' :
                 nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2)
             elif self.rc == 'hk':
                 nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
@@ -238,7 +241,3 @@ class Time_Files:
 
         # print(colored(os.stat(netcdfdir + "/raw_%s.nc" %(self.filestarttime)).st_size,'magenta'))
         return self.rc
-
-if __name__ == "__main__" :
-    tf = Time_Files()
-    tf.netcdfdata('s')

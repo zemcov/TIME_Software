@@ -7,6 +7,7 @@ import time
 import pyqtgraph
 import sine_wave as sw
 import multiprocessing as mp
+from read_files_local import Time_Files
 
 class ExampleApp(QtGui.QMainWindow, ui_main.Ui_MainWindow):
     def __init__(self, parent=None):
@@ -15,6 +16,7 @@ class ExampleApp(QtGui.QMainWindow, ui_main.Ui_MainWindow):
         self.setupUi(self)
         self.btnAdd.clicked.connect(self.update)
         self.grPlot.plotItem.showGrid(True, True, 0.7)
+        self.rc = 'all'
         # these will init the thread and allow it to send messages
         self.update()
 
@@ -43,19 +45,19 @@ class MyThread(QtCore.QThread):
         self.wait()
 
     def run(self):
-        queue = mp.Queue()
-        p = mp.Process(target=sw.wave(queue))
+        data, queue = mp.Pipe()
+        p = mp.Process(target=sw.wave , args=(queue,))
         p.start()
-        # p.join()
         while not self.exiting :
             points=100 #number of data points
             X=np.arange(points)
             Y=np.sin(np.arange(points)/points*3*np.pi+time.time())
-            data = queue.get()
-            if data == 'done':
+            stuff = data.recv()
+            print(stuff[1])
+            if stuff[0] == 'done':
                 break
             else :
-                self.new_data.emit(data,X,Y)
+                self.new_data.emit(stuff[0],X,Y)
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
