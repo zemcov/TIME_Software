@@ -6,8 +6,12 @@ import random as rm
 from termcolor import colored
 import multiprocessing as mp
 import read_files_local as rf
+import fake_tel as ft
 
 # sys.stdout = os.fdopen(sys.stdout.fileno(),'w',1) #line buffering
+mce_exit = mp.Event()
+tel_exit = mp.Event()
+
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
     #initializes mcegui class and calls other init functions
@@ -54,8 +58,6 @@ class mcegui(QtGui.QWidget):
     #quits out of GUI and stops the MCE
     def on_quitbutton_clicked(self):
         print('Quitting Application')
-        ''' Need to add something to disconnect the readfiles
-            from the gui but leave it running'''
         sys.exit()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -126,14 +128,13 @@ class mcegui(QtGui.QWidget):
 
             #start other plot making processes
             self.initplot()
+            self.initfftgraph()
+            self.initkmirrordata()
+            self.inittelescope()
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
-        self.observer = ''
-        self.datamode = ''
-        self.readoutcard = ''
-        self.framenumber = ''
-
+        self.on_quitbutton_clicked()
     #creates inputs for user to enter parameters and creates 'Quit' button
     def getparameters(self):
         self.parametersquit = QtGui.QVBoxLayout()
@@ -271,15 +272,163 @@ class mcegui(QtGui.QWidget):
         self.updater.new_data.connect(self.updateplot)
         self.updater.start()
 
+    def initheatmap(self,z1):
+        #casts z as array for creating heatmap
+        z1 = np.asarray(z1)
+        #z2 = np.asarray(self.z2)
+        #recasting data in z as integers
+        z1.astype(int)
+        #z2.astype(int)
+        #creating heatmap, labeling
+        self.heatmapplot = pg.PlotItem()
+        self.heatmapplot.setLabel('bottom', 'Row')
+        self.heatmapplot.setLabel('left', 'Channel')
+        self.heatmapplot.setTitle('MCE RMS Channel Noise')
+
+
+        self.heatmap = pg.ImageView(view= self.heatmapplot)
+        self.heatmap.setPredefinedGradient('thermal')
+        self.heatmap.setImage(z1)
+
+        #changes levels for heatmap to create gradient at depending on the data rate
+        self.avggrad = int(np.average(z1))
+        self.stddevgrad = int(np.std(z1))
+        self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
+        self.grid.addWidget(self.heatmap, 3, 2, 2, 3)
+
+    def initfftgraph(self):
+        self.fftgraph = pg.PlotWidget()
+        self.fftgraphdata = pg.ScatterPlotItem()
+        self.fftgraph.addItem(self.fftgraphdata)
+
+        self.fftgraph.setLabel('bottom', 'Time', 's')
+        self.fftgraph.setLabel('left', 'Counts')
+        self.fftgraph.setTitle('FFT Data')
+
+        self.grid.addWidget(self.fftgraph, 3, 5, 2, 3)
+
+    def initkmirrordata(self):
+        #place holder data
+        self.parallacticangle = rm.randint(10, 170)
+        self.positionalerror = rm.randint(0, 90)
+
+        self.parallacticangletext = QtGui.QLabel()
+        self.positionalerrortext = QtGui.QLabel()
+
+        self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
+        self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
+
+        self.kmirrordatatext = QtGui.QVBoxLayout()
+
+        self.kmirrordatatext.addWidget(self.parallacticangletext)
+        self.kmirrordatatext.addWidget(self.positionalerrortext)
+
+        self.grid.addLayout(self.kmirrordatatext, 4, 1, 1, 1)
+
+    def inittelescope(self):
+        # start the telescope QThread
+        self.updater = Tel_Thread()
+        self.updater.new_tel_data.connect(self.updatetelescopedata)
+        self.updater.start()
+
+        # initialize printouts of current tele values not plotted
+        self.patext = QtGui.QLabel('PA: %s' %('-'))
+        self.slewtext = QtGui.QLabel('Slew Flag: %s' %('-'))
+        self.timetext = QtGui.QLabel('UTC Time: %s' %('-'))
+
+        # create space for tele printout values
+        self.telescopedata = QtGui.QVBoxLayout()
+        self.telescopedata.addWidget(self.patext)
+        self.telescopedata.addWidget(self.slewtext)
+        self.telescopedata.addWidget(self.timetext)
+
+        # create plot object for alt-az graph
+        self.altazgraph = pg.PlotWidget()
+        self.altazgraphdata = pg.ScatterPlotItem()
+        self.altazgraph.addItem(self.altazgraphdata)
+        self.altazgraph.showGrid(x=True, y=True)
+        self.altazgraph.setTitle('Alt-Az Graph')
+        self.altazgraph.setLabel('left', 'alt')
+        self.altazgraph.setLabel('bottom', 'az')
+
+        # create plot object for ra-dec graph
+        self.radecgraph = pg.PlotWidget()
+        self.radecgraphdata = pg.ScatterPlotItem()
+        self.radecgraph.addItem(self.radecgraphdata)
+        self.radecgraph.showGrid(x=True, y=True)
+        self.radecgraph.setTitle('Ra-Dec Graph')
+        self.radecgraph.setLabel('left', 'DEC (deg)')
+        self.radecgraph.setLabel('bottom', 'RA (deg)')
+
+        # create new window for telescope graphs
+        self.telescopewindow = QtGui.QWidget()
+        self.telescopewindow.setWindowTitle('Telescope Data')
+        self.telegrid = QtGui.QGridLayout()
+        self.telegrid.addLayout(self.telescopedata, 1, 1, 1, 1)
+        self.telegrid.addWidget(self.altazgraph, 1, 2, 2, 2)
+        self.telegrid.addWidget(self.radecgraph, 1, 4, 2, 2)
+        self.telescopewindow.setGeometry(2000, 2000, 2000, 2000)
+        self.telescopewindow.setLayout(self.telegrid)
+        self.telescopewindow.show()
+
+        self.repeat = False
+
+    def updatekmirrordata(self):
+        self.parallacticangle = rm.randint(10, 170)
+        self.positionalerror = rm.randint(0, 90)
+
+        self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
+        self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
+
+    def updatefftgraph(self):
+        # self.y and self.x are defined in updateplot
+        self.fftdata = np.fft.fft(self.y)
+        self.fftdata = np.asarray(self.fftdata, dtype=np.float32)
+        self.fftdata[0] = self.fftdata[-1]
+        self.fftgraphdata.setData(self.x, self.fftdata)
+
+    def updatetelescopedata(self,pa,slew,alt,az,ra,dec,time):
+        global tel_exit
+        global mce_exit
+
+        if (slew == 2.0) and (self.repeat == False) :
+            os.system("afplay /Users/vlb9398/Desktop/Gui_code/TIME_Software/main/klaxon.mp3")
+            self.repeat = True
+            tel_exit.set()
+            mce_exit.set()
+            self.warningbox('tel')
+
+        else :
+            # update text on window to reflect new data
+            self.patext.setText('PA: %s' %(round(float(pa),2)))
+            self.slewtext.setText('Slew Flag: %s' %(slew))
+            self.timetext.setText('UTC Time: %s'%(round(float(time),2)))
+
+            altazcolor = pg.mkBrush('b')
+            radeccolor = pg.mkBrush('r')
+
+            az = [float(az)]
+            alt = [float(alt)]
+            ra = [float(ra)]
+            dec = [float(dec)]
+
+            # if (self.index - 1) == 0 : # if it's the first data set, set data
+            #     self.altazgraphdata.setData(x=[float(i) for i in az], y=[float(i) for i in alt], brush=altazcolor)
+            #     self.radecgraphdata.setData(x=[float(i) for i in ra], y=[float(i) for i in dec], brush=radeccolor)
+            # else : # if it's not the first update, don't remove existing points, but add more to graph
+            self.altazgraphdata.addPoints(x=az, y=alt, brush=altazcolor)
+            self.radecgraphdata.addPoints(x=ra, y=dec, brush=radeccolor)
+
     def updateplot(self,h1,index):
         self.index = index - 1 #because self.p gets updated before data is sent
         print(colored(index,'magenta'))
 
         # parsing mce array to make heatmap data ==================
-        d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=float)
-        for b in range(h1.shape[0]):
-            for c in range(h1.shape[1]):
-                d1[b][c] = (np.std(h1[b][c][:],dtype=float))
+        # d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=float)
+        # for b in range(h1.shape[0]):
+        #     for c in range(h1.shape[1]):
+        #         d1[b][c] = (np.std(h1[b][c][:],dtype=float))
+        d1 = np.random.random((41,32))
         # =========================================================
 
         # parsing mce array for graph data ========================
@@ -322,9 +471,12 @@ class mcegui(QtGui.QWidget):
                 pointsymbol.extend([syms[i] for j in range(self.frameperfile)])
         #============================================================================================================
         #====================================================================================================
+
         #creates graphdata item on first update
         if self.index == 0:
-            print("IF")
+            self.initheatmap(d1) # give first values for heatmap to create image scale
+            self.updatefftgraph()
+            self.updatekmirrordata()
             self.data[0] = x
             self.data[1] = y
             self.mcegraph.addItem(self.mcegraphdata)
@@ -341,7 +493,6 @@ class mcegui(QtGui.QWidget):
         # ===========================================================================================================
         #clears graphdata and updates old graph after the total time interval has passed
         elif self.n_interval == self.totaltimeinterval :
-            print("ELIF")
             self.data[0] = x
             self.data[1] = y
             self.oldmcegraph.setXRange(self.data[0][0], self.data[0][-1], padding=0)
@@ -356,11 +507,13 @@ class mcegui(QtGui.QWidget):
             # updates oldgraphdata after total time interval is reached
             self.data[0] = x
             self.data[1] = y
-            self.n_interval = 0
+            self.n_interval = 0 #reset counter
         # ==============================================================================================================
         #updates graph, if channel delete is set to yes will clear data first
         else:
-            print("ELSE")
+            self.updateheatmap(d1)
+            self.updatefftgraph()
+            self.updatekmirrordata()
             if self.channeldelete == 'Yes' and self.oldch != self.currentchannel:
                 self.mcegraphdata.clear()
                 if self.readoutcard == 'All':
@@ -380,69 +533,75 @@ class mcegui(QtGui.QWidget):
         self.oldch = self.currentchannel
         # =================================================================================================================
 
-        ''' Below is code that I think is already implemented in the three conditional
-            statements above. Can add back in if necessary.'''
-        # initializes old data list on either the first update or the first one after
-        # the current total time interval, otherwise adds to current list
-        # if self.n_intervals == 0 or self.n_intervals % self.totaltimeinterval == 2:
-        #     self.data[0] = x
-        #     self.data[1] = y
+    def updateheatmap(self,z1):
+        #casts z as array for creating heatmap
+        z1 = np.asarray(z1)
+        #z2 = np.asarray(self.z2)
+        #recasting data in z as integers
+        z1.astype(int)
+        #z2.astype(int)
+        self.heatmap.setImage(z1)
+        #changes levels for heatmap to create gradient at depending on the data rate
+        self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
+        # if self.frameperfile == 11:
+        #     self.heatmap.setLevels(60, 260)
         # else:
-        #     np.append(self.data[0],x)
-        #     np.append(self.data[1],y)
+        #     self.heatmap.setLevels(100, 190)
 
-    ''' Not really implemented yet, only works for gui params warning '''
+
+    ''' Need to install playsound to use afplay'''
     def warningbox(self,message):
         if message == 'gui' :
-            self.parameterwarning = QtGui.QMessageBox()
-            self.parameterwarning.setIcon(QtGui.QMessageBox.Warning)
-            self.parameterwarning.setText('One or more parameters not entered correctly!')
-            self.parameterwarning.setStandardButtons(QtGui.QMessageBox.Ok)
-            self.parameterwarning.setWindowTitle('Parameter Warning')
-            self.parameterwarning.buttonClicked.connect(self.on_warningbutton_clicked)
-            self.parameterwarning.exec_()
-        if message == 'KMS' :
-            self.kmswarning = QtGui.QMessageBox()
-            self.kmswarning.setIcon(QtGui.QMessageBox.Warning)
-            self.kmswarning.setText('System has halted due to Kmirror E-Stop. Please standby for user reset...')
-            self.kmswarning.setStandardButtons(QtGui.QMessageBox.Ok)
-            self.kmswarning.setWindowTitle('KMirror System Emergency Stopped!')
-            #self.kmswarning.buttonClicked.connect(self.on_warningbutton_clicked)
-            self.kmswarning.exec_()
+            parameterwarning = QtGui.QMessageBox()
+            parameterwarning.setIcon(QtGui.QMessageBox.Warning)
+            parameterwarning.setText('One or more parameters not entered correctly!')
+            parameterwarning.setStandardButtons(QtGui.QMessageBox.Ok)
+            parameterwarning.setWindowTitle('Parameter Warning')
+            parameterwarning.buttonClicked.connect(self.on_warningbutton_clicked)
+            parameterwarning.exec_()
+        if message == 'kms' :
+            kmswarning = QtGui.QMessageBox()
+            kmswatning.setStyleSheet("background-color: rgb(255,0,0); color: rgb(0,0,0)")
+            kmswarning.setIcon(QtGui.QMessageBox.Critical)
+            kmswarning.setText('System has halted due to Kmirror E-Stop. Please standby for user reset...')
+            kmswarning.setStandardButtons(QtGui.QMessageBox.Abort)
+            kmswarning.setWindowTitle('KMirror System Emergency Stopped!')
+            kmswarning.buttonClicked.connect(self.on_warningbutton_clicked)
+            kmswarning.exec_()
         elif message == 'tel' :
-            self.telwarning = QtGui.QMessageBox()
-            self.telwarning.setIcon(QtGui.QMessageBox.Warning)
-            self.telwarning.setText('The telescope has unexpectedly halted normal operations. Software must be reset by user.')
-            self.telwarning.setStandardButtons(QtGui.QMessageBox.Ok)
-            self.telwarning.setWindowTitle('Telescope Emergency Stop')
-            #self.telwarning.buttonClicked.connect(self.on_warningbutton_clicked)
-            self.telwarning.exec_()
+            telwarning = QtGui.QMessageBox()
+            telwarning.setStyleSheet("background-color: rgb(255,0,0); color: rgb(0,0,0)")
+            telwarning.setIcon(QtGui.QMessageBox.Critical)
+            telwarning.setText('The telescope has unexpectedly halted normal operations. Software must be reset by user.')
+            telwarning.setStandardButtons(QtGui.QMessageBox.Abort)
+            telwarning.setWindowTitle('Telescope Emergency Stop')
+            telwarning.buttonClicked.connect(self.on_warningbutton_clicked)
+            telwarning.exec_()
         elif message == 'hk' :
-            self.hkwarning = QtGui.QMessageBox()
-            self.hkwarning.setIcon(QtGui.QMessageBox.Warning)
-            self.hkwarning.setText('Housekeeping as reported an error. No files are being created.')
-            self.hkwarning.setStandardButtons(QtGui.QMessageBox.Ok)
-            self.hkwarning.setWindowTitle('Housekeeping Error')
-            #self.hkwarning.buttonClicked.connect(self.on_warningbutton_clicked)
-            self.hkwarning.exec_()
+            hkwarning = QtGui.QMessageBox()
+            hkwarning.setStyleSheet("background-color: rgb(255,0,0); color: rgb(0,0,0)")
+            hkwarning.setIcon(QtGui.QMessageBox.Critical)
+            hkwarning.setText('Housekeeping as reported an error. No files are being created.')
+            hkwarning.setStandardButtons(QtGui.QMessageBox.Abort)
+            hkwarning.setWindowTitle('Housekeeping Error')
+            hkwarning.buttonClicked.connect(self.on_warningbutton_clicked)
+            hkwarning.exec_()
 
 class MyThread(QtCore.QThread):
-
+    global mce_exit
     new_data = QtCore.pyqtSignal(object,object)
 
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
-        self.exiting = False
 
     def __del__(self):
-        self.exiting = True
-        self.wait()
+        mce_exit.set()
 
     def run(self):
         data, queue = mp.Pipe()
-        p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,))
+        p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,mce_exit))
         p.start()
-        while not self.exiting :
+        while not mce_exit.is_set():
             # grab data from read_files.py
             stuff = data.recv()
             if stuff[0] == 'done':
@@ -451,7 +610,59 @@ class MyThread(QtCore.QThread):
                 # send updated data to the gui
                 self.new_data.emit(stuff[0],stuff[1])
 
+class Tel_Thread(QtCore.QThread):
+    global tel_exit
+    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
+
+    def __init__(self, parent = None):
+        QtCore.QThread.__init__(self, parent)
+
+    def __del__(self):
+        tel_exit.set()
+
+    def run(self):
+        data, queue = mp.Pipe()
+        p = mp.Process(target=ft.update_tel , args=(queue,tel_exit))
+        p.start()
+        while not tel_exit.is_set() :
+            # grab data from read_files.py
+            tel_stuff = data.recv()
+            if tel_stuff[0] == 'done':
+                break
+            else :
+                # send updated data to the gui
+                self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+        print("Exit Thread is Set")
+
+''' Add this one once we know that KMS is on and ready to be integrated'''
+# class KMS_Thread(QtCore.QThread):
+#
+#     new_data = QtCore.pyqtSignal(object,object)
+#
+#     def __init__(self, parent = None):
+#         QtCore.QThread.__init__(self, parent)
+#         self.exiting = False
+#
+#     def __del__(self):
+#         self.exiting = True
+#         self.wait()
+#
+#     def run(self):
+#         data, queue = mp.Pipe()
+#         p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,))
+#         p.start()
+#         while not self.exiting :
+#             # grab data from read_files.py
+#             stuff = data.recv()
+#             if stuff[0] == 'done':
+#                 break
+#             else :
+#                 # send updated data to the gui
+#                 self.new_data.emit(stuff[0],stuff[1])
+
+
 #activating the gui main window
+
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName('TIME Raw Data Visualization Suite')

@@ -31,15 +31,12 @@ class Time_Files:
         self.h2 = 0
         self.head1 = 0
         self.head2 = 0
-        self.done = True
 
-    def netcdfdata(self,queue):
+    def netcdfdata(self,queue,exit):
         dir3 = ('/Users/vlb9398/Desktop/test_hk_files/')
         dir1 = ('/Users/vlb9398/Desktop/test_mce_files/')
         dir2 = ('/Users/vlb9398/Desktop/test_mce_files_copy/')
-        begin = dt.datetime.utcnow()
-        end = dt.datetime.utcnow()
-        while end - begin < dt.timedelta(seconds = 3):
+        while not exit.is_set():
             # if self.a > 0 :
                 mce_file1 = len(os.listdir(dir1))
                 mce_file2 = len(os.listdir(dir2))
@@ -48,74 +45,62 @@ class Time_Files:
                     files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("test") and not x.endswith('.run'))]
                     files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("test") and not x.endswith('.run'))]
                     # we want more than just temp.run in the directory
-                    if self.a < mce_file1 - 1: # won't work when directory is having files being deleted after each read
+                    if not exit.is_set(): # won't work when directory is having files being deleted after each read
                         self.rc = 'a'
                         self.readdata(files1[self.a], files2[self.a], 1, 1)
-                        self.done = True
                         queue.send([self.h1,self.p])
                         TIME.sleep(1.0)
                         #self.rc = 'hk'
                         # self.hk_read(hk_file)
-                        # self.done = True
                         self.a = self.a + 1
-                        begin = dt.datetime.utcnow()
                         # print(colored(files1[self.a],'yellow'))
                     else :
-                        end = dt.datetime.utcnow() + 3.5
-                    end = dt.datetime.utcnow()
+                        print("Exit is Set!")
 
-        else :
-            print(colored('No More Files','red'))
-            queue.send(['done','done'])
-            queue.close()
-            sys.exit()
+        print(colored('No More Files','red'))
+        sys.exit()
 
 # ===========================================================================================================================
     def readdata(self, files1, files2, mce_file1, mce_file2):
-        if self.done :
-            self.done = False
-            ''' This only works under the assumption that both mces are
-                spitting out the same number of files at any given time'''
-            # for i in range(1):
-            f1 = mce_data.SmallMCEFile(files1)
-            self.h1 = f1.Read(row_col=True, unfilter='DC').data
-            f2 = mce_data.SmallMCEFile(files2)
-            self.h2 = f2.Read(row_col=True, unfilter='DC').data
+        ''' This only works under the assumption that both mces are
+            spitting out the same number of files at any given time'''
+        # for i in range(1):
+        f1 = mce_data.SmallMCEFile(files1)
+        self.h1 = f1.Read(row_col=True, unfilter='DC').data
+        f2 = mce_data.SmallMCEFile(files2)
+        self.h2 = f2.Read(row_col=True, unfilter='DC').data
 
-            # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
-            if self.a != 0 :
-                if (self.h1.shape != self.h1_shape and self.h2.shape != self.h2_shape) :
-                    print(colored('WARNING! Both MCE Frame Size Has Changed','red'))
-                elif self.h1.shape != self.h1_shape :
-                    print(colored('WARNING! MCE0 Frame Size Has Changed','red'))
-                else :
-                    print(colored('WARNING! MCE1 Frame Size Has Changed','red'))
+        # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
+        if self.a != 0 :
+            if (self.h1.shape != self.h1_shape and self.h2.shape != self.h2_shape) :
+                print(colored('WARNING! Both MCE Frame Size Has Changed','red'))
+            elif self.h1.shape != self.h1_shape :
+                print(colored('WARNING! MCE0 Frame Size Has Changed','red'))
             else :
-                self.h1_shape = self.h1.shape
-                self.h2_shape = self.h2.shape
-
-            # self.h1_shape = self.h1.shape
-            # self.h2_shape = self.h2.shape
-            self.head1 = self.read_header(f1)
-            self.head2 = self.read_header(f2)
-            # -----------------------------------------------------------------
-            # d1 = np.empty([h.shape[0],h.shape[1]],dtype=float)
-            # for b in range(h.shape[0]):
-            #     for c in range(h.shape[1]):
-            #         d1[b][c] = (np.std(h1[b][c][:],dtype=float))
-            # d2 = np.empty([h.shape[0],h.shape[1]],dtype=float)
-            # for b in range(h.shape[0]):
-            #     for c in range(h.shape[1]):
-            #         d2[b][c] = (np.std(h2[b][c][:],dtype=float))
-            # -----------------------------------------------------------------
-            self.rc = 'a'
-            self.append_data()
-            self.p += 1
-            print(colored("MCE Append",'red'))
-            return self.rc
+                print(colored('WARNING! MCE1 Frame Size Has Changed','red'))
         else :
-            print(colored("I'm broken",'red'))
-            sys.exit()
+            self.h1_shape = self.h1.shape
+            self.h2_shape = self.h2.shape
+
+        # self.h1_shape = self.h1.shape
+        # self.h2_shape = self.h2.shape
+        self.head1 = self.read_header(f1)
+        self.head2 = self.read_header(f2)
+        # -----------------------------------------------------------------
+        # d1 = np.empty([h.shape[0],h.shape[1]],dtype=float)
+        # for b in range(h.shape[0]):
+        #     for c in range(h.shape[1]):
+        #         d1[b][c] = (np.std(h1[b][c][:],dtype=float))
+        # d2 = np.empty([h.shape[0],h.shape[1]],dtype=float)
+        # for b in range(h.shape[0]):
+        #     for c in range(h.shape[1]):
+        #         d2[b][c] = (np.std(h2[b][c][:],dtype=float))
+        # -----------------------------------------------------------------
+        self.rc = 'a'
+        self.append_data()
+        self.p += 1
+        print(colored("MCE Append",'red'))
+        return self.rc
 
 # ===========================================================================
     def read_header(self, f):
@@ -138,65 +123,60 @@ class Time_Files:
 
 # ============================================================================
     def hk_read(self,num_hk):
-        if self.done :
-            self.done = False
-            self.k = 0
-            dir3 = ('/Users/vlb9398/Desktop/test_hk_files/')
-            files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
-            # print(colored(files3[0],'green'))
-            file = open(files3[0])
-            name = []
-            data = []
-            time = []
-            # print(colored("name %s" %(name),'red'))
-            for line in file:
-                fields = line.strip().split(",")
-                t_type = str(fields[0])
-                name1 = str(fields[2])
-                name2 = str(fields[3])
-                names = (name1 + "_" + name2).replace('"','')
-                if t_type == 't': # want to keep exact sync box value
-                    sync = float(fields[1])
-                    self.tele_time = [float(fields[1]),names.replace(' ','_'),float(fields[4])]
-                else :
-                    time.append(int(fields[1]))
-                    name.append(names.replace(' ','_'))
-                    data.append(float(fields[4]))
-                    self.tele_time = [0,'',0]
+        self.k = 0
+        dir3 = ('/Users/vlb9398/Desktop/test_hk_files/')
+        files3 = [dir3 + x for x in os.listdir(dir3) if (x.startswith('omnilog'))]
+        # print(colored(files3[0],'green'))
+        file = open(files3[0])
+        name = []
+        data = []
+        time = []
+        # print(colored("name %s" %(name),'red'))
+        for line in file:
+            fields = line.strip().split(",")
+            t_type = str(fields[0])
+            name1 = str(fields[2])
+            name2 = str(fields[3])
+            names = (name1 + "_" + name2).replace('"','')
+            if t_type == 't': # want to keep exact sync box value
+                sync = float(fields[1])
+                self.tele_time = [float(fields[1]),names.replace(' ','_'),float(fields[4])]
+            else :
+                time.append(int(fields[1]))
+                name.append(names.replace(' ','_'))
+                data.append(float(fields[4]))
+                self.tele_time = [0,'',0]
 
-            #==============================================
-            ''' Routine for Sorting Data by Time Index '''
-            #==============================================
-            sort_name = [x for _,x in sorted(zip(time,name))]
-            sort_data = [x for _,x in sorted(zip(time,data))]
-            sort_time = sorted(time)
-            #==============================================
-            print(len(time))
-            # only want to append one line at a time to check for new variables
-            for i in range(len(time)-1):
-                self.time = sort_time[i]
-                self.name = sort_name[i]
-                self.data = sort_data[i]
+        #==============================================
+        ''' Routine for Sorting Data by Time Index '''
+        #==============================================
+        sort_name = [x for _,x in sorted(zip(time,name))]
+        sort_data = [x for _,x in sorted(zip(time,data))]
+        sort_time = sorted(time)
+        #==============================================
+        print(len(time))
+        # only want to append one line at a time to check for new variables
+        for i in range(len(time)-1):
+            self.time = sort_time[i]
+            self.name = sort_name[i]
+            self.data = sort_data[i]
 
-                # only incremment index for a new timestamp,not for file num or for t =======
-                if self.k == 0 :
-                    self.new_time = self.time
-                if self.new_time == self.time:
-                    pass
-                elif self.new_time != self.time :
-                    self.n += 1
-                    self.new_time = self.time
-                self.k += 1
+            # only incremment index for a new timestamp,not for file num or for t =======
+            if self.k == 0 :
+                self.new_time = self.time
+            if self.new_time == self.time:
+                pass
+            elif self.new_time != self.time :
+                self.n += 1
+                self.new_time = self.time
+            self.k += 1
 
-                self.append_data()
-                print(colored("HK Append # %s" %(i),'red'))
-            self.k = 0
-            print(colored("End of HK File",'yellow'))
-                    #===============================================================
-            return self.rc
-        else :
-            print(colored("I'm broken",'red'))
-            sys.exit()
+            self.append_data()
+            print(colored("HK Append # %s" %(i),'red'))
+        self.k = 0
+        print(colored("End of HK File",'yellow'))
+                #===============================================================
+        return self.rc
 
 # ============================================================================
     def append_data(self):

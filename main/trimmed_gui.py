@@ -32,32 +32,39 @@ class ExampleApp(QtGui.QMainWindow, ui_main.Ui_MainWindow):
         self.grPlot.plot(X,Y,pen=pen,clear=True)
         print("update took %.02f ms"%((time.clock()-t1)*1000))
 
+    def stop_thread(self):
+        
 class MyThread(QtCore.QThread):
 
     new_data = QtCore.pyqtSignal(object,object,object)
 
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
-        self.exiting = False
+        self.exit = mp.Event()
+
 
     def __del__(self):
-        self.exiting = True
+        self.exit.set()
         self.wait()
 
     def run(self):
+        T = 0
         data, queue = mp.Pipe()
-        p = mp.Process(target=sw.wave , args=(queue,))
+        p = mp.Process(target=sw.wave , args=(queue,self.exit))
         p.start()
-        while not self.exiting :
+        while not self.exit.is_set() :
             points=100 #number of data points
             X=np.arange(points)
             Y=np.sin(np.arange(points)/points*3*np.pi+time.time())
             stuff = data.recv()
+            T += 1
             print(stuff[1])
             if stuff[0] == 'done':
                 break
             else :
                 self.new_data.emit(stuff[0],X,Y)
+            if T == 7 :
+                self.exit.set()
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
