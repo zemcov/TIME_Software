@@ -26,6 +26,7 @@ def new_file(h_size, filestarttime):
     mce.createDimension('v',16)
     mce.createDimension('hk',1)
     mce.createDimension('hks',2)
+    mce.createDimension('sf',4)
 
 
     # creating variables --------------------------------------------------------------------------------
@@ -55,6 +56,9 @@ def new_file(h_size, filestarttime):
     MCE1_Header = mce.createVariable('mce1_header','i4',('t','v','k'),zlib=True)
     # =========================================================================
 
+    global Status_Flags
+    Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
+
     # parafilename = ('tempfiles/tempparameters.txt')
     # parafile = open(parafilename, 'r')
     # parameters = parafile.readline().strip().split()
@@ -73,9 +77,10 @@ def new_file(h_size, filestarttime):
     mce.close()
     return mce
 
-def mce_append(nc_file, p, h1, h2, head1, head2):
+def mce_append(nc_file, p, h1, h2, head1, head2, flags):
     mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-    Time[p,:] = np.array([str(now.datetime.utcnow())],dtype='S26')
+    Time[p,:] = np.array([str(now.datetime.utcnow())],dtype='S26') # will eventually come from telescope
+    Status_Flags[p,:,:] = flags
     MCE0_Raw_Data_All[p,:,:,:] = h1
     MCE1_Raw_Data_All[p,:,:,:] = h2
     MCE0_Header[p,:,:] = head1
@@ -93,4 +98,3 @@ def hk_append(nc_file, n, time, data, name, tele_time):
     if tele_time[0] != 0 : # make sure we are only appending real data
         Tele_time[n,:,:,:] = tele_time
     # print(hk.variables.keys())
-    # hk.close()

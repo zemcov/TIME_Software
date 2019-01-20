@@ -10,6 +10,7 @@ import gzip
 from termcolor import colored
 import time as TIME
 from multiprocessing import Pipe
+import utils as ut
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 
@@ -32,11 +33,11 @@ class Time_Files:
         self.head1 = 0
         self.head2 = 0
 
-    def netcdfdata(self,queue,exit):
+    def netcdfdata(self,queue):
         dir3 = ('/Users/vlb9398/Desktop/test_hk_files/')
         dir1 = ('/Users/vlb9398/Desktop/test_mce_files/')
         dir2 = ('/Users/vlb9398/Desktop/test_mce_files_copy/')
-        while not exit.is_set():
+        while not ut.mce_exit.is_set():
             # if self.a > 0 :
                 mce_file1 = len(os.listdir(dir1))
                 mce_file2 = len(os.listdir(dir2))
@@ -45,7 +46,7 @@ class Time_Files:
                     files1 = [dir1 + x for x in os.listdir(dir1) if (x.startswith("test") and not x.endswith('.run'))]
                     files2 = [dir2 + x for x in os.listdir(dir2) if (x.startswith("test") and not x.endswith('.run'))]
                     # we want more than just temp.run in the directory
-                    if not exit.is_set(): # won't work when directory is having files being deleted after each read
+                    if not ut.mce_exit.is_set(): # won't work when directory is having files being deleted after each read
                         self.rc = 'a'
                         self.readdata(files1[self.a], files2[self.a], 1, 1)
                         queue.send([self.h1,self.p])
@@ -71,36 +72,42 @@ class Time_Files:
         self.h2 = f2.Read(row_col=True, unfilter='DC').data
 
         # -------CHECK FOR FRAME SIZE CHANGE--------------------------------
-        if self.a != 0 :
-            if (self.h1.shape != self.h1_shape and self.h2.shape != self.h2_shape) :
-                print(colored('WARNING! Both MCE Frame Size Has Changed','red'))
-            elif self.h1.shape != self.h1_shape :
-                print(colored('WARNING! MCE0 Frame Size Has Changed','red'))
-            else :
-                print(colored('WARNING! MCE1 Frame Size Has Changed','red'))
-        else :
+        # if frame size is wrong, just append zeros instead of partial array to prevent netcdf error
+        # also gives a frame size error flag
+        if self.p == 0 :
             self.h1_shape = self.h1.shape
             self.h2_shape = self.h2.shape
+            ut.flags.append(0)
+            print(ut.flags)
 
-        # self.h1_shape = self.h1.shape
-        # self.h2_shape = self.h2.shape
+        else :
+            if (self.h1.shape != self.h1_shape) and (self.h2.shape != self.h2_shape) :
+                print(colored('WARNING! Both MCE Frame Size Has Changed','red'))
+                ut.flags[3] = 11
+                self.h1 = np.zeros((self.h1_shape[0],self.h1_shape[1],self.h1_shape[2]))
+                self.h2 = np.zeros((self.h2_shape[0],self.h2_shape[1],self.h2_shape[2]))
+
+            elif self.h1.shape != self.h1_shape :
+                print(colored('WARNING! MCE0 Frame Size Has Changed','red'))
+                ut.flags[3] = 11
+                self.h1 = np.zeros((self.h1_shape[0],self.h1_shape[1],self.h1_shape[2]))
+
+            elif self.h2.shape != self.h2_shape :
+                print(colored('WARNING! MCE1 Frame Size Has Changed','red'))
+                ut.flags[3] = 11
+                self.h2 = np.zeros((self.h2_shape[0],self.h2_shape[1],self.h2_shape[2]))
+
+            else :
+                ut.flags[3] = 0
+                print(ut.flags)
+
         self.head1 = self.read_header(f1)
         self.head2 = self.read_header(f2)
-        # -----------------------------------------------------------------
-        # d1 = np.empty([h.shape[0],h.shape[1]],dtype=float)
-        # for b in range(h.shape[0]):
-        #     for c in range(h.shape[1]):
-        #         d1[b][c] = (np.std(h1[b][c][:],dtype=float))
-        # d2 = np.empty([h.shape[0],h.shape[1]],dtype=float)
-        # for b in range(h.shape[0]):
-        #     for c in range(h.shape[1]):
-        #         d2[b][c] = (np.std(h2[b][c][:],dtype=float))
-        # -----------------------------------------------------------------
         self.rc = 'a'
         self.append_data()
         self.p += 1
-        print(colored("MCE Append",'red'))
-        return self.rc
+        # print(colored("MCE Append",'red'))
+        return
 
 # ===========================================================================
     def read_header(self, f):
@@ -176,7 +183,7 @@ class Time_Files:
         self.k = 0
         print(colored("End of HK File",'yellow'))
                 #===============================================================
-        return self.rc
+        return
 
 # ============================================================================
     def append_data(self):
@@ -189,7 +196,7 @@ class Time_Files:
             self.ncfile = netcdfdir + "/raw_%s.nc" %(self.filestarttime)
 
             if self.rc == 'a' :
-                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2)
+                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2, ut.flags)
             elif self.rc == 'hk':
                 nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
             else :
@@ -205,7 +212,7 @@ class Time_Files:
             self.ncfile = netcdfdir + "/raw_%s.nc" %(self.filestarttime)
 
             if self.rc == 'a' :
-                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2)
+                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2, ut.flags)
             elif self.rc == 'hk':
                 nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
             else :
@@ -213,11 +220,11 @@ class Time_Files:
 
         else: # if everything is okay, append data to the file
             if self.rc == 'a' :
-                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2)
+                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2, ut.flags)
             elif self.rc == 'hk':
                 nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
             else :
                 print(colored('Wrong RC Input!','red'))
 
         # print(colored(os.stat(netcdfdir + "/raw_%s.nc" %(self.filestarttime)).st_size,'magenta'))
-        return self.rc
+        return

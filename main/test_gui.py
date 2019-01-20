@@ -1,4 +1,5 @@
 from pyqtgraph import QtCore, QtGui
+import pyqtgraph as Qt
 import numpy as np
 import sys, os, subprocess, time, datetime, socket, struct, threading
 import pyqtgraph as pg
@@ -7,10 +8,7 @@ from termcolor import colored
 import multiprocessing as mp
 import read_files_local as rf
 import fake_tel as ft
-
-# sys.stdout = os.fdopen(sys.stdout.fileno(),'w',1) #line buffering
-mce_exit = mp.Event()
-tel_exit = mp.Event()
+import utils as ut
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -51,58 +49,80 @@ class mcegui(QtGui.QWidget):
     def qt_connections(self):
         self.quitbutton.clicked.connect(self.on_quitbutton_clicked)
         self.submitbutton.clicked.connect(self.on_submitbutton_clicked)
+        self.starttel.clicked.connect(self.on_starttel_clicked)
         self.selectchannel.currentIndexChanged.connect(self.changechannel)
         self.readoutcardselect.currentIndexChanged.connect(self.changereadoutcard)
         self.selectrow.currentIndexChanged.connect(self.changerow)
 
-    #quits out of GUI and stops the MCE
     def on_quitbutton_clicked(self):
+        ut.mce_exit.set()
+        ut.tel_exit.set()
+        ut.kms_exit.set()
+        ut.hk_exit.set()
         print('Quitting Application')
         sys.exit()
 
+    def on_starttel_clicked(self):
+        print('Setting Telescope Observing Parameters')
     #sets parameter variables to user input and checks if valid - will start MCE
     #and live graphing if they are
     def on_submitbutton_clicked(self):
+        # check if telescope has been started first
+        if not self.startel.isEnabled() :
+            print("Please Initialize Telescope First")
+            self.submitbutton.setEnabled(False)
+
         #set variables to user input
         # observer ---------------------------------------
         self.observer = self.enterobserver.text()
+
         # data mode --------------------------------------
         self.datamode = self.enterdatamode.currentText()
-        if self.datamode == 'Error':
-            self.datamode = 0
-        elif self.datamode == 'Raw':
-            self.datamode = 12
-        elif self.datamode == 'Low Pass Filtered':
-            self.datamode = 2
-        elif self.datamode == 'Mixed Mode':
-            self.datamode = 10
-        elif self.datamode == 'SQ1 Feedback':
-            self.datamode = 1
+        mce_states = ['Error', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)']
+        mce_states2 = [0,12,2,11,10,7,5,4]
+        for state in mce_states :
+            if self.datamode == state :
+                self.datamode = mce_states2[i]
+
         # readout card ---------------------------------------------
         self.readoutcard = self.enterreadoutcard.currentIndex() + 1
         if self.readoutcard == 9:
             self.readoutcard = 'All'
             self.currentreadoutcard = 2
             self.currentreadoutcarddisplay = 'MCE 1 RC 2'
+
         # frame number ----------------------------------------------
         self.framenumber = self.enterframenumber.text()
+
         # data rate -------------------------------------------------
         self.datarate = self.enterdatarate.text()
+
         # how much data to view on screen at once -------------------
         self.timeinterval = self.entertimeinterval.text()
+
         # keep old channel data on graph ----------------------------
         self.channeldelete = self.enterchanneldelete.currentText()
+
         # keep mce data on screen -----------------------------------
         self.showmcedata = self.entershowmcedata.currentText()
+
         # time keepers ----------------------------------------------
         self.timestarted = datetime.datetime.utcnow()
         self.timestarted = self.timestarted.isoformat()
+
+        self.inittel = self.init_tel.currentText()
+
+        if self.inittel == 'Yes':
+            self.inittelescope()
+        else :
+            pass
 
         #check if parameters are valid - will create warning box if invalid
         if self.observer == '' or self.framenumber == '' or self.framenumber == '0'\
         or self.datarate == '0' or self.datarate == '' or self.timeinterval == ''\
         or self.timeinterval == '0':
             self.warningbox('gui') # throw up a warning box
+            ''' should probably also add something in to restart the gui main form screen '''
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
@@ -130,20 +150,19 @@ class mcegui(QtGui.QWidget):
             self.initplot()
             self.initfftgraph()
             self.initkmirrordata()
-            self.inittelescope()
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
         self.on_quitbutton_clicked()
     #creates inputs for user to enter parameters and creates 'Quit' button
-    def getparameters(self):
-        self.parametersquit = QtGui.QVBoxLayout()
 
+    def getparameters(self):
         #creating user input boxes
         self.enterobserver = QtGui.QLineEdit('VLB')
         self.enterobserver.setMaxLength(3)
         self.enterdatamode = QtGui.QComboBox()
-        self.enterdatamode.addItems(['Error', 'Raw', 'Low Pass Filtered', 'Mixed Mode', 'SQ1 Feedback'])
+        self.enterdatamode.addItems(
+            ['Error', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
         self.enterreadoutcard = QtGui.QComboBox()
         for i in range(8):
             if i < 4:
@@ -161,7 +180,12 @@ class mcegui(QtGui.QWidget):
         self.entershowmcedata.addItems(['Yes', 'No'])
         self.submitbutton = QtGui.QPushButton('Submit')
 
+        self.mceGroupBox = QtGui.QGroupBox("MCE Parameters")
         self.parameters = QtGui.QFormLayout()
+        self.mcetitle = QtGui.QLabel(self)
+        self.mcetitle.setAlignment(QtCore.Qt.AlignCenter)
+        self.mcetitle.setText('MCE Parameters')
+        self.parameters.addRow(self.mcetitle)
         self.parameters.addRow('Observer', self.enterobserver)
         self.parameters.addRow('Datamode', self.enterdatamode)
         self.parameters.addRow('Readout Card', self.enterreadoutcard)
@@ -171,10 +195,36 @@ class mcegui(QtGui.QWidget):
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
         self.parameters.addRow('Show MCE Data', self.entershowmcedata)
         self.parameters.addRow(self.submitbutton)
+        self.mceGroupBox.setLayout(self.parameters)
 
-        self.parametersquit.addLayout(self.parameters)
+        # telescope options =================================================
+        self.telescan = QtGui.QComboBox()
+        self.telescan.addItems(['1D','2D','BowTie (constant el)'])
 
-        #creating quit button
+        self.tel_delay = QtGui.QLineEdit('0')
+
+        self.init_tel = QtGui.QComboBox()
+        self.init_tel.addItems(['No','Yes'])
+
+
+
+        self.telGroupBox = QtGui.QGroupBox("Telescope Parameters")
+        self.telparams = QtGui.QFormLayout()
+        self.teltitle = QtGui.QLabel(self)
+        self.teltitle.setAlignment(QtCore.Qt.AlignCenter)
+        self.teltitle.setText('Telescope Parameters')
+        self.telparams.addRow(self.teltitle)
+        self.telparams.addRow('Activate Telescope', self.init_tel)
+        self.telparams.addRow('Scan Strategy', self.telescan)
+        self.telparams.addRow('Delayed Start (sec)', self.tel_delay)
+        self.starttel = QtGui.QPushButton('Initialize Telescope')
+        self.telparams.addRow(self.starttel)
+        self.telGroupBox.setLayout(self.telparams)
+        # =====================================================================
+        self.parametersquit = QtGui.QVBoxLayout()
+        self.parametersquit.setAlignment(QtCore.Qt.AlignCenter)
+        self.parametersquit.addWidget(self.telGroupBox)
+        self.parametersquit.addWidget(self.mceGroupBox)
         self.quitbutton = QtGui.QPushButton('Quit')
         self.parametersquit.addWidget(self.quitbutton)
 
@@ -308,6 +358,12 @@ class mcegui(QtGui.QWidget):
         self.grid.addWidget(self.fftgraph, 3, 5, 2, 3)
 
     def initkmirrordata(self):
+        # start the kms QThread
+        ''' Add back in once KMS is running '''
+        # self.kms_updater = KMS_Thread()
+        # self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
+        # self.kms_updater.start()
+
         #place holder data
         self.parallacticangle = rm.randint(10, 170)
         self.positionalerror = rm.randint(0, 90)
@@ -327,9 +383,9 @@ class mcegui(QtGui.QWidget):
 
     def inittelescope(self):
         # start the telescope QThread
-        self.updater = Tel_Thread()
-        self.updater.new_tel_data.connect(self.updatetelescopedata)
-        self.updater.start()
+        self.tel_updater = Tel_Thread()
+        self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
+        self.tel_updater.start()
 
         # initialize printouts of current tele values not plotted
         self.patext = QtGui.QLabel('PA: %s' %('-'))
@@ -367,18 +423,31 @@ class mcegui(QtGui.QWidget):
         self.telegrid.addLayout(self.telescopedata, 1, 1, 1, 1)
         self.telegrid.addWidget(self.altazgraph, 1, 2, 2, 2)
         self.telegrid.addWidget(self.radecgraph, 1, 4, 2, 2)
-        self.telescopewindow.setGeometry(2000, 2000, 2000, 2000)
+        self.telescopewindow.setGeometry(10, 10, 1920, 1080)
         self.telescopewindow.setLayout(self.telegrid)
         self.telescopewindow.show()
 
         self.repeat = False
 
-    def updatekmirrordata(self):
-        self.parallacticangle = rm.randint(10, 170)
-        self.positionalerror = rm.randint(0, 90)
+    def updatekmirrordata(self,status):
 
-        self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
-        self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
+        # error checking based on status flags from kmirror
+        kms_error = [10,11,12,13]
+        if (status in kms_error) and (self.repeat == False) :
+            os.system("afplay /Users/vlb9398/Desktop/Gui_code/TIME_Software/main/klaxon.mp3")
+            self.repeat = True
+            ut.tel_exit.set()
+            ut.mce_exit.set()
+            ut.kms_exit.set()
+            ut.hk_exit.set()
+            self.warningbox(['kms',status])
+
+        else :
+            self.parallacticangle = rm.randint(10, 170)
+            self.positionalerror = rm.randint(0, 90)
+
+            self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
+            self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
 
     def updatefftgraph(self):
         # self.y and self.x are defined in updateplot
@@ -388,15 +457,16 @@ class mcegui(QtGui.QWidget):
         self.fftgraphdata.setData(self.x, self.fftdata)
 
     def updatetelescopedata(self,pa,slew,alt,az,ra,dec,time):
-        global tel_exit
-        global mce_exit
-
-        if (slew == 2.0) and (self.repeat == False) :
+        # error checking based on status flags from telescope
+        tel_error = [10,11,12]
+        if (slew in tel_error) and (self.repeat == False) :
             os.system("afplay /Users/vlb9398/Desktop/Gui_code/TIME_Software/main/klaxon.mp3")
             self.repeat = True
-            tel_exit.set()
-            mce_exit.set()
-            self.warningbox('tel')
+            ut.tel_exit.set()
+            ut.mce_exit.set()
+            ut.kms_exit.set()
+            ut.hk_exit.set()
+            self.warningbox(['tel',slew]) #slew will be replaced with tel status flag over socket
 
         else :
             # update text on window to reflect new data
@@ -428,7 +498,7 @@ class mcegui(QtGui.QWidget):
         # for b in range(h1.shape[0]):
         #     for c in range(h1.shape[1]):
         #         d1[b][c] = (np.std(h1[b][c][:],dtype=float))
-        d1 = np.random.random((41,32))
+        d1 = np.random.rand(41,32)
         # =========================================================
 
         # parsing mce array for graph data ========================
@@ -476,7 +546,6 @@ class mcegui(QtGui.QWidget):
         if self.index == 0:
             self.initheatmap(d1) # give first values for heatmap to create image scale
             self.updatefftgraph()
-            self.updatekmirrordata()
             self.data[0] = x
             self.data[1] = y
             self.mcegraph.addItem(self.mcegraphdata)
@@ -513,7 +582,6 @@ class mcegui(QtGui.QWidget):
         else:
             self.updateheatmap(d1)
             self.updatefftgraph()
-            self.updatekmirrordata()
             if self.channeldelete == 'Yes' and self.oldch != self.currentchannel:
                 self.mcegraphdata.clear()
                 if self.readoutcard == 'All':
@@ -549,123 +617,129 @@ class mcegui(QtGui.QWidget):
         #     self.heatmap.setLevels(100, 190)
 
 
-    ''' Need to install playsound to use afplay'''
-    def warningbox(self,message):
-        if message == 'gui' :
+    def warningbox(self,message): # message is a tuple
+        if message[0] == 'gui' :
             parameterwarning = QtGui.QMessageBox()
             parameterwarning.setIcon(QtGui.QMessageBox.Warning)
-            parameterwarning.setText('One or more parameters not entered correctly!')
+            parameterwarning.setText('Error %s: One or more parameters not entered correctly!' %(message[1]))
             parameterwarning.setStandardButtons(QtGui.QMessageBox.Ok)
             parameterwarning.setWindowTitle('Parameter Warning')
             parameterwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             parameterwarning.exec_()
-        if message == 'kms' :
+        if message[0] == 'kms' :
             kmswarning = QtGui.QMessageBox()
             kmswatning.setStyleSheet("background-color: rgb(255,0,0); color: rgb(0,0,0)")
             kmswarning.setIcon(QtGui.QMessageBox.Critical)
-            kmswarning.setText('System has halted due to Kmirror E-Stop. Please standby for user reset...')
+            kmswarning.setText('Error %s: System has halted due to Kmirror E-Stop. Please standby for user reset...' %(message[1]))
             kmswarning.setStandardButtons(QtGui.QMessageBox.Abort)
-            kmswarning.setWindowTitle('KMirror System Emergency Stopped!')
+            kmswarning.setWindowTitle('KMirror System Emergency Stop!')
             kmswarning.buttonClicked.connect(self.on_warningbutton_clicked)
             kmswarning.exec_()
-        elif message == 'tel' :
+        elif message[0] == 'tel' :
             telwarning = QtGui.QMessageBox()
             telwarning.setStyleSheet("background-color: rgb(255,0,0); color: rgb(0,0,0)")
             telwarning.setIcon(QtGui.QMessageBox.Critical)
-            telwarning.setText('The telescope has unexpectedly halted normal operations. Software must be reset by user.')
+            telwarning.setText('Error %s : The telescope has unexpectedly halted normal operations. Software must be reset by user.' %(message[1]))
             telwarning.setStandardButtons(QtGui.QMessageBox.Abort)
             telwarning.setWindowTitle('Telescope Emergency Stop')
             telwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             telwarning.exec_()
-        elif message == 'hk' :
+        elif message[0] == 'hk' :
             hkwarning = QtGui.QMessageBox()
             hkwarning.setStyleSheet("background-color: rgb(255,0,0); color: rgb(0,0,0)")
             hkwarning.setIcon(QtGui.QMessageBox.Critical)
-            hkwarning.setText('Housekeeping as reported an error. No files are being created.')
+            hkwarning.setText('Error %s: Housekeeping as reported an error. No files are being created.' %(message[1]))
             hkwarning.setStandardButtons(QtGui.QMessageBox.Abort)
             hkwarning.setWindowTitle('Housekeeping Error')
             hkwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             hkwarning.exec_()
 
 class MyThread(QtCore.QThread):
-    global mce_exit
+
     new_data = QtCore.pyqtSignal(object,object)
 
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
 
     def __del__(self):
-        mce_exit.set()
+        ut.mce_exit.set()
 
     def run(self):
         data, queue = mp.Pipe()
-        p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,mce_exit))
+        p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,))
         p.start()
-        while not mce_exit.is_set():
+        while not ut.mce_exit.is_set():
             # grab data from read_files.py
             stuff = data.recv()
-            if stuff[0] == 'done':
-                break
-            else :
-                # send updated data to the gui
-                self.new_data.emit(stuff[0],stuff[1])
+            # send updated data to the gui
+            self.new_data.emit(stuff[0],stuff[1])
 
 class Tel_Thread(QtCore.QThread):
-    global tel_exit
     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
 
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
 
     def __del__(self):
-        tel_exit.set()
+        ut.tel_exit.set()
 
     def run(self):
         data, queue = mp.Pipe()
-        p = mp.Process(target=ft.update_tel , args=(queue,tel_exit))
+        p = mp.Process(target=ft.update_tel , args=(queue,))
         p.start()
-        while not tel_exit.is_set() :
+        while not ut.tel_exit.is_set() :
             # grab data from read_files.py
             tel_stuff = data.recv()
-            if tel_stuff[0] == 'done':
-                break
-            else :
-                # send updated data to the gui
-                self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-        print("Exit Thread is Set")
+            ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
+            self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
 
 ''' Add this one once we know that KMS is on and ready to be integrated'''
 # class KMS_Thread(QtCore.QThread):
-#
-#     new_data = QtCore.pyqtSignal(object,object)
+
+#     new_kms_data = QtCore.pyqtSignal(object) # object is status flag
 #
 #     def __init__(self, parent = None):
 #         QtCore.QThread.__init__(self, parent)
-#         self.exiting = False
 #
 #     def __del__(self):
-#         self.exiting = True
-#         self.wait()
+#         ut.kms_exit.set()
 #
 #     def run(self):
 #         data, queue = mp.Pipe()
-#         p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,))
+#         p = mp.Process(target='''tbd''' , args=(queue,))
 #         p.start()
-#         while not self.exiting :
-#             # grab data from read_files.py
-#             stuff = data.recv()
-#             if stuff[0] == 'done':
-#                 break
-#             else :
-#                 # send updated data to the gui
-#                 self.new_data.emit(stuff[0],stuff[1])
+#         while not ut.kms_exit.is_set() :
+#             kms_stuff = data.recv()
+#             # send updated data to the gui
+#             self.parallacticangle = kms_stuff[0]
+#             self.positionalerror = kms_stuff[1]
+            # ut.flags[1] = kms_stuff[2] #update kms flags sent to netcdf data
+#             self.new_kms_data.emit(kms_stuff[2]) #stuff 2 is status flag
+
+''' Add back in once HK socket script has been made '''
+# class HK_Thread(QtCore.QThread):
+#
+#     def __init__(self, parent = None):
+#         QtCore.QThread.__init__(self, parent)
+#
+#     def __del__(self):
+#         hk_exit.set()
+#
+#     def run(self):
+#         data, queue = mp.Pipe()
+#         p = mp.Process(target=hk.update_sock , args=(queue,))
+#         p.start()
+#         while not ut.hk_exit.is_set() :
+#             hk_stuff = data.recv()
+#             # send hk status flag to gui
+#             ut.flags[2] = hk_stuff
 
 
 #activating the gui main window
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    app.setApplicationName('TIME Raw Data Visualization Suite')
+    app.setApplicationName('TIME Data Visualization Suite')
     ex = mcegui()
     sys.exit(app.exec_())
     print("Done")

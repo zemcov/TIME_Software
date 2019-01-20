@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
 from astroplan import Observer
+import utils as ut
 
 # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # PILOT1_PORT = 8888
@@ -13,7 +14,7 @@ from astroplan import Observer
 # s.connect((PILOT1, PILOT1_PORT))
 #message = 'Hello!'
 
-def tel_move(exit,queue,RA,DEC,n,COLOR,slew_flag):
+def tel_move(queue,RA,DEC,n,COLOR,slew_flag):
     #initialize  and update position coordinates
     location = EarthLocation.from_geodetic(lon =-111.5947*u.deg, lat =31.95844*u.deg, height=2097.024*u.m)
     kittpeak = Observer(location=location, name='kitt peak')
@@ -35,7 +36,7 @@ def tel_move(exit,queue,RA,DEC,n,COLOR,slew_flag):
     # packer = struct.Struct('d d d d d d d')
     # data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
     # s.send(data)
-    if not exit.is_set():
+    if not ut.tel_exit.is_set():
         queue.send([pa,slew_flag,alt,az,RA,DEC,othertime.time()])
         return
     else :
@@ -45,7 +46,7 @@ def tel_move(exit,queue,RA,DEC,n,COLOR,slew_flag):
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down
 # ----------MOVING UP TO SCANNING POSITION---------------------------------------------------------------------------
-def update_tel(queue,exit) :
+def update_tel(queue) :
     # --------SPEEDS AND PARAMETERS---------------------------------------------
     speeds = [315.0,3615.0] # arcseconds per second, 3600 arcseconds per degree
     area = 2.0 #degrees wide of observing field
@@ -63,7 +64,7 @@ def update_tel(queue,exit) :
     loops_deg = 2 #number of loops per degrees = loops_deg
     COLOR = 'black'
     # -------------------------------------------------------------------------
-    while not exit.is_set():
+    while not ut.tel_exit.is_set():
         if slew_flag == 0.0:
             while dec <= (dec_start + 2) :
                 dec = dec + track
@@ -71,7 +72,7 @@ def update_tel(queue,exit) :
                     ra = ra + track
                 else :
                     ra = ra - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
-                tel_move(exit,queue,ra,dec,n,COLOR,slew_flag)
+                tel_move(queue,ra,dec,n,COLOR,slew_flag)
 
                 n = n + (1/rate)
                 plt.pause(1/rate)
@@ -90,7 +91,7 @@ def update_tel(queue,exit) :
                     ra = ra + track
                 else :
                     ra = ra - 360.0 + track
-                tel_move(exit,queue,ra,dec,n,COLOR,slew_flag)
+                tel_move(queue,ra,dec,n,COLOR,slew_flag)
 
                 n = n + (1/rate)
                 plt.pause(1/rate)
@@ -109,7 +110,7 @@ def update_tel(queue,exit) :
             while ra <= ra_init + area:
                 dec = dec_init + np.sin(loops*(ra-ra_init))
                 ra = ra + (speeds[0]/3600.0/rate)
-                tel_move(exit,queue,ra,dec,n,COLOR,slew_flag)
+                tel_move(queue,ra,dec,n,COLOR,slew_flag)
                 n = n + (1/rate)
                 plt.pause(1/rate)
                 othertime.sleep(1/rate)
