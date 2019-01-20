@@ -68,7 +68,7 @@ class mcegui(QtGui.QWidget):
     #and live graphing if they are
     def on_submitbutton_clicked(self):
         # check if telescope has been started first
-        if not self.startel.isEnabled() :
+        if not self.starttel.isEnabled() :
             print("Please Initialize Telescope First")
             self.submitbutton.setEnabled(False)
 
@@ -82,7 +82,7 @@ class mcegui(QtGui.QWidget):
         mce_states2 = [0,12,2,11,10,7,5,4]
         for state in mce_states :
             if self.datamode == state :
-                self.datamode = mce_states2[i]
+                self.datamode = mce_states2[mce_states.index(state)]
 
         # readout card ---------------------------------------------
         self.readoutcard = self.enterreadoutcard.currentIndex() + 1
