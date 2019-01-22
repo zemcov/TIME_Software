@@ -324,27 +324,36 @@ class mcegui(QtGui.QWidget):
 
     def initheatmap(self,z1):
         #casts z as array for creating heatmap
-        z1 = np.asarray(z1)
+        # z1 = np.asarray(z1)
         #z2 = np.asarray(self.z2)
         #recasting data in z as integers
-        z1.astype(int)
+        # z1.astype(int)
         #z2.astype(int)
-        #creating heatmap, labeling
+
         self.heatmapplot = pg.PlotItem()
         self.heatmapplot.setLabel('bottom', 'Row')
         self.heatmapplot.setLabel('left', 'Channel')
         self.heatmapplot.setTitle('MCE RMS Channel Noise')
 
-
         self.heatmap = pg.ImageView(view= self.heatmapplot)
         self.heatmap.setPredefinedGradient('thermal')
+        self.heatmap.autoLevels()
         self.heatmap.setImage(z1)
 
         #changes levels for heatmap to create gradient at depending on the data rate
         self.avggrad = int(np.average(z1))
         self.stddevgrad = int(np.std(z1))
-        self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
-        self.grid.addWidget(self.heatmap, 3, 2, 2, 3)
+        # self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
+        # self.grid.addWidget(self.heatmap, 3, 2, 2, 3)
+
+        # create new window for hk and fft data
+        self.heatmapwindow = QtGui.QWidget()
+        self.heatmapwindow.setWindowTitle('MCE RMS Noise Map')
+        self.heatgrid = QtGui.QGridLayout()
+        self.heatgrid.addWidget(self.heatmap, 3, 2, 2, 3)
+        self.heatmapwindow.setGeometry(10, 10, 1920, 1080)
+        self.heatmapwindow.setLayout(self.heatgrid)
+        self.heatmapwindow.show()
 
     def initfftgraph(self):
         self.fftgraph = pg.PlotWidget()
@@ -367,19 +376,23 @@ class mcegui(QtGui.QWidget):
         #place holder data
         self.parallacticangle = rm.randint(10, 170)
         self.positionalerror = rm.randint(0, 90)
+        self.kmsstatus = 'Normal'
 
-        self.parallacticangletext = QtGui.QLabel()
-        self.positionalerrortext = QtGui.QLabel()
+        self.parallacticangletext = QtGui.QLabel('Parallactic Angle: %s' %(self.parallacticangle))
+        self.positionalerrortext = QtGui.QLabel('Positional Error: %s' %(self.positionalerror))
+        self.kmsstatustext = QtGui.QLabel('KMS Status Flag: %s' %(self.kmsstatus))
+        self.kmstitle = QtGui.QLabel('Kmirror System Position and Status')
+        self.kmstitle.setAlignment(QtCore.Qt.AlignCenter)
 
-        self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
-        self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
+        self.kmsparams = QtGui.QVBoxLayout()
+        self.kmsparams.setContentsMargins(4,1,1,1)
+        self.kmsparams.addWidget(self.kmstitle)
+        self.kmsparams.addWidget(self.kmsstatustext)
+        self.kmsparams.addWidget(self.parallacticangletext)
+        self.kmsparams.addWidget(self.positionalerrortext)
+        self.grid.addLayout(self.kmsparams, 4, 1, 1, 1)
 
-        self.kmirrordatatext = QtGui.QVBoxLayout()
 
-        self.kmirrordatatext.addWidget(self.parallacticangletext)
-        self.kmirrordatatext.addWidget(self.positionalerrortext)
-
-        self.grid.addLayout(self.kmirrordatatext, 4, 1, 1, 1)
 
     def inittelescope(self):
         # start the telescope QThread
@@ -603,14 +616,14 @@ class mcegui(QtGui.QWidget):
 
     def updateheatmap(self,z1):
         #casts z as array for creating heatmap
-        z1 = np.asarray(z1)
+        # z1 = np.asarray(z1)
         #z2 = np.asarray(self.z2)
         #recasting data in z as integers
-        z1.astype(int)
+        # z1.astype(int)
         #z2.astype(int)
         self.heatmap.setImage(z1)
         #changes levels for heatmap to create gradient at depending on the data rate
-        self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
+        #self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
         # if self.frameperfile == 11:
         #     self.heatmap.setLevels(60, 260)
         # else:

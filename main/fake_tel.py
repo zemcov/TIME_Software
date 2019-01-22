@@ -12,7 +12,7 @@ import utils as ut
 # PILOT1_PORT = 8888
 # PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
 # s.connect((PILOT1, PILOT1_PORT))
-#message = 'Hello!'
+# message = 'Hello!'
 
 def tel_move(queue,RA,DEC,n,COLOR,slew_flag):
     #initialize  and update position coordinates

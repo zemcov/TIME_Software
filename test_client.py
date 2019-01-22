@@ -17,7 +17,7 @@ def Main():
 
     # message you send to server
     message = "hola"
-    while True:
+    while not ut.tel_exit.set():
 
         # message sent to server
         s.send(message.encode('ascii'))
