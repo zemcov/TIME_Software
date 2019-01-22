@@ -20,15 +20,10 @@ def start_tel_server(queue):
         data = client.recv(unpacker.size)
         pa,flag,alt,az,ra,dec,time = unpacker.unpack(data)
         if ra == (0.0,):
-            # this will be replaced by the telescope shutting itself down
-            # and sending us an appropriate shutdown signal
-            subprocess.Popen(['pkill -9 -f fake_tel.py'],shell=True)
             break
 
         else:
             # if no e-stop status is sent, send updates to gui thread
             queue.send([pa,flag,alt,az,ra,dec,time])
-            print('Data Received')
-    # don't use this during normal operations... 
-    subprocess.Popen(['pkill -9 -f fake_tel.py'],shell=True)
+
     print("Telescope Socket Closed")

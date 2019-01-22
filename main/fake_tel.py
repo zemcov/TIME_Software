@@ -11,7 +11,7 @@ import utils as ut
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(('127.0.0.1', 55555))
 
-def tel_move(queue,RA,DEC,n,COLOR,slew_flag):
+def tel_move(RA,DEC,n,COLOR,slew_flag):
     #initialize  and update position coordinates
     location = EarthLocation.from_geodetic(lon =-111.5947*u.deg, lat =31.95844*u.deg, height=2097.024*u.m)
     kittpeak = Observer(location=location, name='kitt peak')
@@ -37,80 +37,81 @@ def tel_move(queue,RA,DEC,n,COLOR,slew_flag):
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down
 # ----------MOVING UP TO SCANNING POSITION---------------------------------------------------------------------------
-def update_tel(queue) :
-    # --------SPEEDS AND PARAMETERS---------------------------------------------
-    speeds = [315.0,3615.0] # arcseconds per second, 3600 arcseconds per degree
-    area = 2.0 #degrees wide of observing field
-    rate = 20.0 #how many updates from telescope per second
-    track = ((speeds[1]-15.0)/rate)/3600
-    move = ((speeds[0]-15.0)/rate)/3600
-    update = int((3600.0/(speeds[0]-15.0))*(area)*rate)
-    n = 0
-    i = 0
-    z = 0
-    slew_flag = 0.0 #starts the simulation tracking up to starting position
-    dec_start = 20.0 # static, for loop limits
-    ra = 20 # static
-    dec = 20 # static
-    loops_deg = 2 #number of loops per degrees = loops_deg
-    COLOR = 'black'
-    # -------------------------------------------------------------------------
-    # telescope won't have access to this flag in reality... 
-    while not ut.tel_exit.is_set():
-        if slew_flag == 0.0:
-            while dec <= (dec_start + 2) :
-                dec = dec + track
-                if ra <= 360.0:
-                    ra = ra + track
-                else :
-                    ra = ra - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
-                tel_move(queue,ra,dec,n,COLOR,slew_flag)
 
-                n = n + (1/rate)
-                plt.pause(1/rate)
-                othertime.sleep(1/rate)
-                z = z + 1
-            else:
-                t.append(slew_flag)
-                slew_flag = 2.0
-                COLOR = 'red'
+# --------SPEEDS AND PARAMETERS---------------------------------------------
+speeds = [315.0,3615.0] # arcseconds per second, 3600 arcseconds per degree
+area = 2.0 #degrees wide of observing field
+rate = 20.0 #how many updates from telescope per second
+track = ((speeds[1]-15.0)/rate)/3600
+move = ((speeds[0]-15.0)/rate)/3600
+update = int((3600.0/(speeds[0]-15.0))*(area)*rate)
+n = 0
+i = 0
+z = 0
+slew_flag = 0.0 #starts the simulation tracking up to starting position
+dec_start = 20.0 # static, for loop limits
+ra = 20 # static
+dec = 20 # static
+loops_deg = 2 #number of loops per degrees = loops_deg
+COLOR = 'black'
+# -------------------------------------------------------------------------
+# telescope won't have access to this flag in reality...
+# it will have it's own flag that tells it when to stop
+while not ut.tel_exit.is_set():
+    if slew_flag == 0.0:
+        while dec <= (dec_start + 2) :
+            dec = dec + track
+            if ra <= 360.0:
+                ra = ra + track
+            else :
+                ra = ra - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
+            tel_move(ra,dec,n,COLOR,slew_flag)
 
-    # ---------MOVING DOWN TO SCANNING POSITION--------------------------------------------------------------------
-        if slew_flag == 1.0:
-            while dec >= dec_start :
-                dec = dec - track
-                if ra <= 360.0 :
-                    ra = ra + track
-                else :
-                    ra = ra - 360.0 + track
-                tel_move(queue,ra,dec,n,COLOR,slew_flag)
+            n = n + (1/rate)
+            plt.pause(1/rate)
+            othertime.sleep(1/rate)
+            z = z + 1
+        else:
+            t.append(slew_flag)
+            slew_flag = 2.0
+            COLOR = 'red'
 
-                n = n + (1/rate)
-                plt.pause(1/rate)
-                othertime.sleep(1/rate)
+# ---------MOVING DOWN TO SCANNING POSITION--------------------------------------------------------------------
+    if slew_flag == 1.0:
+        while dec >= dec_start :
+            dec = dec - track
+            if ra <= 360.0 :
+                ra = ra + track
+            else :
+                ra = ra - 360.0 + track
+            tel_move(ra,dec,n,COLOR,slew_flag)
 
-            else:
-                t.append(slew_flag)
-                slew_flag = 2.0
-                COLOR = 'red'
+            n = n + (1/rate)
+            plt.pause(1/rate)
+            othertime.sleep(1/rate)
 
-    # -------------MOVE BACK AND FORTH IN SCAN----------------------------------------------------------
-        if slew_flag == 2.0:
-            ra_init = ra
-            dec_init = dec
-            loops = loops_deg*2*np.pi
-            while ra <= ra_init + area:
-                dec = dec_init + np.sin(loops*(ra-ra_init))
-                ra = ra + (speeds[0]/3600.0/rate)
-                tel_move(queue,ra,dec,n,COLOR,slew_flag)
-                n = n + (1/rate)
-                plt.pause(1/rate)
-                othertime.sleep(1/rate)
+        else:
+            t.append(slew_flag)
+            slew_flag = 2.0
+            COLOR = 'red'
 
-            else:
-                COLOR = 'black'
-                if t[len(t)-1] == 0: # do the opposite of the last slew
-                    slew_flag = 1.0
-                if t[len(t)-1] == 1:
-                    slew_flag = 0.0
-    #---------------------------------------------------------------------------------------------------------------------
+# -------------MOVE BACK AND FORTH IN SCAN----------------------------------------------------------
+    if slew_flag == 2.0:
+        ra_init = ra
+        dec_init = dec
+        loops = loops_deg*2*np.pi
+        while ra <= ra_init + area:
+            dec = dec_init + np.sin(loops*(ra-ra_init))
+            ra = ra + (speeds[0]/3600.0/rate)
+            tel_move(ra,dec,n,COLOR,slew_flag)
+            n = n + (1/rate)
+            plt.pause(1/rate)
+            othertime.sleep(1/rate)
+
+        else:
+            COLOR = 'black'
+            if t[len(t)-1] == 0: # do the opposite of the last slew
+                slew_flag = 1.0
+            if t[len(t)-1] == 1:
+                slew_flag = 0.0
+#---------------------------------------------------------------------------------------------------------------------
