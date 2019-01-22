@@ -9,6 +9,7 @@ import multiprocessing as mp
 import read_files_local as rf
 import fake_tel as ft
 import utils as ut
+import fake_tel_server
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -37,7 +38,7 @@ class mcegui(QtGui.QWidget):
 
     #creates GUI window and calls functions to populate GUI
     def init_ui(self):
-        self.setWindowTitle('MCE TIME Data')
+        self.setWindowTitle('TIME Live Data Visualization Suite')
         self.getparameters()
         self.grid = QtGui.QGridLayout()
         self.grid.addLayout(self.parametersquit, 1, 1, 1, 1)
@@ -364,7 +365,7 @@ class mcegui(QtGui.QWidget):
         self.fftgraph.setLabel('left', 'Counts')
         self.fftgraph.setTitle('FFT Data')
 
-        self.grid.addWidget(self.fftgraph, 3, 5, 2, 3)
+        self.grid.addWidget(self.fftgraph, 3, 2, 4, 6)
 
     def initkmirrordata(self):
         # start the kms QThread
@@ -379,20 +380,27 @@ class mcegui(QtGui.QWidget):
         self.kmsstatus = 'Normal'
 
         self.parallacticangletext = QtGui.QLabel('Parallactic Angle: %s' %(self.parallacticangle))
+        self.parallacticangletext.setAlignment(QtCore.Qt.AlignCenter)
         self.positionalerrortext = QtGui.QLabel('Positional Error: %s' %(self.positionalerror))
+        self.positionalerrortext.setAlignment(QtCore.Qt.AlignCenter)
         self.kmsstatustext = QtGui.QLabel('KMS Status Flag: %s' %(self.kmsstatus))
+        self.kmsstatustext.setAlignment(QtCore.Qt.AlignCenter)
         self.kmstitle = QtGui.QLabel('Kmirror System Position and Status')
         self.kmstitle.setAlignment(QtCore.Qt.AlignCenter)
 
+        self.kmsgui = QtGui.QWidget()
+        self.kmsFrame = QtGui.QFrame()
+        self.kmsFrame.setStyleSheet("background-color: blue;")
+        self.kmsFrame.setFrameShape(QtGui.QFrame.StyledPanel)
+        self.kmsFrame.setFrameShadow(QtGui.QFrame.Raised)
         self.kmsparams = QtGui.QVBoxLayout()
-        self.kmsparams.setContentsMargins(4,1,1,1)
+        self.kmsparams.addWidget(self.kmsFrame)
         self.kmsparams.addWidget(self.kmstitle)
         self.kmsparams.addWidget(self.kmsstatustext)
         self.kmsparams.addWidget(self.parallacticangletext)
         self.kmsparams.addWidget(self.positionalerrortext)
-        self.grid.addLayout(self.kmsparams, 4, 1, 1, 1)
-
-
+        self.kmsgui.setLayout(self.kmsparams)
+        self.grid.addWidget(self.kmsgui, 4, 1, 1, 1)
 
     def inittelescope(self):
         # start the telescope QThread
@@ -698,7 +706,7 @@ class Tel_Thread(QtCore.QThread):
 
     def run(self):
         data, queue = mp.Pipe()
-        p = mp.Process(target=ft.update_tel , args=(queue,))
+        p = mp.Process(target=fake_tel_server, args=(queue,))
         p.start()
         while not ut.tel_exit.is_set() :
             # grab data from read_files.py

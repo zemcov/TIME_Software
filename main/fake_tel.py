@@ -7,12 +7,9 @@ from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
 from astroplan import Observer
 import utils as ut
-
-# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# PILOT1_PORT = 8888
-# PILOT1 = '129.21.172.16' #I'm sending the socket packets to server
-# s.connect((PILOT1, PILOT1_PORT))
-# message = 'Hello!'
+# I'm sending the socket packets to the server, listening for the gui
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect(('127.0.0.1', 55555))
 
 def tel_move(queue,RA,DEC,n,COLOR,slew_flag):
     #initialize  and update position coordinates
@@ -33,15 +30,9 @@ def tel_move(queue,RA,DEC,n,COLOR,slew_flag):
     cosa = (np.tan(np.radians(31.95844))*np.cos(np.radians(DEC)))-(np.sin(np.radians(DEC))*np.cos(np.radians(ha*15.0)))
     pa = np.degrees(np.arctan2(sina,cosa))
 
-    # packer = struct.Struct('d d d d d d d')
-    # data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-    # s.send(data)
-    if not ut.tel_exit.is_set():
-        queue.send([pa,slew_flag,alt,az,RA,DEC,othertime.time()])
-        return
-    else :
-        print("Fake Tel Has Exited")
-        sys.exit()
+    packer = struct.Struct('d d d d d d d')
+    data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
+    s.send(data)
 
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down
@@ -64,6 +55,7 @@ def update_tel(queue) :
     loops_deg = 2 #number of loops per degrees = loops_deg
     COLOR = 'black'
     # -------------------------------------------------------------------------
+    # telescope won't have access to this flag in reality... 
     while not ut.tel_exit.is_set():
         if slew_flag == 0.0:
             while dec <= (dec_start + 2) :
