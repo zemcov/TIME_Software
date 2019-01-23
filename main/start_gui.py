@@ -165,6 +165,18 @@ class mcegui(QtGui.QWidget):
             # prevents user from re-activating everything
             self.submitbutton.setEnabled(False)
 
+            # set the data rate for both mces
+            subprocess.Popen(['./mce0_cdr.sh %s' %(self.datarate)], shell = True)
+            subprocess.Popen(['./mce1_cdr.sh %s' %(self.datarate)], shell = True)
+
+            # set the data mode for both mces and start them running
+            if self.readoutcard == 'All':
+                subprocess.Popen(['./mce0_cdm.sh %s' %(self.datamode)], shell = True)
+                subprocess.Popen(['./mce0_run.sh %s a %s' %(self.framenumber, self.frameperfile)], shell = True)
+            else :
+                subprocess.Popen(['./mce0_cdm.sh %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+
             #start other plot making processes
             self.initplot()
             self.initfftgraph()
@@ -340,6 +352,10 @@ class mcegui(QtGui.QWidget):
         self.updater = MyThread()
         self.updater.new_data.connect(self.updateplot)
         self.updater.start()
+
+        # start file transfer scripts
+        subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
+        subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
 
     def initheatmap(self,z1):
         #casts z as array for creating heatmap
@@ -726,11 +742,31 @@ class Tel_Thread(QtCore.QThread):
         data, queue = mp.Pipe()
         p = mp.Process(target=ft.start_tel_server, args=(queue,))
         p.start()
-        while not ut.tel_exit.is_set() :
-            # grab data from fake_tel_server.py
-            tel_stuff = data.recv()
-            ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
-            self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+        # while not ut.tel_exit.is_set() :
+        #     # grab data from fake_tel_server.py
+        #     tel_stuff = data.recv()
+        #     if not ut.tel_exit.is_set():
+        #         data.send('good')
+        #     else :
+        #         data.send('end')
+        #     time.sleep(2.0)
+        #
+        #     ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
+        #     self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+
+
+        while True :
+            if not ut.tel_exit.is_set() :
+                data.send('server online')
+                tel_stuff = data.recv()
+                ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
+                self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+            else :
+                data.send('server going offline')
+                # time.sleep(2.0)
+                break
+
+
 
 ''' Add this one once we know that KMS is on and ready to be integrated'''
 # class KMS_Thread(QtCore.QThread):
