@@ -1,29 +1,34 @@
-import socket, struct, sys, subprocess
+import socket, struct, sys, subprocess, time
 import utils as ut
+dir = '/Users/vlb9398/Desktop/Gui_Code/TIME_Software/main'
 
-def start_tel_server(queue):
-    PORT = 55555
-    # I am accepting telescope sim data for the gui
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('',PORT))
-    print('Server Listening')
-    s.listen(5)
-    unpacker = struct.Struct('d d d d d d d')
-    client, info = s.accept()
-    # start up fake telescope script
-    # in reality, this will be activated before sending a init signal
-    # to the real telescope
-    subprocess.Popen(['python fake_tel.py'],shell=True)
+# def start_tel_server(queue):
+PORT = 55556
+# I am accepting telescope sim data for the gui
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(('',PORT))
+print('Server Listening')
+s.listen(5)
+unpacker = struct.Struct('d d d d d d d')
+client, info = s.accept()
+# start up fake telescope script
+# in reality, this will be activated before sending a init signal
+# to the real telescope
+# subprocess.Popen(['python %s/fake_tel.py' %(dir)],shell=True)
 
-    while not ut.tel_exit.is_set():
-        # retrieve and unpack data from socket
-        data = client.recv(unpacker.size)
-        pa,flag,alt,az,ra,dec,time = unpacker.unpack(data)
-        if ra == (0.0,):
-            break
+while True:
+    # retrieve and unpack data from socket
+    data = client.recv(unpacker.size)
+    pa,flag,alt,az,ra,dec,othertime = unpacker.unpack(data)
+    print(flag)
+    if flag == 2.0:
+        time.sleep(2.0)
+        break
 
-        else:
-            # if no e-stop status is sent, send updates to gui thread
-            queue.send([pa,flag,alt,az,ra,dec,time])
+    else:
+        print("DATA Received: %s" %(pa))
+        # if no e-stop status is sent, send updates to gui thread
+        # queue.send([pa,flag,alt,az,ra,dec,time])
 
-    print("Telescope Socket Closed")
+print("Telescope Socket Closed")
+sys.exit()

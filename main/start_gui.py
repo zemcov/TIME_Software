@@ -59,6 +59,25 @@ class mcegui(QtGui.QWidget):
         ut.tel_exit.set()
         ut.kms_exit.set()
         ut.hk_exit.set()
+
+        # stop all of the mces with their own command
+        if self.showmcedata == 'Yes':
+            if self.readoutcard == 'All':
+                subprocess.Popen(['./mce1_stop.sh s'],shell=True)
+                subprocess.Popen(['./mce0_stop.sh s'],shell=True)
+
+            else :
+                subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
+                subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
+
+        # stop the file transfer process to time-master
+        subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
+        subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
+
+        # delete all MCE temp files still in local and mce computer directory
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1'], shell = True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2'], shell = True)
+
         print('Quitting Application')
         sys.exit()
 
