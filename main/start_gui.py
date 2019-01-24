@@ -6,9 +6,9 @@ import pyqtgraph as pg
 import random as rm
 from termcolor import colored
 import multiprocessing as mp
-import read_files_local as rf
+import read_files as rf
 import utils as ut
-import fake_tel_server as ft
+import tel_server as ft
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -73,10 +73,12 @@ class mcegui(QtGui.QWidget):
         # stop the file transfer process to time-master
         subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
         subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
+        subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
 
         # delete all MCE temp files still in local and mce computer directory
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce1'], shell = True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce2'], shell = True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/hk'], shell=True)
 
         print('Quitting Application')
         sys.exit()
@@ -330,7 +332,8 @@ class mcegui(QtGui.QWidget):
         self.data = [0, 0, 0]
 
         #initialize graph GUI item
-        self.mcegraphdata = pg.ScatterPlotItem()
+        self.mcegraphdata1 = pg.ScatterPlotItem()
+        self.mcegraphdata2 = pg.ScatterPlotItem()
         self.mcegraph = pg.PlotWidget()
         self.grid.addWidget(self.mcegraph, 1, 5, 2, 3)
 
@@ -341,12 +344,14 @@ class mcegui(QtGui.QWidget):
 
         #initalize old data graph GUI item and add labels
         self.oldmcegraph = pg.PlotWidget()
-        self.oldmcegraphdata = pg.PlotCurveItem()
+        self.oldmcegraphdata1 = pg.PlotCurveItem()
+        self.oldmcegraphdata2 = pg.PlotCurveItem()
         self.grid.addWidget(self.oldmcegraph, 1, 2, 2, 3)
         self.oldmcegraph.setLabel('bottom', 'Time', 's')
         self.oldmcegraph.setLabel('left', 'Counts')
         self.oldmcegraph.setTitle('Old MCE TIME Data')
-        self.oldmcegraph.addItem(self.oldmcegraphdata)
+        self.oldmcegraph.addItem(self.oldmcegraphdata1)
+        self.oldmcegraph.addItem(self.oldmcegraphdata2)
 
         # connecting thread functions
         self.updater = MyThread()
@@ -357,47 +362,68 @@ class mcegui(QtGui.QWidget):
         subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
         subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
 
-    def initheatmap(self,z1):
+    def initheatmap(self,z1,z2):
         #casts z as array for creating heatmap
-        # z1 = np.asarray(z1)
-        #z2 = np.asarray(self.z2)
+        z1 = np.asarray(z1)
+        z2 = np.asarray(z2)
         #recasting data in z as integers
-        # z1.astype(int)
-        #z2.astype(int)
+        z1.astype(int)
+        z2.astype(int)
 
-        self.heatmapplot = pg.PlotItem()
-        self.heatmapplot.setLabel('bottom', 'Row')
-        self.heatmapplot.setLabel('left', 'Channel')
-        self.heatmapplot.setTitle('MCE RMS Channel Noise')
+        # heatmap for first MCE ===================================================================================
+        self.heatmapplot1 = pg.PlotItem()
+        self.heatmapplot1.setLabel('bottom', 'Row')
+        self.heatmapplot1.setLabel('left', 'Channel')
+        self.heatmapplot1.setTitle('MCE0 RMS Noise')
 
-        self.heatmap = pg.ImageView(view= self.heatmapplot)
-        self.heatmap.setPredefinedGradient('thermal')
-        self.heatmap.autoLevels()
-        self.heatmap.setImage(z1)
+        self.heatmap1 = pg.ImageView(view= self.heatmapplot1)
+        self.heatmap1.setPredefinedGradient('thermal')
+        self.heatmap1.autoLevels()
+        self.heatmap1.setImage(z1)
 
         #changes levels for heatmap to create gradient at depending on the data rate
-        self.avggrad = int(np.average(z1))
-        self.stddevgrad = int(np.std(z1))
-        # self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
-        # self.grid.addWidget(self.heatmap, 3, 2, 2, 3)
+        self.avggrad1 = int(np.average(z1))
+        self.stddevgrad1 = int(np.std(z1))
+        self.heatmap1.setLevels(self.avggrad1 - (3 * self.stddevgrad1), self.avggrad1 + (3 * self.stddevgrad1))
+        # =========================================================================================================
+
+        # heatmap for second MCE ==================================================================================
+        self.heatmapplot2 = pg.PlotItem()
+        self.heatmapplot2.setLabel('bottom', 'Row')
+        self.heatmapplot2.setLabel('left', 'Channel')
+        self.heatmapplot2.setTitle('MCE1 RMS Noise')
+
+        self.heatmap2 = pg.ImageView(view= self.heatmapplot2)
+        self.heatmap2.setPredefinedGradient('thermal')
+        self.heatmap2.autoLevels()
+        self.heatmap2.setImage(z2)
+
+        #changes levels for heatmap to create gradient at depending on the data rate
+        self.avggrad2 = int(np.average(z2))
+        self.stddevgrad2 = int(np.std(z2))
+        self.heatmap2.setLevels(self.avggrad2 - (3 * self.stddevgrad2), self.avggrad2 + (3 * self.stddevgrad2))
+        # ===========================================================================================================
 
         # create new window for hk and fft data
         self.heatmapwindow = QtGui.QWidget()
-        self.heatmapwindow.setWindowTitle('MCE RMS Noise Map')
+        self.heatmapwindow.setWindowTitle('MCE Heatmap')
         self.heatgrid = QtGui.QGridLayout()
-        self.heatgrid.addWidget(self.heatmap, 3, 2, 2, 3)
+        self.heatgrid.addWidget(self.heatmap1, 1, 5, 2, 3)
+        self.heatgrid.addWidget(self.heatmap2, 1, 2, 2, 3)
         self.heatmapwindow.setGeometry(10, 10, 1920, 1080)
         self.heatmapwindow.setLayout(self.heatgrid)
         self.heatmapwindow.show()
 
     def initfftgraph(self):
         self.fftgraph = pg.PlotWidget()
-        self.fftgraphdata = pg.ScatterPlotItem()
-        self.fftgraph.addItem(self.fftgraphdata)
+        self.fftgraphdata1 = pg.ScatterPlotItem()
+        self.fftgraphdata2 = pg.ScatterPlotItem()
+        self.fftgraph.addItem(self.fftgraphdata1)
+        self.fftgraph.addItem(self.fftgraphdata2)
 
         self.fftgraph.setLabel('bottom', 'Time', 's')
         self.fftgraph.setLabel('left', 'Counts')
-        self.fftgraph.setTitle('FFT Data')
+        self.fftgraph.setTitle('MCE 0/1 FFT Data')
 
         self.grid.addWidget(self.fftgraph, 3, 2, 4, 6)
 
@@ -506,10 +532,15 @@ class mcegui(QtGui.QWidget):
 
     def updatefftgraph(self):
         # self.y and self.x are defined in updateplot
-        self.fftdata = np.fft.fft(self.y)
-        self.fftdata = np.asarray(self.fftdata, dtype=np.float32)
-        self.fftdata[0] = self.fftdata[-1]
-        self.fftgraphdata.setData(self.x, self.fftdata)
+        self.fftdata1 = np.fft.fft(self.y1)
+        self.fftdata1 = np.asarray(self.fftdata1, dtype=np.float32)
+        self.fftdata1[0] = self.fftdata1[-1]
+        self.fftgraphdata1.setData(self.x, self.fftdata1)
+
+        self.fftdata2 = np.fft.fft(self.y2)
+        self.fftdata2 = np.asarray(self.fftdata2, dtype=np.float32)
+        self.fftdata2[0] = self.fftdata2[-1]
+        self.fftgraphdata2.setData(self.x, self.fftdata2)
 
     def updatetelescopedata(self,pa,slew,alt,az,ra,dec,time):
         # error checking based on status flags from telescope
@@ -544,16 +575,20 @@ class mcegui(QtGui.QWidget):
             self.altazgraphdata.addPoints(x=az, y=alt, brush=altazcolor)
             self.radecgraphdata.addPoints(x=ra, y=dec, brush=radeccolor)
 
-    def updateplot(self,h1,index):
+    def updateplot(self,h1,h2,index):
         self.index = index - 1 #because self.p gets updated before data is sent
         print(colored(index,'magenta'))
 
         # parsing mce array to make heatmap data ==================
-        # d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=float)
-        # for b in range(h1.shape[0]):
-        #     for c in range(h1.shape[1]):
-        #         d1[b][c] = (np.std(h1[b][c][:],dtype=float))
-        d1 = np.random.rand(41,32)
+        d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=float)
+        for b in range(h1.shape[0]):
+            for c in range(h1.shape[1]):
+                d1[b][c] = (np.std(h1[b][c][:],dtype=float))
+
+        d2 = np.empty([h2.shape[0],h2.shape[1]],dtype=float)
+        for b in range(h2.shape[0]):
+            for c in range(h2.shape[1]):
+                d2[b][c] = (np.std(h2[b][c][:],dtype=float))
         # =========================================================
 
         # parsing mce array for graph data ========================
@@ -562,15 +597,23 @@ class mcegui(QtGui.QWidget):
         for j in range(g1.shape[1]):
             array1.append(g1[self.row - 1][j])
         self.graphdata1 = [self.currentchannel,array1]
+
+        g2 = h1[:,self.currentchannel - 1]
+        array2 = []
+        for j in range(g2.shape[1]):
+            array2.append(g2[self.row - 1][j])
+        self.graphdata2 = [self.currentchannel,array2]
         # =========================================================
 
         self.starttime = datetime.datetime.utcnow()
 
         # ============================================================================================
         ch = self.graphdata1[0]
-        y = self.graphdata1[1][:self.frameperfile]
-        self.y = y
+        y1 = self.graphdata1[1][:self.frameperfile]
+        self.y1 = y1
 
+        y2 = self.graphdata2[1][:self.frameperfile]
+        self.y2 = y2
         #creates x values for current time interval and colors points based on current channel ===
         x = []
         ''' Need a way to make end of time array be the actual amount of time it
@@ -599,38 +642,48 @@ class mcegui(QtGui.QWidget):
 
         #creates graphdata item on first update
         if self.index == 0:
-            self.initheatmap(d1) # give first values for heatmap to create image scale
+            self.initheatmap(d1,d2) # give first values for heatmap to create image scale
             self.updatefftgraph()
             self.data[0] = x
-            self.data[1] = y
-            self.mcegraph.addItem(self.mcegraphdata)
+            self.data[1] = y1
+            self.data[2] = y2
+            self.mcegraph.addItem(self.mcegraphdata1)
             self.mcegraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
             if self.readoutcard == 'All':
-                self.mcegraphdata.setData(x, y, brush=pointcolor, symbol=pointsymbol)
+                self.mcegraphdata1.setData(x, y1, brush=pointcolor, symbol=pointsymbol)
+                self.mcegraphdata2.setData(x, y2, brush=pointcolor, symbol=pointsymbol)
             else:
-                self.mcegraphdata.setData(x, y, brush=pointcolor)
+                self.mcegraphdata1.setData(x, y1, brush=pointcolor)
+                self.mcegraphdata2.setData(x, y2, brush=pointcolor)
             self.oldch = self.currentchannel
             # updates oldgraph data
             self.data[0] = x
-            self.data[1] = y
+            self.data[1] = y1
+            self.data[2] = y2
             self.n_interval += 1 # update to keep graph going
         # ===========================================================================================================
         #clears graphdata and updates old graph after the total time interval has passed
         elif self.n_interval == self.totaltimeinterval :
             self.data[0] = x
-            self.data[1] = y
+            self.data[1] = y1
+            self.data[2] = y2
             self.oldmcegraph.setXRange(self.data[0][0], self.data[0][-1], padding=0)
-            self.oldmcegraphdata.setData(self.data[0], self.data[1])
-            self.mcegraphdata.clear()
+            self.oldmcegraphdata1.setData(self.data[0], self.data[1])
+            self.oldmcegraphdata2.setData(self.data[0], self.data[2])
+            self.mcegraphdata1.clear()
+            self.mcegraphdata2.clear()
             self.mcegraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
             if self.readoutcard == 'All':
-                self.mcegraphdata.setData(x, y, brush=pointcolor, symbol=pointsymbol)
+                self.mcegraphdata1.setData(x, y1, brush=pointcolor, symbol=pointsymbol)
+                self.mcegraphdata2.setData(x, y2, brush=pointcolor, symbol=pointsymbol)
             else:
-                self.mcegraphdata.setData(x, y, brush=pointcolor)
+                self.mcegraphdata1.setData(x, y1, brush=pointcolor)
+                self.mcegraphdata2.setData(x, y2, brush=pointcolor)
             self.data = [0, 0, 0]
             # updates oldgraphdata after total time interval is reached
             self.data[0] = x
-            self.data[1] = y
+            self.data[1] = y1
+            self.data[2] = y2
             self.n_interval = 0 #reset counter
         # ==============================================================================================================
         #updates graph, if channel delete is set to yes will clear data first
@@ -638,32 +691,39 @@ class mcegui(QtGui.QWidget):
             self.updateheatmap(d1)
             self.updatefftgraph()
             if self.channeldelete == 'Yes' and self.oldch != self.currentchannel:
-                self.mcegraphdata.clear()
+                self.mcegraphdata1.clear()
+                self.mcegraphdata2.clear()
                 if self.readoutcard == 'All':
-                    self.mcegraphdata.setData(x, y, brush=pointcolor, symbol=pointsymbol)
+                    self.mcegraphdata1.setData(x, y1, brush=pointcolor, symbol=pointsymbol)
+                    self.mcegraphdata2.setData(x, y2, brush=pointcolor, symbol=pointsymbol)
                 else:
-                    self.mcegraphdata.setData(x, y, brush=pointcolor)
+                    self.mcegraphdata1.setData(x, y1, brush=pointcolor)
+                    self.mcegraphdata2.setData(x, y2, brush=pointcolor)
             else:
                 if self.readoutcard == 'All':
-                    self.mcegraphdata.addPoints(x, y, brush=pointcolor, symbol=pointsymbol)
+                    self.mcegraphdata1.addPoints(x, y1, brush=pointcolor, symbol=pointsymbol)
+                    self.mcegraphdata2.addPoints(x, y2, brush=pointcolor, symbol=pointsymbol)
                 else:
-                    self.mcegraphdata.addPoints(x, y, brush=pointcolor)
+                    self.mcegraphdata1.addPoints(x, y1, brush=pointcolor)
+                    self.mcegraphdata2.addPoints(x, y2, brush=pointcolor)
             # updates old data for when graph resets
             np.append(self.data[0],x) # doesn't create a new array but adds to existing
-            np.append(self.data[1],y)
+            np.append(self.data[1],y1)
+            np.append(self.data[2],y2)
             self.n_interval += 1
         # =================================================================================================================
         self.oldch = self.currentchannel
         # =================================================================================================================
 
-    def updateheatmap(self,z1):
+    def updateheatmap(self,z1,z2):
         #casts z as array for creating heatmap
-        # z1 = np.asarray(z1)
-        #z2 = np.asarray(self.z2)
+        z1 = np.asarray(z1)
+        z2 = np.asarray(z2)
         #recasting data in z as integers
-        # z1.astype(int)
-        #z2.astype(int)
-        self.heatmap.setImage(z1)
+        z1.astype(int)
+        z2.astype(int)
+        self.heatmap1.setImage(z1)
+        self.heatmap2.setImage(z2)
         #changes levels for heatmap to create gradient at depending on the data rate
         #self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
         # if self.frameperfile == 11:
@@ -711,7 +771,7 @@ class mcegui(QtGui.QWidget):
 
 class MyThread(QtCore.QThread):
 
-    new_data = QtCore.pyqtSignal(object,object)
+    new_data = QtCore.pyqtSignal(object,object,object)
 
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
@@ -727,7 +787,7 @@ class MyThread(QtCore.QThread):
             # grab data from read_files.py
             stuff = data.recv()
             # send updated data to the gui
-            self.new_data.emit(stuff[0],stuff[1])
+            self.new_data.emit(stuff[0],stuff[1],stuff[2])
 
 class Tel_Thread(QtCore.QThread):
     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
@@ -742,31 +802,11 @@ class Tel_Thread(QtCore.QThread):
         data, queue = mp.Pipe()
         p = mp.Process(target=ft.start_tel_server, args=(queue,))
         p.start()
-        # while not ut.tel_exit.is_set() :
-        #     # grab data from fake_tel_server.py
-        #     tel_stuff = data.recv()
-        #     if not ut.tel_exit.is_set():
-        #         data.send('good')
-        #     else :
-        #         data.send('end')
-        #     time.sleep(2.0)
-        #
-        #     ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
-        #     self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-
-
-        while True :
-            if not ut.tel_exit.is_set() :
-                data.send('server online')
-                tel_stuff = data.recv()
-                ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
-                self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-            else :
-                data.send('server going offline')
-                # time.sleep(2.0)
-                break
-
-
+        while not ut.tel_exit.is_set() :
+            # grab data from fake_tel_server.py
+            tel_stuff = data.recv()
+            ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
+            self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
 
 ''' Add this one once we know that KMS is on and ready to be integrated'''
 # class KMS_Thread(QtCore.QThread):
