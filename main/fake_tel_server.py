@@ -1,6 +1,5 @@
 import socket, struct, sys, subprocess, time
 import utils as ut
-dir = '/Users/vlb9398/Desktop/Gui_Code/TIME_Software/main'
 
 # def start_tel_server(queue):
 PORT = 55556
@@ -9,28 +8,36 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('',PORT))
 print('Server Listening')
 s.listen(5)
-# unpacker = struct.Struct('d d d d d d d')
-unpacker = struct.Struct('d')
+unpacker = struct.Struct('d d d d d d d')
 client, info = s.accept()
 # start up fake telescope script
 # in reality, this will be activated before sending a init signal
 # to the real telescope
 # subprocess.Popen(['python %s/fake_tel.py' %(dir)],shell=True)
-while True :
-    if not ut.tel_exit.is_set() :
-        s.send('server online')
-        tel_stuff = client.recv(unpacker.size)
-        # pa,flag,alt,az,ra,dec,othertime = unpacker.unpack(tel_stuff)
-        ra = unpacker.unpack(tel_stuff)
-        print(ra)
-        if ra > 21.0 :
-            ut.tel_exit.set()
-    else :
-        s.send('server going offline')
-        # time.sleep(2.0)
+
+while True:
+    data = client.recv(unpacker.size)
+    pa,flag,alt,az,ra,dec,othertime = unpacker.unpack(data)
+    print(pa)
+
+    if flag == 2.0 or ut.tel_exit.is_set():
+        pause_msg = '1'
+        pause_msg = str.encode(pause_msg, 'utf-8')
+        client.send(pause_msg)
+        print("RA > 21, Client Shutting Down")
+        stop_msg = '0'
+        stop_msg = str.encode(stop_msg, 'utf-8')
+        client.send(stop_msg)
+        time.sleep(2.0)
         break
 
-# while True:
+    else :
+        msg = '3'
+        msg = str.encode(msg, 'utf-8')
+        client.send(msg)
+        print('Data Received: RA %s' %(ra))
+
+# while not ut.tel_exit.is_set():
 #     # retrieve and unpack data from socket
 #     data = client.recv(unpacker.size)
 #     pa,flag,alt,az,ra,dec,othertime = unpacker.unpack(data)

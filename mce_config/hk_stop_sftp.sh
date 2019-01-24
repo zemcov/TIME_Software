@@ -1,2 +1,2 @@
 #!/bin/bash
-ssh -T time@time-pyhk.net 'pkill -f hk_sftp.py'
+ssh -T time-hk 'pkill -f hk_sftp.py'

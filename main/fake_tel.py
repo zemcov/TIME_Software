@@ -51,11 +51,21 @@ COLOR = 'black'
 # -------------------------------------------------------------------------
 # I'm sending the socket packets to the server, listening for the gui
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(('127.0.0.1', 55556))
+s.connect(('127.0.0.1', 55555))
 print('Socket Connected')
+unpacker = struct.Struct('d')
 # telescope won't have access to this flag in reality...
 # it will have it's own flag that tells it when to stop
-while not ut.tel_exit.is_set():
+while True:
+    # Check for end signal from server==========================================
+    server_data = s.recv(unpacker.size)
+    server_data = server_data.decode('utf-8')
+    print(server_data)
+    if server_data == '0':
+        break
+    else :
+        continue
+    # ==========================================================================
     if slew_flag == 0.0:
         while dec <= (dec_start + 2) :
             dec = dec + track
@@ -64,14 +74,11 @@ while not ut.tel_exit.is_set():
             else :
                 ra = ra - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
             tel_move(ra,dec,n,COLOR,slew_flag)
+            # ==================================================================
             packer = struct.Struct('d d d d d d d')
             data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-
-            if slew_flag == 2.0 :
-                s.send(data)
-                ut.tel_exit.set()
-            else :
-                s.send(data)
+            s.send(data)
+            # ==================================================================
 
             n = n + (1/rate)
             plt.pause(1/rate)
@@ -91,14 +98,11 @@ while not ut.tel_exit.is_set():
             else :
                 ra = ra - 360.0 + track
             tel_move(ra,dec,n,COLOR,slew_flag)
+            # ==================================================================
             packer = struct.Struct('d d d d d d d')
             data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-
-            if slew_flag == 2.0 :
-                s.send(data)
-                ut.tel_exit.set()
-            else :
-                s.send(data)
+            s.send(data)
+            # ==================================================================
 
             n = n + (1/rate)
             plt.pause(1/rate)
@@ -118,15 +122,12 @@ while not ut.tel_exit.is_set():
             dec = dec_init + np.sin(loops*(ra-ra_init))
             ra = ra + (speeds[0]/3600.0/rate)
             tel_move(ra,dec,n,COLOR,slew_flag)
+            # ==================================================================
             packer = struct.Struct('d d d d d d d')
             data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
+            s.send(data)
+            # ==================================================================
 
-            if slew_flag == 2.0 :
-                s.send(data)
-                ut.tel_exit.set()
-            else :
-                s.send(data)
-                
             n = n + (1/rate)
             plt.pause(1/rate)
             othertime.sleep(1/rate)
