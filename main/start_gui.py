@@ -8,25 +8,27 @@ from termcolor import colored
 import multiprocessing as mp
 import read_files as rf
 import utils as ut
-import tel_server as ft
+import fake_tel_server as ft
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
     #initializes mcegui class and calls other init functions
-    def __init__(self, parent = None):
+    def __init__(self,readoutcard,framenumber,frameperfile,datarate,datamode, parent = None):
         super(mcegui, self).__init__(parent)
-        self.init_mce()
+        self.init_mce(readoutcard,framenumber,frameperfile,datarate,datamode)
         self.init_ui()
         self.qt_connections()
+        self.dir = './home/time/time-software-testing/TIME_Software'
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
-    def init_mce(self):
+    def init_mce(self,readoutcard,framenumber,frameperfile,datarate,datamode):
         self.timeinterval = 1
         self.observer = ''
-        self.datamode = ''
-        self.readoutcard = ''
-        self.framenumber = ''
-        self.frameperfile = 374
+        self.datamode = datamode
+        self.datarate = datarate
+        self.readoutcard = readoutcard
+        self.framenumber = framenumber
+        self.frameperfile = frameperfile
         self.totaltimeinterval = 120
         self.currentchannel = 1
         self.row = 1
@@ -76,9 +78,9 @@ class mcegui(QtGui.QWidget):
         subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
 
         # delete all MCE temp files still in local and mce computer directory
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/hk'], shell=True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
 
         print('Quitting Application')
         sys.exit()
@@ -98,25 +100,25 @@ class mcegui(QtGui.QWidget):
         self.observer = self.enterobserver.text()
 
         # data mode --------------------------------------
-        self.datamode = self.enterdatamode.currentText()
-        mce_states = ['Error', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)']
-        mce_states2 = [0,12,2,11,10,7,5,4]
-        for state in mce_states :
-            if self.datamode == state :
-                self.datamode = mce_states2[mce_states.index(state)]
+        # self.datamode = self.enterdatamode.currentText()
+        # mce_states = ['Error', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)']
+        # mce_states2 = [0,12,2,11,10,7,5,4]
+        # for state in mce_states :
+        #     if self.datamode == state :
+        #         self.datamode = mce_states2[mce_states.index(state)]
 
         # readout card ---------------------------------------------
-        self.readoutcard = self.enterreadoutcard.currentIndex() + 1
+        # self.readoutcard = self.enterreadoutcard.currentIndex() + 1
         if self.readoutcard == 9:
             self.readoutcard = 'All'
             self.currentreadoutcard = 2
             self.currentreadoutcarddisplay = 'MCE 1 RC 2'
 
         # frame number ----------------------------------------------
-        self.framenumber = self.enterframenumber.text()
+        # self.framenumber = self.enterframenumber.text()
 
         # data rate -------------------------------------------------
-        self.datarate = self.enterdatarate.text()
+        # self.datarate = self.enterdatarate.text()
 
         # how much data to view on screen at once -------------------
         self.timeinterval = self.entertimeinterval.text()
@@ -147,14 +149,10 @@ class mcegui(QtGui.QWidget):
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
-            dir = 'Desktop/Gui_Code/TIME_Software/main'
+            dir = 'home/time/time-software-testing/TIME_Software/'
             if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
-                parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
+                parafile = open(dir + 'tempfiles/tempparameters.txt', 'r+')
                 parafile.write(self.observer+' ')
-                parafile.write(str(self.datamode)+' ')
-                parafile.write(str(self.readoutcard)+' ')
-                parafile.write(self.framenumber+' ')
-                parafile.write(self.datarate+' ')
                 parafile.write(self.timeinterval+' ')
                 parafile.write(self.channeldelete+' ')
                 parafile.write(self.timestarted+' ')
@@ -166,18 +164,6 @@ class mcegui(QtGui.QWidget):
 
             # prevents user from re-activating everything
             self.submitbutton.setEnabled(False)
-
-            # set the data rate for both mces
-            subprocess.Popen(['./mce0_cdr.sh %s' %(self.datarate)], shell = True)
-            subprocess.Popen(['./mce1_cdr.sh %s' %(self.datarate)], shell = True)
-
-            # set the data mode for both mces and start them running
-            if self.readoutcard == 'All':
-                subprocess.Popen(['./mce0_cdm.sh %s' %(self.datamode)], shell = True)
-                subprocess.Popen(['./mce0_run.sh %s a %s' %(self.framenumber, self.frameperfile)], shell = True)
-            else :
-                subprocess.Popen(['./mce0_cdm.sh %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
             #start other plot making processes
             self.initplot()
@@ -193,19 +179,19 @@ class mcegui(QtGui.QWidget):
         #creating user input boxes
         self.enterobserver = QtGui.QLineEdit('VLB')
         self.enterobserver.setMaxLength(3)
-        self.enterdatamode = QtGui.QComboBox()
-        self.enterdatamode.addItems(
-            ['Error', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
-        self.enterreadoutcard = QtGui.QComboBox()
-        for i in range(8):
-            if i < 4:
-                self.enterreadoutcard.addItem('MCE 1 RC %s' % (i % 4 + 1))
-            else:
-                self.enterreadoutcard.addItem('MCE 2 RC %s' % (i % 4 + 1))
-        self.enterreadoutcard.addItem('All')
-        self.enterframenumber = QtGui.QLineEdit('1350000')
-        self.enterframenumber.setMaxLength(9)
-        self.enterdatarate = QtGui.QLineEdit('45')
+        # self.enterdatamode = QtGui.QComboBox()
+        # self.enterdatamode.addItems(
+        #     ['Error', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
+        # self.enterreadoutcard = QtGui.QComboBox()
+        # for i in range(8):
+        #     if i < 4:
+        #         self.enterreadoutcard.addItem('MCE 1 RC %s' % (i % 4 + 1))
+        #     else:
+        #         self.enterreadoutcard.addItem('MCE 2 RC %s' % (i % 4 + 1))
+        # self.enterreadoutcard.addItem('All')
+        # self.enterframenumber = QtGui.QLineEdit('1350000')
+        # self.enterframenumber.setMaxLength(9)
+        # self.enterdatarate = QtGui.QLineEdit('45')
         self.entertimeinterval = QtGui.QLineEdit('120')
         self.enterchanneldelete = QtGui.QComboBox()
         self.enterchanneldelete.addItems(['No', 'Yes'])
@@ -213,17 +199,17 @@ class mcegui(QtGui.QWidget):
         self.entershowmcedata.addItems(['Yes', 'No'])
         self.submitbutton = QtGui.QPushButton('Submit')
 
-        self.mceGroupBox = QtGui.QGroupBox("MCE Parameters")
+        self.mceGroupBox = QtGui.QGroupBox("MCE Graph Parameters")
         self.parameters = QtGui.QFormLayout()
         self.mcetitle = QtGui.QLabel(self)
         self.mcetitle.setAlignment(QtCore.Qt.AlignCenter)
         self.mcetitle.setText('MCE Parameters')
         self.parameters.addRow(self.mcetitle)
         self.parameters.addRow('Observer', self.enterobserver)
-        self.parameters.addRow('Datamode', self.enterdatamode)
-        self.parameters.addRow('Readout Card', self.enterreadoutcard)
-        self.parameters.addRow('Frame Number', self.enterframenumber)
-        self.parameters.addRow('Data Rate', self.enterdatarate)
+        # self.parameters.addRow('Datamode', self.enterdatamode)
+        # self.parameters.addRow('Readout Card', self.enterreadoutcard)
+        # self.parameters.addRow('Frame Number', self.enterframenumber)
+        # self.parameters.addRow('Data Rate', self.enterdatarate)
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
         self.parameters.addRow('Show MCE Data', self.entershowmcedata)
@@ -238,8 +224,6 @@ class mcegui(QtGui.QWidget):
 
         self.init_tel = QtGui.QComboBox()
         self.init_tel.addItems(['No','Yes'])
-
-
 
         self.telGroupBox = QtGui.QGroupBox("Telescope Parameters")
         self.telparams = QtGui.QFormLayout()
@@ -357,10 +341,6 @@ class mcegui(QtGui.QWidget):
         self.updater = MyThread()
         self.updater.new_data.connect(self.updateplot)
         self.updater.start()
-
-        # start file transfer scripts
-        subprocess.Popen(['ssh -T time@time-mce-0.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
-        subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
 
     def initheatmap(self,z1,z2):
         #casts z as array for creating heatmap
@@ -773,7 +753,7 @@ class MyThread(QtCore.QThread):
 
     new_data = QtCore.pyqtSignal(object,object,object)
 
-    def __init__(self, parent = None):
+    def __init__(self,parent = None):
         QtCore.QThread.__init__(self, parent)
 
     def __del__(self):
@@ -783,11 +763,13 @@ class MyThread(QtCore.QThread):
         data, queue = mp.Pipe()
         p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,))
         p.start()
+
         while not ut.mce_exit.is_set():
             # grab data from read_files.py
             stuff = data.recv()
             # send updated data to the gui
             self.new_data.emit(stuff[0],stuff[1],stuff[2])
+
 
 class Tel_Thread(QtCore.QThread):
     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
@@ -859,6 +841,6 @@ class Tel_Thread(QtCore.QThread):
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName('TIME Data Visualization Suite')
-    ex = mcegui()
+    ex = mcegui(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5])
     sys.exit(app.exec_())
     print("Done")

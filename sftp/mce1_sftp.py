@@ -10,13 +10,13 @@ from termcolor import colored
 
 a = 0
 dir = '/data/cryo/current_data/'
-print colored('----- Starting MCE1 Data Transfer -----','green')
+# print colored('----- Starting MCE1 Data Transfer -----','green')
 begin = dt.datetime.utcnow()
 end = dt.datetime.utcnow()
 while end - begin < dt.timedelta(seconds = 5):
     if os.path.exists(dir + "temp.%0.3i" %(a+1)) : #wait to read new file until old file is complete
         mce_file_name = dir + 'temp.%0.3i' % (a)
-        print 'File Transfered (MCE1) :',mce_file_name.replace(dir,'')
+        # print 'File Transfered (MCE1) :',mce_file_name.replace(dir,'')
         if a == 0:
             subprocess.Popen(['scp', dir + 'temp.run',  'time-master:/home/time/Desktop/time-data/mce2/temp.run']).wait()
         if os.path.exists(mce_file_name) :
