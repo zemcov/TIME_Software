@@ -26,6 +26,7 @@ class Time_Files:
 
         #( mce0_data, mce0_head, mce0_frame_num, mce1_data, mce1_head, mce1_frame_num )
         h1,head1,sync1,h2,head2,sync2 = q_in.get()
+        print(colored('I received data!','red'))
         i = 0
         while i <= len(self.h1):
             if sync1[i] > sync2[i]:

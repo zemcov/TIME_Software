@@ -18,7 +18,7 @@ def netcdfdata(q_in,q_out):
         files = [dir + x for x in os.listdir(dir) if (x.startswith("temp") and not x.endswith('.run'))]
 
         if mce_file > 1 : # we never remove temp.run
-            print(mce_file,len(files))
+            print('MCE1:',mce_file,len(files))
             for i in range(mce_file):
                 head_new, data_new, frame_new = self.readdata(files[i])
             data_old,head_old, frame_old = q_in.get()

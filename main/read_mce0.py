@@ -18,13 +18,13 @@ def netcdfdata(q_in,q_out):
         files = [dir + x for x in os.listdir(dir) if (x.startswith("temp") and not x.endswith('.run'))]
 
         if mce_file > 1 : # we never remove temp.run
-            print(mce_file,len(files))
+            print('MCE0:',mce_file,len(files))
             for i in range(mce_file - 1):
                 head_new, data_new, frame_new = self.readdata(files[i])
             data_old,head_old = q_in.get()
             data_new.append(data_old)
             head_new.append(head_new)
-            print(len(data_new,head_new,frame_new)
+            print(len(data_new),len(head_new),len(frame_new))
             q_out.put(data_new, head_new, frame_new)
 
         else :
@@ -86,4 +86,5 @@ def read_header(f):
         value = int(value)
         values.append(value)
     values = np.asarray(values)
+    print(colored('MCE0 Frame: %s' %(frame_num),'magenta'))
     return values, frame_num
