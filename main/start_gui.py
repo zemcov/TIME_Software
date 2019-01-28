@@ -9,6 +9,7 @@ import multiprocessing as mp
 import read_files as rf
 import utils as ut
 import fake_tel_server as ft
+import read_mce0, read_mce1, read_hk, append_data
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -29,6 +30,7 @@ class mcegui(QtGui.QWidget):
         self.readoutcard = readoutcard
         self.framenumber = framenumber
         self.frameperfile = frameperfile
+        ut.frameperfile = frameperfile
         self.totaltimeinterval = 120
         self.currentchannel = 1
         self.row = 1
@@ -36,6 +38,7 @@ class mcegui(QtGui.QWidget):
         self.graphdata1 = []
         self.z1 = 0
         self.n_interval = 0
+        self.index = 0
 
     #creates GUI window and calls functions to populate GUI
     def init_ui(self):
@@ -338,7 +341,7 @@ class mcegui(QtGui.QWidget):
         self.oldmcegraph.addItem(self.oldmcegraphdata2)
 
         # connecting thread functions
-        self.updater = MyThread()
+        self.updater = MCEThread()
         self.updater.new_data.connect(self.updateplot)
         self.updater.start()
 
@@ -555,8 +558,8 @@ class mcegui(QtGui.QWidget):
             self.altazgraphdata.addPoints(x=az, y=alt, brush=altazcolor)
             self.radecgraphdata.addPoints(x=ra, y=dec, brush=radeccolor)
 
-    def updateplot(self,h1,h2,index):
-        self.index = index - 1 #because self.p gets updated before data is sent
+    def updateplot(self,h1,h2):
+
         print(colored(index,'magenta'))
 
         # parsing mce array to make heatmap data ==================
@@ -601,7 +604,7 @@ class mcegui(QtGui.QWidget):
         self.endtime = datetime.datetime.utcnow()
         self.timetaken = self.endtime - self.starttime
         print(colored('Time taken: %s' % (self.timetaken.total_seconds()),'green'))
-        x = np.linspace(self.index,self.index + self.timetaken.total_seconds(),self.frameperfile)
+        x = np.linspace(self.index-1,self.index-1 + self.timetaken.total_seconds(),self.frameperfile)
         self.x = x
         # =====================================================================================
         pointcolor = []
@@ -621,14 +624,14 @@ class mcegui(QtGui.QWidget):
         #====================================================================================================
 
         #creates graphdata item on first update
-        if self.index == 0:
+        if self.index-1 == 0:
             self.initheatmap(d1,d2) # give first values for heatmap to create image scale
             self.updatefftgraph()
             self.data[0] = x
             self.data[1] = y1
             self.data[2] = y2
             self.mcegraph.addItem(self.mcegraphdata1)
-            self.mcegraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
+            self.mcegraph.setXRange(self.index-1, self.index-1 + self.totaltimeinterval - 1, padding=0)
             if self.readoutcard == 'All':
                 self.mcegraphdata1.setData(x, y1, brush=pointcolor, symbol=pointsymbol)
                 self.mcegraphdata2.setData(x, y2, brush=pointcolor, symbol=pointsymbol)
@@ -652,7 +655,7 @@ class mcegui(QtGui.QWidget):
             self.oldmcegraphdata2.setData(self.data[0], self.data[2])
             self.mcegraphdata1.clear()
             self.mcegraphdata2.clear()
-            self.mcegraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
+            self.mcegraph.setXRange(self.index-1, self.index-1 + self.totaltimeinterval - 1, padding=0)
             if self.readoutcard == 'All':
                 self.mcegraphdata1.setData(x, y1, brush=pointcolor, symbol=pointsymbol)
                 self.mcegraphdata2.setData(x, y2, brush=pointcolor, symbol=pointsymbol)
@@ -749,26 +752,72 @@ class mcegui(QtGui.QWidget):
             hkwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             hkwarning.exec_()
 
-class MyThread(QtCore.QThread):
+class MCEThread(QtCore.QThread):
 
-    new_data = QtCore.pyqtSignal(object,object,object)
+    new_data = QtCore.pyqtSignal(object,object)
 
     def __init__(self,parent = None):
         QtCore.QThread.__init__(self, parent)
 
-    def __del__(self):
-        ut.mce_exit.set()
+    # def __del__(self):
+    #     ut.mce_exit.set()
 
     def run(self):
-        data, queue = mp.Pipe()
-        p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,))
-        p.start()
+        pool = mp.Pool()
+        manager = mp.Manager()
+        array1 = []
+        array2 = []
+
+        # create queues for each data transfer
+        thread_to_mce0 = manager.Queue()
+        mce0_to_mce1 = manager.Queue()
+        mce1_to_append = manager.Queue()
+        append_to_thread = manager.Queue()
+        # need to add another one for hk data
+
+        # initiate the workers in the Pool
+        mce0_result = pool.apply_async(read_mce0.netcdfdata, (thread_to_mce0,mce0_to_mce1))
+        mce1_result = pool.apply_async(read_mce1.netcdfdata, (mce0_to_mce1,mce1_to_append))
+        append_result = pool.apply_async(append_data.Time_Files().parse_arrays, (mce1_to_append,append_to_thread))
+        # add hk startup to pool
+
+        # give scripts empty array to append to
+        thread_to_mce0.put(array1, array2)
 
         while not ut.mce_exit.is_set():
-            # grab data from read_files.py
-            stuff = data.recv()
-            # send updated data to the gui
-            self.new_data.emit(stuff[0],stuff[1],stuff[2])
+            # wait for the pools to return completed queue
+            print(colored("Retrieving MCE Data",'green'))
+            data = append_to_thread.get()
+            #send updated data to the gui
+            self.index += 1
+            self.new_data.emit(data[0],data[1])
+
+        pool.close()
+        pool.join()
+
+
+
+
+# class MyThread(QtCore.QThread):
+#
+#     new_data = QtCore.pyqtSignal(object,object,object)
+#
+#     def __init__(self,parent = None):
+#         QtCore.QThread.__init__(self, parent)
+#
+#     def __del__(self):
+#         ut.mce_exit.set()
+#
+#     def run(self):
+#         data, queue = mp.Pipe()
+#         p = mp.Process(target=rf.Time_Files().netcdfdata , args=(queue,))
+#         p.start()
+#
+#         while not ut.mce_exit.is_set():
+#             # grab data from read_files.py
+#             stuff = data.recv()
+#             # send updated data to the gui
+#             self.new_data.emit(stuff[0],stuff[1],stuff[2])
 
 
 class Tel_Thread(QtCore.QThread):

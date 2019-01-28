@@ -1,6 +1,5 @@
 import netCDF4 as nc
-import os
-import sys
+import os, sys, time
 import datetime as now
 import numpy as np
 from termcolor import colored
@@ -35,8 +34,8 @@ def new_file(h_size, filestarttime):
     Datamode = mce.createVariable('datamode','S1',('mode',),zlib=True)
     Detector = mce.createVariable('detector','f8',('det',),zlib=True)
     Rc = mce.createVariable('rc','S1',('r',),zlib=True) # can either use rc name or integer used by gui
-    global Time
-    Time = mce.createVariable('time','S1',('t','k'),zlib=True)
+    # global Time
+    # Time = mce.createVariable('time','S1',('t','k'),zlib=True)
     global Tele_time
     Tele_time = mce.createVariable('tele_time','f8',('t','hk','hk','hk'),zlib=True)
 
@@ -66,7 +65,7 @@ def new_file(h_size, filestarttime):
     Frames._Encoding = 'ascii'
     Datamode._Encoding = 'ascii'
     Rc._Encoding = 'ascii'
-    Time._Encoding = 'ascii'
+    # Time._Encoding = 'ascii'
 
     Observer[:] = np.array([parameters[0]],dtype='S3')
     Frames[:] = np.array([parameters[3]],dtype='S8')
@@ -77,14 +76,17 @@ def new_file(h_size, filestarttime):
     return mce
 
 def mce_append(nc_file, p, h1, h2, head1, head2, flags):
-    mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-    Time[p,:] = np.array([str(now.datetime.utcnow())],dtype='S26') # will eventually come from telescope
-    Status_Flags[p,:,:] = flags
-    MCE0_Raw_Data_All[p,:,:,:] = h1
-    MCE1_Raw_Data_All[p,:,:,:] = h2
-    MCE0_Header[p,:,:] = head1
-    MCE1_Header[p,:,:] = head2
-    mce.close()
+    if os.path.exists(nc_file):
+        mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
+        # Time[p,:] = [time.time()] # will eventually come from telescope
+        Status_Flags[p,:,:] = flags
+        MCE0_Raw_Data_All[p,:,:,:] = h1
+        MCE1_Raw_Data_All[p,:,:,:] = h2
+        MCE0_Header[p,:,:] = head1
+        MCE1_Header[p,:,:] = head2
+        mce.close()
+    else :
+        print(colored("Could find NETCDF File!", 'red'))
 
 def hk_append(nc_file, n, time, data, name, tele_time):
     hk = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")

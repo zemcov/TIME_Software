@@ -28,5 +28,4 @@ while end - begin < dt.timedelta(seconds = 5):
             print "File Doesn't Exist!"
     end = dt.datetime.utcnow()
 
-subprocess.Popen(['rm /data/cryo/current_data/temp.*'], shell = True)
 sys.exit()
