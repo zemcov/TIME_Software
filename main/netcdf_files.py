@@ -25,7 +25,7 @@ def new_file(h_size, filestarttime):
     mce.createDimension('v',16)
     mce.createDimension('hk',1)
     mce.createDimension('hks',2)
-    mce.createDimension('sf',4)
+    mce.createDimension('sf',5)
 
     # creating variables --------------------------------------------------------------------------------
     Observer = mce.createVariable("observer","S1",("obs",),zlib=True)
