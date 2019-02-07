@@ -8,7 +8,7 @@ import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
-import read_mce0, read_mce1
+import read_mce0, read_mce1, read_hk
 
 class Time_Files:
 
@@ -17,21 +17,33 @@ class Time_Files:
         self.p = 0
         self.data1, queue1 = mp.Pipe()
         self.data2, queue2 = mp.Pipe()
+        self.data3, queue3 = mp.Pipe()
         self.p1 = mp.Process(target=read_mce0.netcdfdata , args=(queue1,))
         self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,))
+        self.p3 = mp.Process(target=read_hk.loop_files , args=(queue3,))
         self.p1.start()
         self.p2.start()
+        self.p3.start()
 
     def retrieve(self,queue):
         while not ut.mce_exit.is_set():
             data1 = self.data1.recv()
             data2 = self.data2.recv()
+            data3 = self.data3.recv()
             self.h1 = data1[0]
             self.h2 = data2[0]
             self.head1 = data1[1]
             self.head2 = data2[1]
+            self.sync1 = data1[2]
+            self.sync2 = data2[2]
+            # self.hk = data3 # n * (3,215)
             queue.send([self.h1,self.h2,self.p])
-            self.parse_arrays()
+            print(colored('Offset: %s' %(ut.offset),'green'))
+            if ut.offset != 0 :
+                self.parse_arrays()
+                self.append_data()
+            else :
+                print(colored('data append skipped!','red'))
             self.p += 1
 
         # self.p1.join()
@@ -39,59 +51,66 @@ class Time_Files:
         # self.p1.close()
         # self.p2.close()
 
+
     def parse_arrays(self):
-        self.rc = 'a'
-        self.hold_h1 = []
-        self.hold_h2 = []
+        # self.hold_h1 = []
+        # self.hold_h2 = []
+        print()
+        print(colored('MCE0 Sync: %s' %(self.sync1[0]),'green'))
+        print(colored('MCE1 Sync: %s' %(self.sync1[0]),'green'))
+        # print(self.h1.shape[2],self.h2.shape[2])
+        # check to make sure that the frame sync numbers are lining up
+        if self.sync1[0] == self.sync2[0]:
+            print(colored('normal sync nums','green'))
+            # self.hold_h1 = self.h1
+            # self.hold_h2 = self.h2
+            # print(self.hold_h1.shape,self.hold_h2.shape)
 
-        ''' for once we get the sync box working again '''
-        # sync1 = [item['sync_box_num'] for item in self.h1.headers]
-        # sync2 = [item['sync_box_num'] for item in self.h2.headers]
-        ''' using frame counter '''
+        else :
+            print(colored('mismatched sync nums!!!','red'))
+            # self.hold_h1 = self.h1
+            # self.hold_h2 = self.h2
+            # for i in range(self.h1.shape[2]):
+            #     if int(self.sync1[i]) > int(self.sync2[i]):
+            #         start_frame = self.sync1[i]
+            #         for i in range(self.h1.shape[2]):
+            #             if self.sync2[i] < start_frame:
+            #                 continue
+            #             else :
+            #                 self.h2 = self.h2[i:]
+            #                 if self.h2.shape[2] < ut.frameperfile:
+            #                     empty = [[0 for col in range(self.h1.shape[0])] for row in range(self.h1.shape[1])]
+            #                     self.hold_h1.append(self.h1[i] + (empty*(ut.frameperfile - len(self.h1)))) # keeps the last two dimensions as all, same as self.h1[i,:,:]
+            #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
+            #                     break
+            #
+            #
+            #     elif int(self.sync2[i]) > (self.sync1[i]):
+            #         start_frame = self.sync2[i]
+            #         for i in range(self.h1.shape[2]):
+            #             if self.sync1[i] < start_frame:
+            #                 continue
+            #             else :
+            #                 self.h1 = self.h1[i:]
+            #                 if self.h1.shape[2] < ut.frameperfile:
+            #                     empty = [[0 for col in range(self.h1.shape[0])] for row in range(self.h1.shape[1])]
+            #                     self.hold_h1.append(self.h1[i] + (empty*(ut.frameperfile - len(self.h1))))
+            #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
+            #                     break
 
-        # i = 0
-        # while i <= len(self.h1):
-        #     if sync1[i] > sync2[i]:
-        #         start_frame = sync1[i]
-        #         i += 1
-        #         while i <= len(self.h1):
-        #             if sync2[i] < start_frame:
-        #                 i += 1
-        #             else :
-        #                 self.h1 = self.h1[i]
-        #                 self.h2 = self.h2[i]
-        #                 if len(self.h1) < ut.frameperfile:
-        #                     empty = [[0 for col in range(self.h1.shape[0])] for row in range(self.h1.shape[1])]
-        #                     self.hold_h1.append(self.h1[i] + (empty*(ut.frameperfile - len(self.h1)))) # keeps the last two dimensions as all, same as self.h1[i,:,:]
-        #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
-        #                 # don't need else statement, because otherise the last else statement would have been triggered if the array was the right size
-        #                 break
-        #         break
-        #
-        #     elif sync2[i] > sync1[i]:
-        #         start_frame = sync2[i]
-        #         i += 1
-        #         while i <= len(self.h1):
-        #             if sync1[i] < start_frame:
-        #                 i += 1
-        #             else :
-        #                 self.h1 = self.h1[i]
-        #                 self.h2 = self.h2[i]
-        #                 if len(self.h1) < ut.frameperfile:
-        #                     empty = [[0 for col in range(self.h1.shape[0])] for row in range(self.h1.shape[1])]
-        #                     self.hold_h1.append(self.h1[i] + (empty*(ut.frameperfile - len(self.h1))))
-        #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
-        #
-        #                 break
-        #         break
 
-        self.append_data()
-
-        # self.head1 = head1[i]
-        # self.head2 = head2[i]
-        # self.sync1 = sync1[i]
-        # self.sync2 = sync2[i]
-
+        timer1_start = time.time()
+        # Append HK data to correct frame matching MCE timestream ---------------------------------
+        utc_time = ut.sync_to_utc(self.sync1)
+        self.utc = zip(utc_time,self.sync1) # tuples of (utc,sync)
+        self.hk_data = [0]*ut.german_freq # give it the same number of frames as mce data file
+        for i in range(len(utc_time)) :
+            for j in range(len(self.hk)):
+                if self.hk[j][0][0] == utc_time[i] : # check if timestamps match
+                    self.hk_data[i] = self.hk[j]
+        # ------------------------------------------------------------------------------------------
+        timer1_stop = time.time()
+        print(colored('Total Time: %s' %(timer1_stop - timer1_start),'red'))
         return
 
 # ============================================================================
@@ -104,12 +123,7 @@ class Time_Files:
             mce = nc.new_file(self.h1.shape, self.filestarttime)
             self.ncfile = netcdfdir + "/raw_%s.nc" %(self.filestarttime)
 
-            if self.rc == 'a' :
-                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2, ut.flags)
-            elif self.rc == 'hk':
-                nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
-            else :
-                print(colored('Wrong RC Input!','red'))
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.hk_data)
             self.a = 1
 
         elif os.stat(netcdfdir + "/raw_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
@@ -120,20 +134,10 @@ class Time_Files:
             mce = nc.new_file(self.h1.shape, self.filestarttime)
             self.ncfile = netcdfdir + "/raw_%s.nc" %(self.filestarttime)
 
-            if self.rc == 'a' :
-                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2, ut.flags)
-            elif self.rc == 'hk':
-                nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
-            else :
-                print(colored('Wrong RC Input!','red'))
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.hk_data)
 
         else: # if everything is okay, append data to the file
-            if self.rc == 'a' :
-                nc.mce_append(self.ncfile, self.p, self.h1, self.h2, self.head1, self.head2, ut.flags)
-            elif self.rc == 'hk':
-                nc.hk_append(self.ncfile, self.n, self.time, self.data, self.name, self.tele_time)
-            else :
-                print(colored('Wrong RC Input!','red'))
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head2, self.head2, self.h1, self.h2, self.hk_data)
 
         # have the counter incremement for every append, not just hk
         self.a += 1

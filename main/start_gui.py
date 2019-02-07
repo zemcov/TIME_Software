@@ -6,10 +6,11 @@ import pyqtgraph as pg
 import random as rm
 from termcolor import colored
 import multiprocessing as mp
-import read_files as rf
 import utils as ut
 import append_data
-# import tel_server as ft
+import fake_tel_server as ft
+import fake_tel
+import read_hk
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -27,7 +28,7 @@ class mcegui(QtGui.QWidget):
         self.datamode = ''
         self.readoutcard = ''
         self.framenumber = ''
-        self.frameperfile = 374
+        self.frameperfile = 100
         self.totaltimeinterval = 120
         self.currentchannel = 1
         self.row = 1
@@ -76,10 +77,10 @@ class mcegui(QtGui.QWidget):
         subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
         subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
 
-        # delete all MCE temp files still in local and mce computer directory
-        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
-        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-        # subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
+        # # delete all MCE temp files still in local and mce computer directory
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
 
         print('Quitting Application')
         sys.exit()
@@ -117,7 +118,7 @@ class mcegui(QtGui.QWidget):
         self.framenumber = self.enterframenumber.text()
 
         # data rate -------------------------------------------------
-        self.datarate = self.enterdatarate.text()
+        # self.datarate = self.enterdatarate.text()
 
         # how much data to view on screen at once -------------------
         self.timeinterval = self.entertimeinterval.text()
@@ -141,8 +142,10 @@ class mcegui(QtGui.QWidget):
 
         #check if parameters are valid - will create warning box if invalid
         if self.observer == '' or self.framenumber == '' or self.framenumber == '0'\
-        or self.datarate == '0' or self.datarate == '' or self.timeinterval == ''\
+        or self.timeinterval == ''\
         or self.timeinterval == '0':
+        # or self.datarate == '0'\
+        # or self.datarate == ''
             self.warningbox('gui') # throw up a warning box
             ''' should probably also add something in to restart the gui main form screen '''
         elif self.showmcedata == 'No':
@@ -155,7 +158,7 @@ class mcegui(QtGui.QWidget):
                 parafile.write(str(self.datamode)+' ')
                 parafile.write(str(self.readoutcard)+' ')
                 parafile.write(self.framenumber+' ')
-                parafile.write(self.datarate+' ')
+                # parafile.write(self.datarate+' ')
                 parafile.write(self.timeinterval+' ')
                 parafile.write(self.channeldelete+' ')
                 parafile.write(self.timestarted+' ')
@@ -163,7 +166,7 @@ class mcegui(QtGui.QWidget):
 
             self.channelselection()
             print(colored('Time Started: %s' % (self.timestarted),'magenta'))
-            self.p = int((50 * 10 ** 6) / (33 * 90 * int(self.datarate))) #calculation taken from UBC MCE Wiki
+            # self.p = int((50 * 10 ** 6) / (33 * 90 * ut.german_freq)) #calculation taken from UBC MCE Wiki
 
             # prevents user from re-activating everything
             self.submitbutton.setEnabled(False)
@@ -179,25 +182,30 @@ class mcegui(QtGui.QWidget):
                 subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
 
             # set the data rate for both mces
-            subprocess.Popen(['./mce0_cdr.sh %s' %(self.datarate)], shell = True)
-            subprocess.Popen(['./mce1_cdr.sh %s' %(self.datarate)], shell = True)
+            # subprocess.Popen(['./mce0_cdr.sh %s' %(self.datarate)], shell = True)
+            # subprocess.Popen(['./mce1_cdr.sh %s' %(self.datarate)], shell = True)
 
             # set the data mode for both mces and start them running
             if self.readoutcard == 'All':
                 subprocess.Popen(['./mce0_cdm.sh a %s' %(self.datamode)], shell = True)
                 subprocess.Popen(['./mce1_cdm.sh a %s' %(self.datamode)], shell = True)
+                subprocess.Popen(['./mce0_del.sh'], shell=True)
+                subprocess.Popen(['./mce1_del.sh'], shell=True)
                 subprocess.Popen(['./mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
                 subprocess.Popen(['./mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
             else :
                 subprocess.Popen(['./mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
                 subprocess.Popen(['./mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                subprocess.Popen(['./mce0_del.sh'], shell=True)
+                subprocess.Popen(['./mce1_del.sh'], shell=True)
                 subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
                 subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
             # start file transfer scripts
+            subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
+            subprocess.Popen(['ssh -T time-mce-0 python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
+            subprocess.Popen(['ssh -T time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
             time.sleep(2.0)
-            subprocess.Popen(['ssh -T time@time-mce-0 python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
-            subprocess.Popen(['ssh -T time@time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
 
             #start other plot making processes
             self.initplot()
@@ -225,7 +233,7 @@ class mcegui(QtGui.QWidget):
         self.enterreadoutcard.addItem('All')
         self.enterframenumber = QtGui.QLineEdit('1350000')
         self.enterframenumber.setMaxLength(9)
-        self.enterdatarate = QtGui.QLineEdit('45')
+        # self.enterdatarate = QtGui.QLineEdit('45')
         self.entertimeinterval = QtGui.QLineEdit('120')
         self.enterchanneldelete = QtGui.QComboBox()
         self.enterchanneldelete.addItems(['No', 'Yes'])
@@ -243,7 +251,7 @@ class mcegui(QtGui.QWidget):
         self.parameters.addRow('Datamode', self.enterdatamode)
         self.parameters.addRow('Readout Card', self.enterreadoutcard)
         self.parameters.addRow('Frame Number', self.enterframenumber)
-        self.parameters.addRow('Data Rate', self.enterdatarate)
+        # self.parameters.addRow('Data Rate', self.enterdatarate)
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
         self.parameters.addRow('Show MCE Data', self.entershowmcedata)
@@ -380,11 +388,11 @@ class mcegui(QtGui.QWidget):
 
     def initheatmap(self,z1,z2):
         #casts z as array for creating heatmap
-        z1 = np.asarray(z1)
-        z2 = np.asarray(z2)
-        #recasting data in z as integers
-        z1.astype(int)
-        z2.astype(int)
+        # z1 = np.asarray(z1)
+        # z2 = np.asarray(z2)
+        # #recasting data in z as integers
+        # z1.astype(int)
+        # z2.astype(int)
 
         # heatmap for first MCE ===================================================================================
         self.heatmapplot1 = pg.PlotItem()
@@ -560,8 +568,10 @@ class mcegui(QtGui.QWidget):
 
     def updatetelescopedata(self,pa,slew,alt,az,ra,dec,time):
         # error checking based on status flags from telescope
+        print(colored("Update Telescope",'red'))
         tel_error = [10,11,12]
         if (slew in tel_error) and (self.repeat == False) :
+            print(colored("telescope if",'red'))
             os.system("afplay /Users/vlb9398/Desktop/Gui_code/TIME_Software/main/klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
@@ -571,6 +581,7 @@ class mcegui(QtGui.QWidget):
             self.warningbox(['tel',slew]) #slew will be replaced with tel status flag over socket
 
         else :
+            print(colored("telescope else",'red'))
             # update text on window to reflect new data
             self.patext.setText('PA: %s' %(round(float(pa),2)))
             self.slewtext.setText('Slew Flag: %s' %(slew))
@@ -593,17 +604,19 @@ class mcegui(QtGui.QWidget):
 
     def updateplot(self,h1,h2,index):
         self.index = index
-
+        print(colored('Heatmap Shapes: %s , %s' %(str(h1.shape),str(h2.shape)),'magenta'))
         # parsing mce array to make heatmap data ==================
-        d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=float)
+        d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
         for b in range(h1.shape[0]):
             for c in range(h1.shape[1]):
-                d1[b][c] = (np.std(h1[b][c][:],dtype=float))
+                d1[b][c] = (np.std(h1[b,c,:],dtype=np.float32))
 
-        d2 = np.empty([h2.shape[0],h2.shape[1]],dtype=float)
+        d2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
         for b in range(h2.shape[0]):
             for c in range(h2.shape[1]):
-                d2[b][c] = (np.std(h2[b][c][:],dtype=float))
+                d2[b][c] = (np.std(h2[b,c,:],dtype=np.float32))
+        print(colored(d1,'green'))
+        # print(colored(h1,'yellow'))
         # =========================================================
 
         # parsing mce array for graph data ========================
@@ -732,11 +745,11 @@ class mcegui(QtGui.QWidget):
 
     def updateheatmap(self,z1,z2):
         #casts z as array for creating heatmap
-        z1 = np.asarray(z1)
-        z2 = np.asarray(z2)
+        # z1 = np.asarray(z1)
+        # z2 = np.asarray(z2)
         #recasting data in z as integers
-        z1.astype(int)
-        z2.astype(int)
+        # z1.astype(int)
+        # z2.astype(int)
         self.heatmap1.setImage(z1)
         self.heatmap2.setImage(z2)
         #changes levels for heatmap to create gradient at depending on the data rate
@@ -848,25 +861,6 @@ class Tel_Thread(QtCore.QThread):
 #             self.positionalerror = kms_stuff[1]
             # ut.flags[1] = kms_stuff[2] #update kms flags sent to netcdf data
 #             self.new_kms_data.emit(kms_stuff[2]) #stuff 2 is status flag
-
-''' Add back in once HK socket script has been made '''
-# class HK_Thread(QtCore.QThread):
-#
-#     def __init__(self, parent = None):
-#         QtCore.QThread.__init__(self, parent)
-#
-#     def __del__(self):
-#         hk_exit.set()
-#
-#     def run(self):
-#         data, queue = mp.Pipe()
-#         p = mp.Process(target=hk.update_sock , args=(queue,))
-#         p.start()
-#         while not ut.hk_exit.is_set() :
-#             hk_stuff = data.recv()
-#             # send hk status flag to gui
-#             ut.flags[2] = hk_stuff
-
 
 #activating the gui main window
 

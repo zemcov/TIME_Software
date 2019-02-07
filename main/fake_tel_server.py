@@ -2,7 +2,7 @@ import socket, struct, sys, subprocess, time
 import utils as ut
 
 def start_tel_server(queue):
-    PORT = 55556
+    PORT = 55562
     # I am accepting telescope sim data for the gui
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))
@@ -10,32 +10,22 @@ def start_tel_server(queue):
     s.listen(5)
     unpacker = struct.Struct('d d d d d d d')
     client, info = s.accept()
-    # start up fake telescope script
-    # in reality, this will be activated before sending a init signal
-    # to the real telescope
-    subprocess.Popen(['python %s/fake_tel.py' %(dir)],shell=True)
 
     while True:
-        data = client.recv(unpacker.size)
-        pa,flag,alt,az,ra,dec,othertime = unpacker.unpack(data)
-        print(pa)
 
-        if flag == 2.0 or ut.tel_exit.is_set():
-            pause_msg = '1'
-            pause_msg = str.encode(pause_msg, 'utf-8')
-            client.send(pause_msg)
-            print("RA > 21, Client Shutting Down")
-            stop_msg = '0'
-            stop_msg = str.encode(stop_msg, 'utf-8')
-            client.send(stop_msg)
-            time.sleep(2.0)
+        if ut.tel_exit.is_set():
+            print("Client Shutting Down")
+            stop_msg = 'end'
+            client.send(stop_msg.encode())
             break
 
         else :
-            msg = '3'
-            msg = str.encode(msg, 'utf-8')
-            client.send(msg)
-            print('Data Received: RA %s' %(ra))
+            msg = 'go'
+            client.send(msg.encode())
+            data = client.recv(unpacker.size)
+            pa,flag,alt,az,ra,dec,othertime = unpacker.unpack(data)
+            queue.send([pa,flag,alt,az,ra,dec,time])
+
 
     # while not ut.tel_exit.is_set():
     #     # retrieve and unpack data from socket
@@ -52,4 +42,6 @@ def start_tel_server(queue):
             # queue.send([pa,flag,alt,az,ra,dec,time])
 
     print("Telescope Socket Closed")
+    s.shutdown(socket.SHUT_RDWR)
+    s.close()
     sys.exit()

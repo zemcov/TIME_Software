@@ -1,8 +1,10 @@
 import netCDF4 as nc
-import os, sys, time
+import os, sys
+import time as t
 import datetime as now
 import numpy as np
 from termcolor import colored
+import utils as ut
 
 tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
 
@@ -20,11 +22,13 @@ def new_file(h_size, filestarttime):
     # Dimensions for Data Arrays -------------------------------------------------------------------
     mce.createDimension('raw_rows',h_size[0])
     mce.createDimension('raw_cols',h_size[1])
-    mce.createDimension('raw_num', h_size[2])
+    mce.createDimension('raw_num', ut.german_freq)
     mce.createDimension('k',1)
     mce.createDimension('v',16)
+    mce.createDimension('hk_col',3)
+    mce.createDimension('hk_row',215)
+    mce.createDimension('hk_num', ut.german_freq)
     mce.createDimension('hk',1)
-    mce.createDimension('hks',2)
     mce.createDimension('sf',5)
 
     # creating variables --------------------------------------------------------------------------------
@@ -36,8 +40,10 @@ def new_file(h_size, filestarttime):
     Rc = mce.createVariable('rc','S1',('r',),zlib=True) # can either use rc name or integer used by gui
     # global Time
     # Time = mce.createVariable('time','S1',('t','k'),zlib=True)
-    global Tele_time
-    Tele_time = mce.createVariable('tele_time','f8',('t','hk','hk','hk'),zlib=True)
+    global Time
+    Time = mce.createVariable('time','f8',('t','mode'),zlib=True)
+    global HK_Data
+    HK_Data = mce.createVariable('hk_data','f8',('t','hk_col','hk_row','hk_num'),zlib=True)
 
     # MCE DATA =============================================================================================
     global MCE0_Raw_Data_All
@@ -65,7 +71,6 @@ def new_file(h_size, filestarttime):
     Frames._Encoding = 'ascii'
     Datamode._Encoding = 'ascii'
     Rc._Encoding = 'ascii'
-    # Time._Encoding = 'ascii'
 
     Observer[:] = np.array([parameters[0]],dtype='S3')
     Frames[:] = np.array([parameters[3]],dtype='S8')
@@ -73,29 +78,17 @@ def new_file(h_size, filestarttime):
     Rc[:] = np.array([parameters[2]],dtype='S1')
     parafile.close()
     mce.close()
-    return mce
 
-def mce_append(nc_file, p, h1, h2, head1, head2, flags):
+def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, hk):
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-        # Time[p,:] = [time.time()] # will eventually come from telescope
+        Time[p,:] = times
         Status_Flags[p,:,:] = flags
-        MCE0_Raw_Data_All[p,:,:,:] = h1
-        MCE1_Raw_Data_All[p,:,:,:] = h2
+        MCE0_Raw_Data_All[p,:,:,:] = mce0_data
+        MCE1_Raw_Data_All[p,:,:,:] = mce1_data
         MCE0_Header[p,:,:] = head1
         MCE1_Header[p,:,:] = head2
+        HK_Data[p,:,:,:] = hk
         mce.close()
     else :
         print(colored("Could find NETCDF File!", 'red'))
-
-def hk_append(nc_file, n, time, data, name, tele_time):
-    hk = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-    if (name + '_NC') in hk.variables.keys():
-        hk.variables[name + '_NC'][n,:,:] = [float(time),float(data)]
-    else :
-        #trying to make the netcdf name the same as the sensor name
-        name = hk.createVariable(name + '_NC','f8',('t','hk','hks'),zlib=True)
-        name[n,:,:] = [float(time),float(data)]
-    if tele_time[0] != 0 : # make sure we are only appending real data
-        Tele_time[n,:,:,:] = tele_time
-    # print(hk.variables.keys())
