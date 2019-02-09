@@ -7,6 +7,8 @@ from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
 from astroplan import Observer
 import utils as ut
+# from astroplan import download_IERS_A
+# download_IERS_A()
 
 def tel_move(RA,DEC,n,COLOR,slew_flag):
     #initialize  and update position coordinates
@@ -27,7 +29,7 @@ def tel_move(RA,DEC,n,COLOR,slew_flag):
     cosa = (np.tan(np.radians(31.95844))*np.cos(np.radians(DEC)))-(np.sin(np.radians(DEC))*np.cos(np.radians(ha*15.0)))
     pa = np.degrees(np.arctan2(sina,cosa))
 
-
+    return pa,alt,az
 #-----------------------------------------------------------------------------------------------------------------------
 t = [] # to keep track of the last scan, either up or down
 # ----------MOVING UP TO SCANNING POSITION---------------------------------------------------------------------------
@@ -51,11 +53,14 @@ COLOR = 'black'
 # -------------------------------------------------------------------------
 # I'm sending the socket packets to the server, listening for the gui
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(('127.0.0.1', 55556))
+s.connect(('192.168.1.145', 55562))
+packer = struct.Struct('d d d d d d d')
 print('Socket Connected')
 # telescope won't have access to this flag in reality...
 # it will have it's own flag that tells it when to stop
-while not ut.tel_exit.is_set():
+while True:
+
+# ==========================================================================
     if slew_flag == 0.0:
         while dec <= (dec_start + 2) :
             dec = dec + track
@@ -63,14 +68,13 @@ while not ut.tel_exit.is_set():
                 ra = ra + track
             else :
                 ra = ra - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
-            tel_move(ra,dec,n,COLOR,slew_flag)
-            packer = struct.Struct('d d d d d d d')
-            data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-
-            if slew_flag == 2.0 :
-                s.send(data)
-                ut.tel_exit.set()
+            pa,alt,az = tel_move(ra,dec,n,COLOR,slew_flag)
+            server_data = s.recv(1024).decode()
+            if server_data == 'end':
+                break
             else :
+                print(server_data)
+                data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
                 s.send(data)
 
             n = n + (1/rate)
@@ -82,6 +86,7 @@ while not ut.tel_exit.is_set():
             slew_flag = 2.0
             COLOR = 'red'
 
+    break
 # ---------MOVING DOWN TO SCANNING POSITION--------------------------------------------------------------------
     if slew_flag == 1.0:
         while dec >= dec_start :
@@ -90,14 +95,12 @@ while not ut.tel_exit.is_set():
                 ra = ra + track
             else :
                 ra = ra - 360.0 + track
-            tel_move(ra,dec,n,COLOR,slew_flag)
-            packer = struct.Struct('d d d d d d d')
-            data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-
-            if slew_flag == 2.0 :
-                s.send(data)
-                ut.tel_exit.set()
-            else :
+            pa,alt,az = tel_move(ra,dec,n,COLOR,slew_flag)
+            server_data = s.recv(1024).decode()
+            if server_data == 'end':
+                break
+                print(server_data)
+                data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
                 s.send(data)
 
             n = n + (1/rate)
@@ -108,7 +111,7 @@ while not ut.tel_exit.is_set():
             t.append(slew_flag)
             slew_flag = 2.0
             COLOR = 'red'
-
+    break
 # -------------MOVE BACK AND FORTH IN SCAN----------------------------------------------------------
     if slew_flag == 2.0:
         ra_init = ra
@@ -117,16 +120,15 @@ while not ut.tel_exit.is_set():
         while ra <= ra_init + area:
             dec = dec_init + np.sin(loops*(ra-ra_init))
             ra = ra + (speeds[0]/3600.0/rate)
-            tel_move(ra,dec,n,COLOR,slew_flag)
-            packer = struct.Struct('d d d d d d d')
-            data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-
-            if slew_flag == 2.0 :
-                s.send(data)
-                ut.tel_exit.set()
+            pa,alt,az = tel_move(ra,dec,n,COLOR,slew_flag)
+            server_data = s.recv(1024).decode()
+            if server_data == 'end':
+                break
             else :
+                print(server_data)
+                data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
                 s.send(data)
-                
+
             n = n + (1/rate)
             plt.pause(1/rate)
             othertime.sleep(1/rate)
@@ -137,6 +139,8 @@ while not ut.tel_exit.is_set():
                 slew_flag = 1.0
             if t[len(t)-1] == 1:
                 slew_flag = 0.0
+    break
 #---------------------------------------------------------------------------------------------------------------------
 print("Client has shutdown")
+s.close()
 sys.exit()
