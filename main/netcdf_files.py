@@ -22,12 +22,12 @@ def new_file(h_size, filestarttime):
     # Dimensions for Data Arrays -------------------------------------------------------------------
     mce.createDimension('raw_rows',h_size[0])
     mce.createDimension('raw_cols',h_size[1])
-    mce.createDimension('raw_num', ut.german_freq)
+    mce.createDimension('raw_num', int(ut.german_freq))
     mce.createDimension('k',1)
-    mce.createDimension('v',16)
+    mce.createDimension('v',1700)
     mce.createDimension('hk_col',3)
-    mce.createDimension('hk_row',215)
-    mce.createDimension('hk_num', ut.german_freq)
+    mce.createDimension('hk_row',1000)
+    mce.createDimension('hk_num', int(ut.german_freq))
     mce.createDimension('hk',1)
     mce.createDimension('sf',5)
 

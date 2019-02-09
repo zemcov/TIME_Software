@@ -20,31 +20,34 @@ class Time_Files:
         self.data3, queue3 = mp.Pipe()
         self.p1 = mp.Process(target=read_mce0.netcdfdata , args=(queue1,))
         self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,))
-        self.p3 = mp.Process(target=read_hk.loop_files , args=(queue3,))
+        self.p3 = mp.Process(target=read_hk.HK_Reader().loop_files , args=(queue3,))
         self.p1.start()
         self.p2.start()
         self.p3.start()
 
     def retrieve(self,queue):
         while not ut.mce_exit.is_set():
-            data1 = self.data1.recv()
-            data2 = self.data2.recv()
-            data3 = self.data3.recv()
-            self.h1 = data1[0]
-            self.h2 = data2[0]
-            self.head1 = data1[1]
-            self.head2 = data2[1]
-            self.sync1 = data1[2]
-            self.sync2 = data2[2]
-            # self.hk = data3 # n * (3,215)
-            queue.send([self.h1,self.h2,self.p])
-            print(colored('Offset: %s' %(ut.offset),'green'))
-            if ut.offset != 0 :
-                self.parse_arrays()
-                self.append_data()
-            else :
-                print(colored('data append skipped!','red'))
-            self.p += 1
+            try :
+                data1 = self.data1.recv()
+                data2 = self.data2.recv()
+                data3 = self.data3.recv()
+                self.h1 = data1[0]
+                self.h2 = data2[0]
+                self.head1 = data1[1]
+                self.head2 = data2[1]
+                self.sync1 = data1[2]
+                self.sync2 = data2[2]
+                self.hk = data3[0] # n * (3,215)
+                self.offset = data3[1]
+                queue.send([self.h1,self.h2,self.p])
+                if self.offset != 0 :
+                    self.parse_arrays()
+                    # self.append_data()
+                else :
+                    print(colored('data append skipped!','red'))
+                self.p += 1
+            except EOFError :
+                sys.exit()
 
         # self.p1.join()
         # self.p2.join()
@@ -55,19 +58,19 @@ class Time_Files:
     def parse_arrays(self):
         # self.hold_h1 = []
         # self.hold_h2 = []
-        print()
+        # print(colored('HK Shape: %s,%s' %(len(self.hk[0]),len(self.hk[0][0])),'green'))
+
         print(colored('MCE0 Sync: %s' %(self.sync1[0]),'green'))
         print(colored('MCE1 Sync: %s' %(self.sync1[0]),'green'))
-        # print(self.h1.shape[2],self.h2.shape[2])
         # check to make sure that the frame sync numbers are lining up
-        if self.sync1[0] == self.sync2[0]:
-            print(colored('normal sync nums','green'))
+        # if self.sync1[0] == self.sync2[0]:
+        #     print(colored('normal sync nums','green'))
             # self.hold_h1 = self.h1
             # self.hold_h2 = self.h2
             # print(self.hold_h1.shape,self.hold_h2.shape)
 
-        else :
-            print(colored('mismatched sync nums!!!','red'))
+        # else :
+        #     print(colored('mismatched sync nums!!!','red'))
             # self.hold_h1 = self.h1
             # self.hold_h2 = self.h2
             # for i in range(self.h1.shape[2]):
@@ -98,19 +101,23 @@ class Time_Files:
             #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
             #                     break
 
-
-        timer1_start = time.time()
-        # Append HK data to correct frame matching MCE timestream ---------------------------------
+        # # Append HK data to correct frame matching MCE timestream ---------------------------------
         utc_time = ut.sync_to_utc(self.sync1)
         self.utc = zip(utc_time,self.sync1) # tuples of (utc,sync)
-        self.hk_data = [0]*ut.german_freq # give it the same number of frames as mce data file
+        self.hk_data = [0]*int(ut.german_freq) # give it the same number of frames as mce data files
+
         for i in range(len(utc_time)) :
-            for j in range(len(self.hk)):
-                if self.hk[j][0][0] == utc_time[i] : # check if timestamps match
-                    self.hk_data[i] = self.hk[j]
+            for j in range(len(self.hk[0])):
+                for k in range(len(self.hk[0][0])) :
+                    if self.hk[j][0][k] != 0.0 :
+                        if self.hk[j][0][k] == utc_time[i] :
+                            self.hk_data[i] = self.hk[j,:,:]
+                            
+        np.save('/home/time/Desktop/final_hk.npy',self.hk_data)
+        np.save('/home/time/Desktop/utc.npy',utc_time)
+        np.save('/home/time/Desktop/hk_data.npy',self.hk)
         # ------------------------------------------------------------------------------------------
-        timer1_stop = time.time()
-        print(colored('Total Time: %s' %(timer1_stop - timer1_start),'red'))
+        sys.exit()
         return
 
 # ============================================================================

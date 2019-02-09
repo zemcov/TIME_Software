@@ -205,7 +205,7 @@ class mcegui(QtGui.QWidget):
             subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
             subprocess.Popen(['ssh -T time-mce-0 python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
             subprocess.Popen(['ssh -T time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
-            time.sleep(2.0)
+            time.sleep(5.0)
 
             #start other plot making processes
             self.initplot()
@@ -604,7 +604,6 @@ class mcegui(QtGui.QWidget):
 
     def updateplot(self,h1,h2,index):
         self.index = index
-        print(colored('Heatmap Shapes: %s , %s' %(str(h1.shape),str(h2.shape)),'magenta'))
         # parsing mce array to make heatmap data ==================
         d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
         for b in range(h1.shape[0]):
@@ -615,8 +614,6 @@ class mcegui(QtGui.QWidget):
         for b in range(h2.shape[0]):
             for c in range(h2.shape[1]):
                 d2[b][c] = (np.std(h2[b,c,:],dtype=np.float32))
-        print(colored(d1,'green'))
-        # print(colored(h1,'yellow'))
         # =========================================================
 
         # parsing mce array for graph data ========================
