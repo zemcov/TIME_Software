@@ -8,7 +8,7 @@ import datetime as dt
 import fnmatch
 from termcolor import colored
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
+# sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1) # line buffering
 a = 0
 dir = '/data/hk/omnilog/'
 print colored('Starting HK File Transfer','green')
@@ -21,10 +21,11 @@ while True:
         print colored('HK starting file = %i' %(a),'green')
         a = a + 1
     else :
+        print(colored('hk else statement','green'))
         if os.path.exists(dir + "omnilog.%i.txt.gz" %(a+1)) : #wait to read new file until old file is complete
             file_name = dir + 'omnilog.%i.txt.gz' % (a)
             if os.path.exists(file_name) :
-                subprocess.Popen(['scp', file_name,  'time@time-master.caltech.edu:/home/time/Desktop/time-data/hk/omnilog.%i.txt.gz' % (a)]).wait()
+                subprocess.Popen(['scp', file_name,  'time-master:/home/time/Desktop/time-data/hk/omnilog.%i.txt.gz' % (a)]).wait()
                 print colored('HK File Transfered : %s' %(file_name),'magenta')
                 a = a + 1
             else:

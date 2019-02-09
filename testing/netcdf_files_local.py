@@ -1,12 +1,11 @@
 import netCDF4 as nc
 import os
 import sys
-#import takedata_test as td
 import datetime as now
 import numpy as np
 from termcolor import colored
 
-tempfiledir = '/Users/vlb9398/Desktop/netcdffiles'
+tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
 def new_file(h_size, filestarttime):
     mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
@@ -59,21 +58,21 @@ def new_file(h_size, filestarttime):
     global Status_Flags
     Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
 
-    # parafilename = ('tempfiles/tempparameters.txt')
-    # parafile = open(parafilename, 'r')
-    # parameters = parafile.readline().strip().split()
-    #
-    # Observer._Encoding = 'ascii'
-    # Frames._Encoding = 'ascii'
-    # Datamode._Encoding = 'ascii'
-    # Rc._Encoding = 'ascii'
-    # Time._Encoding = 'ascii'
-    #
-    # Observer[:] = np.array([parameters[0]],dtype='S3')
-    # Frames[:] = np.array([parameters[3]],dtype='S8')
-    # Datamode[:] = np.array([parameters[1]],dtype='S2')
-    # Rc[:] = np.array([parameters[2]],dtype='S1')
-    # parafile.close()
+    parafilename = ('tempfiles/tempparameters.txt')
+    parafile = open(parafilename, 'r')
+    parameters = parafile.readline().strip().split()
+
+    Observer._Encoding = 'ascii'
+    Frames._Encoding = 'ascii'
+    Datamode._Encoding = 'ascii'
+    Rc._Encoding = 'ascii'
+    Time._Encoding = 'ascii'
+
+    Observer[:] = np.array([parameters[0]],dtype='S3')
+    Frames[:] = np.array([parameters[3]],dtype='S8')
+    Datamode[:] = np.array([parameters[1]],dtype='S2')
+    Rc[:] = np.array([parameters[2]],dtype='S1')
+    parafile.close()
     mce.close()
     return mce
 
