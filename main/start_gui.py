@@ -7,9 +7,9 @@ import random as rm
 from termcolor import colored
 import multiprocessing as mp
 import utils as ut
-import append_data
-import fake_tel_server as ft
-import fake_tel
+import append_data, append_hk
+# import fake_tel_server as ft
+# import fake_tel
 import read_hk
 
 #class of all components of GUI
@@ -805,36 +805,38 @@ class MCEThread(QtCore.QThread):
         ut.mce_exit.set()
 
     def run(self):
-        data, queue = mp.Pipe()
-        p = mp.Process(target=append_data.Time_Files().retrieve, args=(queue,))
-        p.start()
+        # data, queue = mp.Pipe()
+        # p = mp.Process(target=append_data.Time_Files().retrieve, args=(queue,))
+        p2 = mp.Process(target=append_hk.Time_Files().retrieve)
+        # p.start()
+        p2.start()
 
-        while not ut.mce_exit.is_set():
-            stuff = data.recv()
-            self.new_data.emit(stuff[0],stuff[1],stuff[2])
+        # while not ut.mce_exit.is_set():
+        #     stuff = data.recv()
+        #     self.new_data.emit(stuff[0],stuff[1],stuff[2])
 
-class Tel_Thread(QtCore.QThread):
-    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
-
-    def __init__(self, parent = None):
-        QtCore.QThread.__init__(self, parent)
-
-    def __del__(self):
-        ut.tel_exit.set()
-
-    def run(self):
-        data, queue = mp.Pipe()
-        p = mp.Process(target=ft.start_tel_server, args=(queue,))
-        p.start()
-        while True :
-            # grab data from fake_tel_server.py
-            if not ut.tel_exit.is_set() :
-                tel_stuff = data.recv()
-                ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
-                self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-            else :
-                time.sleep(2.0) # gives client/server time to shutdown before thread is closed
-                break
+# class Tel_Thread(QtCore.QThread):
+#     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
+#
+#     def __init__(self, parent = None):
+#         QtCore.QThread.__init__(self, parent)
+#
+#     def __del__(self):
+#         ut.tel_exit.set()
+#
+#     def run(self):
+#         data, queue = mp.Pipe()
+#         p = mp.Process(target=ft.start_tel_server, args=(queue,))
+#         p.start()
+#         while True :
+#             # grab data from fake_tel_server.py
+#             if not ut.tel_exit.is_set() :
+#                 tel_stuff = data.recv()
+#                 ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
+#                 self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+#             else :
+#                 time.sleep(2.0) # gives client/server time to shutdown before thread is closed
+#                 break
 
 ''' Add this one once we know that KMS is on and ready to be integrated'''
 # class KMS_Thread(QtCore.QThread):

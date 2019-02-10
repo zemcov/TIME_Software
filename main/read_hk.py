@@ -60,7 +60,6 @@ class HK_Reader :
         print(colored('Offset %s' %(ut.offset),'red'))
 
         # makng dict entry for name as integer ====================================
-        # print(colored('N : %s' %(self.n),'magenta'))
         if self.n == 0 :
             if os.path.exists(self.dir2 + '/hk_dict.txt'): # if we already have a saved dictionary :
                 f = open(self.dir2 + '/hk_dict.txt','r')
@@ -107,7 +106,6 @@ class HK_Reader :
                     num = int(k)
                     val = v
             sort_name[i] = float(num)
-            # print(colored("Index of Num: %s , %s" %(num,val),'magenta'))
             # only incremment index for a new timestamp,not for file num or for t =======
             if l == 0 : # if start of a new time (or new file)
                 new_time = sort_time[i]
@@ -135,8 +133,7 @@ class HK_Reader :
 
                     else :
                         print(len(self.name_dict.keys()))
-                        # print(colored("Number of reported sensors over size limit!",'red'))
-                        # print(list(self.name_dict.keys()))
+                        print(colored("Number of reported sensors over size limit!",'red'))
 
                     time2 = [0]*1000
                     names2 = [0]*1000

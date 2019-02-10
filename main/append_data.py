@@ -2,13 +2,14 @@ import numpy as np
 from os import stat
 import os, sys, mce_data, subprocess
 import netcdf_files as nc
+import hk_netcdf_files as hnc
 import datetime as dt
 from termcolor import colored
 import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
-import read_mce0, read_mce1, read_hk
+import read_mce0, read_mce1
 
 class Time_Files:
 
@@ -17,51 +18,45 @@ class Time_Files:
         self.p = 0
         self.data1, queue1 = mp.Pipe()
         self.data2, queue2 = mp.Pipe()
-        self.data3, queue3 = mp.Pipe()
         self.p1 = mp.Process(target=read_mce0.netcdfdata , args=(queue1,))
         self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,))
-        self.p3 = mp.Process(target=read_hk.HK_Reader().loop_files , args=(queue3,))
         self.p1.start()
         self.p2.start()
-        self.p3.start()
 
     def retrieve(self,queue):
         while not ut.mce_exit.is_set():
-            try :
-                data1 = self.data1.recv()
-                data2 = self.data2.recv()
-                data3 = self.data3.recv()
-                self.h1 = data1[0]
-                self.h2 = data2[0]
-                self.head1 = data1[1]
-                self.head2 = data2[1]
-                self.sync1 = data1[2]
-                self.sync2 = data2[2]
-                self.hk = data3[0] # n * (3,215)
-                self.offset = data3[1]
-                queue.send([self.h1,self.h2,self.p])
-                if self.offset != 0 :
-                    self.parse_arrays()
-                    # self.append_data()
-                else :
-                    print(colored('data append skipped!','red'))
-                self.p += 1
-            except EOFError :
-                sys.exit()
 
-        # self.p1.join()
-        # self.p2.join()
-        # self.p1.close()
-        # self.p2.close()
+            time1 = time.time()
+            data1 = self.data1.recv()
+            data2 = self.data2.recv()
+            self.h1 = data1[0]
+            self.h2 = data2[0]
+            queue.send([self.h1,self.h2,self.p])
+            time2 = time.time()
+            print('Total Time:',time2 - time1)
+
+            self.head1 = data1[1]
+            self.head2 = data2[1]
+            self.sync1 = data1[2]
+            self.sync2 = data2[2]
+
+            self.parse_arrays()
+            self.append_mce_data()
+            self.p += 1
+
+        self.p1.join()
+        self.p2.join()
+        self.p1.close()
+        self.p2.close()
+        sys.exit()
 
 
     def parse_arrays(self):
         # self.hold_h1 = []
         # self.hold_h2 = []
-        # print(colored('HK Shape: %s,%s' %(len(self.hk[0]),len(self.hk[0][0])),'green'))
 
         print(colored('MCE0 Sync: %s' %(self.sync1[0]),'green'))
-        print(colored('MCE1 Sync: %s' %(self.sync1[0]),'green'))
+        print(colored('MCE1 Sync: %s' %(self.sync2[0]),'green'))
         # check to make sure that the frame sync numbers are lining up
         # if self.sync1[0] == self.sync2[0]:
         #     print(colored('normal sync nums','green'))
@@ -101,51 +96,37 @@ class Time_Files:
             #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
             #                     break
 
-        # # Append HK data to correct frame matching MCE timestream ---------------------------------
         utc_time = ut.sync_to_utc(self.sync1)
         self.utc = zip(utc_time,self.sync1) # tuples of (utc,sync)
-        self.hk_data = [0]*int(ut.german_freq) # give it the same number of frames as mce data files
-
-        for i in range(len(utc_time)) :
-            for j in range(len(self.hk[0])):
-                for k in range(len(self.hk[0][0])) :
-                    if self.hk[j][0][k] != 0.0 :
-                        if self.hk[j][0][k] == utc_time[i] :
-                            self.hk_data[i] = self.hk[j,:,:]
-                            
-        np.save('/home/time/Desktop/final_hk.npy',self.hk_data)
-        np.save('/home/time/Desktop/utc.npy',utc_time)
-        np.save('/home/time/Desktop/hk_data.npy',self.hk)
-        # ------------------------------------------------------------------------------------------
-        sys.exit()
         return
 
 # ============================================================================
-    def append_data(self):
+    def append_mce_data(self):
         netcdfdir = '/home/time/Desktop/time-data/netcdffiles'
         if self.a == 0: # if it's the first file, make a new netcdf file
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()
-            print(colored('------------ New File -------------','green'))
+            print(colored('------------ New MCE File -------------','green'))
             mce = nc.new_file(self.h1.shape, self.filestarttime)
-            self.ncfile = netcdfdir + "/raw_%s.nc" %(self.filestarttime)
+            self.ncfile = netcdfdir + "/raw_mce_%s.nc" %(self.filestarttime)
 
-            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.hk_data)
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2)
             self.a = 1
 
-        elif os.stat(netcdfdir + "/raw_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
+        # elif os.stat(netcdfdir + "/raw_mce_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
+        elif self.a % 100 == 0 :
             # if it's a full file, make a new netcdf file
-            print(colored('----------- New File ------------','green'))
+            print(colored('----------- New MCE File ------------','green'))
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()
             mce = nc.new_file(self.h1.shape, self.filestarttime)
-            self.ncfile = netcdfdir + "/raw_%s.nc" %(self.filestarttime)
+            self.ncfile = netcdfdir + "/raw_mce_%s.nc" %(self.filestarttime)
 
-            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.hk_data)
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2)
 
         else: # if everything is okay, append data to the file
-            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head2, self.head2, self.h1, self.h2, self.hk_data)
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head2, self.head2, self.h1, self.h2)
 
-        # have the counter incremement for every append, not just hk
+        # have the counter incremement for every append
         self.a += 1
         return

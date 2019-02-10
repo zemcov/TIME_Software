@@ -52,10 +52,10 @@ loops_deg = 2 #number of loops per degrees = loops_deg
 COLOR = 'black'
 # -------------------------------------------------------------------------
 # I'm sending the socket packets to the server, listening for the gui
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(('192.168.1.145', 55562))
-packer = struct.Struct('d d d d d d d')
-print('Socket Connected')
+# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# s.connect(('192.168.1.145', 55562))
+# packer = struct.Struct('d d d d d d d')
+# print('Socket Connected')
 # telescope won't have access to this flag in reality...
 # it will have it's own flag that tells it when to stop
 while True:
@@ -69,13 +69,13 @@ while True:
             else :
                 ra = ra - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
             pa,alt,az = tel_move(ra,dec,n,COLOR,slew_flag)
-            server_data = s.recv(1024).decode()
-            if server_data == 'end':
-                break
-            else :
-                print(server_data)
-                data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-                s.send(data)
+            # server_data = s.recv(1024).decode()
+            # if server_data == 'end':
+            #     break
+            # else :
+            #     print(server_data)
+            #     data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
+            #     s.send(data)
 
             n = n + (1/rate)
             plt.pause(1/rate)
@@ -96,12 +96,12 @@ while True:
             else :
                 ra = ra - 360.0 + track
             pa,alt,az = tel_move(ra,dec,n,COLOR,slew_flag)
-            server_data = s.recv(1024).decode()
-            if server_data == 'end':
-                break
-                print(server_data)
-                data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-                s.send(data)
+            # server_data = s.recv(1024).decode()
+            # if server_data == 'end':
+            #     break
+            #     print(server_data)
+            #     data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
+            #     s.send(data)
 
             n = n + (1/rate)
             plt.pause(1/rate)
@@ -121,13 +121,13 @@ while True:
             dec = dec_init + np.sin(loops*(ra-ra_init))
             ra = ra + (speeds[0]/3600.0/rate)
             pa,alt,az = tel_move(ra,dec,n,COLOR,slew_flag)
-            server_data = s.recv(1024).decode()
-            if server_data == 'end':
-                break
-            else :
-                print(server_data)
-                data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
-                s.send(data)
+            # server_data = s.recv(1024).decode()
+            # if server_data == 'end':
+            #     break
+            # else :
+            #     print(server_data)
+            #     data = packer.pack(pa,slew_flag,alt,az,ra,dec,othertime.time())
+            #     s.send(data)
 
             n = n + (1/rate)
             plt.pause(1/rate)
@@ -142,5 +142,5 @@ while True:
     break
 #---------------------------------------------------------------------------------------------------------------------
 print("Client has shutdown")
-s.close()
+# s.close()
 sys.exit()

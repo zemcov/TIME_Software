@@ -9,7 +9,7 @@ import utils as ut
 tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
 
 def new_file(h_size, filestarttime):
-    mce = nc.Dataset(tempfiledir + "/raw_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
+    mce = nc.Dataset(tempfiledir + "/raw_mce_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
      # GUI PARAMETERS ---------------------------------------------------------------------------------
     mce.createDimension('det',1)
@@ -79,7 +79,7 @@ def new_file(h_size, filestarttime):
     parafile.close()
     mce.close()
 
-def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, hk):
+def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data):
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         Time[p,:] = times
@@ -88,7 +88,6 @@ def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, hk
         MCE1_Raw_Data_All[p,:,:,:] = mce1_data
         MCE0_Header[p,:,:] = head1
         MCE1_Header[p,:,:] = head2
-        HK_Data[p,:,:,:] = hk
         mce.close()
     else :
         print(colored("Could find NETCDF File!", 'red'))
