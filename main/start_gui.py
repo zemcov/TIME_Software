@@ -86,6 +86,7 @@ class mcegui(QtGui.QWidget):
         sys.exit()
 
     def on_starttel_clicked(self):
+        # open socket to tel server and send startup commands
         print('Setting Telescope Observing Parameters')
     #sets parameter variables to user input and checks if valid - will start MCE
     #and live graphing if they are
@@ -133,13 +134,20 @@ class mcegui(QtGui.QWidget):
         self.timestarted = datetime.datetime.utcnow()
         self.timestarted = self.timestarted.isoformat()
 
+        # telescope parameters --------------------------------------
         self.inittel = self.init_tel.currentText()
 
         if self.inittel == 'Yes':
+            self.tel_scan = self.telescan.currentText()
+            scans = ['1D Raster','2D Raster','BowTie (constant el)']
+            script = ['raster_script_1d','raster_script_2d','bowtie_scan']
+            for scan in scans :
+                if self.tel_scan == scan :
+                    self.tel_script = script[scans.index(scan)]
             self.inittelescope()
         else :
             pass
-
+        # -----------------------------------------------------------
         #check if parameters are valid - will create warning box if invalid
         if self.observer == '' or self.framenumber == '' or self.framenumber == '0'\
         or self.timeinterval == ''\
@@ -147,7 +155,8 @@ class mcegui(QtGui.QWidget):
         # or self.datarate == '0'\
         # or self.datarate == ''
             self.warningbox('gui') # throw up a warning box
-            ''' should probably also add something in to restart the gui main form screen '''
+            # restart the gui window
+            ex = mcegui()
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
@@ -260,7 +269,7 @@ class mcegui(QtGui.QWidget):
 
         # telescope options =================================================
         self.telescan = QtGui.QComboBox()
-        self.telescan.addItems(['1D','2D','BowTie (constant el)'])
+        self.telescan.addItems(['1D Raster','2D Raster','BowTie (constant el)'])
 
         self.tel_delay = QtGui.QLineEdit('0')
 
@@ -488,7 +497,7 @@ class mcegui(QtGui.QWidget):
 
     def inittelescope(self):
         # start the telescope QThread
-        self.tel_updater = Tel_Thread()
+        self.tel_updater = Tel_Thread(tel_scan = self.tel_script)
         self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
         self.tel_updater.start()
 
@@ -568,7 +577,6 @@ class mcegui(QtGui.QWidget):
 
     def updatetelescopedata(self,pa,slew,alt,az,ra,dec,time):
         # error checking based on status flags from telescope
-        print(colored("Update Telescope",'red'))
         tel_error = [10,11,12]
         if (slew in tel_error) and (self.repeat == False) :
             print(colored("telescope if",'red'))
@@ -581,10 +589,13 @@ class mcegui(QtGui.QWidget):
             self.warningbox(['tel',slew]) #slew will be replaced with tel status flag over socket
 
         else :
-            print(colored("telescope else",'red'))
             # update text on window to reflect new data
+            tel_flags = [0,1,2,3,4]
+            tel_names = ['Idle','Tracking Centroid','-RA','+RA','Turn Around Zone']
+            for i in range(len(tel_flags)):
+                if slew == tel_flags[i]:
+                    self.slewtext.setText('Slew Flag: %s' %(tel_names[i]))
             self.patext.setText('PA: %s' %(round(float(pa),2)))
-            self.slewtext.setText('Slew Flag: %s' %(slew))
             self.timetext.setText('UTC Time: %s'%(round(float(time),2)))
 
             altazcolor = pg.mkBrush('b')
@@ -815,28 +826,34 @@ class MCEThread(QtCore.QThread):
         #     stuff = data.recv()
         #     self.new_data.emit(stuff[0],stuff[1],stuff[2])
 
-# class Tel_Thread(QtCore.QThread):
-#     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
-#
-#     def __init__(self, parent = None):
-#         QtCore.QThread.__init__(self, parent)
-#
-#     def __del__(self):
-#         ut.tel_exit.set()
-#
-#     def run(self):
-#         data, queue = mp.Pipe()
-#         p = mp.Process(target=ft.start_tel_server, args=(queue,))
-#         p.start()
-#         while True :
-#             # grab data from fake_tel_server.py
-#             if not ut.tel_exit.is_set() :
-#                 tel_stuff = data.recv()
-#                 ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
-#                 self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-#             else :
-#                 time.sleep(2.0) # gives client/server time to shutdown before thread is closed
-#                 break
+class Tel_Thread(QtCore.QThread):
+    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
+
+    def __init__(self, tel_scan, parent = None):
+        QtCore.QThread.__init__(self, parent)
+        self.tel_scan = tel_scan
+
+    def __del__(self):
+        ut.tel_exit.set()
+
+    def run(self):
+        data, queue = mp.Pipe()
+        scans = ['1D Raster','2D Raster','BowTie (constant el)']
+        scripts = ['raster_script_1d','raster_script_2d','bowtie_scan']
+        for scan in scans :
+            if self.tel_scan == scan :
+                p = mp.Process(target=self.tel_scan, args=(queue,))
+                p.start()
+
+        while True :
+            # grab data from fake_tel_server.py
+            if not ut.tel_exit.is_set() :
+                tel_stuff = data.recv()
+                ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
+                self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+            else :
+                time.sleep(2.0) # gives client/server time to shutdown before thread is closed
+                break
 
 ''' Add this one once we know that KMS is on and ready to be integrated'''
 # class KMS_Thread(QtCore.QThread):
