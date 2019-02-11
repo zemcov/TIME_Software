@@ -51,7 +51,7 @@ class HK_Reader :
                 name.append(names.replace(' ','_'))
                 data.append(float(fields[4]))
                 if name[-1] == 'HKMBv1b0_SYNC_number' :
-                    ut.timing(float(fields[1]),float(fields[4]))
+                    ut.offset = ut.timing(float(fields[1]),float(fields[4]))
 
         except IOError:
             print(colored('HK FILE CORRUPT! %s' %(file),'red'))

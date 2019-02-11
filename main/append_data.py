@@ -50,6 +50,11 @@ class Time_Files:
         self.p2.close()
         sys.exit()
 
+    def parse_tel(self):
+        #stuff
+
+    def parse_kms(self):
+        # stuff 
 
     def parse_arrays(self):
         # self.hold_h1 = []
@@ -96,8 +101,8 @@ class Time_Files:
             #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
             #                     break
 
-        utc_time = ut.sync_to_utc(self.sync1)
-        self.utc = zip(utc_time,self.sync1) # tuples of (utc,sync)
+        utc_time = ut.sync_to_utc(self.sync2)
+        self.utc = zip(utc_time,self.sync2) # tuples of (utc,sync)
         return
 
 # ============================================================================

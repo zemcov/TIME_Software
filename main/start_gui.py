@@ -8,8 +8,6 @@ from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
-# import fake_tel_server as ft
-# import fake_tel
 import read_hk
 
 #class of all components of GUI
@@ -136,6 +134,12 @@ class mcegui(QtGui.QWidget):
         self.inittel = self.init_tel.currentText()
 
         if self.inittel == 'Yes':
+            self.tel_scan = self.telescan.currentText()
+            scans = ['1D Raster','2D Raster','Bowtie (constant el)']
+            script = ['raster_script_1d','raster_script_2d','bowtie_scan']
+            for scan in scans :
+                if self.tel_scan == scan :
+                    self.tel_script = script[scans.index(scan)]
             self.inittelescope()
         else :
             pass
@@ -186,26 +190,26 @@ class mcegui(QtGui.QWidget):
             # subprocess.Popen(['./mce1_cdr.sh %s' %(self.datarate)], shell = True)
 
             # set the data mode for both mces and start them running
-            if self.readoutcard == 'All':
-                subprocess.Popen(['./mce0_cdm.sh a %s' %(self.datamode)], shell = True)
-                subprocess.Popen(['./mce1_cdm.sh a %s' %(self.datamode)], shell = True)
-                subprocess.Popen(['./mce0_del.sh'], shell=True)
-                subprocess.Popen(['./mce1_del.sh'], shell=True)
-                subprocess.Popen(['./mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
-                subprocess.Popen(['./mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
-            else :
-                subprocess.Popen(['./mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                subprocess.Popen(['./mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                subprocess.Popen(['./mce0_del.sh'], shell=True)
-                subprocess.Popen(['./mce1_del.sh'], shell=True)
-                subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
-                subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+            # if self.readoutcard == 'All':
+            #     subprocess.Popen(['./mce0_cdm.sh a %s' %(self.datamode)], shell = True)
+            #     subprocess.Popen(['./mce1_cdm.sh a %s' %(self.datamode)], shell = True)
+            #     subprocess.Popen(['./mce0_del.sh'], shell=True)
+            #     subprocess.Popen(['./mce1_del.sh'], shell=True)
+            #     subprocess.Popen(['./mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+            #     subprocess.Popen(['./mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+            # else :
+            #     subprocess.Popen(['./mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+            #     subprocess.Popen(['./mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+            #     subprocess.Popen(['./mce0_del.sh'], shell=True)
+            #     subprocess.Popen(['./mce1_del.sh'], shell=True)
+            #     subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+            #     subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
             # start file transfer scripts
             subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
-            subprocess.Popen(['ssh -T time-mce-0 python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
-            subprocess.Popen(['ssh -T time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
-            time.sleep(5.0)
+            # subprocess.Popen(['ssh -T time-mce-0 python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
+            # subprocess.Popen(['ssh -T time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
+            time.sleep(2.0)
 
             #start other plot making processes
             self.initplot()
@@ -260,7 +264,7 @@ class mcegui(QtGui.QWidget):
 
         # telescope options =================================================
         self.telescan = QtGui.QComboBox()
-        self.telescan.addItems(['1D','2D','BowTie (constant el)'])
+        self.telescan.addItems(['1D Raster','2D Raster','BowTie (constant el)'])
 
         self.tel_delay = QtGui.QLineEdit('0')
 
@@ -488,7 +492,7 @@ class mcegui(QtGui.QWidget):
 
     def inittelescope(self):
         # start the telescope QThread
-        self.tel_updater = Tel_Thread()
+        self.tel_updater = Tel_Thread(tel_scan = self.tel_script)
         self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
         self.tel_updater.start()
 
@@ -805,38 +809,43 @@ class MCEThread(QtCore.QThread):
         ut.mce_exit.set()
 
     def run(self):
-        # data, queue = mp.Pipe()
-        # p = mp.Process(target=append_data.Time_Files().retrieve, args=(queue,))
-        p2 = mp.Process(target=append_hk.Time_Files().retrieve)
-        # p.start()
-        p2.start()
+        data, queue = mp.Pipe()
+        p = mp.Process(target=append_data.Time_Files().retrieve, args=(queue,))
+        # p2 = mp.Process(target=append_hk.Time_Files().retrieve)
+        p.start()
+        # p2.start()
 
-        # while not ut.mce_exit.is_set():
-        #     stuff = data.recv()
-        #     self.new_data.emit(stuff[0],stuff[1],stuff[2])
+        while not ut.mce_exit.is_set():
+            stuff = data.recv()
+            self.new_data.emit(stuff[0],stuff[1],stuff[2])
 
-# class Tel_Thread(QtCore.QThread):
-#     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
-#
-#     def __init__(self, parent = None):
-#         QtCore.QThread.__init__(self, parent)
-#
-#     def __del__(self):
-#         ut.tel_exit.set()
-#
-#     def run(self):
-#         data, queue = mp.Pipe()
-#         p = mp.Process(target=ft.start_tel_server, args=(queue,))
-#         p.start()
-#         while True :
-#             # grab data from fake_tel_server.py
-#             if not ut.tel_exit.is_set() :
-#                 tel_stuff = data.recv()
-#                 ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
-#                 self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-#             else :
-#                 time.sleep(2.0) # gives client/server time to shutdown before thread is closed
-#                 break
+class Tel_Thread(QtCore.QThread):
+    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
+
+    def __init__(self, tel_scan, parent = None):
+        QtCore.QThread.__init__(self, parent)
+        self.tel_scan = tel_scan
+
+    def __del__(self):
+        ut.tel_exit.set()
+
+    def run(self):
+        data, queue = mp.Pipe()
+        scans = ['1D Raster','2D Raster','BowTie (constant el)']
+        scripts = ['raster_script_1d','raster_script_2d','bowtie_scan']
+        for scan in scans :
+            if self.tel_scan == scan :
+                p = mp.Process(target=self.tel_scan, args=(queue,))
+                p.start()
+        while True :
+            # grab data from fake_tel_server.py
+            if not ut.tel_exit.is_set() :
+                tel_stuff = data.recv()
+                ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
+                self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+            else :
+                time.sleep(2.0) # gives client/server time to shutdown before thread is closed
+                break
 
 ''' Add this one once we know that KMS is on and ready to be integrated'''
 # class KMS_Thread(QtCore.QThread):
