@@ -1,3 +1,5 @@
+# bowtie scan
+
 import socket, struct, subprocess, os, sys
 import time as othertime
 import numpy as np
@@ -28,14 +30,14 @@ def start_sock(ra,dec):
         if ut.tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
             print("Client Shutting Down")
             stop_msg = 'TIME_START_TELEMETRY off , '
-            client.send(stop_msg.encode('utf-8'))
+            client.send(stop_msg.encode())
             break
 
         else :
             # option to send response after receiving packet
-            position_update(ra,dec)
+             = position_update(ra,dec)
             msg = ''
-            client.send(msg.encode('utf-8'))
+            client.send(msg.encode())
 
             data = client.recv(unpacker.size)
             # unpacking data packet ===============================================

@@ -30,7 +30,9 @@ def new_file(h_size, filestarttime):
     mce.createDimension('hk_num', int(ut.german_freq))
     mce.createDimension('hk',1)
     mce.createDimension('sf',5)
-    mce.createDimension('tel_pos',21)
+    mce.createDimension('tel_pos',20)
+    mce.createDimension('kms_pos',4)
+    mce.createDimension('sock_rate',10)
 
     # creating variables --------------------------------------------------------------------------------
     Observer = mce.createVariable("observer","S1",("obs",),zlib=True)
@@ -62,7 +64,14 @@ def new_file(h_size, filestarttime):
     # =========================================================================
 
     # TELESCOPE Data ==============================================================
-    global Tel = mce.createVariable('')
+    global Tel
+    Tel = mce.createVariable('tel','f8',('sock_rate','tel_pos'),zlib=True)
+    # ================================================================================
+
+    # KMS Data ======================================================================
+    global KMS
+    KMS = mce.createVariable('kms','f8',('sock_rate','kms_pos'),zlib=True)
+    # ================================================================================
 
     global Status_Flags
     Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
@@ -92,10 +101,8 @@ def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, te
         MCE1_Raw_Data_All[p,:,:,:] = mce1_data
         MCE0_Header[p,:,:] = head1
         MCE1_Header[p,:,:] = head2
-        if tele != 0 :
-            Tel[p,:,:] = tele
-        if kms != 0 :
-            KMS[p,:,:] = kms
+        Tel[p,:,:] = tele
+        KMS[p,:,:] = kms
         mce.close()
     else :
         print(colored("Could find NETCDF File!", 'red'))

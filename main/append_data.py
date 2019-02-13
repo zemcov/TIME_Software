@@ -18,10 +18,16 @@ class Time_Files:
         self.p = 0
         self.data1, queue1 = mp.Pipe()
         self.data2, queue2 = mp.Pipe()
+        self.data3, queue3 = mp.Pipe()
+        self.data4, queue4 = mp.Pipe()
         self.p1 = mp.Process(target=read_mce0.netcdfdata , args=(queue1,))
         self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,))
+        self.p3 = mp.Process(target=read_tel.loop_files , args=(queue3,))
+        self.p4 = mp.Process(target=read_kms.loop_files , args=(queue4,))
         self.p1.start()
         self.p2.start()
+        self.p3.start()
+        self.p4.start()
 
     def retrieve(self,queue):
         while not ut.mce_exit.is_set():
@@ -32,6 +38,8 @@ class Time_Files:
             self.h1 = data1[0]
             self.h2 = data2[0]
             queue.send([self.h1,self.h2,self.p])
+            self.tel = self.data3.recv()
+            self.kms = self.data4.recv()
             time2 = time.time()
             print('Total Time:',time2 - time1)
 
@@ -40,7 +48,10 @@ class Time_Files:
             self.sync1 = data1[2]
             self.sync2 = data2[2]
 
+
             self.parse_arrays()
+            self.parse_tel()
+            self.parse_kms()
             self.append_mce_data()
             self.p += 1
 
@@ -51,10 +62,26 @@ class Time_Files:
         sys.exit()
 
     def parse_tel(self):
-        #stuff
+        if self.tel[0][0] == 0.0 : # check for zeroes from self. off == True
+            self.tel_data = self.tel
+        else : # otherwise, parse the real data into larger array
+            self.tel_data = [0] * 10
+            if len(self.tel) <= 10:
+                for i in range(len(self.tel)) :
+                    self.tel_data[i] = self.tel[i]
+            else :
+                print(colored('TEL ARRAY TOO LARGE!','red'))
 
     def parse_kms(self):
-        # stuff 
+        if self.tel[0][0] == 0.0 :
+            self.kms_data = self.kms
+        else :
+            self.kms_data = [0] * 10
+            if len(self.kms) <= 10 :
+                for i in range(len(self.kms)) :
+                    self.kms_data[i] = self.kms[i]
+            else :
+                print(colored('KMS ARRAY TOO LARGE!','red'))
 
     def parse_arrays(self):
         # self.hold_h1 = []
@@ -115,7 +142,7 @@ class Time_Files:
             mce = nc.new_file(self.h1.shape, self.filestarttime)
             self.ncfile = netcdfdir + "/raw_mce_%s.nc" %(self.filestarttime)
 
-            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2)
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.tel_data, self.kms_data)
             self.a = 1
 
         # elif os.stat(netcdfdir + "/raw_mce_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
@@ -127,10 +154,10 @@ class Time_Files:
             mce = nc.new_file(self.h1.shape, self.filestarttime)
             self.ncfile = netcdfdir + "/raw_mce_%s.nc" %(self.filestarttime)
 
-            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2)
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.tel_data, self.kms_data)
 
         else: # if everything is okay, append data to the file
-            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head2, self.head2, self.h1, self.h2)
+            nc.data_append(self.ncfile, self.a, ut.flags, self.utc, self.head2, self.head2, self.h1, self.h2, self.tel_data, self.kms_data)
 
         # have the counter incremement for every append
         self.a += 1
