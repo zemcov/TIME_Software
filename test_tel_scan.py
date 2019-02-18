@@ -15,9 +15,8 @@ class TIME_TELE :
         print('TCOMM Socket Connected')
         self.s.listen(5)
         self.client, info = self.s.accept()
-        response = struct.Struct('s')
-        reply = self.s.recv(response.size)
-        print(reply)
+        data= self.client.recv(1024).decode("ascii")
+        print(data)
         p1 = mp.Process(target=TIME_TELE().start_sock_tracker)
         p1.start()
         # ======================================================================
