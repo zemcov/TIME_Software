@@ -7,16 +7,19 @@ import multiprocessing as mp
 class TIME_TELE :
 
     def start_sock_tcomm(self): # this is what we use to talk to telescope
-        PORT = 1806
-        HOST = '192.168.1.252'
+        PORT = 8888
+        # I am accepting telescope sim data for the gui
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.connect((HOST,PORT))
-        print('TCOMM Socket Connected')
+        self.s.bind(('',PORT))
+        print('Server Listening')
+        self.s.listen(5)
+        self.client, info = self.s.accept()
         ack = struct.Struct('s')
+        print('TCOMM Socket Connected')
         # ======================================================================
         cmnd_list = 'TIME_START_TELEMETRY on'
         self.s.send(cmnd_list.encode('utf-8'))
-        reply = self.s.recv(ack.size)
+        reply = self.client.recv(ack.size)
         if 'done' in reply : # wait for ack from tel
             print('TELESCOPE INITIALIZED, STATUS: READY')
             self.start_sock_tracker()
