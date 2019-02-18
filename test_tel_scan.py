@@ -17,6 +17,7 @@ class TIME_TELE :
         self.client, info = self.s.accept()
         data= self.client.recv(1024).decode("ascii")
         print(data)
+        time.sleep(1.0)
         p1 = mp.Process(target=TIME_TELE().start_sock_tracker)
         p1.start()
         # ======================================================================
