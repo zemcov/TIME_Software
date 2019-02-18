@@ -7,6 +7,9 @@ import multiprocessing as mp
 
 class TIME_TELE :
 
+    def __init__(self):
+        self.tel_exit = mp.Event()
+
     def start_sock_tcomm(self): # this is what we use to talk to telescope
         PORT = 8888
         # I am accepting telescope sim data for the gui
@@ -41,8 +44,7 @@ class TIME_TELE :
         # ----------------------------------------
         self.s2.send(cmnd_list)
         # ----------------------------------------
-        ack = struct.Struct('s')
-        reply = self.s2.recv(ack.size)
+        reply = self.s2.recv(1024).decode("ascii")
         print('tracker reply',reply)
         # if 'ok' in reply : # wait for ack from tel
         #     print('TELESCOPE INITIALIZED, STATUS: READY')
@@ -50,7 +52,7 @@ class TIME_TELE :
         # ===========================================================================================
         while True:
 
-            if tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
+            if self.tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
                 print("Client Shutting Down")
                 final_msg = 'TIME_START_TELEMETRY off'
                 self.s2.send(final_msg.encode('utf-8'))
@@ -77,7 +79,6 @@ class TIME_TELE :
         # sys.exit()
 
 if __name__ == '__main__':
-    tel_exit = mp.Event()
     TIME_TELE().start_sock_tcomm()
     # time.sleep(10.0)
     # tel_exit.set()
