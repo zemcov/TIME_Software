@@ -20,7 +20,7 @@ class TIME_TELE :
         # ======================================================================
 
     def start_sock_tracker(self): # this is just receiving firehose of data packets
-        PORT2 = 1825
+        PORT2 = 1806
         HOST2 = '192.168.1.252'
         ack = struct.Struct('s')
         self.s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
