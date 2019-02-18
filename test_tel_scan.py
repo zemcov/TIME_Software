@@ -48,34 +48,36 @@ class TIME_TELE :
         if 'done' in reply : # wait for ack from tel
             print('TELESCOPE INITIALIZED, STATUS: READY')
 
-        # ===========================================================================================
-        while True:
+            # ===========================================================================================
+            while True:
 
-            if tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
-                print("Client Shutting Down")
-                final_msg = 'TIME_START_TELEMETRY off'
-                self.s2.send(final_msg.encode('utf-8'))
-                reply = self.s2.recv(ack.size)
-                if 'done' in reply:
-                    break
+                if tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
+                    print("Client Shutting Down")
+                    final_msg = 'TIME_START_TELEMETRY off'
+                    self.s2.send(final_msg.encode('utf-8'))
+                    reply = self.s2.recv(ack.size)
+                    if 'done' in reply:
+                        break
 
-            else :
-                unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
-                data = self.client.recv(unpacker.size)
-                # unpacking data packet ===============================================
-                name, blanking, direction, observing, pad, \
-                ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
-                ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
-                pa = unpacker.unpack(data)
-                # ==================================================================
+                else :
+                    unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
+                    data = self.client.recv(unpacker.size)
+                    # unpacking data packet ===============================================
+                    name, blanking, direction, observing, pad, \
+                    ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
+                    ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
+                    pa = unpacker.unpack(data)
+                    # ==================================================================
+        else :
+            print('No Reply')
 
-        print("Telescope Socket Closed")
-        self.s.close()
-        self.s2.close()
-        sys.exit()
+        # print("Telescope Socket Closed")
+        # self.s.close()
+        # self.s2.close()
+        # sys.exit()
 
 if __name__ == '__main__':
     tel_exit = mp.Event()
     TIME_TELE().start_sock_tcomm()
-    time.sleep(10.0)
-    tel_exit.set()
+    # time.sleep(10.0)
+    # tel_exit.set()
