@@ -1,5 +1,6 @@
 
 import socket, struct, subprocess, os, sys
+from socket import *
 import time
 import numpy as np
 import multiprocessing as mp
