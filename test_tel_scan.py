@@ -46,21 +46,21 @@ class TIME_TELE :
         # ----------------------------------------
         reply = self.s2.recv(1024).decode("ascii")
         print('tracker reply',reply)
-        # if 'ok' in reply : # wait for ack from tel
-        #     print('TELESCOPE INITIALIZED, STATUS: READY')
+        if 'ok' in reply : # wait for ack from tel
+            print('TELESCOPE INITIALIZED, STATUS: READY')
 
         # ===========================================================================================
         while True:
 
-            if self.tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
-                print("Client Shutting Down")
-                final_msg = 'TIME_START_TELEMETRY off'
-                self.s2.send(final_msg.encode('utf-8'))
-                reply = self.s2.recv(ack.size)
-                if 'ok' in reply:
-                    break
-
-            else :
+            # if self.tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
+            #     print("Client Shutting Down")
+            #     final_msg = 'TIME_START_TELEMETRY off'
+            #     self.s2.send(final_msg.encode('utf-8'))
+            #     reply = self.s2.recv(ack.size)
+            #     if 'ok' in reply:
+            #         break
+            #
+            # else :
                 unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
                 data = self.client.recv(unpacker.size)
                 # unpacking data packet ===============================================
