@@ -21,8 +21,7 @@ class TIME_TELE :
         data = self.client.recv(1024).decode("ascii")
         print(data)
         time.sleep(2.0)
-        p1 = mp.Process(target=TIME_TELE().start_sock_tracker)
-        p1.start()
+        self.start_sock_tracker()
         # ======================================================================
 
     def start_sock_tracker(self): # this is just receiving firehose of data packets
