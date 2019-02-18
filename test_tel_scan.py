@@ -12,26 +12,25 @@ class TIME_TELE :
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(('',PORT))
         print('Server Listening')
-        ack = struct.Struct('s')
         print('TCOMM Socket Connected')
-        # ======================================================================
-        cmnd_list = 'TIME_START_TELEMETRY on'
-        self.s.send(cmnd_list.encode('utf-8'))
+        p1 = mp.Process(target=TIME_TELE().start_sock_tracker)
+        p1.start()
         self.s.listen(5)
         self.client, info = self.s.accept()
-        reply = self.client.recv(ack.size)
-        if 'done' in reply : # wait for ack from tel
-            print('TELESCOPE INITIALIZED, STATUS: READY')
-            self.start_sock_tracker()
         # ======================================================================
 
     def start_sock_tracker(self): # this is just receiving firehose of data packets
         PORT2 = 1825
         HOST2 = '192.168.1.252'
+        ack = struct.Struct('s')
         self.s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s2.connect((HOST2,PORT2))
         print('Tracker Socket Connected')
-        unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
+        cmnd_list = 'TIME_START_TELEMETRY on'
+        self.s2.send(cmnd_list.encode('utf-8'))
+        reply = self.s2.recv(ack.size)
+        if 'done' in reply : # wait for ack from tel
+            print('TELESCOPE INITIALIZED, STATUS: READY')
 
         # ===========================================================================================
         while True:
@@ -39,13 +38,14 @@ class TIME_TELE :
             if tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
                 print("Client Shutting Down")
                 final_msg = 'TIME_START_TELEMETRY off'
-                self.s.send(final_msg.encode('utf-8'))
-                reply = self.s.recv(ack.size)
+                self.s2.send(final_msg.encode('utf-8'))
+                reply = self.s2.recv(ack.size)
                 if 'done' in reply:
                     break
 
             else :
-                data = self.s2.recv(unpacker.size)
+                unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
+                data = self.client.recv(unpacker.size)
                 # unpacking data packet ===============================================
                 name, blanking, direction, observing, pad, \
                 ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
