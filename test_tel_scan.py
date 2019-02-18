@@ -17,9 +17,9 @@ class TIME_TELE :
         cmnd_list = 'TIME_START_TELEMETRY on'
         self.s.send(cmnd_list.encode('utf-8'))
         reply = self.s.recv(ack.size)
-            if 'done' in reply : # wait for ack from tel
-                print('TELESCOPE INITIALIZED, STATUS: READY')
-                self.start_sock_tracker()
+        if 'done' in reply : # wait for ack from tel
+            print('TELESCOPE INITIALIZED, STATUS: READY')
+            self.start_sock_tracker()
         # ======================================================================
 
     def start_sock_tracker(self): # this is just receiving firehose of data packets
