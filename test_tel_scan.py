@@ -51,7 +51,7 @@ class TIME_TELE :
 
         # ===========================================================================================
         while True:
-
+            print('Im looking for data')
             # if self.tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
             #     print("Client Shutting Down")
             #     final_msg = 'TIME_START_TELEMETRY off'
