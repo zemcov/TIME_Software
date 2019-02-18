@@ -24,10 +24,10 @@ class TIME_TELE :
         data = self.client.recv(1024).decode("ascii")
         print(data)
         time.sleep(2.0)
-        self.start_sock_tracker()
+        self.start_sock_tracker(self.client)
         # ======================================================================
 
-    def start_sock_tracker(self): # this is just receiving firehose of data packets
+    def start_sock_tracker(self,client): # this is just receiving firehose of data packets
         PORT2 = 1806
         HOST2 = '192.168.1.252'
         ack = struct.Struct('s')
@@ -62,7 +62,7 @@ class TIME_TELE :
             #
             # else :
             unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
-            data = self.client.recv(unpacker.size)
+            data = client.recv(unpacker.size)
             print('Data Received')
             # unpacking data packet ===============================================
             name, blanking, direction, observing, pad, ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, pa = unpacker.unpack(data)
