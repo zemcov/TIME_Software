@@ -46,8 +46,8 @@ class TIME_TELE :
         # ----------------------------------------
         reply = self.s2.recv(1024).decode("ascii")
         print('tracker reply',reply)
-        if 'ok' in reply : # wait for ack from tel
-            print('TELESCOPE INITIALIZED, STATUS: READY')
+        # if 'ok' in reply : # wait for ack from tel
+        #     print('TELESCOPE INITIALIZED, STATUS: READY')
 
         # ===========================================================================================
         while True:
@@ -63,12 +63,10 @@ class TIME_TELE :
             # else :
             unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
             data = self.client.recv(unpacker.size)
-            # unpacking data packet ===============================================
-            name, blanking, direction, observing, pad, \
-            ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
-            ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
-            pa = unpacker.unpack(data)
             print('Data Received')
+            # unpacking data packet ===============================================
+            name, blanking, direction, observing, pad, ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, pa = unpacker.unpack(data)
+            print('PA:',pa)
             # ==================================================================
         # else :
         #     print('Bad Reply')
