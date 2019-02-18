@@ -16,6 +16,7 @@ def start_sock_tcomm():
 
     while True :
         data = client.recv(unpacker.size)
+        print('package size',unpacker.size)
         print('Data Received')
         # unpacking data packet ===============================================
         name, blanking, direction, observing, pad, ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, pa = unpacker.unpack(data)
