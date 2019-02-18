@@ -5,15 +5,16 @@ import numpy as np
 import multiprocessing as mp
 
 def start_sock_tcomm():
+    PORT = 8888
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('',PORT))
+    print('Server Listening')
+    s.listen(5)
+    client, info = s.accept()
+    print('Socket Connected')
+    unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
+
     while True :
-        PORT = 8888
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(('',PORT))
-        print('Server Listening')
-        s.listen(5)
-        client, info = s.accept()
-        print('Socket Connected')
-        unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
         data = client.recv(unpacker.size)
         print('Data Received')
         # unpacking data packet ===============================================
