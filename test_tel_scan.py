@@ -15,7 +15,7 @@ class TIME_TELE :
         s1.bind(('',PORT))
         print('Server Listening')
         s1.listen(5)
-        client1, info = s.accept()
+        client1, info = s1.accept()
         print('Socket Connected')
         data = client1.recv(1024).decode("ascii")
         print(data)
