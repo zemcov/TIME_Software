@@ -45,32 +45,33 @@ class TIME_TELE :
         # ----------------------------------------
         ack = struct.Struct('s')
         reply = self.s2.recv(ack.size)
-        if 'ok' in reply : # wait for ack from tel
-            print('TELESCOPE INITIALIZED, STATUS: READY')
+        print('tracker reply',reply)
+        # if 'ok' in reply : # wait for ack from tel
+        #     print('TELESCOPE INITIALIZED, STATUS: READY')
 
-            # ===========================================================================================
-            while True:
+        # ===========================================================================================
+        while True:
 
-                if tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
-                    print("Client Shutting Down")
-                    final_msg = 'TIME_START_TELEMETRY off'
-                    self.s2.send(final_msg.encode('utf-8'))
-                    reply = self.s2.recv(ack.size)
-                    if 'ok' in reply:
-                        break
+            if tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
+                print("Client Shutting Down")
+                final_msg = 'TIME_START_TELEMETRY off'
+                self.s2.send(final_msg.encode('utf-8'))
+                reply = self.s2.recv(ack.size)
+                if 'ok' in reply:
+                    break
 
-                else :
-                    unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
-                    data = self.client.recv(unpacker.size)
-                    # unpacking data packet ===============================================
-                    name, blanking, direction, observing, pad, \
-                    ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
-                    ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
-                    pa = unpacker.unpack(data)
-                    print('Data Received')
-                    # ==================================================================
-        else :
-            print('Bad Reply')
+            else :
+                unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
+                data = self.client.recv(unpacker.size)
+                # unpacking data packet ===============================================
+                name, blanking, direction, observing, pad, \
+                ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
+                ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
+                pa = unpacker.unpack(data)
+                print('Data Received')
+                # ==================================================================
+        # else :
+        #     print('Bad Reply')
 
         # print("Telescope Socket Closed")
         # self.s.close()
