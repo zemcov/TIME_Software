@@ -13,10 +13,11 @@ class TIME_TELE :
         self.s.bind(('',PORT))
         print('Server Listening')
         print('TCOMM Socket Connected')
-        p1 = mp.Process(target=TIME_TELE().start_sock_tracker)
-        p1.start()
         self.s.listen(5)
         self.client, info = self.s.accept()
+        time.sleep(1.0)
+        p1 = mp.Process(target=TIME_TELE().start_sock_tracker)
+        p1.start()
         # ======================================================================
 
     def start_sock_tracker(self): # this is just receiving firehose of data packets
