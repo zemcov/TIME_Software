@@ -50,6 +50,12 @@ class TIME_TELE :
         #     print('TELESCOPE INITIALIZED, STATUS: READY')
 
         # ===========================================================================================
+        unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
+        PORT3 = 1825
+        HOST3 = '192.168.1.252'
+        self.s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s3.connect((HOST3,PORT3))
+        
         while True:
             print('Im looking for data')
             # if self.tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
@@ -61,8 +67,8 @@ class TIME_TELE :
             #         break
             #
             # else :
-            unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
-            data = client.recv(unpacker.size)
+
+            data = self.s3.recv(unpacker.size)
             print('Data Received')
             # unpacking data packet ===============================================
             name, blanking, direction, observing, pad, ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, pa = unpacker.unpack(data)
