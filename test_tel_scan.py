@@ -10,7 +10,7 @@ class TIME_TELE :
     def __init__(self):
         self.tel_exit = mp.Event()
 
-        PORT = 8888
+        PORT = 6666
         s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s1.bind(('',PORT))
         print('Server Listening')
@@ -36,15 +36,15 @@ class TIME_TELE :
         s2.send('hello world')
         # ===============================================================
         # ==============================================================
-        PORT = 6666
-        s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s3.bind(('',PORT))
-        s3.listen(5)
-        client3, info = s.accept()
-        print('Socket Connected')
-        reply = client3.recv(1024).decode("ascii")
-        print('tracker reply',reply)
-        # ===============================================================
+        # PORT = 6666
+        # s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # s3.bind(('',PORT))
+        # s3.listen(5)
+        # client3, info = s.accept()
+        # print('Socket Connected')
+        # reply = client3.recv(1024).decode("ascii")
+        # print('tracker reply',reply)
+        # # ===============================================================
 
 if __name__ == '__main__':
     TIME_TELE()
