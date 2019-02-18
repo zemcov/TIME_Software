@@ -15,7 +15,10 @@ class TIME_TELE :
         print('TCOMM Socket Connected')
         self.s.listen(5)
         self.client, info = self.s.accept()
-        data= self.client.recv(1024).decode("ascii")
+        ack = struct.Struct('i')
+        data1 = self.client.recv(ack.size)
+        print(data1)
+        data = self.client.recv(1024).decode("ascii")
         print(data)
         time.sleep(2.0)
         p1 = mp.Process(target=TIME_TELE().start_sock_tracker)
@@ -31,9 +34,7 @@ class TIME_TELE :
         print('Tracker Socket Connected')
 
         cmnd_list = 'TIME_START_TELEMETRY on'
-        my_bytes = bytearray()
-        my_bytes.append(24)
-        self.s2.send(my_bytes)
+        self.s2.send(24)
         self.s2.send(cmnd_list.encode('utf-8'))
         reply = self.s2.recv(ack.size)
         if 'done' in reply : # wait for ack from tel
