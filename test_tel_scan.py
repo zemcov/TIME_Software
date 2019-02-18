@@ -67,9 +67,10 @@ class TIME_TELE :
                     ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
                     ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
                     pa = unpacker.unpack(data)
+                    print('Data Received')
                     # ==================================================================
         else :
-            print('No Reply')
+            print('Bad Reply')
 
         # print("Telescope Socket Closed")
         # self.s.close()
