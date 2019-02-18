@@ -36,9 +36,9 @@ class TIME_TELE :
         cmnd_list = 'time_start_telemetry on '
         # packer = struct.Struct('i')
         # packed_data = packer.pack(24)
-        data = socket.htonl(24)
-        packer = struct.pack('I',data)
-        self.s2.send(packer)
+        # data = socket.htonl(24)
+        # packer = struct.pack('I',data)
+        # self.s2.send(packer)
         # ----------------------------------------
         self.s2.send(cmnd_list)
         # ----------------------------------------
