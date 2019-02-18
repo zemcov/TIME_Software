@@ -34,7 +34,7 @@ class TIME_TELE :
         self.s2.connect((HOST2,PORT2))
         print('Tracker Socket Connected')
 
-        cmnd_list = 'TIME_START_TELEMETRY on'
+        cmnd_list = 'time_start_telemetry on '
         # packer = struct.Struct('i')
         # packed_data = packer.pack(24)
         data = socket.htonl(24)
@@ -45,7 +45,7 @@ class TIME_TELE :
         # ----------------------------------------
         ack = struct.Struct('s')
         reply = self.s2.recv(ack.size)
-        if 'done' in reply : # wait for ack from tel
+        if 'ok' in reply : # wait for ack from tel
             print('TELESCOPE INITIALIZED, STATUS: READY')
 
             # ===========================================================================================
@@ -56,7 +56,7 @@ class TIME_TELE :
                     final_msg = 'TIME_START_TELEMETRY off'
                     self.s2.send(final_msg.encode('utf-8'))
                     reply = self.s2.recv(ack.size)
-                    if 'done' in reply:
+                    if 'ok' in reply:
                         break
 
                 else :
