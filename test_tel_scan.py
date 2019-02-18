@@ -29,7 +29,11 @@ class TIME_TELE :
         self.s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s2.connect((HOST2,PORT2))
         print('Tracker Socket Connected')
+
         cmnd_list = 'TIME_START_TELEMETRY on'
+        my_bytes = bytearray()
+        my_bytes.append(24)
+        self.s2.send(my_bytes)
         self.s2.send(cmnd_list.encode('utf-8'))
         reply = self.s2.recv(ack.size)
         if 'done' in reply : # wait for ack from tel
