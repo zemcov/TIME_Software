@@ -15,7 +15,6 @@ class TIME_TELE :
         print('Tots Socket Connected')
         self.s.listen(5)
         self.client, info = self.s.accept()
-        ack = struct.Struct('i')
         data1 = self.client.recv(ack.size)
         print(data1)
         data = self.client.recv(1024).decode("ascii")
@@ -35,10 +34,10 @@ class TIME_TELE :
 
         cmnd_list = 'TIME_START_TELEMETRY on'
         packer = struct.Struct('i')
-        msg = 24
-        packed_data = packer.pack(msg)
+        packed_data = packer.pack(24)
         self.s2.send(packed_data)
         self.s2.send(cmnd_list.encode('utf-8'))
+        ack = struct.Struct('s')
         reply = self.s2.recv(ack.size)
         if 'done' in reply : # wait for ack from tel
             print('TELESCOPE INITIALIZED, STATUS: READY')
