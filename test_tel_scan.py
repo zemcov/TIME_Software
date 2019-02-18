@@ -61,15 +61,15 @@ class TIME_TELE :
             #         break
             #
             # else :
-                unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
-                data = self.client.recv(unpacker.size)
-                # unpacking data packet ===============================================
-                name, blanking, direction, observing, pad, \
-                ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
-                ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
-                pa = unpacker.unpack(data)
-                print('Data Received')
-                # ==================================================================
+            unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
+            data = self.client.recv(unpacker.size)
+            # unpacking data packet ===============================================
+            name, blanking, direction, observing, pad, \
+            ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
+            ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
+            pa = unpacker.unpack(data)
+            print('Data Received')
+            # ==================================================================
         # else :
         #     print('Bad Reply')
 
