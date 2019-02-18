@@ -1,6 +1,6 @@
 
 import socket, struct, subprocess, os, sys
-from socket import *
+# from socket import htonl
 import time
 import numpy as np
 import multiprocessing as mp
@@ -37,7 +37,7 @@ class TIME_TELE :
         cmnd_list = 'TIME_START_TELEMETRY on'
         # packer = struct.Struct('i')
         # packed_data = packer.pack(24)
-        data = self.s2.htonl(24)
+        data = socket.htonl(24)
         struct.pack('I',data)
         self.s2.send(data)
         self.s2.send(cmnd_list.encode('utf-8'))
