@@ -15,6 +15,7 @@ class TIME_TELE :
         print('Tots Socket Connected')
         self.s.listen(5)
         self.client, info = self.s.accept()
+        ack = struct.Struct('s')
         data1 = self.client.recv(ack.size)
         print(data1)
         data = self.client.recv(1024).decode("ascii")
