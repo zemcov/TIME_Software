@@ -40,7 +40,9 @@ class TIME_TELE :
         data = socket.htonl(24)
         packer = struct.pack('I',data)
         self.s2.send(packer)
-        self.s2.send(cmnd_list.encode('utf-8'))
+        # ----------------------------------------
+        self.s2.send(cmnd_list)
+        # ----------------------------------------
         ack = struct.Struct('s')
         reply = self.s2.recv(ack.size)
         if 'done' in reply : # wait for ack from tel
