@@ -12,13 +12,13 @@ class TIME_TELE :
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(('',PORT))
         print('Server Listening')
-        self.s.listen(5)
-        self.client, info = self.s.accept()
         ack = struct.Struct('s')
         print('TCOMM Socket Connected')
         # ======================================================================
         cmnd_list = 'TIME_START_TELEMETRY on'
         self.s.send(cmnd_list.encode('utf-8'))
+        self.s.listen(5)
+        self.client, info = self.s.accept()
         reply = self.client.recv(ack.size)
         if 'done' in reply : # wait for ack from tel
             print('TELESCOPE INITIALIZED, STATUS: READY')
