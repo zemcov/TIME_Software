@@ -34,9 +34,11 @@ class TIME_TELE :
         print('Tracker Socket Connected')
 
         cmnd_list = 'TIME_START_TELEMETRY on'
-        packer = struct.Struct('i')
-        packed_data = packer.pack(24)
-        self.s2.send(packed_data)
+        # packer = struct.Struct('i')
+        # packed_data = packer.pack(24)
+        data = self.s2.htonl(24)
+        struct.pack('I',data)
+        self.s2.send(data)
         self.s2.send(cmnd_list.encode('utf-8'))
         ack = struct.Struct('s')
         reply = self.s2.recv(ack.size)
