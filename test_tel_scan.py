@@ -10,7 +10,7 @@ class TIME_TELE :
     def __init__(self):
         self.tel_exit = mp.Event()
 
-        PORT = 6666
+        PORT = 1806
         s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s1.bind(('',PORT))
         print('Server Listening')
@@ -20,18 +20,19 @@ class TIME_TELE :
         data = client1.recv(1024).decode("ascii")
         print(data)
         if data != 0 :
-            self.start_sock_tcomm()
+            s1.send('hello world')
+            # self.start_sock_tcomm()
         else :
             print('Junk reply')
 
-    def start_sock_tcomm(self):
-
-        PORT2 = 1806
-        HOST2 = '192.168.1.252'
-        s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s2.connect((HOST2,PORT2))
-        print('Tracker Socket Connected')
-        s2.send('hello world')
+    # def start_sock_tcomm(self):
+    #
+    #     PORT2 = 1806
+    #     HOST2 = '192.168.1.252'
+    #     s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #     s2.connect((HOST2,PORT2))
+    #     print('Tracker Socket Connected')
+    #     s2.send('hello world')
         # ===============================================================
 
 if __name__ == '__main__':
