@@ -28,23 +28,11 @@ class TIME_TELE :
 
         PORT2 = 1806
         HOST2 = '192.168.1.252'
-        ack = struct.Struct('s')
         s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s2.connect((HOST2,PORT2))
         print('Tracker Socket Connected')
-        hiya = 'hello world'
         s2.send('hello world')
         # ===============================================================
-        # ==============================================================
-        # PORT = 6666
-        # s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # s3.bind(('',PORT))
-        # s3.listen(5)
-        # client3, info = s.accept()
-        # print('Socket Connected')
-        # reply = client3.recv(1024).decode("ascii")
-        # print('tracker reply',reply)
-        # # ===============================================================
 
 if __name__ == '__main__':
     TIME_TELE()
