@@ -6,7 +6,7 @@ import numpy as np
 from termcolor import colored
 import utils as ut
 
-tempfiledir = '/home/time/Desktop/time-data/netcdffiles'
+tempfiledir = '/data/netcdffiles'
 
 def new_file(filestarttime):
     hk = nc.Dataset(tempfiledir + "/raw_hk_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
@@ -17,12 +17,13 @@ def new_file(filestarttime):
     hk.createDimension('hk_col',3)
     hk.createDimension('hk_row',1000)
     hk.createDimension('hk_num', int(ut.german_freq))
+    # hk.createDimension('tuple',2)
 
     # creating variables --------------------------------------------------------------------------------
-    # global Time
-    # Time = hk.createVariable('time','f8',('t','mode'),zlib=True)
     global HK_Data
-    HK_Data = hk.createVariable('hk_data','f8',('t','hk_col','hk_row','hk_num'),zlib=True)
+    HK_Data = hk.createVariable('hk_data','f8',('t','hk_num','hk_col','hk_row'),zlib=True)
+    # global Time
+    # Time = hk.createVariable('hk_time', 'f8',('t','tuple'),zlib=True)
     # =========================================================================
 
     hk.close()

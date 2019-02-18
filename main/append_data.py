@@ -128,13 +128,13 @@ class Time_Files:
             #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
             #                     break
 
-        utc_time = ut.sync_to_utc(self.sync2)
-        self.utc = zip(utc_time,self.sync2) # tuples of (utc,sync)
+        ut.utc_time = ut.sync_to_utc(self.sync2)
+        self.utc = zip(ut.utc_time,self.sync2) # tuples of (utc,sync)
         return
 
 # ============================================================================
     def append_mce_data(self):
-        netcdfdir = '/home/time/Desktop/time-data/netcdffiles'
+        netcdfdir = '/data/netcdffiles'
         if self.a == 0: # if it's the first file, make a new netcdf file
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()

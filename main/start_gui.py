@@ -8,7 +8,9 @@ from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
-import read_hk
+sys.path.append('/home/time/time-software-testing/TIME_Software')
+import read_hk, kms_socket, raster_script_1d, raster_script_2d
+# import bowtie_scan
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -61,58 +63,65 @@ class mcegui(QtGui.QWidget):
         ut.hk_exit.set()
 
         # stop all of the mces with their own command
-        if self.showmcedata == 'Yes':
-            if self.readoutcard == 'All':
-                subprocess.Popen(['./mce1_stop.sh s'],shell=True)
-                subprocess.Popen(['./mce0_stop.sh s'],shell=True)
-
-            else :
-                subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
-                subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
-
-        # stop the file transfer process to time-master
-        subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
-        subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
+        # if self.showmcedata == 'Yes':
+        #     if self.readoutcard == 'All':
+        #         subprocess.Popen(['./mce1_stop.sh s'],shell=True)
+        #         subprocess.Popen(['./mce0_stop.sh s'],shell=True)
+        #
+        #     else :
+        #         subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
+        #         subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
+        #
+        # # stop the file transfer process to time-master
+        # subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
+        # subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
         subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
+        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
+        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
+
+        ''' run an analysis script from here ? '''
+        # if self.tel_script not ' ':
+        #     # run some analysis based on script
 
         print('Quitting Application')
         sys.exit()
 
     def on_starttel_clicked(self):
 
-        self.sec = self.tel_sec.currentText()
-        self.map_size = self.tel_map_size.currentText()
-        self.map_angle = self.tel_map_angle.currentText()
-        self.coord = self.tel_coord.currentText()
-        self.epoch = self.tel_epoch.currentIndex()
-        self.object = self.tel_object.currentText()
-        self.inittel = self.init_tel.currentText()
-
-        if self.inittel == 'Yes':
-            self.tel_scan = self.telescan.currentText()
-            scans = ['1D Raster','2D Raster','Bowtie (constant el)']
-            script = ['raster_script_1d','raster_script_2d','bowtie_scan']
-            for scan in scans :
-                if self.tel_scan == scan :
-                    self.tel_script = script[scans.index(scan)]
-            tel_message = str(subprocess.Popen(['python %s' %(self.tel_script.start_sock())]))
-
-            self.off = False
-        else :
-            self.tel_script = ' '
-            self.off = True
-            tel_message = 'No Telescope Selected'
-
-        self.telparams.addRow(tel_message)
+        # self.sec = self.tel_sec.currentText()
+        # self.map_size = self.tel_map_size.currentText()
+        # self.map_len = self.tel_map_len.currentText()
+        # self.map_angle = self.tel_map_angle.currentText()
+        # self.coord = self.tel_coord.currentText()
+        # self.epoch = self.tel_epoch.currentIndex()
+        # self.object = self.tel_object.currentText()
+        # self.inittel = self.init_tel.currentText()
+        # self.num_scans = self.tel_num_scans.currentText()
+        #
+        # if self.inittel == 'Yes':
+        #     self.tel_scan = self.telescan.currentText()
+        #     scans = ['1D Raster','2D Raster','Bowtie (constant el)']
+        #     script = ['raster_script_1d','raster_script_2d','bowtie_scan']
+        #     for scan in scans :
+        #         if self.tel_scan == scan :
+        #             self.tel_script = script[scans.index(scan)]
+        #     tel_message = str(subprocess.Popen(['python %s' %(self.tel_script.TIME_TELE().start_sock())]))
+        #
+        #     self.off = False
+        # else :
+        #     self.tel_script = ' '
+        #     self.off = True
+        #     tel_message = 'No Telescope Selected'
+        #
+        # self.telparams.addRow(tel_message)
         self.inittelescope()
 
     #sets parameter variables to user input and checks if valid - will start MCE
     #and live graphing if they are
+
     def on_submitbutton_clicked(self):
         # check if telescope has been started first
         if not self.starttel.isEnabled() :
@@ -287,8 +296,10 @@ class mcegui(QtGui.QWidget):
         self.init_tel.addItems(['No','Yes'])
 
         self.tel_sec = QtGui.QLineEdit('6')
-        self.tel_map_size = QtGui.QLineEdit('60')
+        self.tel_map_size = QtGui.QLineEdit('1')
+        self.tel_map_len  = QtGui.QLineEdit('1')
         self.tel_map_angle = QtGui.QLineEdit('0')
+        self.tel_num_scans = QtGui.QLineEdit('1')
         self.tel_coord = QtGui.QLineEdit()
         self.tel_epoch = QtGui.QComboBox()
         self.tel_epoch.addItems(['Besselian Years (B1950.0)','Julian Days (JD 24332828.4235)','Julian Years (J2000.0)'])
@@ -304,7 +315,9 @@ class mcegui(QtGui.QWidget):
         self.telparams.addRow('Scan Strategy', self.telescan)
         self.telparams.addRow('Delayed Start (sec)', self.tel_delay)
         self.telparams.addRow('Time to Traverse Scan Length (sec)', self.tel_sec)
-        self.telparams.addRow('Map Size (arcseconds)', self.tel_map_size)
+        self.telparams.addRow('Map Size [arcmin], (distance for center of array to reach map edge)', self.tel_map_size)
+        self.telparams.addRow('Map Length [arcmin]', self.tel_map_len)
+        self.telparams.addRow('Number of Scans (-RA to +RA)', self.tel_num_scans)
         self.telparams.addRow('Angle of Map Offset', self.tel_map_angle)
         self.telparams.addRow('Coordinates of Source', self.tel_coord)
         self.telparams.addRow('Epoch of Observation', self.tel_epoch)
@@ -417,13 +430,21 @@ class mcegui(QtGui.QWidget):
         self.updater.new_data.connect(self.updateplot)
         self.updater.start()
 
-    def initheatmap(self,z1,z2):
-        #casts z as array for creating heatmap
-        # z1 = np.asarray(z1)
-        # z2 = np.asarray(z2)
-        # #recasting data in z as integers
-        # z1.astype(int)
-        # z2.astype(int)
+    def initheatmap(self,h1,h2):
+
+        z1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
+        for b in range(h1.shape[0]):
+            for c in range(h1.shape[1]):
+                z1[b][c] = (np.std(h1[b,c,:],dtype=np.float32))
+
+        z2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
+        for b in range(h2.shape[0]):
+            for c in range(h2.shape[1]):
+                z2[b][c] = (np.std(h2[b,c,:],dtype=np.float32))
+
+
+        self.saved_avg_adu1 = [h1]
+        self.saved_avg_adu2 = [h2]
 
         # heatmap for first MCE ===================================================================================
         self.heatmapplot1 = pg.PlotItem()
@@ -436,7 +457,7 @@ class mcegui(QtGui.QWidget):
         self.heatmap1.autoLevels()
         self.heatmap1.setImage(z1)
 
-        #changes levels for heatmap to create gradient at depending on the data rate
+        #changes levels for heatmap to create gradient
         self.avggrad1 = int(np.average(z1))
         self.stddevgrad1 = int(np.std(z1))
         self.heatmap1.setLevels(self.avggrad1 - (3 * self.stddevgrad1), self.avggrad1 + (3 * self.stddevgrad1))
@@ -453,10 +474,46 @@ class mcegui(QtGui.QWidget):
         self.heatmap2.autoLevels()
         self.heatmap2.setImage(z2)
 
-        #changes levels for heatmap to create gradient at depending on the data rate
+        #changes levels for heatmap to create gradient
         self.avggrad2 = int(np.average(z2))
         self.stddevgrad2 = int(np.std(z2))
         self.heatmap2.setLevels(self.avggrad2 - (3 * self.stddevgrad2), self.avggrad2 + (3 * self.stddevgrad2))
+        # ===========================================================================================================
+
+        # first set image is same as heatmap because we need 2 updates of data to take an average
+
+        # heatmap for Raw Data MCE0 ==================================================================================
+        self.heatmapplot3 = pg.PlotItem()
+        self.heatmapplot3.setLabel('bottom', 'Row')
+        self.heatmapplot3.setLabel('left', 'Channel')
+        self.heatmapplot3.setTitle('MCE0 Averaged Signal')
+
+        self.heatmap3 = pg.ImageView(view= self.heatmapplot3)
+        self.heatmap3.setPredefinedGradient('thermal')
+        self.heatmap3.autoLevels()
+        self.heatmap3.setImage(z1)
+
+        #changes levels for heatmap to create gradient
+        self.avggrad3 = int(np.average(z1))
+        self.stddevgrad3 = int(np.std(z1))
+        self.heatmap3.setLevels(self.avggrad3 - (3 * self.stddevgrad3), self.avggrad3 + (3 * self.stddevgrad3))
+        # ===========================================================================================================
+
+        # heatmap for Raw Data MCE1 ==================================================================================
+        self.heatmapplot4 = pg.PlotItem()
+        self.heatmapplot4.setLabel('bottom', 'Row')
+        self.heatmapplot4.setLabel('left', 'Channel')
+        self.heatmapplot4.setTitle('MCE1 Averaged Signal')
+
+        self.heatmap4 = pg.ImageView(view= self.heatmapplot4)
+        self.heatmap4.setPredefinedGradient('thermal')
+        self.heatmap4.autoLevels()
+        self.heatmap4.setImage(z2)
+
+        #changes levels for heatmap to create gradient
+        self.avggrad4 = int(np.average(z2))
+        self.stddevgrad4 = int(np.std(z2))
+        self.heatmap4.setLevels(self.avggrad4 - (3 * self.stddevgrad4), self.avggrad4 + (3 * self.stddevgrad4))
         # ===========================================================================================================
 
         # create new window for hk and fft data
@@ -465,6 +522,8 @@ class mcegui(QtGui.QWidget):
         self.heatgrid = QtGui.QGridLayout()
         self.heatgrid.addWidget(self.heatmap1, 1, 5, 2, 3)
         self.heatgrid.addWidget(self.heatmap2, 1, 2, 2, 3)
+        self.heatgrid.addWidget(self.heatmap3, 3, 5, 2, 3)
+        self.heatgrid.addWidget(self.heatmap4, 3, 2, 2, 3)
         self.heatmapwindow.setGeometry(10, 10, 1920, 1080)
         self.heatmapwindow.setLayout(self.heatgrid)
         self.heatmapwindow.show()
@@ -520,13 +579,11 @@ class mcegui(QtGui.QWidget):
     def inittelescope(self):
 
         # start the telescope QThread
-        self.sec,self.map_size,self.map_angle,self.coord,self.epoch,self.object
-
-        self.tel_updater = Tel_Thread(tel_script = self.tel_script, sec = self.sec, map_size = self.map_size,\
-                                        map_angle = self.map_angle, coord = self.coord, epoch = self.epoch,\
-                                            object = self.object, off = self.off)
-        self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
-        self.tel_updater.start()
+        # self.tel_updater = Tel_Thread(tel_script = self.tel_script, off = self.off, sec = self.sec, map_size = self.map_size,\
+        #                                 map_angle = self.map_angle, coord = self.coord, epoch = self.epoch,\
+        #                                     object = self.object, map_len = self.map_len)
+        # self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
+        # self.tel_updater.start()
 
         # initialize printouts of current tele values not plotted
         self.patext = QtGui.QLabel('PA: %s' %('-'))
@@ -646,17 +703,6 @@ class mcegui(QtGui.QWidget):
 
     def updateplot(self,h1,h2,index):
         self.index = index
-        # parsing mce array to make heatmap data ==================
-        d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
-        for b in range(h1.shape[0]):
-            for c in range(h1.shape[1]):
-                d1[b][c] = (np.std(h1[b,c,:],dtype=np.float32))
-
-        d2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
-        for b in range(h2.shape[0]):
-            for c in range(h2.shape[1]):
-                d2[b][c] = (np.std(h2[b,c,:],dtype=np.float32))
-        # =========================================================
 
         # parsing mce array for graph data ========================
         g1 = h1[:,self.currentchannel - 1]
@@ -709,7 +755,7 @@ class mcegui(QtGui.QWidget):
 
         #creates graphdata item on first update
         if self.index == 0:
-            self.initheatmap(d1,d2) # give first values for heatmap to create image scale
+            self.initheatmap(h1,h2) # give first values for heatmap to create image scale
             self.updatefftgraph()
             self.data[0] = x
             self.data[1] = y1
@@ -755,7 +801,7 @@ class mcegui(QtGui.QWidget):
         # ==============================================================================================================
         #updates graph, if channel delete is set to yes will clear data first
         else:
-            self.updateheatmap(d1,d2)
+            self.updateheatmap(h1,h2,index)
             self.updatefftgraph()
             if self.channeldelete == 'Yes' and self.oldch != self.currentchannel:
                 self.mcegraphdata1.clear()
@@ -782,22 +828,44 @@ class mcegui(QtGui.QWidget):
         self.oldch = self.currentchannel
         # =================================================================================================================
 
-    def updateheatmap(self,z1,z2):
-        #casts z as array for creating heatmap
-        # z1 = np.asarray(z1)
-        # z2 = np.asarray(z2)
-        #recasting data in z as integers
-        # z1.astype(int)
-        # z2.astype(int)
+    def updateheatmap(self,h1,h2,index):
+
+        z1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
+        for b in range(h1.shape[0]):
+            for c in range(h1.shape[1]):
+                z1[b][c] = (np.std(h1[b,c,:],dtype=np.float32))
+
+        z2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
+        for b in range(h2.shape[0]):
+            for c in range(h2.shape[1]):
+                z2[b][c] = (np.std(h2[b,c,:],dtype=np.float32))
+
         self.heatmap1.setImage(z1)
         self.heatmap2.setImage(z2)
-        #changes levels for heatmap to create gradient at depending on the data rate
-        #self.heatmap.setLevels(self.avggrad - (3 * self.stddevgrad), self.avggrad + (3 * self.stddevgrad))
-        # if self.frameperfile == 11:
-        #     self.heatmap.setLevels(60, 260)
-        # else:
-        #     self.heatmap.setLevels(100, 190)
 
+        if index >= 2 : # if we have two frames in array, then average across the last 2 seconds
+            self.saved_avg_adu1[0] = self.saved_avg_adu1[1]
+            self.saved_avg_adu1[1] = h1
+            self.saved_avg_adu2[0] = self.saved_avg_adu2[1]
+            self.saved_avg_adu2[1] = h2
+
+            d1_avg = np.average(self.saved_avg_adu1)
+            d2_avg = np.average(self.saved_avg_adu2)
+            d1 = [x / d1_avg for x in h1]
+            d2 = [y / d2_avg for y in h2]
+
+            self.heatmap3.setImage(d1)
+            self.heatmap4.setImage(d2)
+
+        else : # if it's only the first update, append new data and then take average
+            self.saved_avg_adu1.append(h1)
+            self.saved_avg_adu2.append(h2)
+
+            d1 = np.average(self.saved_avg_adu1)
+            d2 = np.average(self.saved_avg_adu2)
+
+            self.heatmap3.setImage(d1)
+            self.heatmap4.setImage(d2)
 
     def warningbox(self,message): # message is a tuple
         if message[0] == 'gui' :
@@ -857,49 +925,71 @@ class MCEThread(QtCore.QThread):
         #     stuff = data.recv()
         #     self.new_data.emit(stuff[0],stuff[1],stuff[2])
 
-class Tel_Thread(QtCore.QThread):
-    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
+# class Tel_Thread(QtCore.QThread):
+#     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object,object)
+#
+#     def __init__(self, tel_script, off, sec, map_size, map_angle, coord, epoch, object, map_len, num_scans, parent = None):
+#         QtCore.QThread.__init__(self, parent)
+#         self.off = off
+#         self.tel_script = tel_script
+#         self.sec = sec
+#         self.map_size = map_size
+#         self.map_angle = map_angle
+#         self.coord = coord
+#         self.epoch = epoch
+#         self.object = object
+#         self.map_len = map_len
+#         self.num_scans = num_scans
+#
+#     def __del__(self):
+#         ut.tel_exit.set()
+#
+#     def run(self):
+#         if self.off == False :
+#             data, queue = mp.Pipe()
+#             data2, queue2 = mp.Pipe()
+#             p = mp.Process(target=self.tel_script.TIME_TELE().move_tel, args=(queue,self.sec,self.map_size,self.map_angle,self.coord,self.epoch,self.object))
+#             p2 = mp.Process(target=self.tel_script.TIME_TELE().pos_update, args=(queue2,self.sec,self.map_size,self.map_angle,self.coord,self.epoch,self.object,self.map_len,self.num_scans))
+#             p.start()
+#             p2.start()
+#             counter = 0
+#             num_sent = 0
+#             num_loop = int(float(self.map_len) // 0.46 + (float(self.map_len) % 0.46 > 0))
+#
+#             while True :
+#                 # grab data from fake_tel_server.py
+#                 if not ut.tel_exit.is_set() :
+#                     tel_stuff = data.recv()
+#                     ut.flags[0] = tel_stuff[1]
+#                     ut.flags[1] = tel_stuff[2] #update flags passed to netcdf data
+#                     if tel_stuff[2] == 4 :
+#                         counter += 1
+#
+#                     # pa,float(blanking),float(direction),el,az,map_ra,map_dec,ut
+#                     self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6],tel_stuff[7])
+#                     if counter == self.num_scans :
+#                         # checks that tel is in turn-around zone, and last movement was moving back towards left
+#                         # this is because telescope inits track at far left (-RA)
+#                         data2.send('increment')
+#                         counter = 0
+#                         num_sent += 1
+#
+#                     if num_sent == num_loop :
+#                         print(colored('Telescope Scan Completed!','green'))
+#                         # telescope exit is set by scanning script
+#                         ''' generate analysis scripts once it's shutdown '''
+#
+#                 else :
+#                     time.sleep(2.0) # gives client/server time to shutdown before thread is closed
+#                     break
+#
+#         else :
+#             tele_array = np.zeros((10,21),dtype=float)
+#             np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off.npy',tele_array)
 
-    def __init__(self, tel_script, off, sec, map_size, map_angle, coord, epoch, object, parent = None):
-        QtCore.QThread.__init__(self, parent)
-        self.off = off
-        self.tel_script = tel_script
-        self.sec = sec
-        self.map_size = map_size
-        self.map_angle = map_angle
-        self.coord = coord
-        self.epoch = epoch
-        self.object = object
 
-    def __del__(self):
-        ut.tel_exit.set()
-
-    def run(self):
-        if self.off == False :
-            data, queue = mp.Pipe()
-            data2, queue2 = mp.Pipe()
-            p = mp.Process(target=self.tel_script.move_tel, args=(queue,self.sec,self.map_size,self.map_angle,self.coord,self.epoch,self.object))
-            p2 = mp.Process(target=self.tel_script.pos_update, args=(queue2,self.coord))
-            p.start()
-            p2.start()
-
-            while True :
-                # grab data from fake_tel_server.py
-                if not ut.tel_exit.is_set() :
-                    tel_stuff = data.recv()
-                    ut.flags[0] = tel_stuff[1] #update flags passed to netcdf data
-                    self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-                else :
-                    time.sleep(2.0) # gives client/server time to shutdown before thread is closed
-                    break
-
-        else :
-            tele_array = np.zeros((10,21),dtype=float)
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off.npy',tele_array)
-
-''' Add this one once we know that KMS is on and ready to be integrated'''
 # class KMS_Thread(QtCore.QThread):
-
+#
 #     new_kms_data = QtCore.pyqtSignal(object) # object is status flag
 #
 #     def __init__(self, parent = None):
@@ -910,14 +1000,14 @@ class Tel_Thread(QtCore.QThread):
 #
 #     def run(self):
 #         data, queue = mp.Pipe()
-#         p = mp.Process(target='''tbd''' , args=(queue,))
+#         p = mp.Process(target=kms_socket , args=(queue,))
 #         p.start()
 #         while not ut.kms_exit.is_set() :
 #             kms_stuff = data.recv()
 #             # send updated data to the gui
 #             self.parallacticangle = kms_stuff[0]
 #             self.positionalerror = kms_stuff[1]
-            # ut.flags[1] = kms_stuff[2] #update kms flags sent to netcdf data
+#             ut.flags[2] = kms_stuff[2] #update kms flags sent to netcdf data
 #             self.new_kms_data.emit(kms_stuff[2]) #stuff 2 is status flag
 
 #activating the gui main window
@@ -925,7 +1015,6 @@ class Tel_Thread(QtCore.QThread):
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName('TIME Data Visualization Suite')
-    # ex = mcegui(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5])
     ex = mcegui()
     sys.exit(app.exec_())
     print("Done")

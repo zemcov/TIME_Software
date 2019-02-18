@@ -5,12 +5,11 @@ import numpy as np
 def start_sock(ra,dec):
     # I am accepting telescope sim data for the gui
     PORT = 8000
+    HOST = '192.168.1.252'
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('',PORT))
-    print('Server Listening')
-    s.listen(5)
+    s.connect((HOST,PORT))
+    print('Socket Connected')
     unpacker = struct.Struct('d d d d') # d = float , s = char string , i = integer
-    client, info = s.accept()
     time.sleep(1.0)
     # =================================================================================================================
     n = 0
@@ -20,23 +19,22 @@ def start_sock(ra,dec):
         if ut.tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
             print("Client Shutting Down")
             stop_msg = 'end'
-            client.send(stop_msg.encode())
+            s.send(stop_msg.encode())
             break
 
         else :
             msg = 'go'
-            client.send(msg.encode())
-            data = client.recv(unpacker.size)
+            s.send(msg.encode())
+            data = s.recv(unpacker.size)
             # unpacking data packet ===============================================
             pa, flag, time, enc_pos = unpacker.unpack(data)
             # ==================================================================
             n += 1
-            tel_data = np.array([])
+            kms_data = np.array([])
             np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/kms_packet%i.npy' %(n), kms_data)
             # send positional data to gui window
             queue.send([pa, flag, time, enc_pos])
 
     print("KMS Socket Closed")
-    s.shutdown(socket.SHUT_RDWR)
     s.close()
     sys.exit()

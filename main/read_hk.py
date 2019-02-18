@@ -9,23 +9,30 @@ class HK_Reader :
 
     def __init__(self):
         self.dir = '/home/time/Desktop/time-data/hk/'
-        self.dir2 = '/home/time/Desktop/time-data/netcdffiles/'
+        self.dir2 = '/data/netcdffiles/'
         self.name_dict = None
         self.n = 0
         self.bad_counter = 0
 
     def loop_files(self,queue3):
-        files = [self.dir + x for x in os.listdir(self.dir) if x.startswith("omnilog")]
-        hk_file = min(files, key = os.path.getctime) # grab the oldest of the unparsed files
-        a = int(hk_file.replace(self.dir,'').replace('omnilog.','').replace('.txt.gz',''))
-        print colored('HK starting file = %i' %(a),'green')
+        while True : #force it to wait until files exist before continuing
+            files = [self.dir + x for x in os.listdir(self.dir) if x.startswith("omnilog")]
+            if len(files) != 0 :
+                hk_file = min(files, key = os.path.getctime) # grab the oldest of the unparsed files
+                a = int(hk_file.replace(self.dir,'').replace('omnilog.','').replace('.txt.gz',''))
+                print colored('HK starting file = %i' %(a),'green')
+                break
+            else :
+                continue
 
         while not ut.mce_exit.is_set():
             if os.path.exists(self.dir + "omnilog.%i.txt.gz" %(a+1)) : #wait to read new file until old file is complete
                 hk_file = self.dir + 'omnilog.%i.txt.gz' % (a)
+                print(colored(hk_file,'green'))
                 a += 1
                 mega_hk = self.hk_read(hk_file)
-                queue3.send([mega_hk,ut.offset])
+                if ut.offset != 0 : # don't append data to file unless offset has been calculated
+                    queue3.send([mega_hk,ut.offset])
                 subprocess.Popen(['rm %s' %(hk_file)], shell=True)
                 self.n += 1
             else :
@@ -44,14 +51,47 @@ class HK_Reader :
             for line in file:
                 fields = line.strip().split(",")
                 t_type = str(fields[0])
+                time_stamp = float(fields[1])
                 name1 = str(fields[2])
                 name2 = str(fields[3])
                 names = (name1 + "_" + name2).replace('"','')
-                time.append(float(fields[1]))
                 name.append(names.replace(' ','_'))
-                data.append(float(fields[4]))
-                if name[-1] == 'HKMBv1b0_SYNC_number' :
+                # ============================================================================================
+                if t_type == 't' and names != 'HKMBv1b0_SYNC_number' and names != 'HKMBv2b0_SYNC_number':
+
+                    if ut.offset != 0 :
+                        print('ut.offset',ut.offset)
+                        sync_time = ut.utc_to_sync(time_stamp) # check to see if offset has been set
+                        time.append(sync_time)
+                        data.append(float(fields[4]))
+                        print(colored(('time_stamp:if1',time[-1]),'yellow'))
+                    else :
+                        time.append(time_stamp) # this won't go into file anyway, so doesn't matter what it does
+                        data.append(float(fields[4]))
+                        # print(colored(('time_stamp:if2',time[-1]),'yellow'))
+
+                elif t_type == 't' and names == 'HKMBv1b0_SYNC_number':
+                    time.append(float(fields[4])) # append sync number as timestamp, rather than network time
+                    data.append(time_stamp)
                     ut.offset = ut.timing(float(fields[1]),float(fields[4]))
+                    # print(colored(('time_stamp:elif1',time[-1]),'yellow'))
+
+                elif t_type == 't' and names == 'HKMBv2b0_SYNC_number' :
+                    time.append(float(fields[4]))
+                    data.append(time_stamp)
+                    # print(colored(('time_stamp:elif2',time[-1]),'yellow'))
+
+                elif t_type == 's' and names == 'HKMBv1b0_SYNC_number' :
+                    print(colored(('time_stamp:elif3',time[-1]),'yellow'))
+
+                elif t_type == 's' and names == 'HKMBv2b0_SYNC_number' :
+                    print(colored(('time_stamp:elif4',time[-1]),'yellow'))
+
+                else :
+                    time.append(time_stamp)
+                    data.append(float(fields[4]))
+                    # print(colored(('time_stamp:else',time[-1]),'yellow'))
+                # ==============================================================================================
 
         except IOError:
             print(colored('HK FILE CORRUPT! %s' %(file),'red'))
@@ -95,6 +135,7 @@ class HK_Reader :
         sort_name = [x for _,x in sorted(zip(time,name))]
         sort_data = [x for _,x in sorted(zip(time,data))]
         sort_time = sorted(time)
+        # print(colored(sort_time,'red'))
         #==============================================
         # loop through and append to final array until new time index is found
         l = 0
@@ -142,6 +183,6 @@ class HK_Reader :
                     names2[num] = sort_name[i]
                     data2[num] = sort_data[i]
                     # ==================================================================
-        # send data to append_data
+        # send data to append_hk
         return mega_hk
         #===============================================================
