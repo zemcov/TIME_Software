@@ -19,7 +19,7 @@ class TIME_TELE :
         s1.send('time_start_telemetry on')
         print('message sent')
         data = s1.recv(1024).decode("ascii")
-        # print(data)
+        print(data)
         # if data != 0 :
         #     s1.send('hello world')
         #     # self.start_sock_tcomm()
