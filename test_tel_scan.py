@@ -13,7 +13,7 @@ class TIME_TELE :
         PORT = 1806
         s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s1.bind(('',6666))
-        s1.connect('192.168.1.252',PORT)
+        s1.connect(('192.168.1.252',PORT))
         # client1, info = s1.accept()
         print('Socket Connected')
         s1.send('hiya')
