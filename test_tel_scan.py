@@ -48,4 +48,4 @@ class TIME_TELE :
 
 
 if __name__ == '__main__':
-    TIME_TELE('6.0','1.0','0.0',['05:32:47.0','-5:24:21.0'],'B1950.0','OrionA') #sec,map_size,map_angle,coord,epoch,object
+    TIME_TELE(6.0,1.0,0.0,['05:32:47.0','-5:24:21.0'],'B1950.0','OrionA') #sec,map_size,map_angle,coord,epoch,object
