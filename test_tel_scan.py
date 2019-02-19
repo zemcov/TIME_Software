@@ -8,7 +8,7 @@ import tom_tel
 
 class TIME_TELE :
 
-    def __init__(self,sec,map_size,map_angle,coord,epoch,object):
+    def __init__(self):
         self.tel_exit = mp.Event()
         self.sec = sec
         self.map_size = map_size
@@ -24,8 +24,8 @@ class TIME_TELE :
         print('Socket Connected')
 
         # =============================================================================================================================
-        cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME %s','TIME_MAP_SIZE %s','TIME_MAP_ANGLE %s',\
-                        'TIME_MAP_COORD RA','SEEK %s %s %s %s' %(self.sec,self.map_size,self.map_angle,self.coord[0],self.coord[1],self.epoch,self.object)]
+        cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME 6.0','TIME_MAP_SIZE 1.0','TIME_MAP_ANGLE 0.0',\
+                        'TIME_MAP_COORD RA','SEEK 05:32:47.0 -5:24:21.0 B1950.0 OrionA ']
         for i in range(len(cmnd_list)):
             s1.send(cmnd_list[i].encode('utf-8'))
             reply = s1.recv(1024).decode("ascii")
@@ -48,4 +48,4 @@ class TIME_TELE :
 
 
 if __name__ == '__main__':
-    TIME_TELE(6.0,1.0,0.0,['05:32:47.0','-5:24:21.0'],'B1950.0','OrionA') #sec,map_size,map_angle,coord,epoch,object
+    TIME_TELE() #sec,map_size,map_angle,coord,epoch,object
