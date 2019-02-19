@@ -5,11 +5,11 @@ import time
 import numpy as np
 import multiprocessing as mp
 import tom_tel
+import utils as ut
 
 class TIME_TELE :
 
     def __init__(self):
-        self.tel_exit = mp.Event()
 
         PORT = 1806
         s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,6 +42,7 @@ class TIME_TELE :
         data2 = s1.recv(1024).decode("ascii")
         print(data2)
         print("Telescope Socket Closed")
+        ut.tel_exit.set()
         s1.close()
         sys.exit()
 

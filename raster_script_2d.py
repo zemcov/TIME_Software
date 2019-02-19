@@ -21,7 +21,7 @@ class TIME_TELE :
 
     def tel_init(self,sec,map_size,map_angle,coord):
         cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME %s','TIME_MAP_SIZE %s','TIME_MAP_ANGLE %s',\
-                        'TIME_MAP_COORD RA','SEEK %s %s %s %s' %(sec,map_size,map_angle,coord[0],coord[1],epoch,object)]
+                        'TIME_MAP_COORD RA','TIME_SEEK %s %s %s %s' %(sec,map_size,map_angle,coord[0],coord[1],epoch,object)]
         for i in range(len(cmnd_list)):
             self.s.send(cmnd_list[i].encode('utf-8'))
             reply = self.s.recv(ack.size)

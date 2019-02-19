@@ -30,6 +30,9 @@ def start_sock_tracker():
                 i += 1
         else :
             break
-            
+
     s.close()
     sys.exit()
+
+if __name__ == '__main__' :
+    start_sock_tracker()
