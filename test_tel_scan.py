@@ -25,7 +25,7 @@ class TIME_TELE :
             reply = s1.recv(1024).decode("ascii")
             print(reply)
             if i == 0 :
-                if 'OK' in data:
+                if 'OK' in reply:
                     p = mp.Process(target=tom_tel.start_sock_tracker)
                     p.start()
                 else :
