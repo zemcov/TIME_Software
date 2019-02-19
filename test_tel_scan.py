@@ -25,6 +25,12 @@ class TIME_TELE :
             tom_tel.start_sock_tracker()
         else :
             print('ERROR reply')
+        time.sleep(10.0)
+        s1.send('time_start_telemetry off')
+        print('telemetry off')
+        data2 = s1.recv(1024).decode("ascii")
+        print(data2)
+
 
 if __name__ == '__main__':
     TIME_TELE()
