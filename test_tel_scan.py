@@ -16,15 +16,15 @@ class TIME_TELE :
         s1.connect(('192.168.1.252',PORT))
         # client1, info = s1.accept()
         print('Socket Connected')
-        s1.send('hiya')
+        s1.send('time_start_telemetry on')
         print('message sent')
         data = s1.recv(1024).decode("ascii")
-        print(data)
-        if data != 0 :
-            s1.send('hello world')
-            # self.start_sock_tcomm()
-        else :
-            print('Junk reply')
+        # print(data)
+        # if data != 0 :
+        #     s1.send('hello world')
+        #     # self.start_sock_tcomm()
+        # else :
+        #     print('Junk reply')
 
     # def start_sock_tcomm(self):
     #
