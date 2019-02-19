@@ -19,7 +19,7 @@ class TIME_TELE :
 
         # =============================================================================================================================
         cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME 6.0','TIME_MAP_SIZE 1.0','TIME_MAP_ANGLE 0.0',\
-                        'TIME_MAP_COORD RA','SEEK 05:32:47.0 -5:24:21.0 B1950.0 OrionA ']
+                        'TIME_MAP_COORD RA','TIME_SEEK 05:32:47.0 -5:24:21.0 B1950.0 OrionA ']
         i = 0
         while i <= len(cmnd_list):
             s1.send(cmnd_list[i].encode('utf-8'))
