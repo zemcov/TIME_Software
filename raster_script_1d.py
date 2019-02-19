@@ -21,12 +21,12 @@ class TIME_TELE :
 
     def tel_init(self,sec,map_size,map_angle,coord):
         cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME %s','TIME_MAP_SIZE %s','TIME_MAP_ANGLE %s',\
-                        'TIME_MAP_COORD DEC','SEEK %s %s %s %s' %(sec,map_size,map_angle,coord[0],coord[1],epoch,object)]
+                        'TIME_MAP_COORD RA','SEEK %s %s %s %s' %(sec,map_size,map_angle,coord[0],coord[1],epoch,object)]
         for i in range(len(cmnd_list)):
             self.s.send(cmnd_list[i].encode('utf-8'))
             reply = self.s.recv(ack.size)
             while True :
-                if 'done' in reply : # wait for ack from tel
+                if 'OK' in reply  : # wait for ack from tel
                     message = 'TELESCOPE INITIALIZED, STATUS: READY'
         return message
 
@@ -40,11 +40,11 @@ class TIME_TELE :
                 stop_msg = 'TIME_START_TRACKING off'
                 self.s.send(stop_msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if reply == 'confirmed':
+                if 'OK' in reply :
                     final_msg = 'TIME_START_TELEMETRY off'
                     self.s.send(final_msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if reply == 'confirmed':
+                if 'OK' in reply :
                     break
 
             else :
@@ -83,37 +83,43 @@ class TIME_TELE :
                 msg = 'SEEK %s %s %s %s' %(coord[0],coord[1],epoch,object)
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if reply == 'proceed':
+                if 'OK' in reply :
                     continue
                 # -----------------------------------------------------------
                 msg = 'TIME_START_TRACKING arm'
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if reply == 'proceed' :
+                if 'OK' in reply  :
                     continue
                 # --------------------------------------------------------------
                 msg = 'TIME_START_TRACKING neg'
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if reply == 'proceed' :
+                if 'OK' in reply  :
                     continue
                 # --------------------------------------------------------------
                 msg = 'TIME_START_TRACKING track'
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if reply == 'proceed' :
+                if 'OK' in reply  :
                     continue
                 # ---------------------------------------------------------------
                 msg = 'TIME_START_OBSERVING on'
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if reply == 'proceed' :
+                if 'OK' in reply  :
                     continue
                 # -----------------------------------------------------------------
                 while not ut.tel_exit.set(): # check if gui recieved the move flag from tel
                     done = queue2.recv()
                     if done == 'increment' :
                         i += 1
+                        # ---------------------------------------------------------------
+                        msg = 'TIME_START_TRACKING off'
+                        self.s.send(msg.encode('utf-8'))
+                        reply = self.s.recv(ack.size)
+                        if 'OK' in reply :
+                            continue
                         if i == num_scans : # wait to stop scanning until number of scans is done
                             ut.tel_exit.set()
                     else :

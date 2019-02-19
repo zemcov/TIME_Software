@@ -86,38 +86,43 @@ class TIME_TELE :
                 msg = 'SEEK %s %s %s %s' %(coord[0]+(i*0.43),coord[1]+(i*0.43),epoch,object)
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if 'done' in reply :
+                if 'OK' in reply  :
                     continue
                 # -----------------------------------------------------------
                 msg = 'TIME_START_TRACKING arm'
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if 'done' in reply :
+                if 'OK' in reply  :
                     continue
                 # --------------------------------------------------------------
                 msg = 'TIME_START_TRACKING neg'
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if 'done' in reply :
+                if 'OK' in reply :
                     continue
                 # --------------------------------------------------------------
                 msg = 'TIME_START_TRACKING track'
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if 'done' in reply :
+                if 'OK' in reply  :
                     continue
                 # ---------------------------------------------------------------
                 msg = 'TIME_START_OBSERVING on'
                 self.s.send(msg.encode('utf-8'))
                 reply = self.s.recv(ack.size)
-                if 'done' in reply :
+                if 'OK' in reply  :
                     continue
                 # -----------------------------------------------------------------
                 while not ut.tel_exit.set(): # check if gui recieved the move flag from tel
                     done = queue2.recv()
                     if done == 'increment' :
                         i += 1
-                        break
+                        # ---------------------------------------------------------------
+                        msg = 'TIME_START_TRACKING off'
+                        self.s.send(msg.encode('utf-8'))
+                        reply = self.s.recv(ack.size)
+                        if 'OK' in reply  :
+                            break
                     else :
                         pass
 
