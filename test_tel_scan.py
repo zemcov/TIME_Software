@@ -4,6 +4,7 @@ import socket, struct, subprocess, os, sys
 import time
 import numpy as np
 import multiprocessing as mp
+import tom_tel
 
 class TIME_TELE :
 
@@ -20,21 +21,10 @@ class TIME_TELE :
         print('message sent')
         data = s1.recv(1024).decode("ascii")
         print(data)
-        # if data != 0 :
-        #     s1.send('hello world')
-        #     # self.start_sock_tcomm()
-        # else :
-        #     print('Junk reply')
-
-    # def start_sock_tcomm(self):
-    #
-    #     PORT2 = 1806
-    #     HOST2 = '192.168.1.252'
-    #     s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #     s2.connect((HOST2,PORT2))
-    #     print('Tracker Socket Connected')
-    #     s2.send('hello world')
-        # ===============================================================
+        if 'OK' in data:
+            tom_tel.start_sock_tracker()
+        else :
+            print('ERROR reply')
 
 if __name__ == '__main__':
     TIME_TELE()
