@@ -12,12 +12,13 @@ class TIME_TELE :
 
         PORT = 1806
         s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s1.bind(('',PORT))
-        print('Server Listening')
-        s1.listen(5)
-        client1, info = s1.accept()
+        s1.bind(('',6666))
+        s1.connect('192.168.1.252',PORT)
+        # client1, info = s1.accept()
         print('Socket Connected')
-        data = client1.recv(1024).decode("ascii")
+        s1.send('hiya')
+        print('message sent')
+        data = s1.recv(1024).decode("ascii")
         print(data)
         if data != 0 :
             s1.send('hello world')
