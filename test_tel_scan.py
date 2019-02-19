@@ -10,12 +10,6 @@ class TIME_TELE :
 
     def __init__(self):
         self.tel_exit = mp.Event()
-        self.sec = sec
-        self.map_size = map_size
-        self.map_angle = map_angle
-        self.coord = coord
-        self.epoch = epoch
-        self.object = object
 
         PORT = 1806
         s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
