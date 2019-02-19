@@ -29,6 +29,7 @@ class TIME_TELE :
                 if 'OK' in reply:
                     p = mp.Process(target=tom_tel.start_sock_tracker)
                     p.start()
+                    i += 1
                 else :
                     print('ERROR reply')
             else :
