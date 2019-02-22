@@ -1,35 +1,55 @@
-# raster 1D script
+# pointing cross script
 
 import socket, struct, subprocess, os, sys
 import time
 import numpy as np
 
 class TIME_TELE :
+    def __init__(self) :
+        self.n = 0
 
     def start_sock(self,queue,queue2,sec,map_size,map_angle,coord,epoch,object,map_len,num_scans):
-        # I am accepting telescope sim data for the gui
-        PORT = 1806
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind(('',6666))
-        self.s.connect(('192.168.1.252',PORT))
-        print('Socket Connected')
-    # =================================================================================================================
-        cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
-                        'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD RA','TIME_SEEK ' + str(coord[0]) + ' ' + str(coord[1])\
-                        + ' ' + str(epoch) + ' ' + str(object)]
-        i = 0
-        while i <= (len(cmnd_list) - 1):
-            self.s.send(cmnd_list[i])
-            reply = self.s.recv(1024).decode("ascii")
-            print(reply)
-            if i == 0 :
-                if 'OK' in reply:
-                    p = mp.Process(target=tel_tracker.start_tracker, args=(queue,))
-                    p.start()
-                    i += 1
+        if self.n = 0 :
+            self.n += 1
+            # I am accepting telescope sim data for the gui
+            PORT = 1806
+            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.s.bind(('',6666))
+            self.s.connect(('192.168.1.252',PORT))
+            print('Socket Connected')
+        # =================================================================================================================
+            cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
+                            'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD RA','TIME_SEEK ' + str(coord[0]) + ' ' + str(coord[1])\
+                            + ' ' + str(epoch) + ' ' + str(object)]
+            i = 0
+            while i <= (len(cmnd_list) - 1):
+                self.s.send(cmnd_list[i])
+                reply = self.s.recv(1024).decode("ascii")
+                print(reply)
+                if i == 0 :
+                    if 'OK' in reply:
+                        p = mp.Process(target=tel_tracker.start_tracker, args=(queue,))
+                        p.start()
+                        i += 1
+                    else :
+                        print('ERROR reply')
                 else :
-                    print('ERROR reply')
-            else :
+                    if 'OK' in reply :
+                        i += 1
+                    else :
+                        print('ERROR reply')
+
+            self.pos_update(queue2,sec,map_size,map_angle,coord,epoch,object,map_len,num_scans)
+
+        else :
+            cmnd_list = ['TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
+                            'TIME_MAP_ANGLE ' + str(map_angle + 90.0),'TIME_MAP_COORD RA','TIME_SEEK ' + str(coord[0]) + ' ' + str(coord[1])\
+                            + ' ' + str(epoch) + ' ' + str(object)]
+            i = 0
+            while i <= (len(cmnd_list) - 1):
+                self.s.send(cmnd_list[i])
+                reply = self.s.recv(1024).decode("ascii")
+                print(reply)
                 if 'OK' in reply :
                     i += 1
                 else :
@@ -43,7 +63,13 @@ class TIME_TELE :
             of the map length, so only half of array so stick out on each end.'''
 
         while not ut.tel_exit.is_set() :
-
+                # --------------------------------------------------------------------------
+            msg = 'SEEK %s %s %s %s' %(coord[0],coord[1],epoch,object)
+            self.s.send(msg.encode('utf-8'))
+            reply = self.s.recv(ack.size)
+            if 'OK' in reply :
+                continue
+            # -----------------------------------------------------------
             msg = 'TIME_START_TRACKING arm'
             self.s.send(msg.encode('utf-8'))
             reply = self.s.recv(ack.size)
@@ -78,7 +104,8 @@ class TIME_TELE :
                         self.s.send(msg.encode('utf-8'))
                         reply = self.s.recv(ack.size)
                         if 'OK' in reply :
-                            ut.tel_exit.set()
+                            if self.n != 0 :
+                                ut.tel_exit.set()
                 else :
                     pass
 

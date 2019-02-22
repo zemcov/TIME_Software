@@ -21,6 +21,7 @@ class Time_Files:
         self.k = 0
         self.i = 0
         self.j = 0
+        self.time_tuple = []
         self.hk_data = np.zeros((int(ut.german_freq),3,1000))
 
         self.data3, queue3 = mp.Pipe()
@@ -32,6 +33,7 @@ class Time_Files:
             data3 = self.data3.recv() # n * (3,1000)
             self.hk = np.array(data3[0])
             self.offset = data3[1]
+            self.time_tuple = data3[2]
             length = len(self.hk)
             self.hk = self.hk.reshape(length,3,1000)
 
@@ -131,7 +133,7 @@ class Time_Files:
             hk = hnc.new_file(self.filestarttime)
             self.ncfile = netcdfdir + "/raw_hk_%s.nc" %(self.filestarttime)
 
-            hnc.data_append(self.ncfile, self.b, self.hk_data)
+            hnc.data_append(self.ncfile, self.b, self.hk_data, self.time_tuple)
             self.b = 1
 
         # elif os.stat(netcdfdir + "/raw_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
@@ -143,10 +145,10 @@ class Time_Files:
             hk = hnc.new_file(self.filestarttime)
             self.ncfile = netcdfdir + "/raw_hk_%s.nc" %(self.filestarttime)
 
-            hnc.data_append(self.ncfile, self.b, self.hk_data)
+            hnc.data_append(self.ncfile, self.b, self.hk_data, self.time_tuple)
 
         else: # if everything is okay, append data to the file
-            hnc.data_append(self.ncfile, self.b, self.hk_data)
+            hnc.data_append(self.ncfile, self.b, self.hk_data, self.time_tuple)
 
         # have the counter incremement for every append
         self.b += 1

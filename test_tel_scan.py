@@ -45,7 +45,3 @@ class TIME_TELE :
         ut.tel_exit.set()
         s1.close()
         sys.exit()
-
-
-if __name__ == '__main__':
-    TIME_TELE() #sec,map_size,map_angle,coord,epoch,object

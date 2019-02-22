@@ -29,7 +29,7 @@ def new_file(h_size, filestarttime):
     mce.createDimension('hk_row',1000)
     mce.createDimension('hk_num', int(ut.german_freq))
     mce.createDimension('hk',1)
-    mce.createDimension('sf',6)
+    mce.createDimension('sf',5)
     mce.createDimension('tel_pos',20)
     mce.createDimension('kms_pos',4)
     mce.createDimension('sock_rate',10)

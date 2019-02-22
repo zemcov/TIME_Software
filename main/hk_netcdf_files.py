@@ -17,21 +17,21 @@ def new_file(filestarttime):
     hk.createDimension('hk_col',3)
     hk.createDimension('hk_row',1000)
     hk.createDimension('hk_num', int(ut.german_freq))
-    # hk.createDimension('tuple',2)
+    hk.createDimension('tuple',2)
 
     # creating variables --------------------------------------------------------------------------------
     global HK_Data
     HK_Data = hk.createVariable('hk_data','f8',('t','hk_num','hk_col','hk_row'),zlib=True)
-    # global Time
-    # Time = hk.createVariable('hk_time', 'f8',('t','tuple'),zlib=True)
+    global Time
+    Time = hk.createVariable('hk_time', 'f8',('t','tuple'),zlib=True)
     # =========================================================================
-
     hk.close()
 
-def data_append(nc_file, p, hk):
+def data_append(nc_file, p, hk, time):
     if os.path.exists(nc_file):
         hk = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         HK_Data[p,:,:,:] = hk
+        Time[p,:] = time
         hk.close()
     else :
         print(colored("Could not find NETCDF File!", 'red'))

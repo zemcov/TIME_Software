@@ -13,6 +13,7 @@ class HK_Reader :
         self.name_dict = None
         self.n = 0
         self.bad_counter = 0
+        self.time_tuple = [0,0]
 
     def loop_files(self,queue3):
         while True : #force it to wait until files exist before continuing
@@ -32,7 +33,7 @@ class HK_Reader :
                 a += 1
                 mega_hk = self.hk_read(hk_file)
                 if ut.offset != 0 : # don't append data to file unless offset has been calculated
-                    queue3.send([mega_hk,ut.offset])
+                    queue3.send([mega_hk,ut.offset,self.time_tuple])
                 subprocess.Popen(['rm %s' %(hk_file)], shell=True)
                 self.n += 1
             else :
@@ -62,23 +63,25 @@ class HK_Reader :
                     if ut.offset != 0 :
                         print('ut.offset',ut.offset)
                         sync_time = ut.utc_to_sync(time_stamp) # check to see if offset has been set
-                        time.append(sync_time)
+                        time.append(float(sync_time))
                         data.append(float(fields[4]))
                         print(colored(('time_stamp:if1',time[-1]),'yellow'))
                     else :
-                        time.append(time_stamp) # this won't go into file anyway, so doesn't matter what it does
+                        time.append(float(time_stamp)) # this won't go into file anyway, so doesn't matter what it does
                         data.append(float(fields[4]))
                         # print(colored(('time_stamp:if2',time[-1]),'yellow'))
 
                 elif t_type == 't' and names == 'HKMBv1b0_SYNC_number':
                     time.append(float(fields[4])) # append sync number as timestamp, rather than network time
-                    data.append(time_stamp)
+                    data.append(float(time_stamp))
                     ut.offset = ut.timing(float(fields[1]),float(fields[4]))
+                    self.time_tuple[0] = time[-1]
+                    self.time_tuple[1] = data[-1]
                     # print(colored(('time_stamp:elif1',time[-1]),'yellow'))
 
                 elif t_type == 't' and names == 'HKMBv2b0_SYNC_number' :
                     time.append(float(fields[4]))
-                    data.append(time_stamp)
+                    data.append(float(time_stamp))
                     # print(colored(('time_stamp:elif2',time[-1]),'yellow'))
 
                 elif t_type == 's' and names == 'HKMBv1b0_SYNC_number' :
@@ -88,7 +91,7 @@ class HK_Reader :
                     print(colored(('time_stamp:elif4',time[-1]),'yellow'))
 
                 else :
-                    time.append(time_stamp)
+                    time.append(float(time_stamp))
                     data.append(float(fields[4]))
                     # print(colored(('time_stamp:else',time[-1]),'yellow'))
                 # ==============================================================================================
@@ -150,18 +153,18 @@ class HK_Reader :
             # only incremment index for a new timestamp,not for file num or for t =======
             if l == 0 : # if start of a new time (or new file)
                 new_time = sort_time[i]
-                time2 = [0]*1000
-                names2 = [0]*1000
-                data2 = [0]*1000
+                time2 =  np.zeros(1000)
+                names2 = np.zeros(1000)
+                data2 = np.zeros(1000)
                 time2[num] = sort_time[i]
-                names2[num] = sort_name[i]
+                names2[num] = float(sort_name[i])
                 data2[num] = sort_data[i]
                 l += 1
 
             else :
                 if new_time == sort_time[i]:
                     time2[num] = sort_time[i]
-                    names2[num] = sort_name[i]
+                    names2[num] = float(sort_name[i])
                     data2[num] = sort_data[i]
 
                 else :
@@ -176,11 +179,11 @@ class HK_Reader :
                         print(len(self.name_dict.keys()))
                         print(colored("Number of reported sensors over size limit!",'red'))
 
-                    time2 = [0]*1000
-                    names2 = [0]*1000
-                    data2 = [0]*1000
+                    time2 = np.zeros(1000)
+                    names2 = np.zeros(1000)
+                    data2 = np.zeros(1000)
                     time2[num] = sort_time[i]
-                    names2[num] = sort_name[i]
+                    names2[num] = float(sort_name[i])
                     data2[num] = sort_data[i]
                     # ==================================================================
         # send data to append_hk

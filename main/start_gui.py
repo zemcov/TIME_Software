@@ -9,8 +9,7 @@ import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
 sys.path.append('/home/time/time-software-testing/TIME_Software')
-import read_hk, kms_socket, raster_script_1d, raster_script_2d
-# import bowtie_scan
+import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -91,32 +90,32 @@ class mcegui(QtGui.QWidget):
 
     def on_starttel_clicked(self):
 
-        # self.sec = self.tel_sec.currentText()
-        # self.map_size = self.tel_map_size.currentText()
-        # self.map_len = self.tel_map_len.currentText()
-        # self.map_angle = self.tel_map_angle.currentText()
-        # self.coord = self.tel_coord.currentText()
-        # self.epoch = self.tel_epoch.currentIndex()
-        # self.object = self.tel_object.currentText()
-        # self.inittel = self.init_tel.currentText()
-        # self.num_scans = self.tel_num_scans.currentText()
-        #
-        # if self.inittel == 'Yes':
-        #     self.tel_scan = self.telescan.currentText()
-        #     scans = ['1D Raster','2D Raster','Bowtie (constant el)']
-        #     script = ['raster_script_1d','raster_script_2d','bowtie_scan']
-        #     for scan in scans :
-        #         if self.tel_scan == scan :
-        #             self.tel_script = script[scans.index(scan)]
-        #     tel_message = str(subprocess.Popen(['python %s' %(self.tel_script.TIME_TELE().start_sock())]))
-        #
-        #     self.off = False
-        # else :
-        #     self.tel_script = ' '
-        #     self.off = True
-        #     tel_message = 'No Telescope Selected'
-        #
-        # self.telparams.addRow(tel_message)
+        self.sec = self.tel_sec.currentText()
+        self.map_size = self.tel_map_size.currentText()
+        self.map_len = self.tel_map_len.currentText()
+        self.map_angle = self.tel_map_angle.currentText()
+        self.coord = self.tel_coord.currentText()
+        self.epoch = self.tel_epoch.currentIndex()
+        self.object = self.tel_object.currentText()
+        self.inittel = self.init_tel.currentText()
+        self.num_scans = self.tel_num_scans.currentText()
+
+        if self.inittel == 'Yes':
+            self.tel_scan = self.telescan.currentText()
+            scans = ['1D Raster','2D Raster','Bowtie (constant el)','Pointing Cross']
+            script = ['raster_script_1d','raster_script_2d','bowtie_scan','point_cross']
+            for scan in scans :
+                if self.tel_scan == scan :
+                    self.tel_script = script[scans.index(scan)]
+            tel_message = 'TELESCOPE INITIALIZED'
+
+            self.off = False
+        else :
+            self.tel_script = ' '
+            self.off = True
+            tel_message = 'NO TELESCOPE SELECTED'
+
+        self.telparams.addRow(tel_message)
         self.inittelescope()
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -315,11 +314,11 @@ class mcegui(QtGui.QWidget):
         self.telparams.addRow('Scan Strategy', self.telescan)
         self.telparams.addRow('Delayed Start (sec)', self.tel_delay)
         self.telparams.addRow('Time to Traverse Scan Length (sec)', self.tel_sec)
-        self.telparams.addRow('Map Size [arcmin], (distance for center of array to reach map edge)', self.tel_map_size)
-        self.telparams.addRow('Map Length [arcmin]', self.tel_map_len)
+        self.telparams.addRow('Map Size [deg], (distance for center of array to reach map edge)', self.tel_map_size)
+        self.telparams.addRow('Map Length [deg]', self.tel_map_len)
         self.telparams.addRow('Number of Scans (-RA to +RA)', self.tel_num_scans)
-        self.telparams.addRow('Angle of Map Offset', self.tel_map_angle)
-        self.telparams.addRow('Coordinates of Source', self.tel_coord)
+        self.telparams.addRow('Angle of Map Offset [deg]', self.tel_map_angle)
+        self.telparams.addRow('Coordinates of Source [RA,DEC (hr:min:sec, deg:arcmin:arcsec)]', self.tel_coord)
         self.telparams.addRow('Epoch of Observation', self.tel_epoch)
         self.telparams.addRow('Object Catalog Name', self.tel_object)
         self.starttel = QtGui.QPushButton('Initialize Telescope')
@@ -544,6 +543,9 @@ class mcegui(QtGui.QWidget):
     def initkmirrordata(self):
         # start the kms QThread
         ''' Add back in once KMS is running '''
+        if self.tel_script == 'point_cross.py' :
+            # do something to set KMS in specific position before starting KMS thread
+            print('No KMS!')
         # self.kms_updater = KMS_Thread()
         # self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
         # self.kms_updater.start()
@@ -666,6 +668,7 @@ class mcegui(QtGui.QWidget):
     def updatetelescopedata(self,pa,slew,alt,az,ra,dec,time):
         # error checking based on status flags from telescope
         tel_error = [10,11,12]
+
         if (slew in tel_error) and (self.repeat == False) :
             print(colored("telescope if",'red'))
             os.system("afplay /Users/vlb9398/Desktop/Gui_code/TIME_Software/main/klaxon.mp3")
@@ -925,67 +928,65 @@ class MCEThread(QtCore.QThread):
         #     stuff = data.recv()
         #     self.new_data.emit(stuff[0],stuff[1],stuff[2])
 
-# class Tel_Thread(QtCore.QThread):
-#     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object,object)
-#
-#     def __init__(self, tel_script, off, sec, map_size, map_angle, coord, epoch, object, map_len, num_scans, parent = None):
-#         QtCore.QThread.__init__(self, parent)
-#         self.off = off
-#         self.tel_script = tel_script
-#         self.sec = sec
-#         self.map_size = map_size
-#         self.map_angle = map_angle
-#         self.coord = coord
-#         self.epoch = epoch
-#         self.object = object
-#         self.map_len = map_len
-#         self.num_scans = num_scans
-#
-#     def __del__(self):
-#         ut.tel_exit.set()
-#
-#     def run(self):
-#         if self.off == False :
-#             data, queue = mp.Pipe()
-#             data2, queue2 = mp.Pipe()
-#             p = mp.Process(target=self.tel_script.TIME_TELE().move_tel, args=(queue,self.sec,self.map_size,self.map_angle,self.coord,self.epoch,self.object))
-#             p2 = mp.Process(target=self.tel_script.TIME_TELE().pos_update, args=(queue2,self.sec,self.map_size,self.map_angle,self.coord,self.epoch,self.object,self.map_len,self.num_scans))
-#             p.start()
-#             p2.start()
-#             counter = 0
-#             num_sent = 0
-#             num_loop = int(float(self.map_len) // 0.46 + (float(self.map_len) % 0.46 > 0))
-#
-#             while True :
-#                 # grab data from fake_tel_server.py
-#                 if not ut.tel_exit.is_set() :
-#                     tel_stuff = data.recv()
-#                     ut.flags[0] = tel_stuff[1]
-#                     ut.flags[1] = tel_stuff[2] #update flags passed to netcdf data
-#                     if tel_stuff[2] == 4 :
-#                         counter += 1
-#
-#                     # pa,float(blanking),float(direction),el,az,map_ra,map_dec,ut
-#                     self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6],tel_stuff[7])
-#                     if counter == self.num_scans :
-#                         # checks that tel is in turn-around zone, and last movement was moving back towards left
-#                         # this is because telescope inits track at far left (-RA)
-#                         data2.send('increment')
-#                         counter = 0
-#                         num_sent += 1
-#
-#                     if num_sent == num_loop :
-#                         print(colored('Telescope Scan Completed!','green'))
-#                         # telescope exit is set by scanning script
-#                         ''' generate analysis scripts once it's shutdown '''
-#
-#                 else :
-#                     time.sleep(2.0) # gives client/server time to shutdown before thread is closed
-#                     break
-#
-#         else :
-#             tele_array = np.zeros((10,21),dtype=float)
-#             np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off.npy',tele_array)
+class Tel_Thread(QtCore.QThread):
+    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
+
+    def __init__(self, tel_script, off, sec, map_size, map_angle, coord, epoch, object, map_len, num_scans, parent = None):
+        QtCore.QThread.__init__(self, parent)
+        self.off = off
+        self.tel_script = tel_script
+        self.sec = sec
+        self.map_size = map_size
+        self.map_angle = map_angle
+        self.coord = coord
+        self.epoch = epoch
+        self.object = object
+        self.map_len = map_len
+        self.num_scans = num_scans
+
+    def __del__(self):
+        ut.tel_exit.set()
+
+    def run(self):
+        if self.off == False :
+            data, queue = mp.Pipe()
+            data2, queue2 = mp.Pipe()
+            p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue,queue2,self.sec,self.map_size,self.map_angle,self.coord,self.epoch,self.object,self.map_len,self.num_scans)
+            p.start()
+            counter = 0
+            num_sent = 0
+            num_loop = int(float(self.map_len) // 0.46 + (float(self.map_len) % 0.46 > 0))
+
+            while True :
+                # grab data from tel_tracker.py
+                if not ut.tel_exit.is_set() :
+                    tel_stuff = data.recv()
+                    ut.flags[0] = int(tel_stuff[2]) #update flags passed to netcdf data
+                    if int(tel_stuff[2]) == 4 :
+                        counter += 1
+
+                    # pa,float(direction),el,az,map_ra,map_dec,ut
+                    self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+                    if counter == self.num_scans :
+                        # checks that tel is in turn-around zone, and last movement was moving back towards left
+                        # this is because telescope inits track at far left (-RA)
+                        data2.send('increment')
+                        counter = 0
+                        num_sent += 1
+
+                    if num_sent == num_loop :
+                        print(colored('Telescope Scan Completed!','green'))
+                        # telescope exit is set by scanning script
+                        ''' generate analysis scripts once it's shutdown '''
+
+                else :
+                    time.sleep(2.0) # gives client/server time to shutdown before thread is closed
+                    break
+
+        else :
+            # makes fake data for when we don't want to run the telescope
+            tele_array = np.zeros((10,21),dtype=float)
+            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off.npy',tele_array)
 
 
 # class KMS_Thread(QtCore.QThread):

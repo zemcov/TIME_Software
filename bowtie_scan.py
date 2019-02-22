@@ -1,68 +1,93 @@
-# bowtie scan
+# bowtie scan, same as 1D raster, but has Kmirror fixed in place
 
 import socket, struct, subprocess, os, sys
-import time as othertime
+import time
 import numpy as np
-import matplotlib.pyplot as plt
-import astropy.units as u
-from astropy.time import Time as thetime
-from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
-from astroplan import Observer
 
-''' how do I get the telescope to connect at the other end? '''
-''' Need to send "TIME_START_TELEMETRY ON" before activating socket'''
+class TIME_TELE :
 
-def start_sock(ra,dec):
-    # I am accepting telescope sim data for the gui
-    PORT = 1806
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('',PORT))
-    print('Server Listening')
-    s.listen(5)
-    unpacker = struct.Struct('s i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
-    client, info = s.accept()
-    othertime.sleep(1.0)
+    def start_sock(self,queue,queue2,sec,map_size,map_angle,coord,epoch,object,map_len,num_scans):
+        # I am accepting telescope sim data for the gui
+        PORT = 1806
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.bind(('',6666))
+        self.s.connect(('192.168.1.252',PORT))
+        print('Socket Connected')
     # =================================================================================================================
-    n = 0
+        cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
+                        'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD RA','TIME_SEEK ' + str(coord[0]) + ' ' + str(coord[1])\
+                        + ' ' + str(epoch) + ' ' + str(object)]
+        i = 0
+        while i <= (len(cmnd_list) - 1):
+            self.s.send(cmnd_list[i])
+            reply = self.s.recv(1024).decode("ascii")
+            print(reply)
+            if i == 0 :
+                if 'OK' in reply:
+                    p = mp.Process(target=tel_tracker.start_tracker, args=(queue,))
+                    p.start()
+                    i += 1
+                else :
+                    print('ERROR reply')
+            else :
+                if 'OK' in reply :
+                    i += 1
+                else :
+                    print('ERROR reply')
 
-    while True:
+        self.pos_update(queue2,sec,map_size,map_angle,coord,epoch,object,map_len,num_scans)
 
-        if ut.tel_exit.is_set(): # if shutdown command from software, send shutdown command to tel
-            print("Client Shutting Down")
-            stop_msg = 'TIME_START_TELEMETRY off , '
-            client.send(stop_msg.encode())
-            break
+    def pos_update(self,queue2,sec,map_size,map_angle,coord,epoch,object,map_len,num_scans):
+        ''' starting position depends heavily on whether or not center position of telescope
+            is center of time pixel array. Current code moves center of beam array to each end
+            of the map length, so only half of array so stick out on each end.'''
 
-        else :
-            # option to send response after receiving packet
-             = position_update(ra,dec)
-            msg = ''
-            client.send(msg.encode())
+        while not ut.tel_exit.is_set() :
 
-            data = client.recv(unpacker.size)
-            # unpacking data packet ===============================================
-            name, blanking, direction, observing, pad, /
-            ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, /
-            ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, /
-            pa = unpacker.unpack(data)
-            # ==================================================================
-            n += 1
-            tel_data = np.array([float(blanking), float(direction), float(observing), float(pad), /
-            ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, /
-            ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, /
-            pa])
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet%i.npy' %(n), tel_data)
-            # send positional data to gui window
-            queue.send([pa,float(direction),el,az,map_ra,map_dec,ut])
+            # -----------------------------------------------------------
+            msg = 'TIME_START_TRACKING arm'
+            self.s.send(msg.encode('utf-8'))
+            reply = self.s.recv(ack.size)
+            if 'OK' in reply  :
+                continue
+            # --------------------------------------------------------------
+            msg = 'TIME_START_TRACKING neg'
+            self.s.send(msg.encode('utf-8'))
+            reply = self.s.recv(ack.size)
+            if 'OK' in reply  :
+                continue
+            # --------------------------------------------------------------
+            msg = 'TIME_START_TRACKING track'
+            self.s.send(msg.encode('utf-8'))
+            reply = self.s.recv(ack.size)
+            if 'OK' in reply  :
+                continue
+            # ---------------------------------------------------------------
+            msg = 'TIME_START_OBSERVING on'
+            self.s.send(msg.encode('utf-8'))
+            reply = self.s.recv(ack.size)
+            if 'OK' in reply  :
+                continue
+            # -----------------------------------------------------------------
+            while not ut.tel_exit.set(): # check if gui recieved the move flag from tel
+                done = queue2.recv()
+                if done == 'increment' :
+                    i += 1
+                    # ---------------------------------------------------------------
+                    msg = 'TIME_START_TRACKING off'
+                    self.s.send(msg.encode('utf-8'))
+                    reply = self.s.recv(ack.size)
+                    if 'OK' in reply :
+                        continue
+                    if i == num_scans : # wait to stop scanning until number of scans is done
+                        ut.tel_exit.set()
+                else :
+                    pass
 
-    print("Telescope Socket Closed")
-    s.shutdown(socket.SHUT_RDWR)
-    s.close()
-    sys.exit()
-
-def position_update(ra,dec):
-
-    count_ra = [0,20] # set '20' to whatever starting coordinate you want on sky, maybe bottom left of your map?
-    ''' Each beam width is 0.43 ' or 0.0071666 degrees. So I subtracted that from 20 and kept going until I had 16 positions.'''
-    ra = [19.8925,19.8996,19.9068,19.9140,19.9211,19.9283,19.9355,19.9426,19.9498,19.9570,19.9641,19.9713,19.9785,19.9856,19.9928,20]
-    dec = np.full((1,16), 20, dtype=int) # this won't be incremented
+        self.s.send('TIME_START_TELEMETRY OFF')
+        print('Telemetry Off')
+        reply = self.s.recv(1024).decode("ascii")
+        print(reply)
+        print("Telescope Socket Closed")
+        self.s.close()
+        sys.exit()
