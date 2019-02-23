@@ -94,7 +94,8 @@ class mcegui(QtGui.QWidget):
         self.map_size = self.tel_map_size.currentText()
         self.map_len = self.tel_map_len.currentText()
         self.map_angle = self.tel_map_angle.currentText()
-        self.coord = self.tel_coord.currentText()
+        self.coord1 = self.tel_coord1.currentText()
+        self.coord2 = self.tel_coord2.currentText()
         self.epoch = self.tel_epoch.currentIndex()
         self.object = self.tel_object.currentText()
         self.inittel = self.init_tel.currentText()
@@ -287,7 +288,7 @@ class mcegui(QtGui.QWidget):
 
         # telescope options =================================================
         self.telescan = QtGui.QComboBox()
-        self.telescan.addItems(['1D Raster','2D Raster','BowTie (constant el)'])
+        self.telescan.addItems(['1D Raster','2D Raster','BowTie (constant el)','Pointing Cross'])
 
         self.tel_delay = QtGui.QLineEdit('0')
 
@@ -299,7 +300,8 @@ class mcegui(QtGui.QWidget):
         self.tel_map_len  = QtGui.QLineEdit('1')
         self.tel_map_angle = QtGui.QLineEdit('0')
         self.tel_num_scans = QtGui.QLineEdit('1')
-        self.tel_coord = QtGui.QLineEdit()
+        self.tel_coord1 = QtGui.QLineEdit()
+        self.tel_coord2 = QtGui.QLineEdit()
         self.tel_epoch = QtGui.QComboBox()
         self.tel_epoch.addItems(['Besselian Years (B1950.0)','Julian Days (JD 24332828.4235)','Julian Years (J2000.0)'])
         self.tel_object = QtGui.QLineEdit('Mars')
@@ -318,7 +320,8 @@ class mcegui(QtGui.QWidget):
         self.telparams.addRow('Map Length [deg]', self.tel_map_len)
         self.telparams.addRow('Number of Scans (-RA to +RA)', self.tel_num_scans)
         self.telparams.addRow('Angle of Map Offset [deg]', self.tel_map_angle)
-        self.telparams.addRow('Coordinates of Source [RA,DEC (hr:min:sec, deg:arcmin:arcsec)]', self.tel_coord)
+        self.telparams.addRow('RA Coord of Source: [hr:min:sec]', self.tel_coord1)
+        self.telparams.addRow('DEC Coord of Source: [deg:arcmin:arcsec]', self.tel_coord2)
         self.telparams.addRow('Epoch of Observation', self.tel_epoch)
         self.telparams.addRow('Object Catalog Name', self.tel_object)
         self.starttel = QtGui.QPushButton('Initialize Telescope')
@@ -931,14 +934,15 @@ class MCEThread(QtCore.QThread):
 class Tel_Thread(QtCore.QThread):
     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
 
-    def __init__(self, tel_script, off, sec, map_size, map_angle, coord, epoch, object, map_len, num_scans, parent = None):
+    def __init__(self, tel_script, off, sec, map_size, map_angle, coord1, coord2, epoch, object, map_len, num_scans, parent = None):
         QtCore.QThread.__init__(self, parent)
         self.off = off
         self.tel_script = tel_script
         self.sec = sec
         self.map_size = map_size
         self.map_angle = map_angle
-        self.coord = coord
+        self.coord1 = coord1
+        self.coord2 = coord2
         self.epoch = epoch
         self.object = object
         self.map_len = map_len
@@ -951,11 +955,11 @@ class Tel_Thread(QtCore.QThread):
         if self.off == False :
             data, queue = mp.Pipe()
             data2, queue2 = mp.Pipe()
-            p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue,queue2,self.sec,self.map_size,self.map_angle,self.coord,self.epoch,self.object,self.map_len,self.num_scans)
+            p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue,queue2,self.sec,self.map_size,self.map_angle,self.coord1,self.coord2,self.epoch,self.object,self.map_len,self.num_scans))
             p.start()
             counter = 0
             num_sent = 0
-            num_loop = int(float(self.map_len) // 0.46 + (float(self.map_len) % 0.46 > 0))
+            num_loop = int(float(self.map_len) // (0.43/60.0) + (float(self.map_len) % (0.43/60.0) > 0))
 
             while True :
                 # grab data from tel_tracker.py
@@ -977,7 +981,7 @@ class Tel_Thread(QtCore.QThread):
                     if num_sent == num_loop :
                         print(colored('Telescope Scan Completed!','green'))
                         # telescope exit is set by scanning script
-                        ''' generate analysis scripts once it's shutdown '''
+                        ''' generate analysis scripts once its shutdown '''
 
                 else :
                     time.sleep(2.0) # gives client/server time to shutdown before thread is closed
