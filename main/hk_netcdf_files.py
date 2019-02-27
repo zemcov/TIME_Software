@@ -6,8 +6,8 @@ import numpy as np
 from termcolor import colored
 import utils as ut
 
-tempfiledir = '/data/netcdffiles'
-
+# tempfiledir = '/data/netcdffiles'
+tempfiledir = '/Users/vlb9398/Desktop'
 def new_file(filestarttime):
     hk = nc.Dataset(tempfiledir + "/raw_hk_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 

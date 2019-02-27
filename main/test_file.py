@@ -1,37 +1,33 @@
-import mce_data_jon
-import os
+import time as t
+import gzip, os, sys, subprocess
+import datetime as dt
+from termcolor import colored
 import numpy as np
+import utils as ut
+import hk_netcdf_files as hnc
 
-os.path.join('/home/time/Desktop/')
+times = np.linspace(0,0,1000)
+names = np.linspace(1,1,1000)
+data = np.linspace(2,2,1000)
+hk_data = np.array((times,names,data))
+mega_hk = []
+time_tuple = [0.0,0.0]
 
-file = '/home/time/Desktop/temp'
-f = mce_data_jon.MCEFile(file)
-h = f.Read(row_col=True, unfilter='DC', all_headers=True)
+for i in range(20) :
+    mega_hk.append(hk_data)
 
-# keys = []
-# values = []
-# frame_num = []
-# print(len(h.headers))
-# for i in range(len(h.headers)):
-#     for key,value in h.headers[i].items():
-#         # if key == 'sync_box_num' :
-#         #     frame_num.append(value)
-#         print(key)
+hk = np.zeros((100,3,1000))
+mega_hk = np.array(mega_hk)
 
-# hk = np.load('/home/time/Desktop/hk_data.npy') # this contains hk time
-# hk_data = np.load('/home/time/Desktop/final_hk.npy')
-# utc_time = np.load('/home/time/Desktop/utc.npy') # this is from mce
-#
-# ''' Currently, the mce data is ahead of the housekeeping data by quite a lot. Like 3 files.'''
-#
-# def test_hk():
-#     for i in range(len(utc_time)) :
-#         for j in range(len(hk[0])):
-#             for k in range(len(hk[0][0])) :
-#                 if hk[j][0][k] != 0.0 :
-#                     if hk[j][0][k] == utc_time[i] :
-#                         hk_data[i] = hk[j,:,:]
-#                     print(hk[j][0][k],utc_time[i])
-#
-# if __name__ == '__main__':
-#     test_hk()
+j = 0
+for i in range(len(mega_hk)):
+    if i % 2 == 0 :
+        hk[i,:,:] = mega_hk[j,:,:]
+    j += 1
+
+filestarttime = dt.datetime.utcnow()
+filestarttime = filestarttime.isoformat()
+netcdfdir = '/Users/vlb9398/Desktop'
+ncfile = netcdfdir + "/raw_hk_%s.nc" %(filestarttime)
+hk = hnc.new_file(filestarttime)
+hnc.data_append(ncfile, 0, hk_data, time_tuple)
