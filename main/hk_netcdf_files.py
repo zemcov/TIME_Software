@@ -7,7 +7,7 @@ from termcolor import colored
 import utils as ut
 
 # tempfiledir = '/data/netcdffiles'
-tempfiledir = '/Users/vlb9398/Desktop'
+tempfiledir = '/home/time/Desktop'
 def new_file(filestarttime):
     hk = nc.Dataset(tempfiledir + "/raw_hk_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
@@ -16,7 +16,8 @@ def new_file(filestarttime):
     hk.createDimension('t',None)
     hk.createDimension('hk_col',3)
     hk.createDimension('hk_row',1000)
-    hk.createDimension('hk_num', int(ut.german_freq))
+    # hk.createDimension('hk_num', int(ut.german_freq))
+    hk.createDimension('hk_num', 100)
     hk.createDimension('tuple',2)
 
     # creating variables --------------------------------------------------------------------------------
