@@ -1,6 +1,7 @@
 import socket, struct, subprocess, os, sys
 import time
 import numpy as np
+import utils as ut
 
 def start_tracker(queue):
     PORT = 8888
@@ -17,19 +18,21 @@ def start_tracker(queue):
         if len(data) !=0 :
             # print('Data Received')
             # unpacking data packet ===============================================
-            blanking, direction, observing, pad, ut, lst, deltaT, cur_ra, cur_dec,\
+            blanking, direction, observing, pad, utc, lst, deltaT, cur_ra, cur_dec,\
             map_ra, map_dec, ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact,\
             elvelact, pa = unpacker.unpack(data)
             # print('ut:',ut)
             # ==================================================================
             n += 1
             tel_data = np.array([int(blanking), int(direction), float(observing), float(pad), \
-            ut, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
+            utc, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
             ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
             pa])
+            # print('RA/DEC : %s %s' %(map_ra,map_dec))
+            # sys.stdout.flush()
             np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet%i.npy' %(n), tel_data)
             # send positional data to gui window
-            queue.send([pa,int(direction),el,az,map_ra,map_dec,ut])
+            queue.send([pa,int(direction),el,az,map_ra,map_dec,utc])
         else :
             print('waiting for data')
 

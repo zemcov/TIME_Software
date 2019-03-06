@@ -25,7 +25,7 @@ def netcdfdata(queue2):
             head,h,frame_num = readdata(mce_file_name)
             queue2.send([h,head,frame_num])
             a += 1
-            subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
+            # subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
         else :
             pass
 

@@ -6,18 +6,16 @@ import numpy as np
 from termcolor import colored
 import utils as ut
 
-# tempfiledir = '/data/netcdffiles'
-tempfiledir = '/home/time/Desktop'
-def new_file(filestarttime):
-    hk = nc.Dataset(tempfiledir + "/raw_hk_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
+def new_file(filestarttime,dir):
+    print(colored(('DIR:',dir),'yellow'))
+    hk = nc.Dataset(dir + "/raw_hk_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # Dimensions for Data Arrays -------------------------------------------------------------------
     # hk.createDimension('mode',2)
     hk.createDimension('t',None)
     hk.createDimension('hk_col',3)
     hk.createDimension('hk_row',1000)
-    # hk.createDimension('hk_num', int(ut.german_freq))
-    hk.createDimension('hk_num', 100)
+    hk.createDimension('hk_num', int(ut.german_freq))
     hk.createDimension('tuple',2)
 
     # creating variables --------------------------------------------------------------------------------
@@ -28,10 +26,10 @@ def new_file(filestarttime):
     # =========================================================================
     hk.close()
 
-def data_append(nc_file, p, hk, time):
+def data_append(nc_file, p, data, time):
     if os.path.exists(nc_file):
         hk = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-        HK_Data[p,:,:,:] = hk
+        HK_Data[p,:,:,:] = data
         Time[p,:] = time
         hk.close()
     else :

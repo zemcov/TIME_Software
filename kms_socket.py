@@ -7,7 +7,7 @@ import time as othertime
 import numpy as np
 
 def start_tracker(queue):
-    PORT = 8000
+    PORT = 8500
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))
     print('Server Listening')

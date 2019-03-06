@@ -21,7 +21,7 @@ class HK_Reader :
             if len(files) != 0 :
                 hk_file = min(files, key = os.path.getctime) # grab the oldest of the unparsed files
                 a = int(hk_file.replace(self.dir,'').replace('omnilog.','').replace('.txt.gz',''))
-                print colored('HK starting file = %i' %(a),'green')
+                print(colored('HK starting file = %i' %(a),'green'))
                 break
             else :
                 continue

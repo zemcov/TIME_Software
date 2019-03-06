@@ -6,10 +6,9 @@ import numpy as np
 from termcolor import colored
 import utils as ut
 
-tempfiledir = '/data/netcdffiles'
-
-def new_file(h_size, filestarttime):
-    mce = nc.Dataset(tempfiledir + "/raw_mce_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
+def new_file(filestarttime,dir):
+    print(colored(('DIR:',dir),'yellow'))
+    mce = nc.Dataset(dir + "/raw_mce_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
      # GUI PARAMETERS ---------------------------------------------------------------------------------
     mce.createDimension('det',1)
@@ -20,8 +19,8 @@ def new_file(h_size, filestarttime):
     mce.createDimension('r',1)
     mce.createDimension('t',None)
     # Dimensions for Data Arrays -------------------------------------------------------------------
-    mce.createDimension('raw_rows',h_size[0])
-    mce.createDimension('raw_cols',h_size[1])
+    mce.createDimension('raw_rows',33)
+    mce.createDimension('raw_cols',32)
     mce.createDimension('raw_num', int(ut.german_freq))
     mce.createDimension('k',1)
     mce.createDimension('v',1700)
@@ -32,7 +31,7 @@ def new_file(h_size, filestarttime):
     mce.createDimension('sf',5)
     mce.createDimension('tel_pos',20)
     mce.createDimension('kms_pos',4)
-    mce.createDimension('sock_rate',10)
+    mce.createDimension('sock_rate',20)
 
     # creating variables --------------------------------------------------------------------------------
     Observer = mce.createVariable("observer","S1",("obs",),zlib=True)
@@ -65,12 +64,12 @@ def new_file(h_size, filestarttime):
 
     # TELESCOPE Data ==============================================================
     global Tel
-    Tel = mce.createVariable('tel','f8',('sock_rate','tel_pos'),zlib=True)
+    Tel = mce.createVariable('tel','f8',('t','sock_rate','tel_pos'),zlib=True)
     # ================================================================================
 
     # KMS Data ======================================================================
     global KMS
-    KMS = mce.createVariable('kms','f8',('sock_rate','kms_pos'),zlib=True)
+    KMS = mce.createVariable('kms','f8',('t','sock_rate','kms_pos'),zlib=True)
     # ================================================================================
 
     global Status_Flags
@@ -92,17 +91,22 @@ def new_file(h_size, filestarttime):
     parafile.close()
     mce.close()
 
-def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, tele, kms):
+def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data):
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         Time[p,:] = times
         Status_Flags[p,:,:] = flags
-        MCE0_Raw_Data_All[p,:,:,:] = mce0_data
-        MCE1_Raw_Data_All[p,:,:,:] = mce1_data
-        MCE0_Header[p,:,:] = head1
-        MCE1_Header[p,:,:] = head2
-        Tel[p,:,:] = tele
-        KMS[p,:,:] = kms
+
+        if ut.which_mce[0] == 1 :
+            MCE0_Raw_Data_All[p,:,:,:] = mce0_data
+            MCE0_Header[p,:,:] = head1
+
+        if ut.which_mce[1] == 1 :
+            MCE1_Raw_Data_All[p,:,:,:] = mce1_data
+            MCE1_Header[p,:,:] = head2
+
+        # Tel[p,:,:] = tele
+        # KMS[p,:,:] = kms
         mce.close()
     else :
         print(colored("Could find NETCDF File!", 'red'))

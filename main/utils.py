@@ -11,11 +11,14 @@ frameperfile = 0
 offset = 0
 german_freq = 100.0 # units in Hz
 utc_time = []
+which_mce = [1,1] # [0] = mce0 , [1] = mce1
+new_dir = ''
 
 def timing(t,s):
     b = t - (s / german_freq)
     offset = b
     return offset
+
 # warning: if software is run for more than 500 days, then sync value will reset to 0
 
 def sync_to_utc(s):

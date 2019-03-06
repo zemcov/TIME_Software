@@ -3,20 +3,28 @@
 import socket, struct, subprocess, os, sys
 import time
 import numpy as np
+import multiprocessing as mp
+import tel_tracker
+import utils as ut
+from termcolor import colored
 
 class TIME_TELE :
 
-    def start_sock(self,queue,queue2,sec,map_size,map_angle,coord1,coord2,epoch,object,map_len,num_scans):
+    def start_sock(self,queue,scan_time,sec,map_size,map_angle,coord1,coord2,epoch,object,map_len,num_scans):
         # I am accepting telescope sim data for the gui
         PORT = 1806
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(('',6666))
         self.s.connect(('192.168.1.252',PORT))
         print('Socket Connected')
+        commands = '{} {} {} {}'
+        print(colored(commands.format(coord1,coord2,epoch,object),'yellow'))
+
     # =================================================================================================================
-        cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
-                        'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD RA','TIME_SEEK ' + str(coord1) + ' ' + str(coord2)\
-                        + ' ' + str(epoch) + ' ' + str(object)]
+        # cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
+        #                 'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD RA','TIME_SEEK ' + commands.format(coord1,coord2,epoch,object)]
+        cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE_EXTRA 1.1','TIME_MAP_SIZE ' + str(map_size),\
+                        'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD RA','TIME_SEEK ' + commands.format(coord1,coord2,epoch,object)]
         i = 0
         while i <= (len(cmnd_list) - 1):
             self.s.send(cmnd_list[i])
@@ -35,57 +43,52 @@ class TIME_TELE :
                 else :
                     print('ERROR reply')
 
-        self.pos_update(queue2,sec,map_size,map_angle,coord1,coord2,epoch,object,map_len,num_scans)
+        self.pos_update()
+
+        time.sleep(int(scan_time))
+
+        msg = 'TIME_START_TRACKING off'
+        self.s.send(msg)
+        reply = self.s.recv(1024).decode("ascii")
+        print(reply)
+        if 'OK' in reply :
+            ut.tel_exit.set()
 
         self.s.send('TIME_START_TELEMETRY OFF')
         print('Telemetry Off')
         reply = self.s.recv(1024).decode("ascii")
         print(reply)
+
         print("Telescope Socket Closed")
         self.s.close()
         sys.exit()
 
-    def pos_update(self,queue2,sec,map_size,map_angle,coord1,coord2,epoch,object,map_len,num_scans):
-        ''' starting position depends heavily on whether or not center position of telescope
-            is center of time pixel array. Current code moves center of beam array to each end
-            of the map length, so only half of array so stick out on each end.'''
+    def pos_update(self):
+
         # ---------------------------------------------------------------
         msg = 'TIME_START_TRACKING arm'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
-            continue
+            print(reply)
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING neg'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
-            continue
+            print(reply)
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING track'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
-            continue
+            print(reply)
         # ---------------------------------------------------------------
         msg = 'TIME_START_OBSERVING on'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
-            continue
-        # -----------------------------------------------------------------
-        while not ut.tel_exit.set(): # check if gui recieved the move flag from tel
-            done = queue2.recv()
-            if done == 'increment' :
-                i += 1
-                if i == num_scans : # wait to stop scanning until number of scans is done
-                    # ---------------------------------------------------------------
-                    msg = 'TIME_START_TRACKING off'
-                    self.s.send(msg)
-                    reply = self.s.recv(1024).decode("ascii")
-                    if 'OK' in reply :
-                        ut.tel_exit.set()
-            else :
-                pass
+            print(reply)
+        # # -----------------------------------------------------------------
 
         return

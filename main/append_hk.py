@@ -1,6 +1,6 @@
 import numpy as np
 from os import stat
-import os, sys, mce_data, subprocess
+import os, sys, mce_data, subprocess, errno
 import netcdf_files as nc
 import hk_netcdf_files as hnc
 import datetime as dt
@@ -28,20 +28,20 @@ class Time_Files:
         self.p3 = mp.Process(target=read_hk.HK_Reader().loop_files , args=(queue3,))
         self.p3.start()
 
-    def retrieve(self):
+    def retrieve(self,dir):
         while not ut.mce_exit.is_set():
             data3 = self.data3.recv() # n * (3,1000)
             self.hk = np.array(data3[0])
             self.offset = data3[1]
             self.time_tuple = data3[2]
-            length = len(self.hk)
-            self.hk = self.hk.reshape(length,3,1000)
+            # length = len(self.hk)
+            # self.hk = self.hk.reshape(length,3,1000)
 
             if self.offset != 0 :
                 print(colored(self.hk.shape,'red'))
-                self.parse_arrays()
+                self.parse_arrays(dir)
                 print(self.hk_data.shape)
-                self.append_hk_data()
+                self.append_hk_data(dir)
 
             else :
                 print(colored('data append skipped!','red'))
@@ -50,7 +50,7 @@ class Time_Files:
         self.p3.close()
         sys.exit()
 
-    def parse_arrays(self):
+    def parse_arrays(self,dir):
         self.i = 0
         self.j = 0
 
@@ -64,7 +64,7 @@ class Time_Files:
                         self.new_time_stamp = data
                         self.start_time_stamp = data
                         # print('1',int(self.start_time_stamp),int(self.new_time_stamp))
-                        self.hk_data[0,:,:] = self.hk[0,:,:] # take first file and put them in first position
+                        self.hk_data[0,:,:] = self.hk[0][:][:] # take first file and put them in first position
                         self.k += 1
                         self.i += 1
                         self.j = 0
@@ -78,7 +78,7 @@ class Time_Files:
                         if index >= 100 :
                             print(colored(('index > 200',index),'red'))
                             print(self.hk_data.shape)
-                            self.append_hk_data() # stick the current data array in netcdf
+                            self.append_hk_data(dir) # stick the current data array in netcdf
                             new_index = (index+100//2)//100 # how many empty filler files do we need?
                             print(colored(('num of files :',new_index),'red'))
 
@@ -88,11 +88,11 @@ class Time_Files:
                                 for i in range(new_index) :
                                     self.hk_data = np.zeros((int(ut.german_freq),self.hk.shape[1],self.hk.shape[2]))
                                     print(self.hk_data.shape)
-                                    self.append_hk_data() # stick empty data into netcdf
+                                    self.append_hk_data(dir) # stick empty data into netcdf
                                 # find the remainder
                                 new_index = index % 100
                                 # append to last empty array + whatever the index of the remainder was
-                                self.hk_data[new_index,:,:] = self.hk[self.i,:,:]
+                                self.hk_data[new_index,:,:] = self.hk[self.i][:][:]
                                 self.j = 0
                                 self.i += 1
                                 self.start_time_stamp = data # reset the time for the current placeholder
@@ -103,7 +103,7 @@ class Time_Files:
                                 # print('5',int(self.start_time_stamp),int(self.new_time_stamp),index)
                                 self.hk_data = np.zeros((int(ut.german_freq),self.hk.shape[1],self.hk.shape[2])) # make a new array
                                 new_index = index % 100
-                                self.hk_data[new_index,:,:] = self.hk[self.i,:,:]
+                                self.hk_data[new_index,:,:] = self.hk[self.i][:][:]
                                 self.j = 0
                                 self.i += 1
                                 self.start_time_stamp = data # reset the time for the current placeholder
@@ -112,7 +112,7 @@ class Time_Files:
 
                         else : # if not, put it in correct place in array
                             # print('7',int(self.start_time_stamp),int(self.new_time_stamp),index)
-                            self.hk_data[index,:,:] = self.hk[self.i,:,:]
+                            self.hk_data[index,:,:] = self.hk[self.i][:][:]
                             self.j = 0
                             self.i += 1
                             break
@@ -124,14 +124,14 @@ class Time_Files:
         return
 
 # ============================================================================================================================
-    def append_hk_data(self):
-        netcdfdir = '/data/netcdffiles'
+    def append_hk_data(self,dir):
+
         if self.b == 0: # if it's the first file, make a new netcdf file
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()
             print(colored('------------ New HK File -------------','green'))
-            hk = hnc.new_file(self.filestarttime)
-            self.ncfile = netcdfdir + "/raw_hk_%s.nc" %(self.filestarttime)
+            hk = hnc.new_file(self.filestarttime,dir)
+            self.ncfile = dir + "/raw_hk_%s.nc" %(self.filestarttime)
 
             hnc.data_append(self.ncfile, self.b, self.hk_data, self.time_tuple)
             self.b = 1
@@ -142,8 +142,8 @@ class Time_Files:
             print(colored('----------- New HK File ------------','green'))
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()
-            hk = hnc.new_file(self.filestarttime)
-            self.ncfile = netcdfdir + "/raw_hk_%s.nc" %(self.filestarttime)
+            hk = hnc.new_file(self.filestarttime,dir)
+            self.ncfile = dir + "/raw_hk_%s.nc" %(self.filestarttime)
 
             hnc.data_append(self.ncfile, self.b, self.hk_data, self.time_tuple)
 

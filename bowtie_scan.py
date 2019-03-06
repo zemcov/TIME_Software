@@ -4,6 +4,8 @@
 import socket, struct, subprocess, os, sys
 import time
 import numpy as np
+import multiprocessing as mp
+import tel_tracker
 
 class TIME_TELE :
 
@@ -56,25 +58,25 @@ class TIME_TELE :
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
-            continue
+            print('ok')
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING neg'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
-            continue
+            print('ok')
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING track'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
-            continue
+            print('ok')
         # ---------------------------------------------------------------
         msg = 'TIME_START_OBSERVING on'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
-            continue
+            print('ok')
         # -----------------------------------------------------------------
         while not ut.tel_exit.set(): # check if gui recieved the move flag from tel
             done = queue2.recv()
@@ -85,7 +87,7 @@ class TIME_TELE :
                 self.s.send(msg)
                 reply = self.s.recv(1024).decode("ascii")
                 if 'OK' in reply :
-                    continue
+                    print('ok')
                 if i == num_scans : # wait to stop scanning until number of scans is done
                     ut.tel_exit.set()
             else :
