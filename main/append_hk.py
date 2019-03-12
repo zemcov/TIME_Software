@@ -13,38 +13,38 @@ import read_hk
 
 class Time_Files:
 
-    def __init__(self):
+    def __init__(self,offset):
         self.b = 0
         self.start_time_stamp = 0
         self.new_time_stamp = 0
-        self.offset = 0
         self.k = 0
         self.i = 0
         self.j = 0
         self.time_tuple = []
         self.hk_data = np.zeros((int(ut.german_freq),3,1000))
+        self.offset = offset
 
         self.data3, queue3 = mp.Pipe()
-        self.p3 = mp.Process(target=read_hk.HK_Reader().loop_files , args=(queue3,))
+        self.p3 = mp.Process(target=read_hk.HK_Reader(offset = self.offset).loop_files , args=(queue3,))
         self.p3.start()
 
     def retrieve(self,dir):
+        # os.nice(-20)
         while not ut.mce_exit.is_set():
             data3 = self.data3.recv() # n * (3,1000)
             self.hk = np.array(data3[0])
-            self.offset = data3[1]
-            self.time_tuple = data3[2]
+            self.time_tuple = data3[1]
             # length = len(self.hk)
             # self.hk = self.hk.reshape(length,3,1000)
 
-            if self.offset != 0 :
-                print(colored(self.hk.shape,'red'))
-                self.parse_arrays(dir)
-                print(self.hk_data.shape)
-                self.append_hk_data(dir)
-
-            else :
-                print(colored('data append skipped!','red'))
+            # if self.offset != 0 :
+            #     self.parse_arrays(dir)
+            #     self.append_hk_data(dir)
+            #     print(colored(('HK Append',self.b),'red'))
+            #
+            # else :
+            #     print(colored('data append skipped!','red'))
+            time.sleep(0.01)
 
         self.p3.join()
         self.p3.close()
@@ -78,7 +78,7 @@ class Time_Files:
                         if index >= 100 :
                             print(colored(('index > 200',index),'red'))
                             print(self.hk_data.shape)
-                            self.append_hk_data(dir) # stick the current data array in netcdf
+                            # self.append_hk_data(dir) # stick the current data array in netcdf
                             new_index = (index+100//2)//100 # how many empty filler files do we need?
                             print(colored(('num of files :',new_index),'red'))
 
@@ -87,8 +87,7 @@ class Time_Files:
                                 # create a bunch of empty arrays
                                 for i in range(new_index) :
                                     self.hk_data = np.zeros((int(ut.german_freq),self.hk.shape[1],self.hk.shape[2]))
-                                    print(self.hk_data.shape)
-                                    self.append_hk_data(dir) # stick empty data into netcdf
+                                    # self.append_hk_data(dir) # stick empty data into netcdf
                                 # find the remainder
                                 new_index = index % 100
                                 # append to last empty array + whatever the index of the remainder was
@@ -137,7 +136,7 @@ class Time_Files:
             self.b = 1
 
         # elif os.stat(netcdfdir + "/raw_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
-        elif self.b % 100 == 0 :
+        elif self.b % 200 == 0 :
             # if it's a full file, make a new netcdf file
             print(colored('----------- New HK File ------------','green'))
             self.filestarttime = dt.datetime.utcnow()

@@ -7,11 +7,9 @@ from termcolor import colored
 import utils as ut
 
 def new_file(filestarttime,dir):
-    print(colored(('DIR:',dir),'yellow'))
     hk = nc.Dataset(dir + "/raw_hk_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # Dimensions for Data Arrays -------------------------------------------------------------------
-    # hk.createDimension('mode',2)
     hk.createDimension('t',None)
     hk.createDimension('hk_col',3)
     hk.createDimension('hk_row',1000)

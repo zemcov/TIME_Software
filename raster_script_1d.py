@@ -19,6 +19,12 @@ class TIME_TELE :
         print('Socket Connected')
         commands = '{} {} {} {}'
         print(colored(commands.format(coord1,coord2,epoch,object),'yellow'))
+        self.s.send('TIME_START_TELEMETRY on')
+        reply = self.s.recv(1024).decode("ascii")
+        print(reply)
+        p = mp.Process(target=tel_tracker.start_tracker, args=(queue,))
+        p.start()
+        sys.exit()
 
     # =================================================================================================================
         # cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\

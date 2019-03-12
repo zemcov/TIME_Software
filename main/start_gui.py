@@ -19,6 +19,8 @@ class mcegui(QtGui.QWidget):
         self.init_mce()
         self.init_ui()
         self.qt_connections()
+        self.flags = mp.Array('i',ut.flags,lock=True)
+        self.offset = mp.Value('d',ut.offset,lock=True)
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
@@ -30,8 +32,8 @@ class mcegui(QtGui.QWidget):
         self.frameperfile = 100
         self.totaltimeinterval = 120
         self.currentchannel = 1
-        self.row = 1
-        self.oldch = 1
+        self.row = 0
+        self.oldch = 0
         self.graphdata1 = []
         self.z1 = 0
         self.n_interval = 0
@@ -85,11 +87,10 @@ class mcegui(QtGui.QWidget):
         subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
-        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
-        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
+        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
-        subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_packet_off1'], shell=True)
-        subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_packet_off2'], shell=True)
+        subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_*'], shell=True)
 
         print('Quitting Application')
         sys.exit()
@@ -142,22 +143,20 @@ class mcegui(QtGui.QWidget):
 
         # which mces are active --------------------------
         self.mceson = self.whichmces.currentText()
-        if self.mceson == 'MCE1':
+        if self.mceson == 'MCE0':
             ut.which_mce[0] = 1
             ut.which_mce[1] = 0
-        elif self.mceson == 'MCE2':
+        elif self.mceson == 'MCE1':
             ut.which_mce[0] = 0
             ut.which_mce[1] = 1
         else :
             ut.which_mce[0] = 1
             ut.which_mce[1] = 1
 
-        print(colored(('Which MCES',ut.which_mce),'green'))
-
         # data mode --------------------------------------
         self.datamode = self.enterdatamode.currentText()
-        mce_states = ['Error', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)']
-        mce_states2 = [0,12,2,11,10,7,5,4]
+        mce_states = ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)']
+        mce_states2 = [0,1,12,2,11,10,7,5,4]
         for state in mce_states :
             if self.datamode == state :
                 self.datamode = mce_states2[mce_states.index(state)]
@@ -199,7 +198,7 @@ class mcegui(QtGui.QWidget):
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
-            dir = 'Desktop/Gui_Code/TIME_Software/main'
+            dir = '/home/time/time-software-testing/TIME_Software/main/'
             if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
                 parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
                 parafile.write(self.observer+' ')
@@ -227,6 +226,7 @@ class mcegui(QtGui.QWidget):
                 subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
             if mce1 != 0 :
                 subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
+            subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_*'], shell = True)
 
             #set the data mode for both mces and start them running
             if self.readoutcard == 'All':
@@ -258,8 +258,10 @@ class mcegui(QtGui.QWidget):
                 subprocess.Popen(['ssh -T time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
             time.sleep(2.0)
 
+            data = np.zeros((33,32))
             #start other plot making processes
             self.initplot()
+            self.initheatmap(data,data) # give first values for heatmap to create image scale
             self.initfftgraph()
             self.inittelescope()
             # self.initkmirrordata()
@@ -275,15 +277,15 @@ class mcegui(QtGui.QWidget):
         self.enterobserver.setMaxLength(3)
         self.enterdatamode = QtGui.QComboBox()
         self.enterdatamode.addItems(
-            ['Error', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
+            ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
         self.whichmces = QtGui.QComboBox()
-        self.whichmces.addItems(['MCE1','MCE2','Both'])
+        self.whichmces.addItems(['MCE0','MCE1','Both'])
         self.enterreadoutcard = QtGui.QComboBox()
         for i in range(8):
             if i < 4:
-                self.enterreadoutcard.addItem('MCE 1 RC %s' % (i % 4 + 1))
+                self.enterreadoutcard.addItem('MCE 0 RC %s' % (i % 4 + 1))
             else:
-                self.enterreadoutcard.addItem('MCE 2 RC %s' % (i % 4 + 1))
+                self.enterreadoutcard.addItem('MCE 1 RC %s' % (i % 4 + 1))
         self.enterreadoutcard.addItem('All')
         self.enterframenumber = QtGui.QLineEdit('1350000')
         self.enterframenumber.setMaxLength(9)
@@ -457,39 +459,17 @@ class mcegui(QtGui.QWidget):
         # self.oldmcegraph.addItem(self.oldmcegraphdata2)
 
         # connecting thread functions
-        self.updater = MCEThread(netcdfdir = self.netcdfdir)
+        self.updater = MCEThread(offset = self.offset, flags = self.flags, netcdfdir = self.netcdfdir)
         self.updater.new_data.connect(self.updateplot)
         self.updater.start()
 
     def initheatmap(self,h1,h2) :
 
         if ut.which_mce[0] == 1 :
-
-            z1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
-            for b in range(h1.shape[0]):
-                for c in range(h1.shape[1]):
-                    z1[b][c] = (np.std(h1[b,c,:],dtype=np.float32))
-
-            d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
-            for b in range(h1.shape[0]):
-                for c in range(h1.shape[1]):
-                    d1[b][c] = (np.mean(h1[b,c,:],dtype=np.float32))
-
-            self.roll_avg_1 = d1
+            self.roll_avg_1 = h1
 
         if ut.which_mce[1] == 1 :
-            z2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
-            for b in range(h2.shape[0]):
-                for c in range(h2.shape[1]):
-                    z2[b][c] = (np.std(h2[b,c,:],dtype=np.float32))
-
-
-            d2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
-            for b in range(h2.shape[0]):
-                for c in range(h2.shape[1]):
-                    d2[b][c] = (np.mean(h2[b,c,:],dtype=np.float32))
-
-            self.roll_avg_2 = d2
+            self.roll_avg_2 = h2
 
         # heatmap for first MCE ===================================================================================
         self.heatmapplot1 = pg.PlotItem()
@@ -502,11 +482,7 @@ class mcegui(QtGui.QWidget):
         self.heatmap1.autoLevels()
 
         if ut.which_mce[0] == 1 :
-            self.heatmap1.setImage(z1)
-            # #changes levels for heatmap to create gradient
-            # self.avggrad1 = int(np.average(z1))
-            # self.stddevgrad1 = int(np.std(z1))
-            # self.heatmap1.setLevels(self.avggrad1 - (3 * self.stddevgrad1), self.avggrad1 + (3 * self.stddevgrad1))
+            self.heatmap1.setImage(h1)
         # =========================================================================================================
 
         # heatmap for second MCE ==================================================================================
@@ -520,12 +496,7 @@ class mcegui(QtGui.QWidget):
         self.heatmap2.autoLevels()
 
         if ut.which_mce[1] == 1 :
-            self.heatmap2.setImage(z2)
-
-            #changes levels for heatmap to create gradient
-            # self.avggrad2 = int(np.average(z2))
-            # self.stddevgrad2 = int(np.std(z2))
-            # self.heatmap2.setLevels(self.avggrad2 - (3 * self.stddevgrad2), self.avggrad2 + (3 * self.stddevgrad2))
+            self.heatmap2.setImage(h2)
         # ===========================================================================================================
 
         # first set image is same as heatmap because we need 2 updates of data to take an average
@@ -541,12 +512,7 @@ class mcegui(QtGui.QWidget):
         self.heatmap3.autoLevels()
 
         if ut.which_mce[0] == 1 :
-            self.heatmap3.setImage(z1)
-
-            #changes levels for heatmap to create gradient
-            # self.avggrad3 = int(np.average(z1))
-            # self.stddevgrad3 = int(np.std(z1))
-            # self.heatmap3.setLevels(self.avggrad3 - (3 * self.stddevgrad3), self.avggrad3 + (3 * self.stddevgrad3))
+            self.heatmap3.setImage(h1)
         # ===========================================================================================================
 
         # heatmap for Raw Data MCE1 ==================================================================================
@@ -560,12 +526,7 @@ class mcegui(QtGui.QWidget):
         self.heatmap4.autoLevels()
 
         if ut.which_mce[1] == 1 :
-            self.heatmap4.setImage(z2)
-
-            #changes levels for heatmap to create gradient
-            # self.avggrad4 = int(np.average(z2))
-            # self.stddevgrad4 = int(np.std(z2))
-            # self.heatmap4.setLevels(self.avggrad4 - (3 * self.stddevgrad4), self.avggrad4 + (3 * self.stddevgrad4))
+            self.heatmap4.setImage(h2)
         # ===========================================================================================================
 
         # create new window for hk and fft data
@@ -647,7 +608,7 @@ class mcegui(QtGui.QWidget):
     def inittelescope(self):
 
         # start the telescope QThread
-        self.tel_updater = Tel_Thread(scan_time = self.scan_time, tel_script = self.tel_script, off = self.off, sec = self.sec, map_size = self.map_size,\
+        self.tel_updater = Tel_Thread(flags = self.flags, scan_time = self.scan_time, tel_script = self.tel_script, off = self.off, sec = self.sec, map_size = self.map_size,\
                                         map_angle = self.map_angle, coord1 = self.coord1, coord2 = self.coord2, epoch = self.epoch,\
                                             object = self.object, map_len = self.map_len, num_scans = self.num_scans)
         self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
@@ -699,6 +660,11 @@ class mcegui(QtGui.QWidget):
 
         self.repeat = False
 
+        self.alt = [0]
+        self.az = [0]
+        self.ra = [0]
+        self.dec = [0]
+
     def updatekmirrordata(self,pa,status,time,enc):
 
         # error checking based on status flags from kmirror
@@ -747,7 +713,6 @@ class mcegui(QtGui.QWidget):
         tel_error = [10,11,12]
 
         if (slew in tel_error) and (self.repeat == False) :
-            print(colored("telescope if",'red'))
             # use afplay for mac testing
             os.system("mpg123 /home/time/time-software-testing/TIME_Software/main/klaxon.mp3")
             self.repeat = True
@@ -770,22 +735,31 @@ class mcegui(QtGui.QWidget):
             altazcolor = pg.mkBrush('b')
             radeccolor = pg.mkBrush('r')
 
-            az = [float(az)]
-            alt = [float(alt)]
-            ra = [float(ra)]
-            dec = [float(dec)]
+            if len(self.az) < 800 :
+                self.az.append(float(az))
+                self.alt.append(float(alt))
+                self.ra.append(float(ra))
+                self.dec.append(float(dec))
+            else :
+                self.az.pop(0)
+                self.az.append(float(az))
+                self.alt.pop(0)
+                self.alt.append(float(alt))
+                self.ra.pop(0)
+                self.ra.append(float(ra))
+                self.dec.pop(0)
+                self.dec.append(float(dec))
 
-            # if (self.index - 1) == 0 : # if it's the first data set, set data
-            #     self.altazgraphdata.setData(x=[float(i) for i in az], y=[float(i) for i in alt], brush=altazcolor)
-            #     self.radecgraphdata.setData(x=[float(i) for i in ra], y=[float(i) for i in dec], brush=radeccolor)
-            # else : # if it's not the first update, don't remove existing points, but add more to graph
-            self.altazgraphdata.addPoints(x=az, y=alt, brush=altazcolor)
-            self.radecgraphdata.addPoints(x=ra, y=dec, brush=radeccolor)
+            self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
+            self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
+
+            # self.altazgraphdata.addPoints(x=az, y=alt, brush=altazcolor)
+            # self.radecgraphdata.addPoints(x=ra, y=dec, brush=radeccolor)
 
     def updateplot(self,h1,h2,index):
 
-        self.currentchannel = 2
-        self.row = 14
+        # self.currentchannel = 2
+        # self.row = 14
 
 
         self.index = index
@@ -803,14 +777,8 @@ class mcegui(QtGui.QWidget):
             self.y2 = y2
 
         #creates x values for current time interval and colors points based on current channel ===
-        x = []
-        ''' Need a way to make end of time array be the actual amount of time it
-            took to create that file '''
         self.endtime = datetime.datetime.utcnow()
         self.timetaken = self.endtime - self.starttime
-        print(colored('Time taken: %s' % (self.timetaken.total_seconds()),'green'))
-        print(colored('Index: %s' % (self.index),'green'))
-        print(colored('Frameperfile: %s' % (self.frameperfile),'green'))
 
         x = np.linspace(self.index,self.index + 1,self.frameperfile)
         self.x = x
@@ -824,25 +792,15 @@ class mcegui(QtGui.QWidget):
         self.pointcolor.extend([pg.mkBrush(symbols[i]) for j in range(self.frameperfile)])
         # =================================================================================================================
         # changes symbols for viewing different RC cards on same plot =====================
-        syms = ['d','o','s','t']
-        for i in range(4):
-            if self.currentreadoutcard == i :
-                self.pointsymbol.extend([syms[i] for j in range(self.frameperfile)])
+        syms = ['d','o','s','t','d','o','s','t']
+        i = self.row // 4
+        self.pointsymbol.extend([syms[i] for j in range(self.frameperfile)])
         #============================================================================================================
 
         #creates graphdata item on first update
         if self.index == 0:
 
             self.mcegraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
-
-            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
-                self.initheatmap(h1,h2) # give first values for heatmap to create image scale
-            elif ut.which_mce[0] == 1 :
-                dummy = []
-                self.initheatmap(h1,dummy)
-            else :
-                dummy = []
-                self.initheatmap(dummy,h2)
 
             self.updatefftgraph()
             self.data[0] = x
@@ -856,8 +814,6 @@ class mcegui(QtGui.QWidget):
                 self.data[2] = y2
 
             if self.readoutcard == 'All':
-                print(colored(len(x),'magenta'))
-                # print(colored(len(y2),'magenta'))
 
                 if ut.which_mce[0] == 1 :
                     self.mcegraphdata1.setData(x, y1, brush=self.pointcolor, symbol=self.pointsymbol)
@@ -992,44 +948,57 @@ class mcegui(QtGui.QWidget):
 
         self.alpha = 0.1
 
-        print(ut.which_mce)
-
         if ut.which_mce[0] == 1 :
+
             z1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
             for b in range(h1.shape[0]):
                 for c in range(h1.shape[1]):
                     z1[b][c] = (np.std(h1[b,c,:],dtype=np.float32))
+            b = 0
+            c = 0
+
+            d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
+            for b in range(h1.shape[0]):
+                for c in range(h1.shape[1]):
+                    d1[b][c] = (np.mean(h1[b,c,:],dtype=np.float32))
+
+            b = 0
+            c = 0
 
             self.heatmap1.setImage(z1)
 
             d1_avg = np.empty([33,32])
 
-            d1 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
-            for b in range(h2.shape[0]):
-                for c in range(h2.shape[1]):
-                    d1[b][c] = (np.mean(h2[b,c,:],dtype=np.float32))
-
-            for b in range(h2.shape[0]):
-                for c in range(h2.shape[1]):
+            for b in range(h1.shape[0]):
+                for c in range(h1.shape[1]):
                     self.roll_avg_1[b][c] = ((1-self.alpha)*self.roll_avg_1[b][c]) + (self.alpha * d1[b][c])
                     d1_avg[b][c] = d1[b][c] - self.roll_avg_1[b][c]
 
             self.heatmap3.setImage(d1_avg)
 
         if ut.which_mce[1] == 1 :
+
+            # ---------------------------------------------------------
             z2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
                     z2[b][c] = (np.std(h2[b,c,:],dtype=np.float32))
 
-            self.heatmap2.setImage(z2)
-
-            d2_avg = np.empty([33,32])
+            b = 0
+            c = 0
 
             d2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
                     d2[b][c] = (np.mean(h2[b,c,:],dtype=np.float32))
+
+            b = 0
+            c = 0
+            # ----------------------------------------------------------
+
+            self.heatmap2.setImage(z2)
+
+            d2_avg = np.empty([33,32],dtype=np.float32)
 
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
@@ -1080,19 +1049,22 @@ class MCEThread(QtCore.QThread):
 
     new_data = QtCore.pyqtSignal(object,object,object)
 
-    def __init__(self,netcdfdir,parent = None):
+    def __init__(self,offset,flags,netcdfdir,parent = None):
         QtCore.QThread.__init__(self, parent)
         self.netcdfdir = netcdfdir
+        self.flags = flags
+        self.offset = offset
+        print('gui offset:',self.offset.value)
 
     def __del__(self):
         ut.mce_exit.set()
 
     def run(self):
         data, queue = mp.Pipe()
-        p = mp.Process(target=append_data.Time_Files().retrieve, args=(queue,self.netcdfdir,))
-        # p2 = mp.Process(target=append_hk.Time_Files().retrieve, args=(self.netcdfdir,))
+        p = mp.Process(target=append_data.Time_Files(flags = self.flags, offset = self.offset).retrieve, args=(queue,self.netcdfdir,))
+        p2 = mp.Process(target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         p.start()
-        # p2.start()
+        p2.start()
 
         while not ut.mce_exit.is_set():
             stuff = data.recv()
@@ -1104,11 +1076,14 @@ class MCEThread(QtCore.QThread):
             else :
                 dummy = []
                 self.new_data.emit(dummy,stuff[1],stuff[2])
+            time.sleep(0.01)
 
 class Tel_Thread(QtCore.QThread):
+
     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
 
-    def __init__(self, scan_time, tel_script, off, sec, map_size, map_angle, coord1, coord2, epoch, object, map_len, num_scans, parent = None):
+    def __init__(self, flags, scan_time, tel_script, off, sec, map_size, map_angle, coord1, coord2, epoch, object, map_len, num_scans, parent = None):
+        os.nice(-20)
         QtCore.QThread.__init__(self, parent)
         self.off = off
         self.tel_script = tel_script
@@ -1122,6 +1097,7 @@ class Tel_Thread(QtCore.QThread):
         self.map_len = map_len
         self.num_scans = num_scans
         self.scan_time = scan_time
+        self.flags = flags
 
     def __del__(self):
         ut.tel_exit.set()
@@ -1138,14 +1114,12 @@ class Tel_Thread(QtCore.QThread):
             while True :
                 # grab data from tel_tracker.py
                 if not ut.tel_exit.is_set() :
-                    # print(colored('FIRST PRINT','red'))
                     tel_stuff = data.recv()
-                    ut.flags[0] = int(tel_stuff[2]) #update flags passed to netcdf data
-                    if int(tel_stuff[2]) == 4 :
-                        print(colored((counter,tel_stuff[2]),'yellow'))
-
+                    with self.flags.get_lock() :
+                        self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
                     # pa,float(direction),el,az,map_ra,map_dec,ut
                     self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+                    time.sleep(0.01)
 
                 else :
                     time.sleep(2.0) # gives client/server time to shutdown before thread is closed

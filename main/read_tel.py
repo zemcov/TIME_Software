@@ -3,11 +3,11 @@ import numpy as np
 import utils as ut
 import os, subprocess, sys
 from termcolor import colored
-
-dir = '/home/time/time-software-testing/TIME_Software/main/tempfiles/'
-mega_tel = []
+import time
 
 def loop_files(queue3):
+    dir = '/home/time/time-software-testing/TIME_Software/main/tempfiles/'
+    mega_tel = []
 
     while True :
 
@@ -24,17 +24,14 @@ def loop_files(queue3):
             break
 
         else :
-            continue
+            time.sleep(0.01)
 
-        while not ut.tel_exit.is_set():
-            if os.path.exists(dir + 'tele_packet%i.npy' %(a+1)) : #wait to read new file until old file is complete
-                a += 1
-                tele_file = dir + 'tele_packet%i.npy' %(a)
-                print(colored('TEL file' %(tele_file),'green'))
-                data = np.load(tele_file)
-                mega_tel.append(data)
-                subprocess.Popen(['rm %s' %(tele_file)], shell=True)
-
-            if a % 20 == 0 :
-                queue3.send(mega_tel)
-                mega_tel = []
+    while not ut.tel_exit.is_set():
+        if os.path.exists(dir + 'tele_packet%i.npy' %(a+1)) : #wait to read new file until old file is complete
+            tele_file = dir + 'tele_packet%i.npy' %(a)
+            data = np.load(tele_file)
+            queue3.send(data)
+            subprocess.Popen(['rm %s' %(tele_file)], shell=True)
+            a += 1
+        else :
+            time.sleep(0.01)

@@ -5,9 +5,9 @@ import datetime as now
 import numpy as np
 from termcolor import colored
 import utils as ut
+# os.nice(-20)
 
 def new_file(filestarttime,dir):
-    print(colored(('DIR:',dir),'yellow'))
     mce = nc.Dataset(dir + "/raw_mce_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
      # GUI PARAMETERS ---------------------------------------------------------------------------------
@@ -40,12 +40,9 @@ def new_file(filestarttime,dir):
     Datamode = mce.createVariable('datamode','S1',('mode',),zlib=True)
     Detector = mce.createVariable('detector','f8',('det',),zlib=True)
     Rc = mce.createVariable('rc','S1',('r',),zlib=True) # can either use rc name or integer used by gui
-    # global Time
-    # Time = mce.createVariable('time','S1',('t','k'),zlib=True)
+
     global Time
     Time = mce.createVariable('time','f8',('t','mode'),zlib=True)
-    global HK_Data
-    HK_Data = mce.createVariable('hk_data','f8',('t','hk_col','hk_row','hk_num'),zlib=True)
 
     # MCE DATA =============================================================================================
     global MCE0_Raw_Data_All
@@ -58,8 +55,8 @@ def new_file(filestarttime,dir):
     # MCE HEADER INFO =========================================================
     global MCE0_Header
     global MCE1_Header
-    MCE0_Header = mce.createVariable('mce0_header','i4',('t','v','k'),zlib=True)
-    MCE1_Header = mce.createVariable('mce1_header','i4',('t','v','k'),zlib=True)
+    MCE0_Header = mce.createVariable('mce0_header','f8',('t','v','k'),zlib=True)
+    MCE1_Header = mce.createVariable('mce1_header','f8',('t','v','k'),zlib=True)
     # =========================================================================
 
     # TELESCOPE Data ==============================================================
@@ -91,7 +88,7 @@ def new_file(filestarttime,dir):
     parafile.close()
     mce.close()
 
-def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data):
+def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, tele):
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         Time[p,:] = times
@@ -105,7 +102,7 @@ def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data):
             MCE1_Raw_Data_All[p,:,:,:] = mce1_data
             MCE1_Header[p,:,:] = head2
 
-        # Tel[p,:,:] = tele
+        Tel[p,:,:] = tele
         # KMS[p,:,:] = kms
         mce.close()
     else :

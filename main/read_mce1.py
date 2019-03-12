@@ -4,7 +4,7 @@ import os, sys, mce_data_jon, subprocess
 import netcdf_files as nc
 import datetime as dt
 from termcolor import colored
-import time as TIME
+import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
@@ -12,28 +12,30 @@ import utils as ut
 h_shape = 0
 p = 0
 
-def netcdfdata(queue2):
+def netcdfdata(queue2,flags):
+    # os.nice(-20)
     dir = '/home/time/Desktop/time-data/mce2/'
     a = 1
     while not ut.mce_exit.is_set():
         mce_file_len = len(os.listdir(dir))
         mce_file_name = dir + 'temp.%0.3i' %(a)
         mce_file = os.path.exists(dir + 'temp.%0.3i' %(a+1))
+        mce_run = os.path.exists(dir + 'temp.run')
 
-        if mce_file:
-            print('MCE1:',mce_file_name, mce_file_len)
-            head,h,frame_num = readdata(mce_file_name)
+        if mce_file and mce_run:
+            head,h,frame_num = readdata(mce_file_name,flags)
             queue2.send([h,head,frame_num])
             a += 1
-            # subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
+            subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
+
         else :
-            pass
+            time.sleep(0.01)
 
     print(colored('No More Files','red'))
     sys.exit()
 
 # ===========================================================================================================================
-def readdata(file):
+def readdata(file,flags):
     global h_shape
     global p
     print(colored(file,'green'))
@@ -46,17 +48,19 @@ def readdata(file):
     # also gives a frame size error flag
     if p == 0 :
         h_shape = h.shape
-        ut.flags[4] = 0
+        with flags.get_lock():
+            flags[4] = 0
 
     else :
         if (h.shape != h_shape):
             print(colored('WARNING! MCE1 Frame Size Has Changed','red'))
-            ut.flags[4] = 11
+            with flags.get_lock():
+                flags[4] = 11
             h = np.zeros((h_shape[0],h_shape[1],h_shape[2]))
 
         else :
-            ut.flags[4] = 0
-            print(ut.flags)
+            with flags.get_lock():
+                flags[4] = 0
     # -------------------------------------------------------------------------
     # send data to header to be parsed and append data
     head,frame_num = read_header(l)

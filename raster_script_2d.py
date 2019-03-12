@@ -46,7 +46,7 @@ class TIME_TELE :
 
 
         # num_loop = int(float(map_len) // (0.43/60.0) + (float(map_len) % (0.43/60.0) > 0)) # degrees
-        num_loop = int(50)
+        num_loop = int(10)
         c1 = str(coord1).split(':')
         c2 = str(coord2).split(':')
         old_coord = SkyCoord(c1[0]+'h'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
