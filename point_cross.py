@@ -10,7 +10,7 @@ import utils as ut
 
 class TIME_TELE :
 
-    def start_sock(self,queue,scan_time,sec,map_size,map_angle,coord1,coord2,epoch,object,map_len,num_scans):
+    def start_sock(self,queue,scan_time,sec,map_size,map_angle,coord1,coord2,epoch,object,num_loop,step):
         # I am accepting telescope sim data for the gui
         PORT = 1806
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

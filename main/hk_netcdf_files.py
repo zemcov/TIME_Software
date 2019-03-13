@@ -18,9 +18,9 @@ def new_file(filestarttime,dir):
 
     # creating variables --------------------------------------------------------------------------------
     global HK_Data
-    HK_Data = hk.createVariable('hk_data','f8',('t','hk_num','hk_col','hk_row'),zlib=True)
+    HK_Data = hk.createVariable('hk_data','f8',('t','hk_num','hk_col','hk_row'))
     global Time
-    Time = hk.createVariable('hk_time', 'f8',('t','tuple'),zlib=True)
+    Time = hk.createVariable('hk_time', 'f8',('t','tuple'))
     # =========================================================================
     hk.close()
 

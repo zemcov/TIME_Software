@@ -29,44 +29,50 @@ def new_file(filestarttime,dir):
     mce.createDimension('hk_num', int(ut.german_freq))
     mce.createDimension('hk',1)
     mce.createDimension('sf',5)
-    mce.createDimension('tel_pos',20)
+    mce.createDimension('tel_pos',21)
     mce.createDimension('kms_pos',4)
     mce.createDimension('sock_rate',20)
 
     # creating variables --------------------------------------------------------------------------------
-    Observer = mce.createVariable("observer","S1",("obs",),zlib=True)
-    Datetime = mce.createVariable('datetime', 'S1',('date',),zlib=True)
-    Frames = mce.createVariable('frames', 'S1',('f',),zlib=True)
-    Datamode = mce.createVariable('datamode','S1',('mode',),zlib=True)
-    Detector = mce.createVariable('detector','f8',('det',),zlib=True)
-    Rc = mce.createVariable('rc','S1',('r',),zlib=True) # can either use rc name or integer used by gui
+    Observer = mce.createVariable("observer","S1",("obs",))
+    Datetime = mce.createVariable('datetime', 'S1',('date',))
+    Frames = mce.createVariable('frames', 'S1',('f',))
+    Datamode = mce.createVariable('datamode','S1',('mode',))
+    Detector = mce.createVariable('detector','f8',('det',))
+    Rc = mce.createVariable('rc','S1',('r',)) # can either use rc name or integer used by gui
 
     global Time
-    Time = mce.createVariable('time','f8',('t','mode'),zlib=True)
+    Time = mce.createVariable('time','f8',('t','mode'))
 
     # MCE DATA =============================================================================================
     global MCE0_Raw_Data_All
     global MCE1_Raw_Data_All
-    MCE0_Raw_Data_All = mce.createVariable('mce0_raw_data_all','f8',('t','raw_rows','raw_cols','raw_num'),zlib=True)
-    MCE1_Raw_Data_All = mce.createVariable('mce1_raw_data_all','f8',('t','raw_rows','raw_cols','raw_num'),zlib=True)
-
+    MCE0_Raw_Data_All = mce.createVariable('mce0_raw_data_all','f8',('t','raw_rows','raw_cols','raw_num'))
+    MCE1_Raw_Data_All = mce.createVariable('mce1_raw_data_all','f8',('t','raw_rows','raw_cols','raw_num'))
     # =========================================================================================================
+
+    # MCE ROW COL On/Off ========================================================================================
+    global MCE0_on_off
+    global MCE1_on_off
+    MCE0_on_off = mce.createVariable('mce0_on_off','i4',('t','raw_rows','raw_cols'))
+    MCE1_on_off = mce.createVariable('mce1_on_off','i4',('t','raw_rows','raw_cols'))
+    # ============================================================================================================
 
     # MCE HEADER INFO =========================================================
     global MCE0_Header
     global MCE1_Header
-    MCE0_Header = mce.createVariable('mce0_header','f8',('t','v','k'),zlib=True)
-    MCE1_Header = mce.createVariable('mce1_header','f8',('t','v','k'),zlib=True)
+    MCE0_Header = mce.createVariable('mce0_header','f8',('t','v','k'))
+    MCE1_Header = mce.createVariable('mce1_header','f8',('t','v','k'))
     # =========================================================================
 
     # TELESCOPE Data ==============================================================
     global Tel
-    Tel = mce.createVariable('tel','f8',('t','sock_rate','tel_pos'),zlib=True)
+    Tel = mce.createVariable('tel','f8',('t','sock_rate','tel_pos'))
     # ================================================================================
 
     # KMS Data ======================================================================
     global KMS
-    KMS = mce.createVariable('kms','f8',('t','sock_rate','kms_pos'),zlib=True)
+    KMS = mce.createVariable('kms','f8',('t','sock_rate','kms_pos'))
     # ================================================================================
 
     global Status_Flags
@@ -88,7 +94,7 @@ def new_file(filestarttime,dir):
     parafile.close()
     mce.close()
 
-def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, tele):
+def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele):
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         Time[p,:] = times
@@ -97,10 +103,12 @@ def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, te
         if ut.which_mce[0] == 1 :
             MCE0_Raw_Data_All[p,:,:,:] = mce0_data
             MCE0_Header[p,:,:] = head1
+            MCE0_on_off[p,:,:] = mce0_on
 
         if ut.which_mce[1] == 1 :
             MCE1_Raw_Data_All[p,:,:,:] = mce1_data
             MCE1_Header[p,:,:] = head2
+            MCE1_on_off[p,:,:] = mce1_on
 
         Tel[p,:,:] = tele
         # KMS[p,:,:] = kms

@@ -47,6 +47,7 @@ class Time_Files:
                 self.h1 = data1[0]
                 self.head1 = data1[1]
                 self.sync1 = data1[2]
+                self.mce0_on = data1[3]
                 a = self.h1
                 # ---------------------------------------------------------
 
@@ -55,18 +56,17 @@ class Time_Files:
                 self.h2 = data2[0]
                 self.head2 = data2[1]
                 self.sync2 = data2[2]
+                self.mce1_on = data2[3]
                 b = self.h2
 
-            queue.send([a,b,self.a])
+            queue.send([a,b,self.p])
 
             self.tel_data = self.data3.recv()
             # self.kms_data = self.data4.recv()
             # ------------------------------------------
-
             self.parse_arrays(dir)
             self.append_mce_data(dir)
             self.p += 1
-
             time.sleep(0.01)
 
     def parse_arrays(self,dir):
@@ -113,11 +113,10 @@ class Time_Files:
             #                     self.hold_h2.append(self.h2[i] + (empty*(ut.frameperfile - len(self.h1))))
             #                     break
 
-
         if ut.which_mce[1] == 1 :
             ut.utc_time = ut.sync_to_utc(self.sync2,self.offset.value)
             self.utc = zip(ut.utc_time,self.sync2) # tuples of (utc,sync)
-        else :
+        if ut.which_mce[0] == 1 :
             ut.utc_time = ut.sync_to_utc(self.sync1,self.offset.value)
             self.utc = zip(ut.utc_time,self.sync1) # tuples of (utc,sync)
         print('MCE UTC:',self.utc[-1],self.offset.value)
@@ -135,18 +134,17 @@ class Time_Files:
             self.ncfile = dir + "/raw_mce_%s.nc" %(self.filestarttime)
 
             if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.tel_data)
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.mce0_on, self.mce1_on, self.tel_data)
             elif ut.which_mce[0] == 1 :
                 dummy = []
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.tel_data)
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.mce0_on, dummy, self.tel_data)
             else :
                 dummy = []
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, self.tel_data)
-
-            self.a = 1
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, dummy, self.mce1_on, self.tel_data)
 
         # elif os.stat(netcdfdir + "/raw_mce_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
         elif self.a % 100 == 0 :
+            self.a = 0
             # if it's a full file, make a new netcdf file
             print(colored('----------- New MCE File ------------','green'))
             self.filestarttime = dt.datetime.utcnow()
@@ -155,24 +153,24 @@ class Time_Files:
             self.ncfile = dir + "/raw_mce_%s.nc" %(self.filestarttime)
 
             if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.tel_data)
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.mce0_on, self.mce1_on, self.tel_data)
             elif ut.which_mce[0] == 1 :
                 dummy = []
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.tel_data)
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.mce0_on, dummy, self.tel_data)
             else :
                 dummy = []
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, self.tel_data)
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, dummy, self.mce1_on, self.tel_data)
 
         else: # if everything is okay, append data to the file
 
             if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.tel_data) # give first values for heatmap to create image scale
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.mce0_on, self.mce1_on, self.tel_data) # give first values for heatmap to create image scale
             elif ut.which_mce[0] == 1 :
                 dummy = []
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.tel_data)
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.mce0_on, dummy, self.tel_data)
             else :
                 dummy = []
-                nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, self.tel_data)
+                nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, dummy, self.mce1_on, self.tel_data)
         # have the counter incremement for every append
         self.a += 1
         return

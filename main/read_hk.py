@@ -43,6 +43,7 @@ class HK_Reader :
         sys.exit()
 
     def hk_read(self,hk):
+        os.nice(-20)
         mega_hk = []
         name = []
         data = []
@@ -60,7 +61,7 @@ class HK_Reader :
                 # ============================================================================================
                 if t_type == 't' and names != 'HKMBv1b0_SYNC_number' and names != 'HKMBv2b0_SYNC_number':
 
-                    if self.offset.value != 0 :
+                    if self.offset.value != 0.0 :
                         sync_time = ut.utc_to_sync(time_stamp,self.offset) # check to see if offset has been set
                         time.append(float(sync_time))
                         data.append(float(fields[4]))
@@ -74,7 +75,7 @@ class HK_Reader :
                     with self.offset.get_lock():
                         self.offset.value = ut.timing(float(fields[1]),float(fields[4]))
                         print(colored((fields[1],fields[4]),'magenta'))
-                        print(colored('Offset %s' %(self.offset.value),'red'))
+                        print(colored('Offset: %s , %s' %(float(fields[1]),self.offset.value),'red'))
                         sys.stdout.flush()
                     self.time_tuple[0] = time[-1]
                     self.time_tuple[1] = data[-1]

@@ -133,10 +133,10 @@ class Time_Files:
             self.ncfile = dir + "/raw_hk_%s.nc" %(self.filestarttime)
 
             hnc.data_append(self.ncfile, self.b, self.hk_data, self.time_tuple)
-            self.b = 1
 
         # elif os.stat(netcdfdir + "/raw_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
         elif self.b % 200 == 0 :
+            self.b = 0
             # if it's a full file, make a new netcdf file
             print(colored('----------- New HK File ------------','green'))
             self.filestarttime = dt.datetime.utcnow()

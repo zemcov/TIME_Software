@@ -9,6 +9,7 @@ import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
 sys.path.append('/home/time/time-software-testing/TIME_Software')
+sys.path.append('/home/time/time-softwrae-testing/main/tempfiles')
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
 
 #class of all components of GUI
@@ -99,15 +100,15 @@ class mcegui(QtGui.QWidget):
 
         self.sec = self.tel_sec.text()
         self.map_size = self.tel_map_size.text()
-        self.map_len = self.tel_map_len.text()
+        self.num_loop = self.tel_num_loop.text()
         self.map_angle = self.tel_map_angle.text()
         self.coord1 = self.tel_coord1.text()
         self.coord2 = self.tel_coord2.text()
         self.epoch = self.tel_epoch.currentText()
         self.object = self.tel_object.text()
         self.inittel = self.init_tel.currentText()
-        self.num_scans = self.tel_num_scans.text()
         self.scan_time = self.scan_time_input.text()
+        self.step = self.tel_step.text()
 
         if self.inittel == 'Yes':
             self.tel_scan = self.telescan.currentText()
@@ -262,7 +263,7 @@ class mcegui(QtGui.QWidget):
             #start other plot making processes
             self.initplot()
             self.initheatmap(data,data) # give first values for heatmap to create image scale
-            self.initfftgraph()
+            # self.initfftgraph()
             self.inittelescope()
             # self.initkmirrordata()
 
@@ -326,9 +327,9 @@ class mcegui(QtGui.QWidget):
 
         self.tel_sec = QtGui.QLineEdit('6')
         self.tel_map_size = QtGui.QLineEdit('1')
-        self.tel_map_len  = QtGui.QLineEdit('1')
+        self.tel_num_loop  = QtGui.QLineEdit('20')
+        self.tel_step = QtGui.QLineEdit('0.001')
         self.tel_map_angle = QtGui.QLineEdit('0')
-        self.tel_num_scans = QtGui.QLineEdit('1')
         self.scan_time_input = QtGui.QLineEdit('30')
         self.tel_coord1 = QtGui.QLineEdit()
         self.tel_coord2 = QtGui.QLineEdit()
@@ -348,9 +349,9 @@ class mcegui(QtGui.QWidget):
         self.telparams.addRow('Delayed Start (sec)', self.tel_delay)
         self.telparams.addRow('Time to Traverse Scan Length (sec)', self.tel_sec)
         self.telparams.addRow('Map Size [deg], (distance for center of array to reach map edge)', self.tel_map_size)
-        self.telparams.addRow('Map Length [deg]', self.tel_map_len)
-        self.telparams.addRow('Number of Scans (-RA to +RA)', self.tel_num_scans)
         self.telparams.addRow('Angle of Map Offset [deg]', self.tel_map_angle)
+        self.telparams.addRow('Number of 2D Map Vertical Steps [deg]', self.tel_num_loop)
+        self.telparams.addRow('Size of 2D Vertical Step [deg]', self.tel_step)
         self.telparams.addRow('RA Coord of Source: [hr:min:sec]', self.tel_coord1)
         self.telparams.addRow('DEC Coord of Source: [deg:arcmin:arcsec]', self.tel_coord2)
         self.telparams.addRow('Epoch of Observation', self.tel_epoch)
@@ -610,7 +611,7 @@ class mcegui(QtGui.QWidget):
         # start the telescope QThread
         self.tel_updater = Tel_Thread(flags = self.flags, scan_time = self.scan_time, tel_script = self.tel_script, off = self.off, sec = self.sec, map_size = self.map_size,\
                                         map_angle = self.map_angle, coord1 = self.coord1, coord2 = self.coord2, epoch = self.epoch,\
-                                            object = self.object, map_len = self.map_len, num_scans = self.num_scans)
+                                            object = self.object, num_loop = self.num_loop, step = self.step)
         self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
         self.tel_updater.start()
 
@@ -722,6 +723,16 @@ class mcegui(QtGui.QWidget):
             ut.hk_exit.set()
             self.warningbox(['tel',slew]) #slew will be replaced with tel status flag over socket
 
+        elif slew == 'done' :
+            print('telescope data did')
+            os.system("mpg123 /home/time/time-software-testing/TIME_Software/main/finished.mp3")
+            self.repeat = True
+            ut.tel_exit.set()
+            ut.mce_exit.set()
+            ut.kms_exit.set()
+            ut.hk_exit.set()
+            self.warningbox(['tel_stop','done'])
+
         else :
             # update text on window to reflect new data
             tel_flags = [0,1,2,3,4]
@@ -802,7 +813,7 @@ class mcegui(QtGui.QWidget):
 
             self.mcegraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
 
-            self.updatefftgraph()
+            # self.updatefftgraph()
             self.data[0] = x
 
             if ut.which_mce[0] == 1 :
@@ -893,7 +904,7 @@ class mcegui(QtGui.QWidget):
                 dummy = []
                 self.updateheatmap(dummy,h2)
 
-            self.updatefftgraph()
+            # self.updatefftgraph()
 
             if self.channeldelete == 'Yes' and self.oldch != self.currentchannel:
 
@@ -1035,6 +1046,15 @@ class mcegui(QtGui.QWidget):
             telwarning.setWindowTitle('Telescope Emergency Stop')
             telwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             telwarning.exec_()
+        elif message[0] == 'tel_stop' :
+            telwarning = QtGui.QMessageBox()
+            telwarning.setStyleSheet("background-color: rgb(0,128,0); color: rgb(0,0,0)")
+            telwarning.setIcon(QtGui.QMessageBox.Information)
+            telwarning.setText('Telescope Scan Finished!')
+            telwarning.setStandardButtons(QtGui.QMessageBox.Ok)
+            telwarning.setWindowTitle('Telescope Stopped')
+            telwarning.buttonClicked.connect(self.on_warningbutton_clicked)
+            telwarning.exec_()
         elif message[0] == 'hk' :
             hkwarning = QtGui.QMessageBox()
             hkwarning.setStyleSheet("background-color: rgb(255,0,0); color: rgb(0,0,0)")
@@ -1054,7 +1074,6 @@ class MCEThread(QtCore.QThread):
         self.netcdfdir = netcdfdir
         self.flags = flags
         self.offset = offset
-        print('gui offset:',self.offset.value)
 
     def __del__(self):
         ut.mce_exit.set()
@@ -1082,7 +1101,7 @@ class Tel_Thread(QtCore.QThread):
 
     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
 
-    def __init__(self, flags, scan_time, tel_script, off, sec, map_size, map_angle, coord1, coord2, epoch, object, map_len, num_scans, parent = None):
+    def __init__(self, flags, scan_time, tel_script, off, sec, map_size, map_angle, coord1, coord2, epoch, object, num_loop, step, parent = None):
         os.nice(-20)
         QtCore.QThread.__init__(self, parent)
         self.off = off
@@ -1094,10 +1113,10 @@ class Tel_Thread(QtCore.QThread):
         self.coord2 = coord2
         self.epoch = epoch
         self.object = object
-        self.map_len = map_len
-        self.num_scans = num_scans
+        self.num_loop = num_loop
         self.scan_time = scan_time
         self.flags = flags
+        self.step = step
 
     def __del__(self):
         ut.tel_exit.set()
@@ -1105,11 +1124,9 @@ class Tel_Thread(QtCore.QThread):
     def run(self):
         if self.off == False :
             data, queue = mp.Pipe()
-            p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue,self.scan_time,self.sec,self.map_size,self.map_angle,self.coord1,self.coord2,self.epoch,self.object,self.map_len,self.num_scans))
+            p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue,self.scan_time,self.sec,self.map_size,\
+                                    self.map_angle,self.coord1,self.coord2,self.epoch,self.object,self.num_loop,self.step))
             p.start()
-            counter = 0
-            num_sent = 0
-            num_loop = int(float(self.map_len) // (0.43/60.0) + (float(self.map_len) % (0.43/60.0) > 0))
 
             while True :
                 # grab data from tel_tracker.py
@@ -1122,9 +1139,8 @@ class Tel_Thread(QtCore.QThread):
                     time.sleep(0.01)
 
                 else :
-                    time.sleep(2.0) # gives client/server time to shutdown before thread is closed
+                    self.new_tel_data.emit(0,'done',0,0,0,0,0)
                     print(colored('Telescope Scan Completed!','green'))
-                    ''' generate analysis scripts once its shutdown '''
                     break
 
         else :

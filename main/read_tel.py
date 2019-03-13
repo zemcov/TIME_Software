@@ -13,7 +13,7 @@ def loop_files(queue3):
 
         files = [dir + x for x in os.listdir(dir) if x.startswith("tele_packet")]
         if os.path.isfile(dir + 'tele_packet_off1.npy') :
-            tel_data = np.zeros((20,20))
+            tel_data = np.zeros((20,21))
             queue3.send(tel_data)
             continue
 

@@ -1,3 +1,4 @@
+from __future__ import division
 import socket, struct, subprocess, os, sys
 import time
 import numpy as np
@@ -11,7 +12,7 @@ def start_tracker(queue):
     s.listen(5)
     client, info = s.accept()
     print('Socket Connected')
-    unpacker = struct.Struct('i i i i d d d d d d d d d d d d d d d d') # d = float , s = char string , i = integer
+    unpacker = struct.Struct('i i i i d d d d d d d d d d d d d d d d I I')
     n = 0
     mega_tel = []
 
@@ -21,18 +22,20 @@ def start_tracker(queue):
             # unpacking data packet ===============================================
             blanking, direction, observing, pad, utc, lst, deltaT, cur_ra, cur_dec,\
             map_ra, map_dec, ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact,\
-            elvelact, pa = unpacker.unpack(data)
-            # print('ut:',ut)
-            # ==================================================================
+            elvelact, pa, unix_val, unix_delta = unpacker.unpack(data)
+            # =======================================================================
+
+            unix = float(unix_val) + float(unix_delta) / 10**(9)
+            # ------------------------------------------------------------------------
             tel_data = np.array([int(blanking), int(direction), float(observing), float(pad), \
             utc, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \
             ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
-            pa])
+            pa, unix])
 
             if len(mega_tel) < 20:
                 mega_tel.append(tel_data)
             else :
-                print('Tel UTC:',utc)
+                print('Tel Time:', unix_val , unix_delta)
                 np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet%i.npy' %(n), mega_tel)
                 mega_tel = []
                 mega_tel.append(tel_data)
