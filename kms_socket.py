@@ -5,8 +5,9 @@
 import socket, struct, subprocess, os, sys, time
 import time as othertime
 import numpy as np
+import utils as ut
 
-def start_tracker(queue):
+def start_sock(queue):
     PORT = 8500
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))
@@ -14,8 +15,8 @@ def start_tracker(queue):
     s.listen(5)
     client, info = s.accept()
     print('Socket Connected')
-    unpacker = struct.Struct('d d d d') # d = float , s = char string , i = integer
-
+    unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
+    kms_data = []
     n = 0
     while not ut.tel_exit.is_set() :
         data = client.recv(unpacker.size)
@@ -25,8 +26,13 @@ def start_tracker(queue):
             pa, flag, time, enc_pos = unpacker.unpack(data)
             # print('pa:',pa)
             # ==================================================================
-            kms_data = np.array([float(pa),float(flag),float(time),float(enc_pos)])
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/kms_packet%i.npy' %(n), kms_data)
+            if len(kms_data) < 20 :
+                kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
+
+            else :
+                np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/kms_packet%i.npy' %(n), kms_data)
+                kms_data = []
+                kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
             # send positional data to gui window
             queue.send([pa, flag, time, enc_pos])
             n += 1

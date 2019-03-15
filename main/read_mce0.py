@@ -16,6 +16,7 @@ def netcdfdata(queue1,flags):
     # os.nice(-20)
     dir = '/home/time/Desktop/time-data/mce1/'
     a = 0
+    print('starting mce0 read')
     while not ut.mce_exit.is_set():
         mce_file_len = len(os.listdir(dir))
         mce_file_name = dir + 'temp.%0.3i' %(a)
@@ -25,14 +26,13 @@ def netcdfdata(queue1,flags):
         if mce_file and mce_run:
             head,h,frame_num,mce_on = readdata(mce_file_name,flags)
             queue1.send([h,head,frame_num,mce_on])
-            print(mce_file_name)
             a += 1
             subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
 
         else :
             time.sleep(0.01)
 
-    print(colored('No More Files','red'))
+    # print(colored('No More Files','red'))
     sys.exit()
 
 # ===========================================================================================================================
@@ -53,7 +53,7 @@ def readdata(file,flags):
 
     else :
         if (h.shape != h_shape):
-            print(colored('WARNING! MCE0 Frame Size Has Changed','red'))
+            # print(colored('WARNING! MCE0 Frame Size Has Changed','red'))
             sys.stdout.flush()
             with flags.get_lock():
                 flags[3] = 11

@@ -562,9 +562,9 @@ class mcegui(QtGui.QWidget):
         if self.tel_script == 'point_cross.py' :
             # do something to set KMS in specific position before starting KMS thread
             print('No KMS!')
-        # self.kms_updater = KMS_Thread()
-        # self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
-        # self.kms_updater.start()
+        self.kms_updater = KMS_Thread()
+        self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
+        self.kms_updater.start()
 
         #place holder data
         self.parallacticangle = 0.0
@@ -961,10 +961,14 @@ class mcegui(QtGui.QWidget):
 
         if ut.which_mce[0] == 1 :
 
-            z1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
+            m1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
             for b in range(h1.shape[0]):
                 for c in range(h1.shape[1]):
-                    z1[b][c] = (np.std(h1[b,c,:],dtype=np.float32))
+                    z1 = np.std(h1[b,c,:])
+                    if z1 != 0.0 :
+                        m1[b][c] = np.log(z1)
+                    else :
+                        m1[b][c] = None
             b = 0
             c = 0
 
@@ -976,7 +980,7 @@ class mcegui(QtGui.QWidget):
             b = 0
             c = 0
 
-            self.heatmap1.setImage(z1)
+            self.heatmap1.setImage(m1)
 
             d1_avg = np.empty([33,32])
 
@@ -990,10 +994,14 @@ class mcegui(QtGui.QWidget):
         if ut.which_mce[1] == 1 :
 
             # ---------------------------------------------------------
-            z2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
+            m2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
-                    z2[b][c] = (np.std(h2[b,c,:],dtype=np.float32))
+                    z2 = np.std(h2[b,c,:])
+                    if z2 != 0.0 :
+                        m2[b][c] = np.log(z2)
+                    else :
+                        m2[b][c] = None
 
             b = 0
             c = 0
@@ -1007,7 +1015,7 @@ class mcegui(QtGui.QWidget):
             c = 0
             # ----------------------------------------------------------
 
-            self.heatmap2.setImage(z2)
+            self.heatmap2.setImage(m2)
 
             d2_avg = np.empty([33,32],dtype=np.float32)
 
@@ -1102,7 +1110,6 @@ class Tel_Thread(QtCore.QThread):
     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
 
     def __init__(self, flags, scan_time, tel_script, off, sec, map_size, map_angle, coord1, coord2, epoch, object, num_loop, step, parent = None):
-        os.nice(-20)
         QtCore.QThread.__init__(self, parent)
         self.off = off
         self.tel_script = tel_script
@@ -1151,25 +1158,27 @@ class Tel_Thread(QtCore.QThread):
             np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
 
 
-# class KMS_Thread(QtCore.QThread):
-#
-#     new_kms_data = QtCore.pyqtSignal(object,object,object,object) # object is status flag
-#
-#     def __init__(self, parent = None):
-#         QtCore.QThread.__init__(self, parent)
-#
-#     def __del__(self):
-#         ut.kms_exit.set()
-#
-#     def run(self):
-#         data, queue = mp.Pipe()
-#         p = mp.Process(target=kms_socket , args=(queue,))
-#         p.start()
-#         while not ut.kms_exit.is_set() :
-#             kms_stuff = data.recv() # pa , flags, time, encoder pos
-#             # send updated data to the gui
-#             ut.flags[2] = kms_stuff[2] #update kms flags sent to netcdf data
-#             self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
+class KMS_Thread(QtCore.QThread):
+
+    new_kms_data = QtCore.pyqtSignal(object,object,object,object) # object is status flag
+
+    def __init__(self, parent = None):
+        QtCore.QThread.__init__(self, parent)
+
+    def __del__(self):
+        ut.kms_exit.set()
+
+    def run(self):
+        data, queue = mp.Pipe()
+        p = mp.Process(target=kms_socket.start_sock , args=(queue,))
+        p.start()
+        while not ut.kms_exit.is_set() :
+            kms_stuff = data.recv() # pa , flags, time, encoder pos
+            # send updated data to the gui
+            with self.flags.get_lock():
+                self.flags[2] = int(kms_stuff[2])
+
+            self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
 
 #activating the gui main window
 

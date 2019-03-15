@@ -14,6 +14,7 @@ import read_hk
 class Time_Files:
 
     def __init__(self,offset):
+        os.nice(-10)
         self.b = 0
         self.start_time_stamp = 0
         self.new_time_stamp = 0
@@ -27,6 +28,7 @@ class Time_Files:
         self.data3, queue3 = mp.Pipe()
         self.p3 = mp.Process(target=read_hk.HK_Reader(offset = self.offset).loop_files , args=(queue3,))
         self.p3.start()
+        print(colored('HK Has Started'),'red')
 
     def retrieve(self,dir):
         # os.nice(-20)
@@ -46,8 +48,6 @@ class Time_Files:
             #     print(colored('data append skipped!','red'))
             time.sleep(0.01)
 
-        self.p3.join()
-        self.p3.close()
         sys.exit()
 
     def parse_arrays(self,dir):

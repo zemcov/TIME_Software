@@ -45,19 +45,33 @@ class TIME_TELE :
         c1 = str(coord1).split(':')
         c2 = str(coord2).split(':')
         old_coord = SkyCoord(c1[0]+'h'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
+        print(num_loop)
+        print(self.i)
 
         while self.i < int(num_loop) :
-            print(colored(('Current Scan: %s / %s' %(self.i,int(num_loop)),'yellow')))
+            print('Current Scan: %s / %s' %(self.i,int(num_loop)))
             sys.stdout.flush()
+            sys.stderr.flush()
 
-            if self.i > 0 :
+            if self.i == 0 :
+                commands = '{} {} {} {}'
+                msg = 'TIME_SEEK ' + commands.format(coord1,coord2,epoch,object)
+                self.s.send(msg)
+                reply = self.s.recv(1024).decode("ascii")
+                print(reply)
+
+                self.pos_update()
+                # time.sleep(int(scan_time) + (int(sec) * 6))
+                time.sleep(int(scan_time))
+
+            else :
                 # convert all coordinates to same format, then add values to ra and dec
                 c = SkyCoord(ra = (self.i*float(step))* u.degree, dec = (self.i*float(step)) * u.degree)
                 # new_ra = (c.ra + old_coord.ra).to_string()
                 new_dec = (c.dec + old_coord.dec).to_string()
                 print('New Dec',new_dec,'C',c)
                 # new_coord_ra = '{}{}{}{}{}'
-                # new_coord_ra = new_coord_ra.format(new_ra[0][0:2],':',new_ra[0][3:5],':',new_ra[0][6:8])
+                # new_coord_ra = new_coord_ra
                 new_coord_dec = '{}{}{}{}{}'
                 new_coord_dec = new_coord_dec.format(new_dec[:new_dec.find('d')],':',new_dec[new_dec.find('d')+1:new_dec.find('m')],':',new_dec[new_dec.find('m')+1:new_dec.find('s')])
                 print('New Coord Dec',new_coord_dec, new_dec[:new_dec.find('d')],new_dec[new_dec.find('d')+1:new_dec.find('m')],new_dec[new_dec.find('m')+1:new_dec.find('s')])
@@ -70,16 +84,6 @@ class TIME_TELE :
 
                 self.pos_update()
                 time.sleep(int(scan_time))
-
-            else :
-                commands = '{} {} {} {}'
-                msg = 'TIME_SEEK ' + commands.format(coord1,coord2,epoch,object)
-                self.s.send(msg)
-                reply = self.s.recv(1024).decode("ascii")
-                print(reply)
-
-                self.pos_update()
-                time.sleep(int(scan_time) + (int(sec) * 6))
 
             self.i += 1
             # -------------------------------------------

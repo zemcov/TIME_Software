@@ -32,6 +32,7 @@ def new_file(filestarttime,dir):
     mce.createDimension('tel_pos',21)
     mce.createDimension('kms_pos',4)
     mce.createDimension('sock_rate',20)
+    mce.createDimension('time_num',100)
 
     # creating variables --------------------------------------------------------------------------------
     Observer = mce.createVariable("observer","S1",("obs",))
@@ -42,7 +43,7 @@ def new_file(filestarttime,dir):
     Rc = mce.createVariable('rc','S1',('r',)) # can either use rc name or integer used by gui
 
     global Time
-    Time = mce.createVariable('time','f8',('t','mode'))
+    Time = mce.createVariable('time','f8',('t','time_num','mode'))
 
     # MCE DATA =============================================================================================
     global MCE0_Raw_Data_All
@@ -97,7 +98,7 @@ def new_file(filestarttime,dir):
 def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele):
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-        Time[p,:] = times
+        Time[p,:,:] = times
         Status_Flags[p,:,:] = flags
 
         if ut.which_mce[0] == 1 :

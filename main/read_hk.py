@@ -43,7 +43,6 @@ class HK_Reader :
         sys.exit()
 
     def hk_read(self,hk):
-        os.nice(-20)
         mega_hk = []
         name = []
         data = []

@@ -26,6 +26,7 @@ class Time_Files:
         self.p1 = mp.Process(target=read_mce0.netcdfdata , args=(queue1,self.flags,))
         self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,self.flags,))
         self.p3 = mp.Process(target=read_tel.loop_files , args=(queue3,))
+        os.nice(-20)
         # self.p4 = mp.Process(target=read_kms.loop_files , args=(queue4,))
 
         if ut.which_mce[0] == 1 :
@@ -119,7 +120,13 @@ class Time_Files:
         if ut.which_mce[0] == 1 :
             ut.utc_time = ut.sync_to_utc(self.sync1,self.offset.value)
             self.utc = zip(ut.utc_time,self.sync1) # tuples of (utc,sync)
-        print('MCE UTC:',self.utc[-1],self.offset.value)
+
+        # new_utc = self.utc[::5]
+        # # print(len(self.utc),len([x[0] for x in new_utc]),len(self.tel_data[:,-1]))
+        # print('MCE UTC: ', ["%0.3f" % x[0] for x in new_utc])
+        # print('Tel UTC: ', ["%0.3f" % x[-1] for x in self.tel_data])
+        # print('Diff: ' , ["%0.3f" % x for x in np.subtract([x[0] for x in new_utc],self.tel_data[:,-1])])
+        # sys.stdout.flush()
 
         return
 
