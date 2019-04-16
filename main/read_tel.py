@@ -6,15 +6,15 @@ from termcolor import colored
 import time
 
 def loop_files(queue3):
-    os.nice(-20)
-    dir = '/home/time/time-software-testing/TIME_Software/main/tempfiles/'
+    # os.nice(-20)
+    dir = '/home/time_user/TIME_Software/main/tempfiles/'
     mega_tel = []
 
     while True :
 
         files = [dir + x for x in os.listdir(dir) if x.startswith("tele_packet")]
         if os.path.isfile(dir + 'tele_packet_off1.npy') :
-            print('tele_packet_off1.npy')
+            # print('tele_packet_off1.npy')
             tel_data = np.zeros((20,21))
             queue3.send(tel_data)
             continue

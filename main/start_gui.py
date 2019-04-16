@@ -8,20 +8,33 @@ from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
-sys.path.append('/home/time/time-software-testing/TIME_Software')
-sys.path.append('/home/time/time-softwrae-testing/main/tempfiles')
+sys.path.append('/home/time_user/TIME_Software')
+sys.path.append('/home/time_user/main/tempfiles')
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
 
 #class of all components of GUI
-class mcegui(QtGui.QWidget):
+class MainWindow(QtGui.QMainWindow):
     #initializes mcegui class and calls other init functions
     def __init__(self, parent = None):
-        super(mcegui, self).__init__(parent)
+        super(MainWindow, self).__init__(parent)
+        self.setWindowTitle('TIME Live Data Visualization Suite')
+        # self.setAutoFillBackground(true)
+        self.getparameters()
+
+        p = QtGui.QPalette()
+        # p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(114,160,240)))
+        p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
+
+        self.startwindow = QtGui.QWidget()
+        self.startgrid = QtGui.QGridLayout()
+        self.startgrid.addLayout(self.parametersquit, 1, 1, 1, 1)
+        self.startwindow.setGeometry(10, 10, 1920, 1080)
+        self.startwindow.setLayout(self.startgrid)
+        self.startwindow.setPalette(p)
+        self.startwindow.show()
+
         self.init_mce()
-        self.init_ui()
         self.qt_connections()
-        self.flags = mp.Array('i',ut.flags,lock=True)
-        self.offset = mp.Value('d',ut.offset,lock=True)
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
@@ -32,35 +45,27 @@ class mcegui(QtGui.QWidget):
         self.framenumber = ''
         self.frameperfile = 100
         self.totaltimeinterval = 120
-        self.currentchannel = 1
-        self.row = 0
-        self.oldch = 0
+        self.channel1 = 0
+        self.channel2 = 0
+        self.row1 = 0
+        self.row2 = 0
+        self.oldch1 = 0
+        self.oldch2 = 0
         self.graphdata1 = []
         self.z1 = 0
         self.n_interval = 0
+        self.flags = mp.Array('i',ut.flags,lock=True)
+        self.offset = mp.Value('d',ut.offset,lock=True)
         ut.new_dir = str(datetime.datetime.utcnow().isoformat())
-        self.netcdfdir = '/data/netcdffiles/%s' %(ut.new_dir)
-        os.makedirs(self.netcdfdir)
-
-
-    #creates GUI window and calls functions to populate GUI
-    def init_ui(self):
-        self.setWindowTitle('TIME Live Data Visualization Suite')
-        self.getparameters()
-        self.grid = QtGui.QGridLayout()
-        self.grid.addLayout(self.parametersquit, 1, 1, 1, 1)
-        self.setLayout(self.grid)
-        self.setGeometry(10, 10, 1920, 1080)
-        self.show()
+        self.netcdfdir = './data/netcdffiles/%s' %(ut.new_dir)
+        os.makedirs(self.netcdfdir, 0755)
 
     #reacts to button presses and other GUI user input
     def qt_connections(self):
         self.quitbutton.clicked.connect(self.on_quitbutton_clicked)
         self.submitbutton.clicked.connect(self.on_submitbutton_clicked)
         self.starttel.clicked.connect(self.on_starttel_clicked)
-        self.selectchannel.currentIndexChanged.connect(self.changechannel)
-        self.readoutcardselect.currentIndexChanged.connect(self.changereadoutcard)
-        self.selectrow.currentIndexChanged.connect(self.changerow)
+        self.changechan.clicked.connect(self.on_set_chan_clicked)
 
     def on_quitbutton_clicked(self):
         ut.mce_exit.set()
@@ -79,19 +84,19 @@ class mcegui(QtGui.QWidget):
             else :
                 if ut.which_mce[1] == 1 :
                     subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
+                    subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
                 if ut.which_mce[0] == 1 :
                     subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
+                    subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
 
         # # stop the file transfer process to time-master
-        subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
-        subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
         subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
-        subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_*'], shell=True)
+        subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele*'], shell=True)
 
         print('Quitting Application')
         sys.exit()
@@ -134,6 +139,7 @@ class mcegui(QtGui.QWidget):
         # check if telescope has been started first
         if not self.starttel.isEnabled() :
             print("Please Initialize Telescope First")
+            self.warningbox('gui')
             self.submitbutton.setEnabled(False)
 
         ut.new_dir = '%s' %(datetime.datetime.utcnow().isoformat())
@@ -147,12 +153,19 @@ class mcegui(QtGui.QWidget):
         if self.mceson == 'MCE0':
             ut.which_mce[0] = 1
             ut.which_mce[1] = 0
+            ut.which_mce[2] = 0
         elif self.mceson == 'MCE1':
             ut.which_mce[0] = 0
             ut.which_mce[1] = 1
+            ut.which_mce[2] = 0
+        elif self.mceson == 'MCE SIM':
+            ut.which_mce[0] = 0
+            ut.which_mce[1] = 0
+            ut.which_mce[2] = 1
         else :
             ut.which_mce[0] = 1
             ut.which_mce[1] = 1
+            ut.which_mce[2] = 0
 
         # data mode --------------------------------------
         self.datamode = self.enterdatamode.currentText()
@@ -195,7 +208,7 @@ class mcegui(QtGui.QWidget):
         or self.timeinterval == '0':
             self.warningbox('gui') # throw up a warning box
             # restart the gui window
-            ex = mcegui()
+            ex = MainWindow()
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
@@ -211,7 +224,6 @@ class mcegui(QtGui.QWidget):
                 parafile.write(self.timestarted+' ')
                 parafile.close()
 
-            self.channelselection()
             print(colored('Time Started: %s' % (self.timestarted),'magenta'))
             # self.p = int((50 * 10 ** 6) / (33 * 90 * ut.german_freq)) #calculation taken from UBC MCE Wiki
 
@@ -219,15 +231,15 @@ class mcegui(QtGui.QWidget):
             self.submitbutton.setEnabled(False)
 
             # check for leftover files from previous run and delete
-            dir1 = '/home/time/Desktop/time-data/mce1/'
-            dir2 = '/home/time/Desktop/time-data/mce2/'
+            dir1 = '/home/time_user/Desktop/time-data/mce1/'
+            dir2 = '/home/time_user/Desktop/time-data/mce2/'
             mce0 = len(os.listdir(dir1))
             mce1 = len(os.listdir(dir2))
             if mce0 != 0 :
-                subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
+                subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce1/temp*'], shell = True)
             if mce1 != 0 :
-                subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-            subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_*'], shell = True)
+                subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce2/temp*'], shell = True)
+            subprocess.Popen(['rm /home/time_user/TIME_Software/main/tempfiles/tele_*'], shell = True)
 
             #set the data mode for both mces and start them running
             if self.readoutcard == 'All':
@@ -252,25 +264,54 @@ class mcegui(QtGui.QWidget):
                     subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
             # start file transfer scripts
-            subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
+            # subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
             if ut.which_mce[0] == 1 :
-                subprocess.Popen(['ssh -T time-mce-0 python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
+                subprocess.Popen(['ssh -T time-mce-0 python /home/time_user/TIME_Software/sftp/mce0_sftp.py'], shell=True)
             if ut.which_mce[1] == 1 :
-                subprocess.Popen(['ssh -T time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
+                subprocess.Popen(['ssh -T time-mce-1 python /home/time_user/TIME_Software/sftp/mce1_sftp.py'], shell=True)
             time.sleep(2.0)
 
             data = np.zeros((33,32))
+
+            self.startwindow.hide()
+
+            self.newwindow = QtGui.QWidget()
+            self.newwindow.setWindowTitle('TIME Live Data Viewer')
+            self.newgrid = QtGui.QGridLayout()
+            self.newwindow.setGeometry(10, 10, 1920, 1080)
+            self.newwindow.setLayout(self.newgrid)
+
+            p = QtGui.QPalette()
+            p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
+            self.newwindow.setPalette(p)
+
+            self.newquitbutton = QtGui.QVBoxLayout()
+            self.newquitbutton.addWidget(self.quitbutton)
+            self.newgrid.addLayout(self.newquitbutton, 9,0,1,2)
+
+            self.setnewrc = QtGui.QVBoxLayout()
+            self.setnewrc.addWidget(self.changechan)
+            self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
+
             #start other plot making processes
             self.initplot()
+            self.channelselection()
             self.initheatmap(data,data) # give first values for heatmap to create image scale
-            # self.initfftgraph()
+            self.initfftgraph()
             self.inittelescope()
             # self.initkmirrordata()
+
+            self.newwindow.show()
+
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
         self.on_quitbutton_clicked()
     #creates inputs for user to enter parameters and creates 'Quit' button
+
+    def on_set_chan_clicked(self):
+        self.changechannel()
+        self.changerow()
 
     def getparameters(self):
         #creating user input boxes
@@ -280,7 +321,7 @@ class mcegui(QtGui.QWidget):
         self.enterdatamode.addItems(
             ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
         self.whichmces = QtGui.QComboBox()
-        self.whichmces.addItems(['MCE0','MCE1','Both'])
+        self.whichmces.addItems(['MCE0','MCE1','Both','MCE SIM'])
         self.enterreadoutcard = QtGui.QComboBox()
         for i in range(8):
             if i < 4:
@@ -297,6 +338,7 @@ class mcegui(QtGui.QWidget):
         self.entershowmcedata = QtGui.QComboBox()
         self.entershowmcedata.addItems(['Yes', 'No'])
         self.submitbutton = QtGui.QPushButton('Submit')
+        self.submitbutton.setStyleSheet("background-color: green")
 
         self.mceGroupBox = QtGui.QGroupBox("MCE Parameters")
         self.parameters = QtGui.QFormLayout()
@@ -357,6 +399,7 @@ class mcegui(QtGui.QWidget):
         self.telparams.addRow('Epoch of Observation', self.tel_epoch)
         self.telparams.addRow('Object Catalog Name', self.tel_object)
         self.starttel = QtGui.QPushButton('Initialize Telescope')
+        self.starttel.setStyleSheet("background-color: blue")
         self.telparams.addRow(self.starttel)
         self.telGroupBox.setLayout(self.telparams)
         # =====================================================================
@@ -365,7 +408,10 @@ class mcegui(QtGui.QWidget):
         self.parametersquit.addWidget(self.telGroupBox)
         self.parametersquit.addWidget(self.mceGroupBox)
         self.quitbutton = QtGui.QPushButton('Quit')
+        self.quitbutton.setStyleSheet("background-color: red")
         self.parametersquit.addWidget(self.quitbutton)
+        self.changechan = QtGui.QPushButton('Set New')
+        self.changechan.setStyleSheet("background-color: blue")
 
         self.readoutcardselect = QtGui.QComboBox()
         self.selectchannel = QtGui.QComboBox()
@@ -374,55 +420,71 @@ class mcegui(QtGui.QWidget):
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
     def channelselection(self):
-        self.channelreadoutbox = QtGui.QFormLayout()
 
-        #adds readout card dropbox if All
-        if self.readoutcard == 'All':
-            for i in range(32):
-                self.selectchannel.addItem(str(i))
-        else:
-            self.selectchannel.addItems(['0', '1', '2', '3', '4', '5', '6', '7'])
-        #creates channel dropbox
+        self.channelreadoutbox1 = QtGui.QFormLayout()
+        self.selectchannel1 = QtGui.QLineEdit('0')
+        self.selectrow1 = QtGui.QLineEdit('0')
+        self.row1 = int(self.selectrow1.text())
+        self.channel1 = int(self.selectchannel1.text())
+        self.channelreadoutbox1.addRow('Row1 [0-32]',self.selectrow1)
+        self.channelreadoutbox1.addRow('Col1 [0-31]',self.selectchannel1)
+        self.newgrid.addLayout(self.channelreadoutbox1, 0,0,1,2)
 
-        for i in range(33):
-            self.selectrow.addItem(str(i))
-
-        self.channellabel = QtGui.QLabel('Column')
-
-        self.rowlabel = QtGui.QLabel('Row')
-
-        self.channelreadoutbox.addRow(self.channellabel, self.selectchannel)
-
-        self.channelreadoutbox.addRow(self.rowlabel, self.selectrow)
-
-        self.grid.addLayout(self.channelreadoutbox, 3, 1, 1, 1)
+        self.channelreadoutbox2 = QtGui.QFormLayout()
+        self.selectchannel2 = QtGui.QLineEdit('0')
+        self.selectrow2 = QtGui.QLineEdit('0')
+        self.row2 = int(self.selectrow2.text())
+        self.channel2 = int(self.selectchannel2.text())
+        self.channelreadoutbox2.addRow('Row2 [0-32]',self.selectrow2)
+        self.channelreadoutbox2.addRow('Col2 [0-31]',self.selectchannel2)
+        self.newgrid.addLayout(self.channelreadoutbox2, 5,0,1,2)
 
     #changes channel of live graph when user changes channel
     def changechannel(self):
-        self.currentchannel = int(self.selectchannel.currentText()) + 1
-        if self.readoutcard == 'All':
-	           self.changereadoutcard()
-        #print(self.currentchannel)
+        if int(self.selectchannel1.text()) <= 31 :
+            if int(self.selectchannel1.text()) != self.channel1 :
+                self.channel1 = int(self.selectchannel1.text())
+                if self.i3 < 6 :
+                    self.i3 += 1
+                else :
+                    self.i3 == 0
+        else :
+            os.system("mpg123 /home/time_user/TIME_Software/main/warning3.mp3")
+            self.warningbox(['rc_wrong','CHANNEL 1'])
+
+        if int(self.selectchannel2.text()) <= 31 :
+            if int(self.selectchannel2.text()) != self.channel2 :
+                self.channel2 = int(self.selectchannel2.text())
+                if self.i4 < 6 :
+                    self.i4 += 1
+                else :
+                    self.i4 == 0
+        else :
+            os.system("mpg123 /home/time_user/TIME_Software/main/warning3.mp3")
+            self.warningbox(['rc_wrong','CHANNEL 2'])
 
     def changerow(self):
-        self.row = int(self.selectrow.currentText()) + 1
+        if int(self.selectrow1.text()) <= 32 :
+            if int(self.selectrow1.text()) != self.row1 :
+                self.row1 = int(self.selectrow1.text())
+                if self.i1 < 7 :
+                    self.i1 += 1
+                else :
+                    self.i1 == 0
+        else :
+            os.system("mpg123 /home/time_user/TIME_Software/main/warning3.mp3")
+            self.warningbox(['rc_wrong','ROW 1'])
 
-    #changes readout card of live graph when user changes readout card
-    def changereadoutcard(self):
-    	if self.currentchannel < 9:
-    	   self.currentreadoutcard = 1
-    	   self.currentreadoutcarddisplay = 'MCE 1 RC 1'
-    	elif self.currentchannel >= 9 and self.currentchannel < 17:
-    	   self.currentreadoutcard = 2
-    	   self.currentreadoutcarddisplay = 'MCE 1 RC 2'
-    	elif self.currentchannel >= 17 and self.currentchannel < 25:
-    	   self.currentreadoutcard = 3
-    	   self.currentreadoutcarddisplay = 'MCE 1 RC 3'
-    	elif self.currentchannel >= 25:
-    	   self.currentreadoutcard = 4
-    	   self.currentreadoutcarddisplay = 'MCE 1 RC 4'
-    	# self.currentreadoutcard.setText('Current Readout Card: %s' % (self.currentreadoutcarddisplay))
-        # self.currentreadoutcarddisplay = self.readoutcardselect.currentText()
+        if int(self.selectrow2.text()) <= 32 :
+            if int(self.selectrow2.text()) != self.row2 :
+                self.row2 = int(self.selectrow2.text())
+                if self.i2 < 7 :
+                    self.i2 += 1
+                else :
+                    self.i2 == 0
+        else :
+            os.system("mpg123 /home/time_user/TIME_Software/main/warning3.mp3")
+            self.warningbox(['rc_wrong','ROW 2'])
 
     def initplot(self):
         #initialize graph objects & graph time scales
@@ -440,13 +502,19 @@ class mcegui(QtGui.QWidget):
         #initialize graph GUI item
         self.mcegraphdata1 = pg.ScatterPlotItem()
         self.mcegraphdata2 = pg.ScatterPlotItem()
-        self.mcegraph = pg.PlotWidget()
-        self.grid.addWidget(self.mcegraph, 1, 2, 4, 10)
+        self.mcegraph1 = pg.PlotWidget()
+        self.mcegraph2 = pg.PlotWidget()
+        self.newgrid.addWidget(self.mcegraph1, 0,2,3,8)
+        self.newgrid.addWidget(self.mcegraph2, 5,2,5,8)
 
         #add labels to graph
-        self.mcegraph.setLabel('bottom', 'Time', 's')
-        self.mcegraph.setLabel('left', 'Counts')
-        self.mcegraph.setTitle('MCE TIME Data')
+        self.mcegraph1.setLabel('bottom', 'Time [sec]')
+        self.mcegraph1.setLabel('left', 'Counts [ADU]')
+        self.mcegraph1.setTitle('MCE0 Raw Data')
+
+        self.mcegraph2.setLabel('bottom', 'Time [sec]')
+        self.mcegraph2.setLabel('left', 'Counts [ADU]')
+        self.mcegraph2.setTitle('MCE1 Raw Data')
 
         #initalize old data graph GUI item and add labels
         # self.oldmcegraph = pg.PlotWidget()
@@ -465,6 +533,10 @@ class mcegui(QtGui.QWidget):
         self.updater.start()
 
     def initheatmap(self,h1,h2) :
+
+        if ut.which_mce[2] == 1 :
+            self.roll_avg_1 = h1
+            self.roll_avg_2 = h2
 
         if ut.which_mce[0] == 1 :
             self.roll_avg_1 = h1
@@ -512,6 +584,7 @@ class mcegui(QtGui.QWidget):
         self.heatmap3.setPredefinedGradient('thermal')
         self.heatmap3.autoLevels()
 
+
         if ut.which_mce[0] == 1 :
             self.heatmap3.setImage(h1)
         # ===========================================================================================================
@@ -527,6 +600,12 @@ class mcegui(QtGui.QWidget):
         self.heatmap4.autoLevels()
 
         if ut.which_mce[1] == 1 :
+            self.heatmap4.setImage(h2)
+
+        if ut.which_mce[2] == 1 :
+            self.heatmap1.setImage(h1)
+            self.heatmap2.setImage(h2)
+            self.heatmap3.setImage(h1)
             self.heatmap4.setImage(h2)
         # ===========================================================================================================
 
@@ -544,21 +623,26 @@ class mcegui(QtGui.QWidget):
 
     def initfftgraph(self):
 
-        self.fftgraph = pg.PlotWidget()
+        self.fftgraph1 = pg.PlotWidget()
+        self.fftgraph2 = pg.PlotWidget()
         self.fftgraphdata1 = pg.ScatterPlotItem()
         self.fftgraphdata2 = pg.ScatterPlotItem()
-        self.fftgraph.addItem(self.fftgraphdata1)
-        self.fftgraph.addItem(self.fftgraphdata2)
+        self.fftgraph1.addItem(self.fftgraphdata1)
+        self.fftgraph2.addItem(self.fftgraphdata2)
 
-        self.fftgraph.setLabel('bottom', 'Time', 's')
-        self.fftgraph.setLabel('left', 'Counts')
-        self.fftgraph.setTitle('MCE 0/1 FFT Data')
+        self.fftgraph1.setLabel('bottom', 'Time', 's')
+        self.fftgraph1.setLabel('left', 'Counts')
+        self.fftgraph1.setTitle('MCE 0 FFT Data')
 
-        self.grid.addWidget(self.fftgraph, 3, 2, 4, 6)
+        self.fftgraph2.setLabel('bottom', 'Time', 's')
+        self.fftgraph2.setLabel('left', 'Counts')
+        self.fftgraph2.setTitle('MCE 1 FFT Data')
+
+        self.newgrid.addWidget(self.fftgraph1, 3,2,2,8)
+        # self.newgrid.addWidget(self.fftgraph2, 8,2)
 
     def initkmirrordata(self):
         # start the kms QThread
-        ''' Add back in once KMS is running '''
         if self.tel_script == 'point_cross.py' :
             # do something to set KMS in specific position before starting KMS thread
             print('No KMS!')
@@ -604,7 +688,7 @@ class mcegui(QtGui.QWidget):
         self.kmsparams.addWidget(self.timetext)
         self.kmsparams.addWidget(self.enctext)
         self.kmsgui.setLayout(self.kmsparams)
-        self.grid.addWidget(self.kmsgui, 4, 1, 1, 1)
+        self.newgrid.addWidget(self.kmsgui, 4, 1, 1, 1)
 
     def inittelescope(self):
 
@@ -671,7 +755,7 @@ class mcegui(QtGui.QWidget):
         # error checking based on status flags from kmirror
         kms_error = [10,11,12,13]
         if (status in kms_error) and (self.repeat == False) :
-            os.system("mpg123 /home/time/time-software-testing/TIME_Software/main/klaxon.mp3")
+            os.system("mpg123 /home/time_user/TIME_Software/main/klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -709,13 +793,25 @@ class mcegui(QtGui.QWidget):
             self.fftdata2[0] = self.fftdata2[-1]
             self.fftgraphdata2.setData(self.x, self.fftdata2)
 
+        if ut.which_mce[2] == 1 :
+
+            self.fftdata1 = np.fft.fft(self.y1)
+            self.fftdata1 = np.asarray(self.fftdata1, dtype=np.float32)
+            self.fftdata1[0] = self.fftdata1[-1]
+            self.fftgraphdata1.setData(self.x, self.fftdata1)
+
+            self.fftdata2 = np.fft.fft(self.y2)
+            self.fftdata2 = np.asarray(self.fftdata2, dtype=np.float32)
+            self.fftdata2[0] = self.fftdata2[-1]
+            self.fftgraphdata2.setData(self.x, self.fftdata2)
+
     def updatetelescopedata(self,pa,slew,alt,az,ra,dec,time):
         # error checking based on status flags from telescope
         tel_error = [10,11,12]
 
         if (slew in tel_error) and (self.repeat == False) :
             # use afplay for mac testing
-            os.system("mpg123 /home/time/time-software-testing/TIME_Software/main/klaxon.mp3")
+            os.system("mpg123 /home/time_user/TIME_Software/main/klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -724,8 +820,7 @@ class mcegui(QtGui.QWidget):
             self.warningbox(['tel',slew]) #slew will be replaced with tel status flag over socket
 
         elif slew == 'done' :
-            print('telescope data did')
-            os.system("mpg123 /home/time/time-software-testing/TIME_Software/main/finished.mp3")
+            os.system("mpg123 /home/time_user/TIME_Software/main/finished.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -769,22 +864,27 @@ class mcegui(QtGui.QWidget):
 
     def updateplot(self,h1,h2,index):
 
-        # self.currentchannel = 2
-        # self.row = 14
-
-
         self.index = index
         self.starttime = datetime.datetime.utcnow()
 
         # parsing mce array for graph data ========================
         if ut.which_mce[0] == 1 :
 
-            y1 = np.asarray(h1)[self.row,self.currentchannel,:]
+            y1 = np.asarray(h1)[self.row1,self.channel1,:]
             self.y1 = y1
 
         if ut.which_mce[1] == 1 :
 
-            y2 = np.asarray(h2)[self.row,self.currentchannel,:]
+            y2 = np.asarray(h2)[self.row2,self.channel2,:]
+            self.y2 = y2
+
+        if ut.which_mce[2] == 1 :
+
+            y1 = np.asarray(h1)[self.row1,self.channel1,:]
+            self.y1 = y1
+            print(len(h1),len(h1[0]),len(h1[0][0]))
+
+            y2 = np.asarray(h2)[self.row2,self.channel2,:]
             self.y2 = y2
 
         #creates x values for current time interval and colors points based on current channel ===
@@ -794,53 +894,82 @@ class mcegui(QtGui.QWidget):
         x = np.linspace(self.index,self.index + 1,self.frameperfile)
         self.x = x
 
-        self.pointcolor = []
-        self.pointsymbol = []
-        # =====================================================================================
-        #picks color based on current channel =============================================
+        syms = ['d','o','s','t','+','d','o']
         symbols = ['b','r','g','y','c','m','k','w']
-        i = self.currentchannel // 4
-        self.pointcolor.extend([pg.mkBrush(symbols[i]) for j in range(self.frameperfile)])
-        # =================================================================================================================
-        # changes symbols for viewing different RC cards on same plot =====================
-        syms = ['d','o','s','t','d','o','s','t']
-        i = self.row // 4
-        self.pointsymbol.extend([syms[i] for j in range(self.frameperfile)])
+        # =====================================================================================
+        if self.index != 0 :
+            #picks color based on current channel =============================================
+            self.pointcolor1 = []
+            self.pointcolor1.extend([pg.mkBrush(symbols[self.i1]) for j in range(self.frameperfile)])
+            self.pointcolor2 = []
+            self.pointcolor2.extend([pg.mkBrush(symbols[self.i2]) for j in range(self.frameperfile)])
+            # =================================================================================================================
+            # changes symbols for viewing different RC cards on same plot =====================
+            self.pointsymbol1 = []
+            self.pointsymbol1.extend([syms[self.i3] for j in range(self.frameperfile)])
+            self.pointsymbol2 = []
+            self.pointsymbol2.extend([syms[self.i4] for j in range(self.frameperfile)])
+
+        else :
+            self.pointcolor1 = [pg.mkBrush(symbols[0]) for j in range(self.frameperfile)]
+            self.pointcolor2 = [pg.mkBrush(symbols[0]) for j in range(self.frameperfile)]
+            self.pointsymbol1 = [syms[0] for j in range(self.frameperfile)]
+            self.pointsymbol2 = [syms[0] for j in range(self.frameperfile)]
+            self.i1 = 0
+            self.i2 = 0
+            self.i3 = 0
+            self.i4 = 0
+
         #============================================================================================================
 
         #creates graphdata item on first update
         if self.index == 0:
 
-            self.mcegraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
+            self.mcegraph1.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
+            self.mcegraph2.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
 
-            # self.updatefftgraph()
+            self.updatefftgraph()
             self.data[0] = x
 
             if ut.which_mce[0] == 1 :
                 self.data[1] = y1
-                self.mcegraph.addItem(self.mcegraphdata1)
+                self.mcegraph1.addItem(self.mcegraphdata1)
 
             if ut.which_mce[1] == 1 :
-                self.mcegraph.addItem(self.mcegraphdata2)
+                self.mcegraph2.addItem(self.mcegraphdata2)
+                self.data[2] = y2
+
+            if ut.which_mce[2] == 1 :
+                self.data[1] = y1
+                self.mcegraph1.addItem(self.mcegraphdata1)
+
+                self.mcegraph2.addItem(self.mcegraphdata2)
                 self.data[2] = y2
 
             if self.readoutcard == 'All':
 
                 if ut.which_mce[0] == 1 :
-                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor, symbol=self.pointsymbol)
+                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1, symbol=self.pointsymbol1)
                     # self.mcegraphdata1.setData(x,y1)
                 if ut.which_mce[1] == 1 :
-                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor, symbol=self.pointsymbol)
+                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2, symbol=self.pointsymbol2)
                     # self.mcegraphdata2.setData(x,y2)
+                if ut.which_mce[2] == 1 :
+                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1, symbol=self.pointsymbol1)
+                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2, symbol=self.pointsymbol2)
 
             else:
 
                 if ut.which_mce[0] == 1 :
-                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor)
+                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1)
                 if ut.which_mce[1] == 1 :
-                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor)
+                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2)
+                if ut.which_mce[2] == 1 :
+                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1)
+                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2)
 
-            self.oldch = self.currentchannel
+            self.oldch1 = self.channel1
+            self.oldch2 = self.channel2
             # updates oldgraph data
             self.data[0] = x
 
@@ -848,13 +977,17 @@ class mcegui(QtGui.QWidget):
                 self.data[1] = y1
             if ut.which_mce[1] == 1 :
                 self.data[2] = y2
+            if ut.which_mce[2] == 1 :
+                self.data[1] = y1
+                self.data[2] = y2
 
             self.n_interval += 1 # update to keep graph going
         # ===========================================================================================================
         #clears graphdata and updates old graph after the total time interval has passed
         elif self.n_interval == self.totaltimeinterval :
             # self.oldmcegraph.setXRange(self.index - self.frameperfile, self.index + self.totaltimeinterval - 1 - self.frameperfile, padding=0)
-            self.mcegraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
+            self.mcegraph1.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
+            self.mcegraph2.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
             self.data[0] = x
 
             if ut.which_mce[0] == 1 :
@@ -867,19 +1000,31 @@ class mcegui(QtGui.QWidget):
                 # self.oldmcegraphdata2.setData(self.data[0], self.data[2])
                 self.mcegraphdata2.clear()
 
+            if ut.which_mce[2] == 1 :
+                self.data[1] = y1
+                # self.oldmcegraphdata1.setData(self.data[0], self.data[1])
+                self.mcegraphdata1.clear()
+
+                self.data[2] = y2
+                # self.oldmcegraphdata2.setData(self.data[0], self.data[2])
+                self.mcegraphdata2.clear()
+
             if self.readoutcard == 'All':
                 if ut.which_mce[0] == 1 :
-                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor, symbol=self.pointsymbol)
+                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1, symbol=self.pointsymbol1)
                     # self.mcegraphdata1.setData(x,y1)
                 if ut.which_mce[1] == 1 :
-                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor, symbol=self.pointsymbol)
+                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2, symbol=self.pointsymbol2)
                     # self.mcegraphdata1.setData(x,y2)
 
             else:
                 if ut.which_mce[0] == 1 :
-                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor)
+                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1)
                 if ut.which_mce[1] == 1 :
-                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor)
+                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2)
+                if ut.which_mce[2] == 1 :
+                    self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1)
+                    self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2)
 
             self.data = [0, 0, 0]
             # updates oldgraphdata after total time interval is reached
@@ -888,6 +1033,9 @@ class mcegui(QtGui.QWidget):
             if ut.which_mce[0] == 1 :
                 self.data[1] = y1
             if ut.which_mce[1] == 1 :
+                self.data[2] = y2
+            if ut.which_mce[2] == 1 :
+                self.data[1] = y1
                 self.data[2] = y2
 
             self.n_interval = 0 #reset counter
@@ -900,47 +1048,65 @@ class mcegui(QtGui.QWidget):
             elif ut.which_mce[0] == 1 :
                 dummy = []
                 self.updateheatmap(h1,dummy)
+            elif ut.which_mce[2] == 1 :
+                self.updateheatmap(h1,h2)
             else :
                 dummy = []
                 self.updateheatmap(dummy,h2)
 
-            # self.updatefftgraph()
+            self.updatefftgraph()
 
-            if self.channeldelete == 'Yes' and self.oldch != self.currentchannel:
+            if self.channeldelete == 'Yes' and self.oldch1 != self.channel1 and self.oldch2 != self.channel2:
 
                 if ut.which_mce[0] == 1 :
                     self.mcegraphdata1.clear()
                 if ut.which_mce[1] == 1 :
                     self.mcegraphdata2.clear()
+                if ut.which_mce[2] == 1 :
+                    self.mcegraphdata1.clear()
+                    self.mcegraphdata2.clear()
 
                 if self.readoutcard == 'All':
                     if ut.which_mce[0] == 1 :
-                        self.mcegraphdata1.setData(x, y1, brush=self.pointcolor, symbol=self.pointsymbol)
+                        self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1, symbol=self.pointsymbol1)
                         # self.mcegraphdata1.setData(x,y1)
                     if ut.which_mce[1] == 1 :
-                        self.mcegraphdata2.setData(x, y2, brush=self.pointcolor, symbol=self.pointsymbol)
+                        self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2, symbol=self.pointsymbol2)
                         # self.mcegraphdata1.setData(x,y2)
+                    if ut.which_mce[2] == 1 :
+                        self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1, symbol=self.pointsymbol1)
+                        self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2, symbol=self.pointsymbol2)
 
                 else:
                     if ut.which_mce[0] == 1 :
-                        self.mcegraphdata1.setData(x, y1, brush=self.pointcolor)
+                        self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1)
                     if ut.which_mce[1] == 1 :
-                        self.mcegraphdata2.setData(x, y2, brush=self.pointcolor)
+                        self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2)
+                    if ut.which_mce[2] == 1 :
+                        self.mcegraphdata1.setData(x, y1, brush=self.pointcolor1)
+                        self.mcegraphdata2.setData(x, y2, brush=self.pointcolor2)
 
             else:
                 if self.readoutcard == 'All':
                     if ut.which_mce[0] == 1 :
-                        self.mcegraphdata1.addPoints(x, y1, brush=self.pointcolor, symbol=self.pointsymbol)
+                        self.mcegraphdata1.addPoints(x, y1, brush=self.pointcolor1, symbol=self.pointsymbol1)
                         # self.mcegraphdata1.setData(x,y1)
                     if ut.which_mce[1] == 1 :
-                        self.mcegraphdata2.addPoints(x, y2, brush=self.pointcolor, symbol=self.pointsymbol)
+                        self.mcegraphdata2.addPoints(x, y2, brush=self.pointcolor2, symbol=self.pointsymbol2)
                         # self.mcegraphdata1.setData(x,y2)
+                    if ut.which_mce[2] == 1 :
+                        self.mcegraphdata1.addPoints(x, y1, brush=self.pointcolor1, symbol=self.pointsymbol1)
+                        self.mcegraphdata2.addPoints(x, y2, brush=self.pointcolor2, symbol=self.pointsymbol2)
 
                 else:
                     if ut.which_mce[0] == 1 :
-                        self.mcegraphdata1.addPoints(x, y1, brush=self.pointcolor)
+                        self.mcegraphdata1.addPoints(x, y1, brush=self.pointcolor1)
                     if ut.which_mce[1] == 1 :
-                        self.mcegraphdata2.addPoints(x, y2, brush=self.pointcolor)
+                        self.mcegraphdata2.addPoints(x, y2, brush=self.pointcolor2)
+                    if ut.which_mce[2] == 1 :
+                        self.mcegraphdata1.addPoints(x, y1, brush=self.pointcolor1)
+                        self.mcegraphdata2.addPoints(x, y2, brush=self.pointcolor2)
+
 
             # updates old data for when graph resets
             np.append(self.data[0],x) # doesn't create a new array but adds to existing
@@ -949,17 +1115,21 @@ class mcegui(QtGui.QWidget):
                 np.append(self.data[1],y1)
             if ut.which_mce[1] == 1 :
                 np.append(self.data[2],y2)
+            if ut.which_mce[2] == 1 :
+                np.append(self.data[1],y1)
+                np.append(self.data[2],y2)
 
             self.n_interval += 1
         # =================================================================================================================
-        self.oldch = self.currentchannel
+        self.oldch1 = self.channel1
+        self.oldch2 = self.channel2
         # =================================================================================================================
 
     def updateheatmap(self,h1,h2):
 
         self.alpha = 0.1
 
-        if ut.which_mce[0] == 1 :
+        if ut.which_mce[0] == 1 or ut.which_mce[2] == 1:
 
             m1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
             for b in range(h1.shape[0]):
@@ -991,7 +1161,7 @@ class mcegui(QtGui.QWidget):
 
             self.heatmap3.setImage(d1_avg)
 
-        if ut.which_mce[1] == 1 :
+        if ut.which_mce[1] == 1 or ut.which_mce[2] == 1:
 
             # ---------------------------------------------------------
             m2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
@@ -1034,9 +1204,15 @@ class mcegui(QtGui.QWidget):
             parameterwarning.setText('Error %s: One or more parameters not entered correctly!' %(message[1]))
             parameterwarning.setStandardButtons(QtGui.QMessageBox.Ok)
             parameterwarning.setWindowTitle('Parameter Warning')
-            parameterwarning.buttonClicked.connect(self.on_warningbutton_clicked)
             parameterwarning.exec_()
-        if message[0] == 'kms' :
+        elif message[0] == 'rc_wrong' :
+            parameterwarning = QtGui.QMessageBox()
+            parameterwarning.setIcon(QtGui.QMessageBox.Warning)
+            parameterwarning.setText('Error: %s entered incorrectly' %(message[1]))
+            parameterwarning.setStandardButtons(QtGui.QMessageBox.Ok)
+            parameterwarning.setWindowTitle('Parameter Warning')
+            parameterwarning.exec_()
+        elif message[0] == 'kms' :
             kmswarning = QtGui.QMessageBox()
             kmswatning.setStyleSheet("background-color: rgb(255,0,0); color: rgb(0,0,0)")
             kmswarning.setIcon(QtGui.QMessageBox.Critical)
@@ -1089,9 +1265,9 @@ class MCEThread(QtCore.QThread):
     def run(self):
         data, queue = mp.Pipe()
         p = mp.Process(target=append_data.Time_Files(flags = self.flags, offset = self.offset).retrieve, args=(queue,self.netcdfdir,))
-        p2 = mp.Process(target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
+        # p2 = mp.Process(target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         p.start()
-        p2.start()
+        # p2.start()
 
         while not ut.mce_exit.is_set():
             stuff = data.recv()
@@ -1100,6 +1276,8 @@ class MCEThread(QtCore.QThread):
             elif ut.which_mce[0] == 1 :
                 dummy = []
                 self.new_data.emit(stuff[0],dummy,stuff[2])
+            elif ut.which_mce[2] == 1 :
+                self.new_data.emit(stuff[0],stuff[1],stuff[2])
             else :
                 dummy = []
                 self.new_data.emit(dummy,stuff[1],stuff[2])
@@ -1153,9 +1331,9 @@ class Tel_Thread(QtCore.QThread):
         else :
             # makes fake data for when we don't want to run the telescope
             tele_array = np.zeros((20,20),dtype=float)
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off1.npy',tele_array)
+            np.save('/home/time_user/TIME_Software/main/tempfiles/tele_packet_off1.npy',tele_array)
             time.sleep(0.05)
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
+            np.save('/home/time_user/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
 
 
 class KMS_Thread(QtCore.QThread):
@@ -1185,6 +1363,5 @@ class KMS_Thread(QtCore.QThread):
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName('TIME Data Visualization Suite')
-    ex = mcegui()
+    ex = MainWindow()
     sys.exit(app.exec_())
-    print("Done")

@@ -8,7 +8,7 @@ import utils as ut
 class HK_Reader :
 
     def __init__(self,offset):
-        self.dir = '/home/time/Desktop/time-data/hk/'
+        self.dir = '/home/time_user/Desktop/time-data/hk/'
         self.dir2 = '/data/netcdffiles/'
         self.name_dict = None
         self.n = 0

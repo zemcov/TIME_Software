@@ -14,7 +14,7 @@ p = 0
 
 def netcdfdata(queue2,flags):
     # os.nice(-20)
-    dir = '/home/time/Desktop/time-data/mce2/'
+    dir = '/home/time_user/Desktop/time-data/mce2/'
     a = 0
     while not ut.mce_exit.is_set():
         mce_file_len = len(os.listdir(dir))
