@@ -10,10 +10,12 @@ import multiprocessing as mp
 import tel_tracker
 import termcolor as colored
 import utils as ut
+from pos_counter import scan_params
+import angle_converter as ac
 
 class TIME_TELE :
 
-    def start_sock(self,queue,scan_time,sec,map_size,map_angle,coord1,coord2,epoch,object,num_loop,step):
+    def start_sock(self,queue2,queue,scan_time,sec,map_size,map_angle,coord1,coord2,epoch,object,num_loop,step,coord_space,step_unit,map_size_unit,map_angle_unit):
         # I am accepting telescope sim data for the gui
         self.i = 0
         PORT = 1806
@@ -21,7 +23,14 @@ class TIME_TELE :
         self.s.bind(('',6666))
         self.s.connect(('192.168.1.252',PORT))
         print('Socket Connected')
+
+        num_loop = scan_params(map_size,scan_time,coord1,coord2,step)
+        p2 = mp.Process(target = self.loop_track , args=(num_loop,))
+        p2.start()
     # =================================================================================================================
+        '''
+        Need to put in a check for the units for map_angle and map_size and convert if necessary.
+        '''
         cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
                         'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD RA']
         i = 0
@@ -49,9 +58,6 @@ class TIME_TELE :
         print(self.i)
 
         while self.i < int(num_loop) :
-            print('Current Scan: %s / %s' %(self.i,int(num_loop)))
-            sys.stdout.flush()
-            sys.stderr.flush()
 
             if self.i == 0 :
                 commands = '{} {} {} {}'
@@ -61,7 +67,7 @@ class TIME_TELE :
                 print(reply)
 
                 self.pos_update()
-                # time.sleep(int(scan_time) + (int(sec) * 6))
+                # time.sleep(int(scan_time) + (int(sec) * 6)) # because the dome needed 6-8 wraps for the first scan to warm up
                 time.sleep(int(scan_time))
 
             else :
@@ -135,5 +141,11 @@ class TIME_TELE :
         reply = self.s.recv(1024).decode("ascii")
         print(reply)
         # -----------------------------------------------------------------
+
+    def loop_track(self,num_loop):
+        while not ut.tel_exit.is_set():
+            tot = int((self.i / num_loop) * 100)
+            queue2.send([tot])
+            time.sleep(0.05)
 
         return

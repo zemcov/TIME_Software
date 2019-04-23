@@ -61,8 +61,11 @@ class Time_Files:
                 b = self.h2
 
             if ut.which_mce[2] == 1 :
-                a = np.random.rand(33,32,100)
-                b = np.random.rand(33,32,100)
+                # a = np.random.rand(33,32,100)
+                # b = np.random.rand(33,32,100)
+                a = np.random.normal(0,2,(33,32,100))
+                b = np.random.normal(10,0.1,(33,32,100))
+
                 time.sleep(1.0)
 
             queue.send([a,b,self.p])
@@ -70,8 +73,8 @@ class Time_Files:
             self.tel_data = self.data3.recv()
             # self.kms_data = self.data4.recv()
             # ------------------------------------------
-            self.parse_arrays(dir)
             if ut.which_mce[2] == 0 : # if we aren't running in sim mode
+                self.parse_arrays(dir)
                 self.append_mce_data(dir)
             self.p += 1
             time.sleep(0.01)

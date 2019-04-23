@@ -66,6 +66,60 @@ class MainWindow(QtGui.QMainWindow):
         self.submitbutton.clicked.connect(self.on_submitbutton_clicked)
         self.starttel.clicked.connect(self.on_starttel_clicked)
         self.changechan.clicked.connect(self.on_set_chan_clicked)
+        self.helpbutton.clicked.connect(self.on_help_clicked)
+
+    def on_help_clicked(self):
+
+        self.helpwindow = QtGui.QWidget()
+        self.helpwindow.setWindowTitle('Description of TIME Commands')
+        self.helpgrid = QtGui.QGridLayout()
+        self.helpwindow.setGeometry(5, 5, 1920, 1080)
+        self.helpwindow.setLayout(self.helpgrid)
+
+        p = QtGui.QPalette()
+        p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
+        self.helpwindow.setPalette(p)
+
+        document = QtGui.QTextDocument(self.helpwindow)
+
+        html = """
+        <head>
+            <title>MCE and Telescope Command Descriptions</title>
+            <style>
+            </style>
+        </head>
+        <body>
+             <h2 style="color:blue;">Telescope Commands</h2>
+             <p style="color:black;">
+                <dl>
+                    <dt>Coffee</dt>
+                    <dd>- black hot drink</dd>
+                    <dt>Milk</dt>
+                    <dd>- white cold drink</dd>
+                </dl>
+            </p>
+            <h2 style="color:blue;">MCE Commands</h2>
+            <p style="color:black;">
+                <dl>
+                    <dt>Coffee</dt>
+                    <dd>- black hot drink</dd>
+                    <dt>Milk</dt>
+                    <dd>- white cold drink</dd>
+                </dl>
+           </p>
+        </body>
+        """
+
+        document.setHtml(html)
+
+        printer = QPrinter()
+        font = QFont()
+        font.setPointSize(12*dpi/96)
+        document.setDefaultFont(font)
+        textEdit = QtGui.QTextEdit(self.helpwindow)
+        textEdit.setDocument(document)
+        layout = QtGui.QVBoxLayout(self.helpwindow)
+        layout.addWidget(textEdit)
 
     def on_quitbutton_clicked(self):
         ut.mce_exit.set()
@@ -105,7 +159,6 @@ class MainWindow(QtGui.QMainWindow):
 
         self.sec = self.tel_sec.text()
         self.map_size = self.tel_map_size.text()
-        self.num_loop = self.tel_num_loop.text()
         self.map_angle = self.tel_map_angle.text()
         self.coord1 = self.tel_coord1.text()
         self.coord2 = self.tel_coord2.text()
@@ -114,6 +167,10 @@ class MainWindow(QtGui.QMainWindow):
         self.inittel = self.init_tel.currentText()
         self.scan_time = self.scan_time_input.text()
         self.step = self.tel_step.text()
+        self.coord_space = self.map_space.currentText()
+        self.map_size_unit = self.unit1.currentText()
+        self.map_angle_unit = self.unit2.currentText()
+        self.step_unit = self.unit3.currentText()
 
         if self.inittel == 'Yes':
             self.tel_scan = self.telescan.currentText()
@@ -184,6 +241,9 @@ class MainWindow(QtGui.QMainWindow):
 
         # frame number ----------------------------------------------
         self.framenumber = self.enterframenumber.text()
+
+        # heatmap error function ------------------------------------
+        self.alpha = float(self.heatalpha.text())
 
         # data rate -------------------------------------------------
         # self.datarate = self.enterdatarate.text()
@@ -331,6 +391,7 @@ class MainWindow(QtGui.QMainWindow):
         self.enterreadoutcard.addItem('All')
         self.enterframenumber = QtGui.QLineEdit('1350000')
         self.enterframenumber.setMaxLength(9)
+        self.heatalpha = QtGui.QLineEdit('0.1')
         # self.enterdatarate = QtGui.QLineEdit('45')
         self.entertimeinterval = QtGui.QLineEdit('120')
         self.enterchanneldelete = QtGui.QComboBox()
@@ -351,6 +412,7 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters.addRow('Datamode', self.enterdatamode)
         self.parameters.addRow('Readout Card', self.enterreadoutcard)
         self.parameters.addRow('Frame Number', self.enterframenumber)
+        self.parameters.addRow('Heatmap Alpha', self.heatalpha)
         # self.parameters.addRow('Data Rate', self.enterdatarate)
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
@@ -378,6 +440,14 @@ class MainWindow(QtGui.QMainWindow):
         self.tel_epoch = QtGui.QComboBox()
         self.tel_epoch.addItems(['B1950.0','Apparent','J2000.0'])
         self.tel_object = QtGui.QLineEdit('Mars')
+        self.unit1 = QtGui.QComboBox()
+        self.unit2 = QtGui.QComboBox()
+        self.unit3 = QtGui.QComboBox()
+        self.unit1.addItems(['arcsec','arcmin','deg'])
+        self.unit2.addItems(['arcsec','arcmin','deg'])
+        self.unit3.addItems(['arcsec','arcmin','deg'])
+        self.map_space = QtGui.QComboBox()
+        self.map_space.addItems(['RA','DEC','AZ','ALT'])
 
         self.telGroupBox = QtGui.QGroupBox("Telescope Parameters")
         self.telparams = QtGui.QFormLayout()
@@ -387,20 +457,24 @@ class MainWindow(QtGui.QMainWindow):
         self.telparams.addRow(self.teltitle)
         self.telparams.addRow('Activate Telescope', self.init_tel)
         self.telparams.addRow('Scan Strategy', self.telescan)
-        self.telparams.addRow('Total Scan Time (sec)', self.scan_time_input)
+        self.telparams.addRow('Constant Coordinate System', self.map_space)
+        # self.telparams.addRow('Total Scan Time (sec)', self.scan_time_input)
         self.telparams.addRow('Delayed Start (sec)', self.tel_delay)
         self.telparams.addRow('Time to Traverse Scan Length (sec)', self.tel_sec)
-        self.telparams.addRow('Map Size [deg], (distance for center of array to reach map edge)', self.tel_map_size)
-        self.telparams.addRow('Angle of Map Offset [deg]', self.tel_map_angle)
-        self.telparams.addRow('Number of 2D Map Vertical Steps [deg]', self.tel_num_loop)
-        self.telparams.addRow('Size of 2D Vertical Step [deg]', self.tel_step)
+        self.telparams.addRow('Map Size [deg], (distance for center of array to reach map edge)', self.tel_map_size, self.unit1)
+        self.telparams.addRow('Angle of Map Offset [deg]', self.tel_map_angle, self.unit2)
+        # self.telparams.addRow('Number of 2D Map Vertical Steps [deg]', self.tel_num_loop)
+        self.telparams.addRow('Size of 2D Vertical Step [deg]', self.tel_step, self.unit3)
         self.telparams.addRow('RA Coord of Source: [hr:min:sec]', self.tel_coord1)
         self.telparams.addRow('DEC Coord of Source: [deg:arcmin:arcsec]', self.tel_coord2)
         self.telparams.addRow('Epoch of Observation', self.tel_epoch)
         self.telparams.addRow('Object Catalog Name', self.tel_object)
         self.starttel = QtGui.QPushButton('Initialize Telescope')
         self.starttel.setStyleSheet("background-color: blue")
+        self.helpbutton = QtGui.QPushButton('Help')
+        self.helpbutton.setStyleSheet("background-color: yellow")
         self.telparams.addRow(self.starttel)
+        self.telparams.addRow(self.helpbutton)
         self.telGroupBox.setLayout(self.telparams)
         # =====================================================================
         self.parametersquit = QtGui.QVBoxLayout()
@@ -554,7 +628,7 @@ class MainWindow(QtGui.QMainWindow):
         self.heatmap1.setPredefinedGradient('thermal')
         self.heatmap1.autoLevels()
 
-        if ut.which_mce[0] == 1 :
+        if ut.which_mce[0] == 1 or ut.which_mce[2] == 1:
             self.heatmap1.setImage(h1)
         # =========================================================================================================
 
@@ -568,7 +642,7 @@ class MainWindow(QtGui.QMainWindow):
         self.heatmap2.setPredefinedGradient('thermal')
         self.heatmap2.autoLevels()
 
-        if ut.which_mce[1] == 1 :
+        if ut.which_mce[1] == 1 or ut.which_mce[2] == 1:
             self.heatmap2.setImage(h2)
         # ===========================================================================================================
 
@@ -582,11 +656,14 @@ class MainWindow(QtGui.QMainWindow):
 
         self.heatmap3 = pg.ImageView(view= self.heatmapplot3)
         self.heatmap3.setPredefinedGradient('thermal')
-        self.heatmap3.autoLevels()
+        # self.heatmap3.autoLevels()
 
 
-        if ut.which_mce[0] == 1 :
+        if ut.which_mce[0] == 1 or ut.which_mce[2] == 1:
             self.heatmap3.setImage(h1)
+            self.heatmap3.setLevels(np.mean(h1)-np.var(h1),np.mean(h1)+np.var(h1))
+            self.h1_var = np.var(h1)
+            self.h1_avg = np.mean(h1)
         # ===========================================================================================================
 
         # heatmap for Raw Data MCE1 ==================================================================================
@@ -597,16 +674,14 @@ class MainWindow(QtGui.QMainWindow):
 
         self.heatmap4 = pg.ImageView(view= self.heatmapplot4)
         self.heatmap4.setPredefinedGradient('thermal')
-        self.heatmap4.autoLevels()
+        # self.heatmap4.autoLevels()
 
-        if ut.which_mce[1] == 1 :
+        if ut.which_mce[1] == 1 or ut.which_mce[2] == 1:
             self.heatmap4.setImage(h2)
+            self.heatmap4.setLevels(np.mean(h2)-np.var(h2),np.mean(h2)+np.var(h2))
+            self.h2_var = np.var(h2)
+            self.h2_avg = np.mean(h2)
 
-        if ut.which_mce[2] == 1 :
-            self.heatmap1.setImage(h1)
-            self.heatmap2.setImage(h2)
-            self.heatmap3.setImage(h1)
-            self.heatmap4.setImage(h2)
         # ===========================================================================================================
 
         # create new window for hk and fft data
@@ -623,23 +698,19 @@ class MainWindow(QtGui.QMainWindow):
 
     def initfftgraph(self):
 
-        self.fftgraph1 = pg.PlotWidget()
-        self.fftgraph2 = pg.PlotWidget()
+        self.fftgraph = pg.PlotWidget()
         self.fftgraphdata1 = pg.ScatterPlotItem()
         self.fftgraphdata2 = pg.ScatterPlotItem()
-        self.fftgraph1.addItem(self.fftgraphdata1)
-        self.fftgraph2.addItem(self.fftgraphdata2)
+        self.fftgraph.addItem(self.fftgraphdata1)
+        self.fftgraph.addItem(self.fftgraphdata2)
 
-        self.fftgraph1.setLabel('bottom', 'Time', 's')
-        self.fftgraph1.setLabel('left', 'Counts')
-        self.fftgraph1.setTitle('MCE 0 FFT Data')
+        self.fftgraph.setLabel('bottom', 'Time', 's')
+        self.fftgraph.setLabel('left', 'Counts')
+        self.fftgraph.setTitle('MCE 0/1 FFT Data')
+        self.fftlegend = pg.LegendItem()
+        self.fftgraph.addItem(self.fftlegend)
 
-        self.fftgraph2.setLabel('bottom', 'Time', 's')
-        self.fftgraph2.setLabel('left', 'Counts')
-        self.fftgraph2.setTitle('MCE 1 FFT Data')
-
-        self.newgrid.addWidget(self.fftgraph1, 3,2,2,8)
-        # self.newgrid.addWidget(self.fftgraph2, 8,2)
+        self.newgrid.addWidget(self.fftgraph, 3,2,1,8)
 
     def initkmirrordata(self):
         # start the kms QThread
@@ -693,9 +764,10 @@ class MainWindow(QtGui.QMainWindow):
     def inittelescope(self):
 
         # start the telescope QThread
-        self.tel_updater = Tel_Thread(flags = self.flags, scan_time = self.scan_time, tel_script = self.tel_script, off = self.off, sec = self.sec, map_size = self.map_size,\
-                                        map_angle = self.map_angle, coord1 = self.coord1, coord2 = self.coord2, epoch = self.epoch,\
-                                            object = self.object, num_loop = self.num_loop, step = self.step)
+        self.tel_updater = Tel_Thread(flags = self.flags, tel_script = self.tel_script, off = self.off, sec = self.sec, map_size = self.map_size,\
+                                    map_angle = self.map_angle, coord1 = self.coord1, coord2 = self.coord2, epoch = self.epoch,\
+                                    object = self.object, step = self.step, coord_space = self.coord_space, map_size_unit = self.map_size_unit,\
+                                    map_angle_unit = self.map_angle_unit, step_unit = self.step_unit)
         self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
         self.tel_updater.start()
 
@@ -703,9 +775,15 @@ class MainWindow(QtGui.QMainWindow):
         self.patext = QtGui.QLabel('PA: %s' %('-'))
         self.slewtext = QtGui.QLabel('Slew Flag: %s' %('-'))
         self.timetext = QtGui.QLabel('UTC Time: %s' %('-'))
+        self.barlabel = QtGui.QLabel('Scan Progress (%) ')
+        self.progressbar = QtGui.QProgressBar()
+        self.progressbar.setRange(0,100)
+        self.progressbar.setTextVisible(True)
 
         # create space for tele printout values
         self.telescopedata = QtGui.QVBoxLayout()
+        self.telescopedata.addWidget(self.barlabel)
+        self.telescopedata.addWidget(self.progressbar)
         self.telescopedata.addWidget(self.patext)
         self.telescopedata.addWidget(self.slewtext)
         self.telescopedata.addWidget(self.timetext)
@@ -778,34 +856,39 @@ class MainWindow(QtGui.QMainWindow):
 
     def updatefftgraph(self):
         #self.y and self.x are defined in updateplot
+        self.fftgraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
 
         if ut.which_mce[0] == 1 :
 
             self.fftdata1 = np.fft.fft(self.y1)
             self.fftdata1 = np.asarray(self.fftdata1, dtype=np.float32)
             self.fftdata1[0] = self.fftdata1[-1]
-            self.fftgraphdata1.setData(self.x, self.fftdata1)
+            self.fftgraphdata1.setData(self.x, self.fftdata1, brush=pg.mkBrush('r'))
+            self.fftlegend.setItem(self.fftgraphdata1,'mce0')
 
         if ut.which_mce[1] == 1 :
 
             self.fftdata2 = np.fft.fft(self.y2)
             self.fftdata2 = np.asarray(self.fftdata2, dtype=np.float32)
             self.fftdata2[0] = self.fftdata2[-1]
-            self.fftgraphdata2.setData(self.x, self.fftdata2)
+            self.fftgraphdata2.setData(self.x, self.fftdata2, brush=pg.mkBrush('w'))
+            self.fftlegend.setItem(self.fftgraphdata2,'mce1')
 
         if ut.which_mce[2] == 1 :
 
             self.fftdata1 = np.fft.fft(self.y1)
             self.fftdata1 = np.asarray(self.fftdata1, dtype=np.float32)
             self.fftdata1[0] = self.fftdata1[-1]
-            self.fftgraphdata1.setData(self.x, self.fftdata1)
+            self.fftgraphdata1.setData(self.x, self.fftdata1, brush=pg.mkBrush('r'))
+            self.fftlegend.setItem(self.fftgraphdata1,'mce0')
 
             self.fftdata2 = np.fft.fft(self.y2)
             self.fftdata2 = np.asarray(self.fftdata2, dtype=np.float32)
             self.fftdata2[0] = self.fftdata2[-1]
-            self.fftgraphdata2.setData(self.x, self.fftdata2)
+            self.fftgraphdata2.setData(self.x, self.fftdata2, brush=pg.mkBrush('w'))
+            self.fftlegend.setItem(self.fftgraphdata2,'mce1')
 
-    def updatetelescopedata(self,pa,slew,alt,az,ra,dec,time):
+    def updatetelescopedata(self,progress,pa,slew,alt,az,ra,dec,time):
         # error checking based on status flags from telescope
         tel_error = [10,11,12]
 
@@ -831,7 +914,7 @@ class MainWindow(QtGui.QMainWindow):
         else :
             # update text on window to reflect new data
             tel_flags = [0,1,2,3,4]
-            tel_names = ['Idle','Tracking Centroid','-RA','+RA','Turn Around Zone']
+            tel_names = ['Idle','TC','-RA','+RA','TAZ']
             for i in range(len(tel_flags)):
                 if slew == tel_flags[i]:
                     self.slewtext.setText('Slew Flag: %s' %(tel_names[i]))
@@ -858,9 +941,7 @@ class MainWindow(QtGui.QMainWindow):
 
             self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
-
-            # self.altazgraphdata.addPoints(x=az, y=alt, brush=altazcolor)
-            # self.radecgraphdata.addPoints(x=ra, y=dec, brush=radeccolor)
+            self.progressbar.setValue(int(progress))
 
     def updateplot(self,h1,h2,index):
 
@@ -1127,8 +1208,6 @@ class MainWindow(QtGui.QMainWindow):
 
     def updateheatmap(self,h1,h2):
 
-        self.alpha = 0.1
-
         if ut.which_mce[0] == 1 or ut.which_mce[2] == 1:
 
             m1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
@@ -1160,6 +1239,7 @@ class MainWindow(QtGui.QMainWindow):
                     d1_avg[b][c] = d1[b][c] - self.roll_avg_1[b][c]
 
             self.heatmap3.setImage(d1_avg)
+            self.heatmap3.setLevels(self.h1_var - self.h1_avg , self.h1_var + self.h1_avg)
 
         if ut.which_mce[1] == 1 or ut.which_mce[2] == 1:
 
@@ -1195,6 +1275,7 @@ class MainWindow(QtGui.QMainWindow):
                     d2_avg[b][c] = d2[b][c] - self.roll_avg_2[b][c]
 
             self.heatmap4.setImage(d2_avg)
+            self.heatmap3.setLevels(self.h2_var - self.h2_avg , self.h2_var + self.h2_avg)
 
 
     def warningbox(self,message): # message is a tuple
@@ -1285,9 +1366,10 @@ class MCEThread(QtCore.QThread):
 
 class Tel_Thread(QtCore.QThread):
 
-    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
+    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object,object)
 
-    def __init__(self, flags, scan_time, tel_script, off, sec, map_size, map_angle, coord1, coord2, epoch, object, num_loop, step, parent = None):
+    def __init__(self, flags, tel_script, off, sec, map_size, map_angle, coord1, coord2, epoch, object, step, coord_space, map_size_unit,\
+                    map_angle_unit, step_unit, parent = None):
         QtCore.QThread.__init__(self, parent)
         self.off = off
         self.tel_script = tel_script
@@ -1302,25 +1384,32 @@ class Tel_Thread(QtCore.QThread):
         self.scan_time = scan_time
         self.flags = flags
         self.step = step
+        self.step_unit = step_unit
+        self.map_angle_unit = map_angle_unit
+        self.map_size_unit = map_size_unit
+        self.coord_space = coord_space
 
     def __del__(self):
         ut.tel_exit.set()
 
     def run(self):
         if self.off == False :
-            data, queue = mp.Pipe()
-            p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue,self.scan_time,self.sec,self.map_size,\
-                                    self.map_angle,self.coord1,self.coord2,self.epoch,self.object,self.num_loop,self.step))
+            data, queue = mp.Pipe() # this is for tracker
+            data2, queue2 = mp.Pipe() # this is for pos_calculator
+            p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue2,queue,self.sec,self.map_size,\
+                                    self.map_angle,self.coord1,self.coord2,self.epoch,self.object,self.step,\
+                                    self.coord_space,self.step_unit,self.map_size_unit,self.map_angle_unit))
             p.start()
 
             while True :
                 # grab data from tel_tracker.py
                 if not ut.tel_exit.is_set() :
                     tel_stuff = data.recv()
+                    progress = data2.recv() # this could end up blocking if rate is different from tel_stuff
                     with self.flags.get_lock() :
                         self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
                     # pa,float(direction),el,az,map_ra,map_dec,ut
-                    self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+                    self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
                     time.sleep(0.01)
 
                 else :

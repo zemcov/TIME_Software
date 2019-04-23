@@ -34,10 +34,6 @@ def start_tracker(queue):
             ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact, elvelact, \
             pa, unix])
 
-            # print('Unix Time:',unix)
-            sys.stderr.flush()
-            sys.stdout.flush()
-
             if len(mega_tel) < 20:
                 mega_tel.append(tel_data)
             else :
