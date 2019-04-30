@@ -6,6 +6,7 @@ import time
 import numpy as np
 import multiprocessing as mp
 import tel_tracker
+from pos_counter import scan_params
 
 class TIME_TELE :
 
@@ -17,7 +18,8 @@ class TIME_TELE :
         self.s.connect(('192.168.1.252',PORT))
         print('Socket Connected')
 
-        p2 = mp.Process(target=pos_calculator, args=(,))
+        num_loop = scan_params(map_size,scan_time,coord1,coord2,step)
+        p2 = mp.Process(target = self.loop_track , args=(num_loop,))
         p2.start()
     # =================================================================================================================
         cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\

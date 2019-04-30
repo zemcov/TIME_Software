@@ -7,6 +7,7 @@ import multiprocessing as mp
 import tel_tracker
 import utils as ut
 from termcolor import colored
+from pos_counter import scan_params
 
 class TIME_TELE :
 
@@ -20,7 +21,8 @@ class TIME_TELE :
         commands = '{} {} {} {}'
         print(colored(commands.format(coord1,coord2,epoch,object),'yellow'))
 
-        p2 = mp.Process(target=pos_calculator, args=(,))
+        num_loop = scan_params(map_size,scan_time,coord1,coord2,step)
+        p2 = mp.Process(target = self.loop_track , args=(num_loop,))
         p2.start()
     # =================================================================================================================
         # cmnd_list = ['TIME_START_TELEMETRY on','TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\

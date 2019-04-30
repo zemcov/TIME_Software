@@ -1,0 +1,83 @@
+<head>
+        <title>MCE and Telescope Command Descriptions</title>
+        <style>
+        </style>
+    </head>
+    <body>
+         <h2 style="color:blue;">Telescope Commands</h2>
+         <p style="color:black;">
+            <dl>
+                <dt><b>Activate Telescope</b></dt>
+                  <dd>- Options are [yes,no,sim]</dd>
+                  <dd>- [yes] : activate socket connection between telescope tracker and time-master</dd>
+                  <dd>- [no] : run software without any telescope input </dd>
+                  <dd>- [sim] : activate simulated telescope data, this does not open a socket </dd>
+                <dt><b>Scan Strategy</b></dt>
+                  <dd>- Options are [1D Raster, 2D Raster, Pointing Cross, BowTie]</dd>
+                  <dd>- 1D produces a linear scan in chosen coordinate</dd>
+                  <dd>- 2D produces a box scan made from stacked linear scans in the chosen coordinate</dd>
+                  <dd>- Pointing Cross creates 2 linear scans in perpendicular coordinates. (example one constant RA scan, one constant DEC scan)</dd>
+                  <dd>- BowTie is a linear scan at constant elevation (will probably be deprecated)</dd>
+                <dt><b>Constant Coordinate System</b></dt>
+                  <dd>- Options are [RA,DEC,AZ,ALT]</dd>
+                  <dd>- Coordinate option will create fixed position along which telescope moves. (example, constant RA will increment along DEC coordinates)</dd>
+                <dt><b>Delayed Start</b></dt>
+                  <dd>- How many seconds the MCE and KMirror will be running until the telescope script is activated</dd>
+                <dt><b>Time to Traverse Scan Length</b></dt>
+                  <dd>- How long to traverse one linear pass from both extremes of the map</dd>
+                <dt><b>Map Size</b></dt>
+                  <dd>- Defines the length of the map along the axes of motion. Units can be given in arsec, arcmin, and degrees.</dd>
+                <dt><b>Angle of Map Offset</b></dt>
+                  <dd>- A setting of "0" will mean constant motion along the axis perpendicular to the coord chosen in "Constant Coordinate System"</dd>
+                  <dd>- Value will rotate the field N degrees off of axis perpendicular to "Constant Coordinate System"</dd>
+                <dt><b>Size of 2D Vertical Step</b></dt>
+                  <dd>- For a 2D map, this defines how far above or below the last constant coordinate the telescope will step to start the next linear pass</dd>
+                <dt><b>Source Coord 1</b></dt>
+                  <dd>- Coord 1 can be [RA,AZ]</dd>
+                  <dd>- This is the center of the map, or on a source</dd>
+                  <dd>- If coord in RA , please provide in [h:m:s]
+                <dt><b>Source Coord 2</b></dt>
+                  <dd>- Coord 2 can be [DEC,ALT]
+                  <dd>- This is the center of the map, or on a source</dd>
+                  <dd>- Coord should be given in [deg:arcmin:arcsec]
+                <dt><b>Epoch of Observation</b></dt>
+                  <dd>- Options are [B1950.0, J2000, Apparent]</dd>
+                  <dd>- Provides epoch for given source coordinates. Apparent should be used for any objects within the solar system or those with high apparent motions</dd>
+                <dt><b>Object Catalog Name</b></dt>
+                  <dd>- Name can be anything, unless it is in the solar system. Then choose arbitrary name. (example: if the Moon, use notMoon)</dd>
+            </dl>
+        </p>
+        <h2 style="color:blue;">MCE Commands</h2>
+        <p style="color:black;">
+            <dl>
+                <dt><b>Observer</b></dt>
+                  <dd>- Please put your initials (eg. VLB)</dd>
+                  <dd>- This is put in the netcdf data files</dd>
+                <dt><b>Active MCE's</b></dt>
+                  <dd>- Options are [MCE0,MCE1,BOTH,MCE Sim]</dd>
+                  <dd>- MCE0 and MCE1 only activate one at a time</dd>
+                  <dd>- BOTH activates MCE0 and MCE1 simultaneously</dd>
+                  <dd>- Sim does not activate either, but only provides randomly generated data from a normal distribution</dd>
+                <dt><b>Datamode</b></dt>
+                  <dd>- Options are [Error,SQ1 Feedback,Raw,Filtered SQ1 Feedback,Debugging,Mixed Mode (25:7),Mixed Mode (22:10),Mixed Mode (24:8),Mixed Mode (18:14)]</dd>
+                  <dd>- The definitions for these MCE programmable modes can be found at the UBC website</dd>
+                  <dd>- https://e-mode.phas.ubc.ca/mcewiki/index.php/Data_mode</dd>
+                <dt><b>Readout Card</b></dt>
+                  <dd>- "All" will activate all detectors connected to both MCE0 and MCE1</dd>
+                  <dd>- All other options will select only one readout card connected to only one MCE</dd>
+                <dt><b>Frame Number</b></dt>
+                  <dd>- Default is set to large value that will keep MCEs running for duration of a given scan</dd>
+                  <dd>- This should not be changed unless stricly necessary</dd>
+                <dt><b>Heatmap Alpha</b></dt>
+                  <dd>- This adjusts the alpha value for the rolling average calculation in the heatmap graphs</dd>
+                  <dd>- roll_avg[b][c] = ((1-alpha)*roll_avg[b][c]) + (alpha * d[b][c])</dd>
+                  <dd>- [b][c] indexing corresponds to a given row/col of the detector map
+                <dt><b>Delete Old Columns</b></dt>
+                  <dd>- When changing the raw data view to different row/col combinations , setting "Yes" deletes older row/col data on graph</dd>
+                <dt><b>Time Interval</b></dt>
+                  <dd>- How many seconds of MCE data you want to view on a screen at a time</dd>
+                <dt><b>Show MCE Data</b></dt>
+                  <dd>- This will turn off the raw mce data graph, leaving the telescope and heatmap graphs running</dd>
+            </dl>
+       </p>
+    </body>
