@@ -35,6 +35,7 @@ class TIME_TELE :
                 map_size = float(map_size) // 3600
             else :
                 map_size = float(map_size) // 60
+                
         if str(map_angle_unit) != 'deg' :
             if str(map_size_unit) == 'arcsec' :
                 map_size = float(map_size) // 3600
@@ -63,8 +64,8 @@ class TIME_TELE :
                 else :
                     print('ERROR reply')
 
-        c1 = str(calc_coord1).split(':')
-        c2 = str(calc_coord2).split(':')
+        c1 = str(calc_coord1.to_string()).split(':')
+        c2 = str(calc_coord2.to_string()).split(':')
         if str(coord1_unit) == 'RA' and str(coord2_unit) == 'DEC' :
             old_coord = SkyCoord(c1[0]+'h'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
         else :

@@ -11,7 +11,7 @@ def start_sock(queue):
     PORT = 8500
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))
-    print('Server Listening')
+    print('KMS Server Listening')
     s.listen(5)
     client, info = s.accept()
     print('Socket Connected')

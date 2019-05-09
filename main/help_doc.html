@@ -11,7 +11,7 @@
                   <dd>- Options are [yes,no,sim]</dd>
                   <dd>- [yes] : activate socket connection between telescope tracker and time-master</dd>
                   <dd>- [no] : run software without any telescope input </dd>
-                  <dd>- [sim] : activate simulated telescope data, this does not open a socket </dd>
+                  <dd>- [sim] : activate simulated telescope data, this does not open a socket. Any selection for "scan strategy" is ignored </dd>
                 <dt><b>Scan Strategy</b></dt>
                   <dd>- Options are [1D Raster, 2D Raster, Pointing Cross, BowTie]</dd>
                   <dd>- 1D produces a linear scan in chosen coordinate</dd>
@@ -25,6 +25,9 @@
                   <dd>- How many seconds the MCE and KMirror will be running until the telescope script is activated</dd>
                 <dt><b>Time to Traverse Scan Length</b></dt>
                   <dd>- How long to traverse one linear pass from both extremes of the map</dd>
+                <dt><b>Map Len</b></dt>
+                  <dd>- Parameter only used with 2D maps</dd>
+                  <dd>- Defines the height of the map, perpendicular to axes of motion</dd>
                 <dt><b>Map Size</b></dt>
                   <dd>- Defines the length of the map along the axes of motion. Units can be given in arsec, arcmin, and degrees.</dd>
                 <dt><b>Angle of Map Offset</b></dt>

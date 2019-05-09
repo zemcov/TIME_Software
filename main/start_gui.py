@@ -1,4 +1,4 @@
-from pyqtgraph import QtCore, QtGui
+from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 import pyqtgraph as Qt
 import numpy as np
@@ -11,7 +11,9 @@ import utils as ut
 import append_data, append_hk
 sys.path.append('/home/time_user/TIME_Software')
 sys.path.append('/home/time_user/main/tempfiles')
-import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
+import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
+from init import tel_dict,mce_dict
+from tel_box import draw_box
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
@@ -68,6 +70,7 @@ class MainWindow(QtGui.QMainWindow):
         self.starttel.clicked.connect(self.on_starttel_clicked)
         self.changechan.clicked.connect(self.on_set_chan_clicked)
         self.helpbutton.clicked.connect(self.on_help_clicked)
+        self.useinit.clicked.connect(self.on_useinit_clicked)
 
     def on_help_clicked(self):
 
@@ -83,29 +86,29 @@ class MainWindow(QtGui.QMainWindow):
         ut.hk_exit.set()
 
         # stop all of the mces with their own command
-        if self.showmcedata == 'Yes':
-            if self.readoutcard == 'All':
-                if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_stop.sh s'],shell=True)
-                if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_stop.sh s'],shell=True)
-
-            else :
-                if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
-                    subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
-                if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
-                    subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
-
-        # # stop the file transfer process to time-master
-        subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
-
-        # # delete all MCE temp files still in local and mce computer directory
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
-        subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele*'], shell=True)
+        # if self.showmcedata == 'Yes':
+        #     if self.readoutcard == 'All':
+        #         if ut.which_mce[1] == 1 :
+        #             subprocess.Popen(['./mce1_stop.sh s'],shell=True)
+        #         if ut.which_mce[0] == 1 :
+        #             subprocess.Popen(['./mce0_stop.sh s'],shell=True)
+        #
+        #     else :
+        #         if ut.which_mce[1] == 1 :
+        #             subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
+        #             subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
+        #         if ut.which_mce[0] == 1 :
+        #             subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
+        #             subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
+        #
+        # # # stop the file transfer process to time-master
+        # subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
+        #
+        # # # delete all MCE temp files still in local and mce computer directory
+        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
+        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
+        # subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
+        # subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele*'], shell=True)
 
         print('Quitting Application')
         sys.exit()
@@ -121,7 +124,6 @@ class MainWindow(QtGui.QMainWindow):
         self.epoch = self.tel_epoch.currentText()
         self.object = self.tel_object.text()
         self.inittel = self.init_tel.currentText()
-        self.scan_time = self.scan_time_input.text()
         self.step = self.tel_step.text()
         self.coord_space = self.map_space.currentText()
         self.map_size_unit = self.unit1.currentText()
@@ -139,33 +141,146 @@ class MainWindow(QtGui.QMainWindow):
                 if self.tel_scan == scan :
                     self.tel_script = script[scans.index(scan)]
             tel_message = 'TELESCOPE INITIALIZED'
-
             self.off = False
-        else :
+
+        elif self.inittel == 'No' :
             self.tel_script = ' '
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
 
+        elif self.inittel == 'Sim' :
+            tel_message = 'TEL SIM SELECTED'
+            self.tel_script = 'Sim'
+            self.off = False
+
+        else :
+            tel_message = 'TRACKER DATA ONLY'
+            self.tel_script = 'Tracker'
+            self.off = False
+
         print(tel_message)
+
+    def on_useinit_clicked(self):
+
+        # mce params ========================
+        self.observer = mce_dict["observer"]
+        self.mceson = mce_dict["mceson"]
+        self.datamode = mce_dict["datamode"]
+        self.readoutcard = mce_dict["readoutcard"]
+        self.framenumber = mce_dict["framenumber"]
+        self.alpha = float(mce_dict["alpha"])
+        self.timeinterval = mce_dict["timeinterval"]
+        self.channeldelete = mce_dict["channeldelete"]
+        self.showmcedata = mce_dict["showmcedata"]
+        # =====================================
+
+        # telescope params ====================
+        self.sec = tel_dict["sec"]
+        self.map_size = tel_dict["map_size"]
+        self.map_len = tel_dict["map_len"]
+        self.map_angle = tel_dict["map_angle"]
+        self.coord1 = tel_dict["coord1"]
+        self.coord2 = tel_dict["coord2"]
+        self.epoch = tel_dict["epoch"]
+        self.object = tel_dict["object"]
+        self.inittel = tel_dict["inittel"]
+        self.tel_scan = tel_dict["tel_scan"]
+        self.step = tel_dict["step"]
+        self.coord_space = tel_dict["coord_space"]
+        self.map_size_unit = tel_dict["map_size_unit"]
+        self.map_len_unit = tel_dict["map_len_unit"]
+        self.map_angle_unit = tel_dict["map_angle_unit"]
+        self.step_unit = tel_dict["step_unit"]
+        self.coord1_unit = tel_dict["coord1_unit"]
+        self.coord2_unit = tel_dict["coord2_unit"]
+        # =============================================================================
+        # ==============================================================================
+        self.starttel.setEnabled(True)
+
 
     #sets parameter variables to user input and checks if valid - will start MCE
     #and live graphing if they are
 
     def on_submitbutton_clicked(self):
+
+        ut.new_dir = '%s' %(datetime.datetime.utcnow().isoformat())
+        self.timestarted = datetime.datetime.utcnow().isoformat()
+
         # check if telescope has been started first
         if not self.starttel.isEnabled() :
             print("Please Initialize Telescope First")
             self.warningbox('gui')
             self.submitbutton.setEnabled(False)
 
-        ut.new_dir = '%s' %(datetime.datetime.utcnow().isoformat())
+        ''' ###################################################################'''
+        if not self.useinit.isEnabled():
+            #set variables to user input
+            # observer ---------------------------------------
+            self.observer = self.enterobserver.text()
 
-        #set variables to user input
-        # observer ---------------------------------------
-        self.observer = self.enterobserver.text()
+            # which mces are active --------------------------
+            self.mceson = self.whichmces.currentText()
 
-        # which mces are active --------------------------
-        self.mceson = self.whichmces.currentText()
+            # data mode --------------------------------------
+            self.datamode = self.enterdatamode.currentText()
+            mce_states = ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)']
+            mce_states2 = [0,1,12,2,11,10,7,5,4]
+            for state in mce_states :
+                if self.datamode == state :
+                    self.datamode = mce_states2[mce_states.index(state)]
+
+            # readout card ---------------------------------------------
+            self.readoutcard = self.enterreadoutcard.currentIndex() + 1
+            if self.readoutcard == 9:
+                self.readoutcard = 'All'
+                self.currentreadoutcard = 2
+                self.currentreadoutcarddisplay = 'MCE 1 RC 2'
+
+            # frame number ----------------------------------------------
+            self.framenumber = self.enterframenumber.text()
+
+            # heatmap error function ------------------------------------
+            self.alpha = float(self.heatalpha.text())
+
+            # how much data to view on screen at once -------------------
+            self.timeinterval = self.entertimeinterval.text()
+
+            # keep old channel data on graph ----------------------------
+            self.channeldelete = self.enterchanneldelete.currentText()
+
+            # keep mce data on screen -----------------------------------
+            self.showmcedata = self.entershowmcedata.currentText()
+
+        ''' ######################################################################'''
+
+        if self.inittel == 'Yes':
+            self.tel_scan = self.telescan.currentText()
+            scans = ['1D Raster','2D Raster','Bowtie (constant el)','Pointing Cross']
+            script = [raster_script_1d,raster_script_2d,bowtie_scan,point_cross]
+            for scan in scans :
+                if self.tel_scan == scan :
+                    self.tel_script = script[scans.index(scan)]
+            tel_message = 'TELESCOPE INITIALIZED'
+            self.off = False
+
+        elif self.inittel == 'No' :
+            self.tel_script = ' '
+            self.off = True
+            tel_message = 'NO TELESCOPE SELECTED'
+
+        elif self.inittel == 'Sim' :
+            tel_message = 'TEL SIM SELECTED'
+            self.tel_script = 'Sim'
+            self.off = False
+
+        else :
+            tel_message = 'TRACKER DATA ONLY'
+            self.tel_script = 'Tracker'
+            self.off = False
+
+        print(tel_message)
+
+        # -----------------------------------------------------------
         if self.mceson == 'MCE0':
             ut.which_mce[0] = 1
             ut.which_mce[1] = 0
@@ -183,44 +298,6 @@ class MainWindow(QtGui.QMainWindow):
             ut.which_mce[1] = 1
             ut.which_mce[2] = 0
 
-        # data mode --------------------------------------
-        self.datamode = self.enterdatamode.currentText()
-        mce_states = ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)']
-        mce_states2 = [0,1,12,2,11,10,7,5,4]
-        for state in mce_states :
-            if self.datamode == state :
-                self.datamode = mce_states2[mce_states.index(state)]
-
-        # readout card ---------------------------------------------
-        self.readoutcard = self.enterreadoutcard.currentIndex() + 1
-        if self.readoutcard == 9:
-            self.readoutcard = 'All'
-            self.currentreadoutcard = 2
-            self.currentreadoutcarddisplay = 'MCE 1 RC 2'
-
-        # frame number ----------------------------------------------
-        self.framenumber = self.enterframenumber.text()
-
-        # heatmap error function ------------------------------------
-        self.alpha = float(self.heatalpha.text())
-
-        # data rate -------------------------------------------------
-        # self.datarate = self.enterdatarate.text()
-
-        # how much data to view on screen at once -------------------
-        self.timeinterval = self.entertimeinterval.text()
-
-        # keep old channel data on graph ----------------------------
-        self.channeldelete = self.enterchanneldelete.currentText()
-
-        # keep mce data on screen -----------------------------------
-        self.showmcedata = self.entershowmcedata.currentText()
-
-        # time keepers ----------------------------------------------
-        self.timestarted = datetime.datetime.utcnow()
-        self.timestarted = self.timestarted.isoformat()
-
-        # -----------------------------------------------------------
         #check if parameters are valid - will create warning box if invalid
         if self.observer == '' or self.framenumber == '' or self.framenumber == '0'\
         or self.timeinterval == ''\
@@ -260,35 +337,37 @@ class MainWindow(QtGui.QMainWindow):
                 subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce2/temp*'], shell = True)
             subprocess.Popen(['rm /home/time_user/TIME_Software/main/tempfiles/tele_*'], shell = True)
 
-            #set the data mode for both mces and start them running
-            if self.readoutcard == 'All':
+            if self.mceson != "MCE SIM" :
+
+                #set the data mode for both mces and start them running
+                if self.readoutcard == 'All':
+                    if ut.which_mce[0] == 1 :
+                        subprocess.Popen(['./mce0_cdm.sh a %s' %(self.datamode)], shell = True)
+                        subprocess.Popen(['./mce0_del.sh'], shell=True)
+                        subprocess.Popen(['./mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+
+                    if ut.which_mce[1] == 1 :
+                        subprocess.Popen(['./mce1_cdm.sh a %s' %(self.datamode)], shell = True)
+                        subprocess.Popen(['./mce1_del.sh'], shell=True)
+                        subprocess.Popen(['./mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                else :
+                    if ut.which_mce[0] == 1 :
+                        subprocess.Popen(['./mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                        subprocess.Popen(['./mce0_del.sh'], shell=True)
+                        subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+
+                    if ut.which_mce[1] == 1 :
+                        subprocess.Popen(['./mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                        subprocess.Popen(['./mce1_del.sh'], shell=True)
+                        subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+
+                # start file transfer scripts
+                subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_cdm.sh a %s' %(self.datamode)], shell = True)
-                    subprocess.Popen(['./mce0_del.sh'], shell=True)
-                    subprocess.Popen(['./mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
-
+                    subprocess.Popen(['ssh -T time-mce-0 python /home/time_user/TIME_Software/sftp/mce0_sftp.py'], shell=True)
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_cdm.sh a %s' %(self.datamode)], shell = True)
-                    subprocess.Popen(['./mce1_del.sh'], shell=True)
-                    subprocess.Popen(['./mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
-            else :
-                if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                    subprocess.Popen(['./mce0_del.sh'], shell=True)
-                    subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
-
-                if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                    subprocess.Popen(['./mce1_del.sh'], shell=True)
-                    subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
-
-            # start file transfer scripts
-            # subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
-            if ut.which_mce[0] == 1 :
-                subprocess.Popen(['ssh -T time-mce-0 python /home/time_user/TIME_Software/sftp/mce0_sftp.py'], shell=True)
-            if ut.which_mce[1] == 1 :
-                subprocess.Popen(['ssh -T time-mce-1 python /home/time_user/TIME_Software/sftp/mce1_sftp.py'], shell=True)
-            time.sleep(2.0)
+                    subprocess.Popen(['ssh -T time-mce-1 python /home/time_user/TIME_Software/sftp/mce1_sftp.py'], shell=True)
+                time.sleep(2.0)
 
             data = np.zeros((33,32))
 
@@ -297,8 +376,10 @@ class MainWindow(QtGui.QMainWindow):
             self.newwindow = QtGui.QWidget()
             self.newwindow.setWindowTitle('TIME Live Data Viewer')
             self.newgrid = QtGui.QGridLayout()
+            self.newgraphs = QtGui.QVBoxLayout()
             self.newwindow.setGeometry(10, 10, 1920, 1080)
             self.newwindow.setLayout(self.newgrid)
+            self.newgrid.addLayout(self.newgraphs, 0,2,8,8)
 
             p = QtGui.QPalette()
             p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
@@ -318,10 +399,9 @@ class MainWindow(QtGui.QMainWindow):
             self.initheatmap(data,data) # give first values for heatmap to create image scale
             self.initfftgraph()
             self.inittelescope()
-            # self.initkmirrordata()
+            self.initkmirrordata()
 
             self.newwindow.show()
-
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
@@ -386,15 +466,13 @@ class MainWindow(QtGui.QMainWindow):
         self.tel_delay = QtGui.QLineEdit('0')
 
         self.init_tel = QtGui.QComboBox()
-        self.init_tel.addItems(['No','Yes'])
+        self.init_tel.addItems(['No','Yes','Sim','Tracker'])
 
         self.tel_sec = QtGui.QLineEdit('6')
         self.tel_map_len = QtGui.QLineEdit('1')
         self.tel_map_size = QtGui.QLineEdit('1')
-        self.tel_num_loop  = QtGui.QLineEdit('20')
         self.tel_step = QtGui.QLineEdit('0.001')
         self.tel_map_angle = QtGui.QLineEdit('0')
-        self.scan_time_input = QtGui.QLineEdit('30')
         self.tel_coord1 = QtGui.QLineEdit()
         self.tel_coord2 = QtGui.QLineEdit()
         self.tel_epoch = QtGui.QComboBox()
@@ -461,10 +539,18 @@ class MainWindow(QtGui.QMainWindow):
         self.telparams.addRow(self.helpbutton)
         self.telGroupBox.setLayout(self.telparams)
         # =====================================================================
+        self.useinit = QtGui.QPushButton('Auto-Fill from File')
+        self.useinit.setStyleSheet("background-color: orange")
+        self.initGroupBox = QtGui.QGroupBox()
+        self.initparams = QtGui.QFormLayout()
+        self.initparams.addRow(self.useinit)
+        self.initGroupBox.setLayout(self.initparams)
+        # =====================================================================
         self.parametersquit = QtGui.QVBoxLayout()
         self.parametersquit.setAlignment(QtCore.Qt.AlignCenter)
         self.parametersquit.addWidget(self.telGroupBox)
         self.parametersquit.addWidget(self.mceGroupBox)
+        self.parametersquit.addWidget(self.initGroupBox)
         self.quitbutton = QtGui.QPushButton('Quit')
         self.quitbutton.setStyleSheet("background-color: red")
         self.parametersquit.addWidget(self.quitbutton)
@@ -495,7 +581,7 @@ class MainWindow(QtGui.QMainWindow):
         self.channel2 = int(self.selectchannel2.text())
         self.channelreadoutbox2.addRow('Row2 [0-32]',self.selectrow2)
         self.channelreadoutbox2.addRow('Col2 [0-31]',self.selectchannel2)
-        self.newgrid.addLayout(self.channelreadoutbox2, 5,0,1,2)
+        self.newgrid.addLayout(self.channelreadoutbox2, 3,0,1,2)
 
     #changes channel of live graph when user changes channel
     def changechannel(self):
@@ -562,8 +648,10 @@ class MainWindow(QtGui.QMainWindow):
         self.mcegraphdata2 = pg.ScatterPlotItem()
         self.mcegraph1 = pg.PlotWidget()
         self.mcegraph2 = pg.PlotWidget()
-        self.newgrid.addWidget(self.mcegraph1, 0,2,3,8)
-        self.newgrid.addWidget(self.mcegraph2, 5,2,5,8)
+        self.mcegraph1.addItem(self.mcegraphdata1)
+        self.mcegraph2.addItem(self.mcegraphdata2)
+        self.newgraphs.addWidget(self.mcegraph1, stretch=2)
+        self.newgraphs.addWidget(self.mcegraph2, stretch=2)
 
         #add labels to graph
         self.mcegraph1.setLabel('bottom', 'Time [sec]')
@@ -691,19 +779,18 @@ class MainWindow(QtGui.QMainWindow):
         self.fftgraph.setLabel('bottom', 'Time', 's')
         self.fftgraph.setLabel('left', 'Counts')
         self.fftgraph.setTitle('MCE 0/1 FFT Data')
-        # self.fftlegend = pg.LegendItem()
-        # self.fftgraph.addItem(self.fftlegend)
-
-        self.newgrid.addWidget(self.fftgraph, 3,2,1,8)
+        self.fftlegend = pg.LegendItem()
+        self.fftgraph.addItem(self.fftlegend)
+        self.newgraphs.addWidget(self.fftgraph, stretch=1)
 
     def initkmirrordata(self):
         # start the kms QThread
         if self.tel_script == 'point_cross.py' :
             # do something to set KMS in specific position before starting KMS thread
             print('No KMS!')
-        self.kms_updater = KMS_Thread()
-        self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
-        self.kms_updater.start()
+        # self.kms_updater = KMS_Thread()
+        # self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
+        # self.kms_updater.start()
 
         #place holder data
         self.parallacticangle = 0.0
@@ -743,15 +830,16 @@ class MainWindow(QtGui.QMainWindow):
         self.kmsparams.addWidget(self.timetext)
         self.kmsparams.addWidget(self.enctext)
         self.kmsgui.setLayout(self.kmsparams)
-        self.newgrid.addWidget(self.kmsgui, 4, 1, 1, 1)
+        self.newgrid.addWidget(self.kmsgui, 5, 0, 2, 2)
 
     def inittelescope(self):
 
         # start the telescope QThread
         self.tel_updater = Tel_Thread(flags = self.flags, tel_script = self.tel_script, off = self.off, sec = self.sec, map_size = self.map_size,\
-                                    map_angle = self.map_angle, coord1 = self.coord1, coord2 = self.coord2, epoch = self.epoch,\
+                                    map_len = self.map_len, map_angle = self.map_angle, coord1 = self.coord1, coord1_unit = self.coord1_unit,\
+                                    coord2 = self.coord2, coord2_unit = self.coord2_unit, epoch = self.epoch,\
                                     object = self.object, step = self.step, coord_space = self.coord_space, map_size_unit = self.map_size_unit,\
-                                    map_angle_unit = self.map_angle_unit, step_unit = self.step_unit)
+                                    map_len_unit = self.map_len_unit, map_angle_unit = self.map_angle_unit, step_unit = self.step_unit)
         self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
         self.tel_updater.start()
 
@@ -775,7 +863,15 @@ class MainWindow(QtGui.QMainWindow):
         # create plot object for alt-az graph
         self.altazgraph = pg.PlotWidget()
         self.altazgraphdata = pg.ScatterPlotItem()
+        self.altazlinedata1 = pg.PlotCurveItem()
+        self.altazlinedata2 = pg.PlotCurveItem()
+        self.altazlinedata3 = pg.PlotCurveItem()
+        self.altazlinedata4 = pg.PlotCurveItem()
         self.altazgraph.addItem(self.altazgraphdata)
+        self.altazgraph.addItem(self.altazlinedata1)
+        self.altazgraph.addItem(self.altazlinedata2)
+        self.altazgraph.addItem(self.altazlinedata3)
+        self.altazgraph.addItem(self.altazlinedata4)
         self.altazgraph.showGrid(x=True, y=True)
         self.altazgraph.setTitle('Alt-Az Graph')
         self.altazgraph.setLabel('left', 'alt')
@@ -784,7 +880,15 @@ class MainWindow(QtGui.QMainWindow):
         # create plot object for ra-dec graph
         self.radecgraph = pg.PlotWidget()
         self.radecgraphdata = pg.ScatterPlotItem()
+        self.radeclinedata1 = pg.PlotCurveItem()
+        self.radeclinedata2 = pg.PlotCurveItem()
+        self.radeclinedata3 = pg.PlotCurveItem()
+        self.radeclinedata4 = pg.PlotCurveItem()
         self.radecgraph.addItem(self.radecgraphdata)
+        self.radecgraph.addItem(self.radeclinedata1)
+        self.radecgraph.addItem(self.radeclinedata2)
+        self.radecgraph.addItem(self.radeclinedata3)
+        self.radecgraph.addItem(self.radeclinedata4)
         self.radecgraph.showGrid(x=True, y=True)
         self.radecgraph.setTitle('Ra-Dec Graph')
         self.radecgraph.setLabel('left', 'DEC (deg)')
@@ -801,6 +905,22 @@ class MainWindow(QtGui.QMainWindow):
         self.telescopewindow.setLayout(self.telegrid)
 
         if self.off == False :
+            box_leftx,box_lefty,box_rightx,box_righty,box_topx,box_topy,box_botx,box_boty =\
+            draw_box(self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.coord_space,\
+                        self.map_size,self.map_size_unit,self.map_len,self.map_len_unit)
+
+            if self.coord_space == 'ALT' or self.coord_space == 'AZ' :
+                self.altazlinedata1.setData(box_leftx,box_lefty,brush=pg.mkBrush('g'))
+                self.altazlinedata2.setData(box_rightx,box_righty,brush=pg.mkBrush('g'))
+                self.altazlinedata3.setData(box_topx,box_topy,brush=pg.mkBrush('g'))
+                self.altazlinedata4.setData(box_botx,box_boty,brush=pg.mkBrush('g'))
+
+            else :
+                self.radeclinedata1.setData(box_leftx,box_lefty,brush=pg.mkBrush('g'))
+                self.radeclinedata2.setData(box_rightx,box_righty,brush=pg.mkBrush('g'))
+                self.radeclinedata3.setData(box_topx,box_topy,brush=pg.mkBrush('g'))
+                self.radeclinedata4.setData(box_botx,box_boty,brush=pg.mkBrush('g'))
+
             self.telescopewindow.show()
         else :
             pass
@@ -840,7 +960,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def updatefftgraph(self):
         #self.y and self.x are defined in updateplot
-        self.fftgraph.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
+        self.fftgraph.setXRange(self.index, self.index + 1, padding=0)
 
         if ut.which_mce[0] == 1 :
 
@@ -903,7 +1023,7 @@ class MainWindow(QtGui.QMainWindow):
                 if slew == tel_flags[i]:
                     self.slewtext.setText('Slew Flag: %s' %(tel_names[i]))
             self.patext.setText('PA: %s' %(round(float(pa),2)))
-            self.timetext.setText('UTC Time: %s'%(round(float(time),2)))
+            self.timetext.setText('UTC Time: %.2f'%(round(float(time),2)))
 
             altazcolor = pg.mkBrush('b')
             radeccolor = pg.mkBrush('r')
@@ -947,7 +1067,6 @@ class MainWindow(QtGui.QMainWindow):
 
             y1 = np.asarray(h1)[self.row1,self.channel1,:]
             self.y1 = y1
-            print(len(h1),len(h1[0]),len(h1[0][0]))
 
             y2 = np.asarray(h2)[self.row2,self.channel2,:]
             self.y2 = y2
@@ -1352,8 +1471,10 @@ class Tel_Thread(QtCore.QThread):
 
     new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object,object)
 
-    def __init__(self, flags, tel_script, off, sec, map_size, map_len, map_angle, coord1, coord1_unit, coord2, coord2_unit, epoch, object, step, coord_space, map_size_unit,\
+    def __init__(self, flags, tel_script, off, sec, map_size, map_len, map_angle, coord1, coord1_unit, coord2,\
+                    coord2_unit, epoch, object, step, coord_space, map_size_unit,\
                     map_len_unit, map_angle_unit, step_unit, parent = None):
+
         QtCore.QThread.__init__(self, parent)
         self.off = off
         self.tel_script = tel_script
@@ -1365,8 +1486,6 @@ class Tel_Thread(QtCore.QThread):
         self.coord2 = coord2
         self.epoch = epoch
         self.object = object
-        self.num_loop = num_loop
-        self.scan_time = scan_time
         self.flags = flags
         self.step = step
         self.step_unit = step_unit
@@ -1382,28 +1501,74 @@ class Tel_Thread(QtCore.QThread):
 
     def run(self):
         if self.off == False :
-            data, queue = mp.Pipe() # this is for tracker
-            data2, queue2 = mp.Pipe() # this is for pos_calculator
-            p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue2,queue,self.sec,self.map_size,self.map_len,\
-                                    self.map_angle,self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.epoch,self.object,self.step,\
-                                    self.coord_space,self.step_unit,self.map_size_unit,self.map_len_unit,self.map_angle_unit))
-            p.start()
 
-            while True :
-                # grab data from tel_tracker.py
-                if not ut.tel_exit.is_set() :
-                    tel_stuff = data.recv()
-                    progress = data2.recv() # this could end up blocking if rate is different from tel_stuff
-                    with self.flags.get_lock() :
-                        self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
-                    # pa,float(direction),el,az,map_ra,map_dec,ut
-                    self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-                    time.sleep(0.01)
+            if self.tel_script == 'Tracker' :
+                from tel_tracker import start_tracker
+                data, queue = mp.Pipe()
+                p = mp.Process(target= start_tracker, args=(queue,))
+                p.start()
 
-                else :
-                    self.new_tel_data.emit(0,'done',0,0,0,0,0)
-                    print(colored('Telescope Scan Completed!','green'))
-                    break
+                while True :
+                    if not ut.tel_exit.is_set() :
+                        tel_stuff = data.recv()
+                        with self.flags.get_lock() :
+                            self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
+                        self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+                        time.sleep(0.01)
+
+                    else :
+                        self.new_tel_data.emit(0,'done',0,0,0,0,0)
+                        print(colored('Telescope Scan Completed!','green'))
+                        break
+
+            elif self.tel_script == 'Sim' :
+                print(colored('TEL SIM STARTED','red'))
+                tele_array = np.zeros((20,20),dtype=float)
+                np.save('/home/time_user/TIME_Software/main/tempfiles/tele_packet_off1.npy',tele_array)
+                time.sleep(0.05)
+                np.save('/home/time_user/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
+
+                data, queue = mp.Pipe()
+                p = mp.Process(target=fake_tel.TIME_TELE().start_tel, args=(queue,self.map_len,self.map_len_unit,self.map_size,self.map_size_unit,self.sec,\
+                                                                            self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.coord_space,self.step,self.step_unit))
+                p.start()
+
+                while True :
+                    if not ut.tel_exit.is_set() :
+                        tel_stuff = data.recv()
+                        with self.flags.get_lock() :
+                            self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
+                        self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6],tel_stuff[7])
+                        time.sleep(0.01)
+
+                    else :
+                        self.new_tel_data.emit(0,'done',0,0,0,0,0)
+                        print(colored('Telescope Scan Completed!','green'))
+                        break
+
+            else :
+                data, queue = mp.Pipe() # this is for tracker
+                data2, queue2 = mp.Pipe() # this is for pos_calculator
+                p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue2,queue,self.sec,self.map_size,self.map_len,\
+                                        self.map_angle,self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.epoch,self.object,self.step,\
+                                        self.coord_space,self.step_unit,self.map_size_unit,self.map_len_unit,self.map_angle_unit))
+                p.start()
+
+                while True :
+                    # grab data from tel_tracker.py
+                    if not ut.tel_exit.is_set() :
+                        tel_stuff = data.recv()
+                        progress = data2.recv() # this could end up blocking if rate is different from tel_stuff
+                        with self.flags.get_lock() :
+                            self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
+                        # pa,float(direction),el,az,map_ra,map_dec,ut
+                        self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+                        time.sleep(0.01)
+
+                    else :
+                        self.new_tel_data.emit(0,'done',0,0,0,0,0)
+                        print(colored('Telescope Scan Completed!','green'))
+                        break
 
         else :
             # makes fake data for when we don't want to run the telescope

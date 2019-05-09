@@ -10,7 +10,7 @@ def start_tracker(queue):
     PORT = 4444
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))
-    print('Server Listening')
+    print('Tracker Server Listening')
     s.listen(5)
     client, info = s.accept()
     print(colored('Socket Connected'),'red')
