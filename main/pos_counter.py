@@ -50,6 +50,8 @@ def scan_params(map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,c
         c = SkyCoord(ra = (map_size / 0.5)* u.degree, dec = (map_len / 0.5) * u.degree)
         start_coord1 = (c.ra - old_coord.ra)
         start_coord2 = (c.dec - old_coord.dec)
+        print(colored((old_coord.ra.degree,old_coord.dec.degree),'red'))
+        sys.flush()
 
     else :
         old_coord = AltAz(c1[0]+'d'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
