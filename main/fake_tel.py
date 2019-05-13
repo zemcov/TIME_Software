@@ -89,6 +89,8 @@ class TIME_TELE :
                 step = float(step) / 60.0
             else :
                 step = float(step) / 3600.0
+        else :
+            step = float(step)
         loops_deg = float(step) / 3600.0 #number of loops per degrees
 
         # -------------------------------------------------------------------------
