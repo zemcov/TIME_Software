@@ -84,11 +84,11 @@ class TIME_TELE :
         start_x = float(calc_coord1.degree) # static
         start_y = float(calc_coord2.degree) # static
 
-        if str(step_unit) != 'arcsec':
+        if str(step_unit) != 'deg':
             if str(step_unit) == 'arcmin' :
-                step = float(step) * 60.0
+                step = float(step) / 60.0
             else :
-                step = float(step) * 3600.0
+                step = float(step) / 3600.0
         loops_deg = float(step) / 3600.0 #number of loops per degrees
 
         # -------------------------------------------------------------------------
