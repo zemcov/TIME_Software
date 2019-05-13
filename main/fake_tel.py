@@ -94,8 +94,6 @@ class TIME_TELE :
         # -------------------------------------------------------------------------
 
         while not ut.tel_exit.is_set():
-            print(slew_flag)
-            sys.stdout.flush()
         # ==========================================================================
             if self.i <= num_loop :
             # ----------MOVING RIGHT---------------------------------------------------------------------------
@@ -179,29 +177,9 @@ class TIME_TELE :
             # -------------MOVE UP----------------------------------------------------------
                 if slew_flag == 4.0:
                     if coord_space == 'RA' or coord_space == 'AZ':
-                        while y <= start_y + step :
-                            print(y,start_y + step)
-                            sys.stdout.flush()
-                            if y <= 360.0:
-                                y = y + track
-                            else :
-                                y = y - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
-                            pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
-
-                            tot = int((float(self.i) / float(num_loop)) * 100)
-                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
-
-                            n = n + (1/rate)
-                            othertime.sleep(1/rate)
-
-                        else:
-                            if t[len(t)-1] == 2.0: # do the opposite of the last slew
-                                slew_flag = 3.0
-                            if t[len(t)-1] == 3.0:
-                                slew_flag = 2.0
-                            start_y = start_y + step
-                    else :
                         while x <= start_x + step :
+                            print(x,start_x + step)
+                            sys.stdout.flush()
                             if x <= 360.0:
                                 x = x + track
                             else :
@@ -213,12 +191,33 @@ class TIME_TELE :
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
+
                         else:
                             if t[len(t)-1] == 2.0: # do the opposite of the last slew
                                 slew_flag = 3.0
                             if t[len(t)-1] == 3.0:
                                 slew_flag = 2.0
                             start_x = start_x + step
+                    else :
+                        print(start_y , step)
+                        while y <= start_y + step :
+                            if y <= 360.0:
+                                y = y + track
+                            else :
+                                y = y - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
+                            pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
+
+                            tot = int((float(self.i) / float(num_loop)) * 100)
+                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
+
+                            n = n + (1/rate)
+                            othertime.sleep(1/rate)
+                        else:
+                            if t[len(t)-1] == 2.0: # do the opposite of the last slew
+                                slew_flag = 3.0
+                            if t[len(t)-1] == 3.0:
+                                slew_flag = 2.0
+                            start_y = start_y + step
 
             else :
                 ut.tel_exit.set()
