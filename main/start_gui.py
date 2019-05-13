@@ -9,7 +9,6 @@ from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
-sys.path.append('/home/time_user/TIME_Software')
 sys.path.append('/home/time_user/main/tempfiles')
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
 from init import tel_dict,mce_dict
@@ -326,18 +325,20 @@ class MainWindow(QtGui.QMainWindow):
             # prevents user from re-activating everything
             self.submitbutton.setEnabled(False)
 
-            # check for leftover files from previous run and delete
-            dir1 = '/home/time_user/Desktop/time-data/mce1/'
-            dir2 = '/home/time_user/Desktop/time-data/mce2/'
-            mce0 = len(os.listdir(dir1))
-            mce1 = len(os.listdir(dir2))
-            if mce0 != 0 :
-                subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce1/temp*'], shell = True)
-            if mce1 != 0 :
-                subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce2/temp*'], shell = True)
-            subprocess.Popen(['rm /home/time_user/TIME_Software/main/tempfiles/tele_*'], shell = True)
 
             if self.mceson != "MCE SIM" :
+
+                # check for leftover files from previous run and delete
+                dir1 = '/home/time_user/Desktop/time-data/mce1/'
+                dir2 = '/home/time_user/Desktop/time-data/mce2/'
+                mce0 = len(os.listdir(dir1))
+                mce1 = len(os.listdir(dir2))
+                if mce0 != 0 :
+                    subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce1/temp*'], shell = True)
+                if mce1 != 0 :
+                    subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce2/temp*'], shell = True)
+                subprocess.Popen(['rm /home/time_user/TIME_Software/main/tempfiles/tele_*'], shell = True)
+
 
                 #set the data mode for both mces and start them running
                 if self.readoutcard == 'All':
@@ -1524,9 +1525,9 @@ class Tel_Thread(QtCore.QThread):
             elif self.tel_script == 'Sim' :
                 print(colored('TEL SIM STARTED','red'))
                 tele_array = np.zeros((20,20),dtype=float)
-                np.save('/home/time_user/TIME_Software/main/tempfiles/tele_packet_off1.npy',tele_array)
+                np.save('./tempfiles/tele_packet_off1.npy',tele_array)
                 time.sleep(0.05)
-                np.save('/home/time_user/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
+                np.save('./tempfiles/tele_packet_off2.npy',tele_array)
 
                 data, queue = mp.Pipe()
                 p = mp.Process(target=fake_tel.TIME_TELE().start_tel, args=(queue,self.map_len,self.map_len_unit,self.map_size,self.map_size_unit,self.sec,\
