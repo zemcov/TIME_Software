@@ -118,15 +118,16 @@ class TIME_TELE :
                             othertime.sleep(1/rate)
 
                         else:
+                            print(colored('ELSE IS REACHED','red'))
                             t.append(slew_flag)
                             slew_flag = 4.0
                             self.i += 1
                     else :
-                        while x <= start_x + map_len :
-                            if x <= 360.0:
-                                x = x + move
+                        while y <= start_y + map_len :
+                            if y <= 360.0:
+                                y = y + move
                             else :
-                                x = x - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
+                                y = y - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((float(self.i) / float(num_loop)) * 100)
@@ -160,11 +161,11 @@ class TIME_TELE :
                             slew_flag = 4.0
                             self.i += 1
                     else :
-                        while x <= start_x + map_len :
-                            if x <= 360.0:
-                                x = x + move
+                        while y <= start_y + map_len :
+                            if y <= 360.0:
+                                y = y + move
                             else :
-                                x = x - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
+                                y = y - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((float(self.i) / float(num_loop)) * 100)
@@ -203,11 +204,11 @@ class TIME_TELE :
                                 slew_flag = 2.0
                             start_y = start_y + step
                     else :
-                        while y <= start_y + step :
-                            if y <= 360.0:
-                                y = y + track
+                        while x <= start_x + step :
+                            if x <= 360.0:
+                                x = x + track
                             else :
-                                y = y - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
+                                x = x - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((float(self.i) / float(num_loop)) * 100)
@@ -220,7 +221,7 @@ class TIME_TELE :
                                 slew_flag = 3.0
                             if t[len(t)-1] == 3.0:
                                 slew_flag = 2.0
-                            start_y = start_y + step
+                            start_x = start_x + step
 
             else :
                 ut.tel_exit.set()
