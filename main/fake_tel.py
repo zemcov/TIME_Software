@@ -158,7 +158,7 @@ class TIME_TELE :
                             slew_flag = 4.0
                             self.i += 1
                     else :
-                        while x <= start_x + map_len :
+                        while x >= start_x - map_len :
                             if x <= 360.0:
                                 x = x + move
                             else :
@@ -180,8 +180,6 @@ class TIME_TELE :
                 if slew_flag == 4.0:
                     if coord_space == 'RA' or coord_space == 'AZ':
                         while x <= start_x + step :
-                            print(x,start_x + step)
-                            sys.stdout.flush()
                             if x <= 360.0:
                                 x = x + track
                             else :
