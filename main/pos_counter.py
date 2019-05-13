@@ -48,8 +48,8 @@ def scan_params(map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,c
     if str(coord1_unit) == 'RA' and str(coord2_unit) == 'DEC' :
         old_coord = SkyCoord(c1[0]+'h'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
         c = SkyCoord(ra = (map_size / 0.5)* u.degree, dec = (map_len / 0.5) * u.degree)
-        start_coord1 = (c.ra - old_coord.ra)
-        start_coord2 = (c.dec - old_coord.dec)
+        start_coord1 = (old_coord.ra - c.ra)
+        start_coord2 = (old_coord.dec - c.dec)
         print(colored((c.ra.degree,c.dec.degree),'magenta'))
         print(colored((old_coord.ra.degree,old_coord.dec.degree),'red'))
 
