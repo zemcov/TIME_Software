@@ -183,6 +183,7 @@ class TIME_TELE :
                     if coord_space == 'RA' or coord_space == 'AZ':
                         while y <= start_y + step :
                             print(y,start_y + step)
+                            sys.stdout.flush()
                             if y <= 360.0:
                                 y = y + track
                             else :
