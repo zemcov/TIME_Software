@@ -45,7 +45,7 @@ class TIME_TELE :
         cosa = (np.tan(np.radians(31.95844))*np.cos(np.radians(y)))-(np.sin(np.radians(y))*np.cos(np.radians(ha*15.0)))
         pa = np.degrees(np.arctan2(sina,cosa))
 
-        return pa,other_y,other_x
+        return pa,other_x,other_y
     #-----------------------------------------------------------------------------------------------------------------------
     def start_tel(self,queue,map_len,map_len_unit,map_size,map_size_unit,scan_time,coord1,coord1_unit,coord2,coord2_unit,coord_space,step,step_unit):
 
@@ -94,18 +94,20 @@ class TIME_TELE :
         # -------------------------------------------------------------------------
 
         print(colored((x,y),'yellow'))
+        print(colored(num_loop,'green'))
+
         while not ut.tel_exit.is_set():
         # ==========================================================================
             if self.i <= num_loop :
             # ----------MOVING RIGHT---------------------------------------------------------------------------
                 if slew_flag == 3.0:
                     if coord_space == 'RA' or coord_space == 'AZ':
-                        while y <= start_y + map_len :
-                            if y <= 360.0:
-                                y = y + move
+                        while x <= start_x + map_len :
+                            if x <= 360.0:
+                                x = x + move
                             else :
-                                y = y - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
-                            pa,other_y,other_x = self.tel_move(coord_space,x,y,n)
+                                x = x - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
+                            pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((self.i / num_loop) * 100)
                             queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
@@ -123,10 +125,10 @@ class TIME_TELE :
                                 x = x + move
                             else :
                                 x = x - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
-                            pa,other_y,other_x = self.tel_move(coord_space,x,y,n)
+                            pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((self.i / num_loop) * 100)
-                            queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -138,15 +140,15 @@ class TIME_TELE :
             # ---------MOVING LEFT--------------------------------------------------------------------
                 if slew_flag == 2.0:
                     if coord_space == 'RA' or coord_space == 'AZ':
-                        while y >= start_y - map_len :
-                            if y <= 360.0:
-                                y = y + move
+                        while x >= start_x - map_len :
+                            if x <= 360.0:
+                                x = x + move
                             else :
-                                y = y - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
-                            pa,other_y,other_x = self.tel_move(coord_space,x,y,n)
+                                x = x - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
+                            pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((self.i / num_loop) * 100)
-                            queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -161,10 +163,10 @@ class TIME_TELE :
                                 x = x + move
                             else :
                                 x = x - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
-                            pa,other_y,other_x = self.tel_move(coord_space,x,y,n)
+                            pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((self.i / num_loop) * 100)
-                            queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -177,15 +179,15 @@ class TIME_TELE :
             # -------------MOVE UP----------------------------------------------------------
                 if slew_flag == 4.0:
                     if coord_space == 'RA' or coord_space == 'AZ':
-                        while x <= start_x + step :
-                            if x <= 360.0:
-                                x = x + track
+                        while y <= start_y + step :
+                            if y <= 360.0:
+                                y = y + track
                             else :
-                                x = x - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
-                            pa,other_y,other_x = self.tel_move(coord_space,x,y,n)
+                                y = y - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
+                            pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((self.i / num_loop) * 100)
-                            queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -201,10 +203,10 @@ class TIME_TELE :
                                 y = y + track
                             else :
                                 y = y - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
-                            pa,other_y,other_x = self.tel_move(coord_space,x,y,n)
+                            pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = int((self.i / num_loop) * 100)
-                            queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
