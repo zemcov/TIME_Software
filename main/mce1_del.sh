@@ -1,1 +1,1 @@
-ssh -T time-mce-1 'rm /data/cryo/current_data/temp*'
+ssh -T time@time-mce-1 'rm /data/cryo/current_data/temp*'
