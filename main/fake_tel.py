@@ -132,7 +132,6 @@ class TIME_TELE :
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
                         else:
-                            print(colored('ELSE IS REACHED','red'))
                             t.append(slew_flag)
                             slew_flag = 4.0
                             self.i += 1
@@ -193,9 +192,9 @@ class TIME_TELE :
                             othertime.sleep(1/rate)
 
                         else:
-                            if t[len(t)-1] == 2.0: # do the opposite of the last slew
+                            if t[-1] == 2.0: # do the opposite of the last slew
                                 slew_flag = 3.0
-                            if t[len(t)-1] == 3.0:
+                            if t[-1] == 3.0:
                                 slew_flag = 2.0
                             start_x = start_x + step
                     else :
@@ -213,9 +212,9 @@ class TIME_TELE :
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
                         else:
-                            if t[len(t)-1] == 2.0: # do the opposite of the last slew
+                            if t[-1] == 2.0: # do the opposite of the last slew
                                 slew_flag = 3.0
-                            if t[len(t)-1] == 3.0:
+                            if t[-1] == 3.0:
                                 slew_flag = 2.0
                             start_y = start_y + step
 
