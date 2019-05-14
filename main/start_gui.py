@@ -928,10 +928,10 @@ class MainWindow(QtGui.QMainWindow):
 
         self.repeat = False
 
-        self.alt = [0]
-        self.az = [0]
-        self.ra = [0]
-        self.dec = [0]
+        self.alt = []
+        self.az = []
+        self.ra = []
+        self.dec = []
 
     def updatekmirrordata(self,pa,status,time,enc):
 
@@ -1046,7 +1046,7 @@ class MainWindow(QtGui.QMainWindow):
 
             self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
-            self.progressbar.setValue(int(progress))
+            self.progressbar.setValue(progress)
 
     def updateplot(self,h1,h2,index):
 

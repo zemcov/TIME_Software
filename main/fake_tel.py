@@ -101,14 +101,14 @@ class TIME_TELE :
             # ----------MOVING RIGHT---------------------------------------------------------------------------
                 if slew_flag == 3.0:
                     if coord_space == 'RA' or coord_space == 'AZ':
-                        while y <= start_y + map_len :
+                        while y <= start_y + map_len and not ut.tel_exit.is_set():
                             if y <= 360.0:
                                 y = y + move
                             else :
                                 y = y - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
-                            tot = int((float(self.i) / float(num_loop)) * 100)
+                            tot = (float(self.i) / float(num_loop)) * 100.0
                             queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
 
                             n = n + (1/rate)
@@ -119,14 +119,14 @@ class TIME_TELE :
                             slew_flag = 4.0
                             self.i += 1
                     else :
-                        while x <= start_x + map_len :
+                        while x <= start_x + map_len and not ut.tel_exit.is_set():
                             if x <= 360.0:
                                 x = x + move
                             else :
                                 x = x - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
-                            tot = int((float(self.i) / float(num_loop)) * 100)
+                            tot = (float(self.i) / float(num_loop)) * 100.0
                             queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
@@ -139,14 +139,14 @@ class TIME_TELE :
             # ---------MOVING LEFT--------------------------------------------------------------------
                 if slew_flag == 2.0:
                     if coord_space == 'RA' or coord_space == 'AZ':
-                        while y >= start_y - map_len :
+                        while y >= start_y and not ut.tel_exit.is_set() :
                             if y <= 360.0:
-                                y = y + move
+                                y = y - move
                             else :
                                 y = y - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
-                            tot = int((float(self.i) / float(num_loop)) * 100)
+                            tot = (float(self.i) / float(num_loop)) * 100.0
                             queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
@@ -157,14 +157,14 @@ class TIME_TELE :
                             slew_flag = 4.0
                             self.i += 1
                     else :
-                        while x >= start_x - map_len :
+                        while x >= start_x and not ut.tel_exit.is_set():
                             if x <= 360.0:
-                                x = x + move
+                                x = x - move
                             else :
-                                x = x - 360.0 + move # keep coordinates realistic, can't go more than 360 degrees around a circle
+                                x = x - 360.0 - move # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
-                            tot = int((float(self.i) / float(num_loop)) * 100)
+                            tot = (float(self.i) / float(num_loop)) * 100.0
                             queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
@@ -178,14 +178,14 @@ class TIME_TELE :
             # -------------MOVE UP----------------------------------------------------------
                 if slew_flag == 4.0:
                     if coord_space == 'RA' or coord_space == 'AZ':
-                        while x <= start_x + step :
+                        while x <= start_x + step and not ut.tel_exit.is_set():
                             if x <= 360.0:
                                 x = x + track
                             else :
                                 x = x - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
-                            tot = int((float(self.i) / float(num_loop)) * 100)
+                            tot = (float(self.i) / float(num_loop)) * 100.0
                             queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
@@ -198,15 +198,14 @@ class TIME_TELE :
                                 slew_flag = 2.0
                             start_x = start_x + step
                     else :
-                        print(start_y , step)
-                        while y <= start_y + step :
+                        while y < start_y + step and not ut.tel_exit.is_set():
                             if y <= 360.0:
                                 y = y + track
                             else :
                                 y = y - 360.0 + track # keep coordinates realistic, can't go more than 360 degrees around a circle
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
-                            tot = int((float(self.i) / float(num_loop)) * 100)
+                            tot = (float(self.i) / float(num_loop)) * 100.0
                             queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
 
                             n = n + (1/rate)
