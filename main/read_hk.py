@@ -93,6 +93,10 @@ class HK_Reader :
             self.bad_counter += 1
 
         # makng dict entry for name as integer ====================================
+        """
+            Creating a Dictionary of HK Sensors
+            :return: writes dictionary to file (.txt)
+        """
         if self.n == 0 :
             if os.path.exists(self.dir2 + '/hk_dict.txt'): # if we already have a saved dictionary :
                 f = open(self.dir2 + '/hk_dict.txt','r')
@@ -120,8 +124,10 @@ class HK_Reader :
         f.close()
 
         #==============================================
-        ''' Routine for Sorting Data by Time Index '''
-        #==============================================
+        '''
+            Routine for Sorting Data by Time Index
+            :return: mega_hk
+        '''
         sort_name = [x for _,x in sorted(zip(time,name))]
         sort_data = [x for _,x in sorted(zip(time,data))]
         sort_time = sorted(time)
@@ -136,6 +142,7 @@ class HK_Reader :
                     num = int(k)
                     val = v
             sort_name[i] = float(num)
+            
             # only incremment index for a new timestamp,not for file num or for t =======
             if l == 0 : # if start of a new time (or new file)
                 new_time = sort_time[i]

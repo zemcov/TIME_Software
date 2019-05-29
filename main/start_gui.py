@@ -811,8 +811,8 @@ class MainWindow(QtGui.QMainWindow):
         self.kmstitle.setAlignment(QtCore.Qt.AlignCenter)
         self.statustext = QtGui.QLabel('Tel Status: %s' %(self.status))
         self.statustext.setAlignment(QtCore.Qt.AlignCenter)
-        self.timetext = QtGui.QLabel('UTC Time: %s' %(self.time))
-        self.timetext.setAlignment(QtCore.Qt.AlignCenter)
+        self.kmstimetext = QtGui.QLabel('UTC Time: %s' %(self.time))
+        self.kmstimetext.setAlignment(QtCore.Qt.AlignCenter)
         self.enctext = QtGui.QLabel('Encoder Position: %s' %(self.enc))
         self.enctext.setAlignment(QtCore.Qt.AlignCenter)
 
@@ -955,9 +955,9 @@ class MainWindow(QtGui.QMainWindow):
 
             self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
             self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
-            self.statustext.setText('Tel Current Status: %s' %(self.status))
-            self.timetext.setText('UTC Time: %s' %(self.time))
-            self.enctext.setText('Encoder Position %s' %(self.enc))
+            self.statustext.setText('Tel Current Status: %s' %(status))
+            self.kmstimetext.setText('UTC Time: %s' %(time))
+            self.enctext.setText('Encoder Position %s' %(enc))
 
     def updatefftgraph(self):
         #self.y and self.x are defined in updateplot
@@ -1343,7 +1343,7 @@ class MainWindow(QtGui.QMainWindow):
                     d1_avg[b][c] = d1[b][c] - self.roll_avg_1[b][c]
 
             self.heatmap3.setImage(d1_avg)
-            self.heatmap3.setLevels(self.h1_var - self.h1_avg , self.h1_var + self.h1_avg)
+            # self.heatmap3.setLevels(self.h1_var - self.h1_avg , self.h1_var + self.h1_avg)
 
         if ut.which_mce[1] == 1 or ut.which_mce[2] == 1:
 
@@ -1379,7 +1379,7 @@ class MainWindow(QtGui.QMainWindow):
                     d2_avg[b][c] = d2[b][c] - self.roll_avg_2[b][c]
 
             self.heatmap4.setImage(d2_avg)
-            self.heatmap3.setLevels(self.h2_var - self.h2_avg , self.h2_var + self.h2_avg)
+            # self.heatmap4.setLevels(self.h2_var - self.h2_avg , self.h2_var + self.h2_avg)
 
 
     def warningbox(self,message): # message is a tuple
@@ -1450,9 +1450,9 @@ class MCEThread(QtCore.QThread):
     def run(self):
         data, queue = mp.Pipe()
         p = mp.Process(target=append_data.Time_Files(flags = self.flags, offset = self.offset).retrieve, args=(queue,self.netcdfdir,))
-        # p2 = mp.Process(target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
+        p2 = mp.Process(target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         p.start()
-        # p2.start()
+        p2.start()
 
         while not ut.mce_exit.is_set():
             stuff = data.recv()
@@ -1514,6 +1514,7 @@ class Tel_Thread(QtCore.QThread):
                         tel_stuff = data.recv()
                         with self.flags.get_lock() :
                             self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
+                        progress = 0.0
                         self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
                         time.sleep(0.01)
 

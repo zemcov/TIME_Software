@@ -109,7 +109,10 @@ class TIME_TELE :
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
-                            queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            if coord_space == 'RA' :
+                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            else :
+                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -127,7 +130,10 @@ class TIME_TELE :
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
-                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
+                            if coord_space == 'DEC' :
+                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            else :
+                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -147,7 +153,10 @@ class TIME_TELE :
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
-                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
+                            if coord_space == 'RA' :
+                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            else :
+                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -165,7 +174,10 @@ class TIME_TELE :
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
-                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
+                            if coord_space == 'DEC' :
+                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            else :
+                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -186,7 +198,10 @@ class TIME_TELE :
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
-                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
+                            if coord_space == 'RA' :
+                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            else :
+                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -206,7 +221,10 @@ class TIME_TELE :
                             pa,other_x,other_y = self.tel_move(coord_space,x,y,n)
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
-                            queue.send([tot,pa,int(slew_flag),other_x,other_y,x,y,othertime.time()])
+                            if coord_space == 'DEC' :
+                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                            else :
+                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)

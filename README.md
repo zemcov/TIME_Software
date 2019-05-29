@@ -9,7 +9,19 @@
     d) **self.k** is used to keep track of when a new HK file is being read so that the timekeeper self.n may be reset. It is incremented in the HK_Read function after each line of data is appended. <br>
 
   2.) MCE indexing assumes both mces are spitting out the same number of files each time the directory is checked. <br>
-  
+
   3.) Both MCE and HK share the same unlimited time dimension within the netcdf file. Since HK is sampled first, it can build up the value of "t" to close to 20. When MCE data is appended afterwards, that value is reset back to 0, and then incremented again. This value is continually flip-flopped between the two, and may present problems with reading multiple files in as one data variable. This is necessary because the files for MCE and HK are not parsed synchronously, but one at a time. <br>
 
   4.) The same function is used to append data for both MCE and HK data. As such, it is necessary to save all data as class variables that can be accessed by the function in order to prevent problems with passing different numbers of variables for each case. <br>
+
+*Device Communication Scripts*
+  **mce0_run.sh , mce1_run.sh**
+      Activates either MCE0 or MCE1 by sending the name of the temporary files "temp" , how many readout cards to activate, how many frames to collect, and how many frames should be appended into each temp file.
+
+  **mce0_del.sh , mce1_del.sh**
+      Removes any built up temp files not transferred to GUI computer. These will always be located in /data/cryo/current_data. Typically called at the start and end of each GUI activation.
+
+  **mce0_cdm.sh , mce1_cdm.sh**
+      
+
+*Data Transfer Scripts*
