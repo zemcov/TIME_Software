@@ -195,6 +195,7 @@ class MainWindow(QtGui.QMainWindow):
         # =============================================================================
         # ==============================================================================
         self.starttel.setEnabled(True)
+        self.useinit.setEnabled(False)
 
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -212,13 +213,14 @@ class MainWindow(QtGui.QMainWindow):
             self.submitbutton.setEnabled(False)
 
         ''' ###################################################################'''
-        if not self.useinit.isEnabled():
+        if self.useinit.isEnabled():
             #set variables to user input
             # observer ---------------------------------------
             self.observer = self.enterobserver.text()
 
             # which mces are active --------------------------
             self.mceson = self.whichmces.currentText()
+            print(colored('MCESON SET','red'))
 
             # data mode --------------------------------------
             self.datamode = self.enterdatamode.currentText()
@@ -363,13 +365,13 @@ class MainWindow(QtGui.QMainWindow):
                         subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
                 # start file transfer scripts
-                subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['ssh -T time-mce-0 python /home/time_user/TIME_Software/sftp/mce0_sftp.py'], shell=True)
+                    subprocess.Popen(['ssh -T time@time-mce-0 python /home/time/TIME_Software/sftp/mce0_sftp.py'], shell=True)
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['ssh -T time-mce-1 python /home/time_user/TIME_Software/sftp/mce1_sftp.py'], shell=True)
+                    subprocess.Popen(['ssh -T time@time-mce-1 python /home/time/TIME_Software/sftp/mce1_sftp.py'], shell=True)
                 time.sleep(2.0)
 
+            subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
             data = np.zeros((33,32))
 
             self.startwindow.hide()

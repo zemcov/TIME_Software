@@ -12,7 +12,7 @@ def new_file(filestarttime,dir):
     # Dimensions for Data Arrays -------------------------------------------------------------------
     hk.createDimension('t',None)
     hk.createDimension('hk_col',3)
-    hk.createDimension('hk_row',1000)
+    hk.createDimension('hk_row',500)
     hk.createDimension('hk_num', int(ut.german_freq))
     hk.createDimension('tuple',2)
 

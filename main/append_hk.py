@@ -14,7 +14,7 @@ import read_hk
 class Time_Files:
 
     def __init__(self,offset):
-        os.nice(-10)
+        # os.nice(-10)
         self.b = 0
         self.start_time_stamp = 0
         self.new_time_stamp = 0
@@ -22,7 +22,7 @@ class Time_Files:
         self.i = 0
         self.j = 0
         self.time_tuple = []
-        self.hk_data = np.zeros((int(ut.german_freq),3,1000))
+        self.hk_data = np.zeros((int(ut.german_freq),3,500))
         self.offset = offset
 
         self.data3, queue3 = mp.Pipe()

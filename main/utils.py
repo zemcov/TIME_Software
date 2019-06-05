@@ -7,6 +7,9 @@ tel_exit = mp.Event()
 kms_exit = mp.Event()
 hk_exit = mp.Event()
 
+mce0_onoff = []
+mce1_onoff = []
+
 flags = [1,1,1,1,1] # initialize flags with all green
 frameperfile = 0
 offset = 0
