@@ -16,7 +16,7 @@ end = dt.datetime.utcnow()
 while end - begin < dt.timedelta(seconds = 5):
     if os.path.exists(dir + 'temp.run') :
         if a == 0 :
-            subprocess.Popen(['scp', dir + 'temp.run',  'time-rit:/home/time_user/Desktop/time-data/mce2/temp.run']).wait()
+            subprocess.Popen(['scp', dir + 'temp.run',  'time_user@time-rit:/home/time_user/Desktop/time-data/mce2/temp.run']).wait()
 
         if os.path.exists(dir + "temp.%0.3i" %(a+1)) : #wait to read new file until old file is complete
             mce_file_name = dir + 'temp.%0.3i' % (a)
