@@ -21,7 +21,6 @@ while True:
         print colored('HK starting file = %i' %(a),'green')
         a = a + 1
     else :
-        print(colored('hk else statement','green'))
         if os.path.exists(dir + "omnilog.%i.txt.gz" %(a+1)) : #wait to read new file until old file is complete
             file_name = dir + 'omnilog.%i.txt.gz' % (a)
             if os.path.exists(file_name) :
