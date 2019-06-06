@@ -1597,7 +1597,7 @@ class KMS_Thread(QtCore.QThread):
         data, queue = mp.Pipe()
         p = mp.Process(target=kms_socket.start_sock , args=(queue,))
         p.start()
-        subprocess.Popen(['ssh -T vlb9398@vlb-mac python /Users/vlb93983/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock.py'], shell=True)
+        subprocess.Popen(['ssh -T vlb9398@vlb-mac python /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock.py'], shell=True)
 
         while not ut.kms_exit.is_set() :
             kms_stuff = data.recv() # pa , flags, time, encoder pos
