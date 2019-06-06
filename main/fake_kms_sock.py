@@ -1,4 +1,4 @@
-import socket
+import socket, struct
 import time
 import random
 import datetime

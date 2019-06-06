@@ -37,8 +37,8 @@ def start_sock(queue):
             queue.send([pa, flag, time, enc_pos])
             n += 1
 
-        else :
-            print('waiting for data')
+        # else :
+        #     print('waiting for data')
 
     s.close()
     sys.exit()
