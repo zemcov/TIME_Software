@@ -20,6 +20,6 @@ while True:
 	time = datetime.datetime.now()
 	time = datetime.timestamp(time)
 	enc_pos = random.random()
-	resp = struct.pack(format, length, pa, flag, time, enc_pos)
+	resp = struct.pack(format, pa, flag, time, enc_pos)
 	s.send(resp)
 	time.sleep(0.05)
