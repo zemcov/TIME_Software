@@ -7,9 +7,9 @@ import utils as ut
 HOST = "129.21.172.16"
 PORT = "8500"
 
-self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print('attempting to connect')
-self.s.connect((HOST,PORT))
+s.connect((HOST,PORT))
 print('connected')
 
 format = "didd" #d = float, i = integer
@@ -21,5 +21,5 @@ while True:
 	time = datetime.timestamp(time)
 	enc_pos = random.random()
 	resp = struct.pack(format, length, pa, flag, time, enc_pos)
-	self.s.send(resp)
+	s.send(resp)
 	time.sleep(0.05)
