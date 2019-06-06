@@ -109,6 +109,7 @@ class MainWindow(QtGui.QMainWindow):
         # subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
         # subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele*'], shell=True)
 
+        subprocess.Popen(['pkill -9 -f /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock'],shell=True)
         print('Quitting Application')
         sys.exit()
 
@@ -371,7 +372,7 @@ class MainWindow(QtGui.QMainWindow):
                     subprocess.Popen(['ssh -T time@time-mce-1 python /home/time/TIME_Software/sftp/mce1_sftp.py'], shell=True)
                 time.sleep(2.0)
 
-            subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
+            # subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
             data = np.zeros((33,32))
 
             self.startwindow.hide()
@@ -791,9 +792,9 @@ class MainWindow(QtGui.QMainWindow):
         if self.tel_script == 'point_cross.py' :
             # do something to set KMS in specific position before starting KMS thread
             print('No KMS!')
-        # self.kms_updater = KMS_Thread()
-        # self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
-        # self.kms_updater.start()
+        self.kms_updater = KMS_Thread()
+        self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
+        self.kms_updater.start()
 
         #place holder data
         self.parallacticangle = 0.0
@@ -1596,6 +1597,8 @@ class KMS_Thread(QtCore.QThread):
         data, queue = mp.Pipe()
         p = mp.Process(target=kms_socket.start_sock , args=(queue,))
         p.start()
+        subprocess.Popen(['ssh -T vlb9398@vlb-mac python /Users/vlb93983/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock.py'], shell=True)
+
         while not ut.kms_exit.is_set() :
             kms_stuff = data.recv() # pa , flags, time, encoder pos
             # send updated data to the gui

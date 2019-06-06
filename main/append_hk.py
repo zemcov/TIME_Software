@@ -24,6 +24,8 @@ class Time_Files:
         self.time_tuple = []
         self.hk_data = np.zeros((int(ut.german_freq),3,500))
         self.offset = offset
+        self.saved_array = []
+        self.saved_time = 0
 
         self.data3, queue3 = mp.Pipe()
         self.p3 = mp.Process(target=read_hk.HK_Reader(offset = self.offset).loop_files , args=(queue3,))

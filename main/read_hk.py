@@ -142,13 +142,13 @@ class HK_Reader :
                     num = int(k)
                     val = v
             sort_name[i] = float(num)
-            
+
             # only incremment index for a new timestamp,not for file num or for t =======
             if l == 0 : # if start of a new time (or new file)
                 new_time = sort_time[i]
-                time2 =  np.zeros(1000)
-                names2 = np.zeros(1000)
-                data2 = np.zeros(1000)
+                time2 =  np.zeros(500)
+                names2 = np.zeros(500)
+                data2 = np.zeros(500)
                 time2[num] = sort_time[i]
                 names2[num] = float(sort_name[i])
                 data2[num] = sort_data[i]
@@ -164,7 +164,7 @@ class HK_Reader :
                     new_time = sort_time[i]
                     l = 0 # reset timer for new timestamp
                     # ==================================================================
-                    if len(self.name_dict.keys()) <= 1000 : # make sure num of sensors isn't over array limit
+                    if len(self.name_dict.keys()) <= 500 : # make sure num of sensors isn't over array limit
                         hk_data = np.array((time2,names2,data2)) # make monolithic array, only of one timestamp
                         mega_hk.append(hk_data)
 
@@ -172,9 +172,9 @@ class HK_Reader :
                         print(len(self.name_dict.keys()))
                         print(colored("Number of reported sensors over size limit!",'red'))
 
-                    time2 = np.zeros(1000)
-                    names2 = np.zeros(1000)
-                    data2 = np.zeros(1000)
+                    time2 = np.zeros(500)
+                    names2 = np.zeros(500)
+                    data2 = np.zeros(500)
                     time2[num] = sort_time[i]
                     names2[num] = float(sort_name[i])
                     data2[num] = sort_data[i]
