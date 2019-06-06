@@ -5,7 +5,7 @@ import datetime
 import utils as ut
 
 HOST = "129.21.172.16"
-PORT = "8500"
+PORT = 8500
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print('attempting to connect')
