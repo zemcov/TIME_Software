@@ -18,7 +18,7 @@ while True:
 	pa = random.random()
 	flag = random.randint(0,4)
 	time = datetime.datetime.now()
-	time = datetime.timestamp(time)
+	time = datetime.datetime(time).timestamp()
 	enc_pos = random.random()
 	resp = struct.pack(format, pa, flag, time, enc_pos)
 	s.send(resp)
