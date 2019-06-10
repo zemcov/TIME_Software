@@ -20,7 +20,7 @@ while end - begin < dt.timedelta(seconds = 3):
 
         if os.path.exists(dir + "temp.%0.3i" %(a+1)) : #wait to read new file until old file is complete
             mce_file_name = dir + 'temp.%0.3i' % (a)
-            # print 'File Transfered (MCE0):',(mce_file_name.replace(dir,''))
+            print 'File Transfered (MCE0):',(mce_file_name.replace(dir,''))
 
             if os.path.exists(mce_file_name) :
                 subprocess.Popen(['scp', mce_file_name,  'time_user@time-rit:/home/time_user/Desktop/time-data/mce1/temp.%0.3i' % (a)]).wait()

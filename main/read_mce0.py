@@ -22,8 +22,6 @@ def netcdfdata(queue1,flags):
         mce_file_name = dir + 'temp.%0.3i' %(a)
         mce_file = os.path.exists(dir + 'temp.%0.3i' %(a+1))
         mce_run = os.path.exists(dir + 'temp.run')
-        print("mce_file", mce_file)
-        print("mce_run", mce_run)
         if mce_file and mce_run:
             head,h,frame_num,mce_on = readdata(mce_file_name,flags)
             queue1.send([h,head,frame_num,mce_on])
@@ -41,10 +39,8 @@ def readdata(file,flags):
     global h_shape
     global p
     f = mce_data_jon.MCEFile(file)
-    print('before l')
     l = f.Read(row_col=True, unfilter='DC', all_headers=True)
     h = l.data
-    print('after l')
 
     # -------CHECK FOR FRAME SIZE CHANGE----------------------------------------
     # if frame size is wrong, just append zeros instead of partial array to prevent netcdf error

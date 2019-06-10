@@ -365,6 +365,7 @@ class MainWindow(QtGui.QMainWindow):
                         subprocess.Popen(['./mce1_del.sh'], shell=True)
                         subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
+                sys.exit()
                 # start file transfer scripts
                 if ut.which_mce[0] == 1 :
                     subprocess.Popen(['ssh -T time@time-mce-0 python /home/time/TIME_Software/sftp/mce0_sftp.py'], shell=True)
@@ -398,10 +399,10 @@ class MainWindow(QtGui.QMainWindow):
             self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
 
             #start other plot making processes
-            self.initplot()
+            # self.initplot()
             self.channelselection()
-            self.initheatmap(data,data) # give first values for heatmap to create image scale
-            self.initfftgraph()
+            # self.initheatmap(data,data) # give first values for heatmap to create image scale
+            # self.initfftgraph()
             self.inittelescope()
             # self.initkmirrordata()
 
@@ -1453,9 +1454,9 @@ class MCEThread(QtCore.QThread):
     def run(self):
         data, queue = mp.Pipe()
         p = mp.Process(target=append_data.Time_Files(flags = self.flags, offset = self.offset).retrieve, args=(queue,self.netcdfdir,))
-        p2 = mp.Process(target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
+        # p2 = mp.Process(target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         p.start()
-        p2.start()
+        # p2.start()
 
         while not ut.mce_exit.is_set():
             stuff = data.recv()
