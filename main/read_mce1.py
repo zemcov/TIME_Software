@@ -97,7 +97,11 @@ def read_header(l):
                 value = ''.join(map(str,value))
             if key == 'sync_box_num' :
                 frame_num.append(value)
+                print('sync_box_num', value)
+            if key == 'frame_num':
+                print('frame_num', value)
             value = int(value)
             values.append(value)
     values = np.asarray(values)
+    sys.stdout.flush()
     return values, frame_num

@@ -18,9 +18,9 @@ def start_sock(queue):
     unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
     kms_data = []
     n = 0
-    while not ut.tel_exit.is_set(): 
-        print(ut.tel_exit.is_set())
-        data = client.recv(unpacker.size)
+    while not ut.tel_exit.is_set() :
+       
+        print('collecting data')
         if len(data) !=0 :
             # print('Data Received')
             # unpacking data packet ===============================================
@@ -31,7 +31,7 @@ def start_sock(queue):
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
 
             else :
-                np.save('/home/time_user/TIME_Software/main/tempfiles/kms_packet%i.npy' %(n), kms_data)
+                np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/kms_packet%i.npy' %(n), kms_data)
                 kms_data = []
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
             # send positional data to gui window

@@ -59,7 +59,7 @@ class MainWindow(QtGui.QMainWindow):
         self.flags = mp.Array('i',ut.flags,lock=True)
         self.offset = mp.Value('d',ut.offset,lock=True)
         ut.new_dir = str(datetime.datetime.utcnow().isoformat())
-        self.netcdfdir = './data/netcdffiles/%s' %(ut.new_dir)
+        self.netcdfdir = '/data/netcdffiles/%s' %(ut.new_dir)
         os.makedirs(self.netcdfdir, 0755)
 
     #reacts to button presses and other GUI user input
@@ -85,29 +85,29 @@ class MainWindow(QtGui.QMainWindow):
         ut.hk_exit.set()
 
         # stop all of the mces with their own command
-        # if self.showmcedata == 'Yes':
-        #     if self.readoutcard == 'All':
-        #         if ut.which_mce[1] == 1 :
-        #             subprocess.Popen(['./mce1_stop.sh s'],shell=True)
-        #         if ut.which_mce[0] == 1 :
-        #             subprocess.Popen(['./mce0_stop.sh s'],shell=True)
-        #
-        #     else :
-        #         if ut.which_mce[1] == 1 :
-        #             subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
-        #             subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
-        #         if ut.which_mce[0] == 1 :
-        #             subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
-        #             subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
-        #
-        # # # stop the file transfer process to time-master
-        # subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
-        #
-        # # # delete all MCE temp files still in local and mce computer directory
-        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
-        # subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-        # subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
-        # subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele*'], shell=True)
+        if self.showmcedata == 'Yes' and self.mceson != 'MCE SIM':
+            if self.readoutcard == 'All':
+                if ut.which_mce[1] == 1 :
+                    subprocess.Popen(['./mce1_stop.sh s'],shell=True)
+                if ut.which_mce[0] == 1 :
+                    subprocess.Popen(['./mce0_stop.sh s'],shell=True)
+
+            else :
+                if ut.which_mce[1] == 1 :
+                    subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
+                    subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
+                if ut.which_mce[0] == 1 :
+                    subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
+                    subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
+
+        # # stop the file transfer process to time-master
+        subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
+
+        # # delete all MCE temp files still in local and mce computer directory
+        subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce1/temp*'], shell = True)
+        subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce2/temp*'], shell = True)
+        subprocess.Popen(['rm /home/time_user/Desktop/time-data/hk/omnilog*'], shell=True)
+        subprocess.Popen(['rm /home/time_user/time-software-testing/main/tempfiles/tele*'], shell=True)
 
         subprocess.Popen(['pkill -9 -f /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock'],shell=True)
         print('Quitting Application')
@@ -403,7 +403,7 @@ class MainWindow(QtGui.QMainWindow):
             self.initheatmap(data,data) # give first values for heatmap to create image scale
             self.initfftgraph()
             self.inittelescope()
-            self.initkmirrordata()
+            # self.initkmirrordata()
 
             self.newwindow.show()
 
@@ -1602,8 +1602,8 @@ class KMS_Thread(QtCore.QThread):
         while not ut.kms_exit.is_set() :
             kms_stuff = data.recv() # pa , flags, time, encoder pos
             # send updated data to the gui
-            with self.flags.get_lock():
-                self.flags[2] = int(kms_stuff[2])
+            # with self.flags.get_lock():
+            #     self.flags[2] = int(kms_stuff[2])
 
             self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
 

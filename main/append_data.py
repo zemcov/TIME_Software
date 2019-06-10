@@ -23,15 +23,16 @@ class Time_Files:
         self.data2, queue2 = mp.Pipe()
         self.data3, queue3 = mp.Pipe()
         self.data4, queue4 = mp.Pipe()
-        self.p1 = mp.Process(target=read_mce0.netcdfdata , args=(queue1,self.flags,))
+        self.p1 = mp.Process(target=read_mce0.netcdfdata, args=(queue1,self.flags,))
         self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,self.flags,))
         self.p3 = mp.Process(target=read_tel.loop_files , args=(queue3,))
-        # os.nice(-20)
         # self.p4 = mp.Process(target=read_kms.loop_files , args=(queue4,))
 
         if ut.which_mce[0] == 1 :
+            print('starting read mce0')
             self.p1.start()
         if ut.which_mce[1] == 1 :
+            print('starting read mce1')
             self.p2.start()
 
         self.p3.start()
@@ -73,9 +74,9 @@ class Time_Files:
             self.tel_data = self.data3.recv()
             # self.kms_data = self.data4.recv()
             # ------------------------------------------
-            if ut.which_mce[2] == 0 : # if we aren't running in sim mode
-                self.parse_arrays(dir)
-                self.append_mce_data(dir)
+            # if ut.which_mce[2] == 0 : # if we aren't running in sim mode
+            self.parse_arrays(dir)
+            self.append_mce_data(dir)
             self.p += 1
             time.sleep(0.01)
 
@@ -154,10 +155,11 @@ class Time_Files:
             elif ut.which_mce[0] == 1 :
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.mce0_on, dummy, self.tel_data)
-            else :
+            elif ut.which_mce[1] == 1 :
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, dummy, self.mce1_on, self.tel_data)
-
+            else:
+                dummy = []
         # elif os.stat(netcdfdir + "/raw_mce_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
         elif self.a % 100 == 0 :
             self.a = 0
@@ -173,10 +175,11 @@ class Time_Files:
             elif ut.which_mce[0] == 1 :
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.mce0_on, dummy, self.tel_data)
-            else :
+            elif ut.which_mce[1] == 1 :
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, dummy, self.mce1_on, self.tel_data)
-
+            else:
+                dummy = []
         else: # if everything is okay, append data to the file
 
             if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
@@ -184,9 +187,11 @@ class Time_Files:
             elif ut.which_mce[0] == 1 :
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.mce0_on, dummy, self.tel_data)
-            else :
+            elif ut.which_mce[1] == 1 :
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, dummy, self.mce1_on, self.tel_data)
+            else:
+                dummy = []
         # have the counter incremement for every append
         self.a += 1
         return

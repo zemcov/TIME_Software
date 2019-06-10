@@ -22,7 +22,8 @@ def netcdfdata(queue1,flags):
         mce_file_name = dir + 'temp.%0.3i' %(a)
         mce_file = os.path.exists(dir + 'temp.%0.3i' %(a+1))
         mce_run = os.path.exists(dir + 'temp.run')
-
+        print("mce_file", mce_file)
+        print("mce_run", mce_run)
         if mce_file and mce_run:
             head,h,frame_num,mce_on = readdata(mce_file_name,flags)
             queue1.send([h,head,frame_num,mce_on])
@@ -40,8 +41,10 @@ def readdata(file,flags):
     global h_shape
     global p
     f = mce_data_jon.MCEFile(file)
+    print('before l')
     l = f.Read(row_col=True, unfilter='DC', all_headers=True)
     h = l.data
+    print('after l')
 
     # -------CHECK FOR FRAME SIZE CHANGE----------------------------------------
     # if frame size is wrong, just append zeros instead of partial array to prevent netcdf error
@@ -76,16 +79,17 @@ def readdata(file,flags):
     head, frame_num = read_header(l)
     p += 1
 
-    return head, h, frame_num, mce_on
+    return head, h, frame_num, mce_on, l
 
 # ===========================================================================
 def read_header(l):
     keys = []
     values = []
     frame_num = []
-
+    print('hello world')
     for i in range(len(l.headers)):
         for key,value in l.headers[i].items():
+            print(key)
             if key == '_rc_present':
                 for i in range(len(value)):
                     if value[i] == True:
@@ -97,7 +101,11 @@ def read_header(l):
                 value = ''.join(map(str,value))
             if key == 'sync_box_num' :
                 frame_num.append(value)
+                print('sync num', value)
+            if key == 'frame_counter':
+                print('frame num',value)
             value = int(value)
             values.append(value)
     values = np.asarray(values)
+    sys.stdout.flush()
     return values, frame_num

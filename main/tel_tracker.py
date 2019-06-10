@@ -6,7 +6,7 @@ import utils as ut
 from termcolor import colored
 
 def start_tracker(queue):
-    os.nice(-20)
+    # os.nice(-20)
     PORT = 4444
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))
