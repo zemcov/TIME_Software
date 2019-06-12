@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # use this to program the parameters in the software
 
 tel_dict = {
@@ -36,3 +37,11 @@ mce_dict = {
 "showmcedata":"Yes"
 
 }
+
+
+netcdf_dir = '/data/netcdffiles/%s" % (ut.new_dir)'
+master_dir = '/home/time/time-software-testing/TIME_Software/main/'
+mce0_dir = '/home/time_user/Desktop/time-data/mce1/'
+mce1_dir = '/home/time_user/Desktop/time-data/mce2/'
+temp_dir = '/home/time_user/TIME_Software/main/tempfiles/'
+hk_dir = '/home/time_user/Desktop/time-data/hk/'

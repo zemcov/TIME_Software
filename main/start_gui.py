@@ -13,6 +13,7 @@ sys.path.append('/home/time_user/main/tempfiles')
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
 from init import tel_dict,mce_dict
 from tel_box import draw_box
+import init
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
@@ -59,7 +60,7 @@ class MainWindow(QtGui.QMainWindow):
         self.flags = mp.Array('i',ut.flags,lock=True)
         self.offset = mp.Value('d',ut.offset,lock=True)
         ut.new_dir = str(datetime.datetime.utcnow().isoformat())
-        self.netcdfdir = '/data/netcdffiles/%s' %(ut.new_dir)
+        self.netcdfdir = init.netcdf_dir
         os.makedirs(self.netcdfdir, 0755)
 
     #reacts to button presses and other GUI user input
@@ -310,7 +311,7 @@ class MainWindow(QtGui.QMainWindow):
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
-            dir = '/home/time/time-software-testing/TIME_Software/main/'
+            dir = init.master_dir
             if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
                 parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
                 parafile.write(self.observer+' ')
@@ -332,8 +333,8 @@ class MainWindow(QtGui.QMainWindow):
             if self.mceson != "MCE SIM" :
 
                 # check for leftover files from previous run and delete
-                dir1 = '/home/time_user/Desktop/time-data/mce1/'
-                dir2 = '/home/time_user/Desktop/time-data/mce2/'
+                dir1 = init.mce0_dir
+                dir2 = init.mce1_dir
                 mce0 = len(os.listdir(dir1))
                 mce1 = len(os.listdir(dir2))
                 if mce0 != 0 :

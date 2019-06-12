@@ -4,12 +4,13 @@ import datetime as dt
 from termcolor import colored
 import numpy as np
 import utils as ut
+import init
 
 class HK_Reader :
 
     def __init__(self,offset):
-        self.dir = '/home/time_user/Desktop/time-data/hk/'
-        self.dir2 = '/data/netcdffiles/'
+        self.dir = init.hk_dir
+        self.dir2 = init.netcdf_dir
         self.name_dict = None
         self.n = 0
         self.bad_counter = 0

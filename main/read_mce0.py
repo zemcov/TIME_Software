@@ -8,13 +8,13 @@ import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
-
+import init
 h_shape = 0
 p = 0
 
 def netcdfdata(queue1,flags):
     # os.nice(-20)
-    dir = '/home/time_user/Desktop/time-data/mce1/'
+    dir = init.mce0_dir
     a = 0
     print('starting mce0 read')
     while not ut.mce_exit.is_set():

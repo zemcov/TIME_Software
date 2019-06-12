@@ -1,8 +1,9 @@
 # this parses kms data
 import numpy as np
 import subprocess
+import init
 
-dir = '/home/time_user/TIME_Software/main/tempfiles/'
+dir = init.temp_dir
 
 def loop_files(self,queue4):
 

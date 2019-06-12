@@ -10,6 +10,7 @@ from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
 import read_mce0, read_mce1, read_tel
+import init
 
 class Time_Files:
 
@@ -18,7 +19,7 @@ class Time_Files:
         self.p = 0
         self.flags = flags
         self.offset = offset
-        self.dir = '/home/time/time-software-testing/TIME_Software/main/tempfiles/'
+        self.dir = temp_dir
         self.data1, queue1 = mp.Pipe()
         self.data2, queue2 = mp.Pipe()
         self.data3, queue3 = mp.Pipe()
