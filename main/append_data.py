@@ -20,7 +20,7 @@ class Time_Files:
         self.flags = flags
         self.offset = offset
         self.dir = temp_dir
-        self.data1, queue1 = mp.Pipe()
+        self.data1, queue1 = mp.Pipe() #what are each of these pipes, idk
         self.data2, queue2 = mp.Pipe()
         self.data3, queue3 = mp.Pipe()
         self.data4, queue4 = mp.Pipe()
@@ -40,14 +40,20 @@ class Time_Files:
         # self.p4.start()
 
     def retrieve(self,queue,dir):
+        """
+        The purpose of this function is to retrieve data for the telescope and both of the mces 
+        Inputs: queue - idk
+                dir - the directory where we want to append data
+        Outputs: None
+        """
         # os.nice(-20)
         while not ut.mce_exit.is_set():
             a = []
             b = []
 
             if ut.which_mce[0] == 1 :
-                data1 = self.data1.recv()
-                self.h1 = data1[0]
+                data1 = self.data1.recv() #what is actually in data1, idk
+                self.h1 = data1[0] #what is h1? idk
                 self.head1 = data1[1]
                 self.sync1 = data1[2]
                 self.mce0_on = data1[3]
@@ -70,7 +76,7 @@ class Time_Files:
 
                 time.sleep(1.0)
 
-            queue.send([a,b,self.p])
+            queue.send([a,b,self.p]) #where is it beign sent to idk
 
             self.tel_data = self.data3.recv()
             # self.kms_data = self.data4.recv()

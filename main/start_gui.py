@@ -105,10 +105,10 @@ class MainWindow(QtGui.QMainWindow):
         subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
-        subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce1/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce2/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time_user/Desktop/time-data/hk/omnilog*'], shell=True)
-        subprocess.Popen(['rm /home/time_user/time-software-testing/main/tempfiles/tele*'], shell=True)
+        subprocess.Popen(['rm' + init.mce0_dir + 'temp*'], shell = True)
+        subprocess.Popen(['rm' + init.mce1_dir + 'temp*'], shell = True)
+        subprocess.Popen(['rm' + init.hk_dir + 'omnilog*'], shell=True)
+        subprocess.Popen(['rm' + init.temp_dir + 'tele*'], shell=True)
 
         subprocess.Popen(['pkill -9 -f /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock'],shell=True)
         print('Quitting Application')
@@ -338,10 +338,10 @@ class MainWindow(QtGui.QMainWindow):
                 mce0 = len(os.listdir(dir1))
                 mce1 = len(os.listdir(dir2))
                 if mce0 != 0 :
-                    subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce1/temp*'], shell = True)
+                    subprocess.Popen(['rm' init.mce0_dir + 'temp*'], shell = True)
                 if mce1 != 0 :
-                    subprocess.Popen(['rm /home/time_user/Desktop/time-data/mce2/temp*'], shell = True)
-                subprocess.Popen(['rm /home/time_user/TIME_Software/main/tempfiles/tele_*'], shell = True)
+                    subprocess.Popen(['rm' init.mce1_dir + 'temp*'], shell = True)
+                subprocess.Popen(['rm' init.temp_dir + 'tele_*'], shell = True)
 
 
                 #set the data mode for both mces and start them running
@@ -599,7 +599,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i3 == 0
         else :
-            os.system("mpg123 /home/time_user/TIME_Software/main/warning3.mp3")
+            os.system("mpg123" + init.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','CHANNEL 1'])
 
         if int(self.selectchannel2.text()) <= 31 :
@@ -610,7 +610,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i4 == 0
         else :
-            os.system("mpg123 /home/time_user/TIME_Software/main/warning3.mp3")
+            os.system("mpg123" + init.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','CHANNEL 2'])
 
     def changerow(self):
@@ -622,7 +622,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i1 == 0
         else :
-            os.system("mpg123 /home/time_user/TIME_Software/main/warning3.mp3")
+            os.system("mpg123" + init.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','ROW 1'])
 
         if int(self.selectrow2.text()) <= 32 :
@@ -633,7 +633,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i2 == 0
         else :
-            os.system("mpg123 /home/time_user/TIME_Software/main/warning3.mp3")
+            os.system("mpg123" + init.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','ROW 2'])
 
     def initplot(self):
@@ -943,7 +943,7 @@ class MainWindow(QtGui.QMainWindow):
         # error checking based on status flags from kmirror
         kms_error = [10,11,12,13]
         if (status in kms_error) and (self.repeat == False) :
-            os.system("mpg123 /home/time_user/TIME_Software/main/klaxon.mp3")
+            os.system("mpg123" + init.master_dir + "klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1004,7 +1004,7 @@ class MainWindow(QtGui.QMainWindow):
 
         if (slew in tel_error) and (self.repeat == False) :
             # use afplay for mac testing
-            os.system("mpg123 /home/time_user/TIME_Software/main/klaxon.mp3")
+            os.system("mpg123" + init.master_dir + "klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1013,7 +1013,7 @@ class MainWindow(QtGui.QMainWindow):
             self.warningbox(['tel',slew]) #slew will be replaced with tel status flag over socket
 
         elif slew == 'done' :
-            os.system("mpg123 /home/time_user/TIME_Software/main/finished.mp3")
+            os.system("mpg123" + init.master_dir + "finished.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1599,7 +1599,7 @@ class KMS_Thread(QtCore.QThread):
         data, queue = mp.Pipe()
         p = mp.Process(target=kms_socket.start_sock , args=(queue,))
         p.start()
-        subprocess.Popen(['ssh -T vlb9398@vlb-mac python /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock.py'], shell=True)
+        #subprocess.Popen(['ssh -T vlb9398@vlb-mac python /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock.py'], shell=True)
 
         while not ut.kms_exit.is_set() :
             kms_stuff = data.recv() # pa , flags, time, encoder pos
