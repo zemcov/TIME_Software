@@ -27,12 +27,20 @@ class Time_Files:
         self.saved_array = []
         self.saved_time = 0
 
-        self.data3, queue3 = mp.Pipe()
+        self.data3, queue3 = mp.Pipe() #what does this pipe do? idk
         self.p3 = mp.Process(target=read_hk.HK_Reader(offset = self.offset).loop_files , args=(queue3,))
         self.p3.start()
         print(colored('HK Has Started'),'red')
 
     def retrieve(self,dir):
+        """
+        Purpose: to retrieve hk and time data from the pipe and then parse the data
+        Inputs: dir - the directory where you want the hk data to be placed
+        Outputs: None
+        Calls: parse_array()
+        Class variables - sets self.hk 
+                        - sets self.time
+        """
         # os.nice(-20)
         while not ut.mce_exit.is_set():
             data3 = self.data3.recv() # n * (3,1000)
@@ -49,6 +57,16 @@ class Time_Files:
         sys.exit()
 
     def parse_arrays(self,dir):
+        """
+        Purpose: idk
+        Inputs: dir - the directory where you want the hk data to be placed
+        Outputs: None
+        Calls : append_data()
+        Class variables - sets self.start_time_stamp
+                        - updates self.k
+                        - sets self.new_time_stamp
+                        - sets self.hk_data
+        """
         i = 0
         j = 0
 
@@ -132,7 +150,15 @@ class Time_Files:
 
 # ============================================================================================================================
     def append_hk_data(self,dir):
-
+        """
+        Purpose: to append hk data to hk data files
+        Inputs: dir - directory where you want to put the hk data files
+        Outputs: None - but a file is created 
+        Calls: hnc.append_data()
+               hnc.new_file()
+        Class variables: -sets self.filestarttime
+                         -sets self.ncfile
+        """
         if self.b == 0: # if it's the first file, make a new netcdf file
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()

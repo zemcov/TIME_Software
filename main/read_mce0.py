@@ -13,6 +13,13 @@ h_shape = 0
 p = 0
 
 def netcdfdata(queue1,flags):
+    """
+    Purpose: read the mce0 data
+    inputs: queue1 - idk
+            flags - idk
+    outputs: None
+    Calls : readdata()
+    """
     # os.nice(-20)
     dir = init.mce0_dir
     a = 0
@@ -36,6 +43,18 @@ def netcdfdata(queue1,flags):
 
 # ===========================================================================================================================
 def readdata(file,flags):
+    """
+    Purpose: reads data from a raw mce file 
+    Inputs: file - mce_file
+            flags - idk
+    Outputs: head - header data
+             h - mce data? idk
+             frame_num - an array of frame numbers
+             mce_on - mce on/off data
+             l - idk
+    Calls: mce_data_jon.MCEFILE()
+           read_header()
+    """
     global h_shape
     global p
     f = mce_data_jon.MCEFile(file)
@@ -79,10 +98,16 @@ def readdata(file,flags):
 
 # ===========================================================================
 def read_header(l):
+    """
+    Purpose: reads header data from a mce file
+    Inputs: l - idk
+    Outputs: frame_num - an array of frame numbers
+             values - an array of values from the header dictionary
+    Calls: None
+    """
     keys = []
     values = []
     frame_num = []
-    print('hello world')
     for i in range(len(l.headers)):
         for key,value in l.headers[i].items():
             print(key)

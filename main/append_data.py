@@ -149,7 +149,11 @@ class Time_Files:
 
 # ============================================================================
     def append_mce_data(self,dir):
-
+        """
+        Purpose: to append mce data into the netcdf files
+        Inputs: dir - the directory for the netcdf files
+        Outputs: None - but it creates files
+        """
         if self.a == 0: # if it's the first file, make a new netcdf file
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()
@@ -157,15 +161,15 @@ class Time_Files:
             mce = nc.new_file(self.filestarttime,dir)
             self.ncfile = dir + "/raw_mce_%s.nc" %(self.filestarttime)
 
-            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
+            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 : #if it is using mce1 and mce0
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.mce0_on, self.mce1_on, self.tel_data)
-            elif ut.which_mce[0] == 1 :
+            elif ut.which_mce[0] == 1 : #if it is just mce0
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.mce0_on, dummy, self.tel_data)
-            elif ut.which_mce[1] == 1 :
+            elif ut.which_mce[1] == 1 : #if it is just mce1
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, dummy, self.mce1_on, self.tel_data)
-            else:
+            else: #if it's sim data
                 dummy = []
         # elif os.stat(netcdfdir + "/raw_mce_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
         elif self.a % 100 == 0 :

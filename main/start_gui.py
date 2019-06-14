@@ -338,10 +338,10 @@ class MainWindow(QtGui.QMainWindow):
                 mce0 = len(os.listdir(dir1))
                 mce1 = len(os.listdir(dir2))
                 if mce0 != 0 :
-                    subprocess.Popen(['rm' init.mce0_dir + 'temp*'], shell = True)
+                    subprocess.Popen(['rm' + init.mce0_dir + 'temp*'], shell = True)
                 if mce1 != 0 :
-                    subprocess.Popen(['rm' init.mce1_dir + 'temp*'], shell = True)
-                subprocess.Popen(['rm' init.temp_dir + 'tele_*'], shell = True)
+                    subprocess.Popen(['rm' + init.mce1_dir + 'temp*'], shell = True)
+                subprocess.Popen(['rm' + init.temp_dir + 'tele_*'], shell = True)
 
 
                 #set the data mode for both mces and start them running

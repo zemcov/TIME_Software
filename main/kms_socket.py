@@ -8,6 +8,13 @@ import numpy as np
 import utils as ut
 
 def start_sock(queue):
+    """
+    Purpose: to open a socket for getting K-mirror data from the K-mirror computer and 
+    then sending that data to the GUI
+    Inputs: queue - idk
+    Outputs: None
+    Calls : queue.send()
+    """
     PORT = 8500
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))

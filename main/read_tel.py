@@ -7,6 +7,12 @@ import time
 import init
 
 def loop_files(queue3):
+    """
+    Purpose: idk
+    Inputs : queue3 - idk
+    Outputs: None
+    Calls: queue3.send() 
+    """
     # os.nice(-20)
     dir = init.temp_dir
     mega_tel = []
