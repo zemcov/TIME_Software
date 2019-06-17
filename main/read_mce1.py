@@ -8,14 +8,14 @@ import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
-import init
+import config
 
 h_shape = 0
 p = 0
 
 def netcdfdata(queue2,flags):
     # os.nice(-20)
-    dir = init.mce1_dir
+    dir = config.mce1_dir
     a = 0
     while not ut.mce_exit.is_set():
         mce_file_len = len(os.listdir(dir))

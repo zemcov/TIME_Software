@@ -1,9 +1,9 @@
 # this parses kms data
 import numpy as np
 import subprocess
-import init
+import config
 
-dir = init.temp_dir
+dir = config.temp_dir
 
 def loop_files(self,queue4):
     """

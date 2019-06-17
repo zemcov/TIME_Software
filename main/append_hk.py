@@ -173,9 +173,7 @@ class Time_Files:
             self.b = 0
             # if it's a full file, make a new netcdf file
             print(colored('----------- New HK File ------------','green'))
-            self.filestarttime = dt.datetime.utcnow()
-            self.filestarttime = self.filestarttime.isoformat()
-            hk = hnc.new_file(self.filestarttime,dir)
+            dir)
             self.ncfile = dir + "/raw_hk_%s.nc" %(self.filestarttime)
 
             hnc.data_append(self.ncfile, self.b, self.hk_data, self.time_tuple)

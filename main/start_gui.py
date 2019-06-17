@@ -13,7 +13,7 @@ sys.path.append('/home/time_user/main/tempfiles')
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
 from init import tel_dict,mce_dict
 from tel_box import draw_box
-import init
+import config
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
@@ -60,7 +60,7 @@ class MainWindow(QtGui.QMainWindow):
         self.flags = mp.Array('i',ut.flags,lock=True)
         self.offset = mp.Value('d',ut.offset,lock=True)
         ut.new_dir = str(datetime.datetime.utcnow().isoformat())
-        self.netcdfdir = init.netcdf_dir
+        self.netcdfdir = config.netcdf_dir
         os.makedirs(self.netcdfdir, 0755)
 
     #reacts to button presses and other GUI user input
@@ -105,10 +105,10 @@ class MainWindow(QtGui.QMainWindow):
         subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
-        subprocess.Popen(['rm' + init.mce0_dir + 'temp*'], shell = True)
-        subprocess.Popen(['rm' + init.mce1_dir + 'temp*'], shell = True)
-        subprocess.Popen(['rm' + init.hk_dir + 'omnilog*'], shell=True)
-        subprocess.Popen(['rm' + init.temp_dir + 'tele*'], shell=True)
+        subprocess.Popen(['rm' + config.mce0_dir + 'temp*'], shell = True)
+        subprocess.Popen(['rm' + config.mce1_dir + 'temp*'], shell = True)
+        subprocess.Popen(['rm' + config.hk_dir + 'omnilog*'], shell=True)
+        subprocess.Popen(['rm' + config.temp_dir + 'tele*'], shell=True)
 
         subprocess.Popen(['pkill -9 -f /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock'],shell=True)
         print('Quitting Application')
@@ -311,7 +311,7 @@ class MainWindow(QtGui.QMainWindow):
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
-            dir = init.master_dir
+            dir = config.master_dir
             if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
                 parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
                 parafile.write(self.observer+' ')
@@ -333,15 +333,15 @@ class MainWindow(QtGui.QMainWindow):
             if self.mceson != "MCE SIM" :
 
                 # check for leftover files from previous run and delete
-                dir1 = init.mce0_dir
-                dir2 = init.mce1_dir
+                dir1 = config.mce0_dir
+                dir2 = config.mce1_dir
                 mce0 = len(os.listdir(dir1))
                 mce1 = len(os.listdir(dir2))
                 if mce0 != 0 :
-                    subprocess.Popen(['rm' + init.mce0_dir + 'temp*'], shell = True)
+                    subprocess.Popen(['rm' + config.mce0_dir + 'temp*'], shell = True)
                 if mce1 != 0 :
-                    subprocess.Popen(['rm' + init.mce1_dir + 'temp*'], shell = True)
-                subprocess.Popen(['rm' + init.temp_dir + 'tele_*'], shell = True)
+                    subprocess.Popen(['rm' + config.mce1_dir + 'temp*'], shell = True)
+                subprocess.Popen(['rm' + config.temp_dir + 'tele_*'], shell = True)
 
 
                 #set the data mode for both mces and start them running
@@ -599,7 +599,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i3 == 0
         else :
-            os.system("mpg123" + init.master_dir + "warning3.mp3")
+            os.system("mpg123" + config.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','CHANNEL 1'])
 
         if int(self.selectchannel2.text()) <= 31 :
@@ -610,7 +610,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i4 == 0
         else :
-            os.system("mpg123" + init.master_dir + "warning3.mp3")
+            os.system("mpg123" + config.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','CHANNEL 2'])
 
     def changerow(self):
@@ -622,7 +622,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i1 == 0
         else :
-            os.system("mpg123" + init.master_dir + "warning3.mp3")
+            os.system("mpg123" + config.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','ROW 1'])
 
         if int(self.selectrow2.text()) <= 32 :
@@ -633,7 +633,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i2 == 0
         else :
-            os.system("mpg123" + init.master_dir + "warning3.mp3")
+            os.system("mpg123" + config.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','ROW 2'])
 
     def initplot(self):
@@ -943,7 +943,7 @@ class MainWindow(QtGui.QMainWindow):
         # error checking based on status flags from kmirror
         kms_error = [10,11,12,13]
         if (status in kms_error) and (self.repeat == False) :
-            os.system("mpg123" + init.master_dir + "klaxon.mp3")
+            os.system("mpg123" + config.master_dir + "klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1004,7 +1004,7 @@ class MainWindow(QtGui.QMainWindow):
 
         if (slew in tel_error) and (self.repeat == False) :
             # use afplay for mac testing
-            os.system("mpg123" + init.master_dir + "klaxon.mp3")
+            os.system("mpg123" + config.master_dir + "klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1013,7 +1013,7 @@ class MainWindow(QtGui.QMainWindow):
             self.warningbox(['tel',slew]) #slew will be replaced with tel status flag over socket
 
         elif slew == 'done' :
-            os.system("mpg123" + init.master_dir + "finished.mp3")
+            os.system("mpg123" + config.master_dir + "finished.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1580,9 +1580,9 @@ class Tel_Thread(QtCore.QThread):
         else :
             # makes fake data for when we don't want to run the telescope
             tele_array = np.zeros((20,20),dtype=float)
-            np.save(init.temp_dir + 'tele_packet_off1.npy',tele_array)
+            np.save(config.temp_dir + 'tele_packet_off1.npy',tele_array)
             time.sleep(0.05)
-            np.save(init.temp_dir + 'tele_packet_off2.npy',tele_array)
+            np.save(config.temp_dir + 'tele_packet_off2.npy',tele_array)
 
 
 class KMS_Thread(QtCore.QThread):

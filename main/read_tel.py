@@ -4,7 +4,7 @@ import utils as ut
 import os, subprocess, sys
 from termcolor import colored
 import time
-import init
+import config
 
 def loop_files(queue3):
     """
@@ -14,7 +14,7 @@ def loop_files(queue3):
     Calls: queue3.send() 
     """
     # os.nice(-20)
-    dir = init.temp_dir
+    dir = config.temp_dir
     mega_tel = []
 
     while True :
