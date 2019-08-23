@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # use this to program the parameters in the software
 
 tel_dict = {
@@ -36,3 +37,6 @@ mce_dict = {
 "showmcedata":"Yes"
 
 }
+
+
+

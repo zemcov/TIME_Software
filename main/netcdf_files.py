@@ -8,6 +8,13 @@ import utils as ut
 # os.nice(-20)
 
 def new_file(filestarttime,dir):
+    """
+    Purpose: to create a new netcdf file for the mce/K-mirror/telescope data
+    Inputs: filestarttime - the time of the first set of data that is appended to the file
+            dir - the directory in which you want to create the netcdf files
+    Outputs : None
+    Calls : None
+    """
     mce = nc.Dataset(dir + "/raw_mce_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
      # GUI PARAMETERS ---------------------------------------------------------------------------------
@@ -96,6 +103,22 @@ def new_file(filestarttime,dir):
     mce.close()
 
 def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele):
+    """
+    Purpose: to append data to the netcdf file created in the above function
+    inputs: nc_file - the file in which you want to append data to
+            p - idk
+            flags - idk
+            times - an array containing time data
+            head1 - mce0 header data
+            head2 - mce1 header data
+            mce0_data - mce0 raw data
+            mce1_data - mce1 raw data
+            mceo_on - data showing which of the mce0s are on
+            mce1_on - data showing which of the mce1s are on
+            tele - telescope data
+    Outputs: None
+    Calls : None
+    """
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         Time[p,:,:] = times

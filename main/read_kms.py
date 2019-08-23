@@ -1,11 +1,17 @@
 # this parses kms data
 import numpy as np
 import subprocess
+import config
 
-dir = '/home/time_user/TIME_Software/main/tempfiles/'
+dir = config.temp_dir
 
 def loop_files(self,queue4):
-
+    """
+    Purpose: idk
+    Inputs: queue4 - idk
+    Outputs: None
+    Calls: queue4.send()
+    """
     while not ut.mce_exit.is_set():
         files = [dir + x for x in os.listdir(dir) if x.startswith("kms_packet")]
         mega_kms = []

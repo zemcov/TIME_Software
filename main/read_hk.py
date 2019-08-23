@@ -4,12 +4,13 @@ import datetime as dt
 from termcolor import colored
 import numpy as np
 import utils as ut
+import config
 
 class HK_Reader :
 
     def __init__(self,offset):
-        self.dir = '/home/time_user/Desktop/time-data/hk/'
-        self.dir2 = '/data/netcdffiles/'
+        self.dir = config.hk_dir
+        self.dir2 = config.netcdf_dir
         self.name_dict = None
         self.n = 0
         self.bad_counter = 0
@@ -17,6 +18,12 @@ class HK_Reader :
         self.offset = offset
 
     def loop_files(self,queue3):
+        """
+        Purpose: idk
+        inputs: queue3 - idk
+        Outputs : None
+        Calls: queue3.send()
+        """
         while True : #force it to wait until files exist before continuing
             files = [self.dir + x for x in os.listdir(self.dir) if x.startswith("omnilog")]
             if len(files) != 0 :
@@ -43,6 +50,12 @@ class HK_Reader :
         sys.exit()
 
     def hk_read(self,hk):
+        """
+        Purpose: to read hk files and maybe more? idk
+        input : hk - hk data file
+        outputs: mega_hk - idk
+        calls : None
+        """
         mega_hk = []
         name = []
         data = []

@@ -10,6 +10,7 @@ from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
 import read_mce0, read_mce1, read_tel
+import init
 
 class Time_Files:
 
@@ -18,8 +19,8 @@ class Time_Files:
         self.p = 0
         self.flags = flags
         self.offset = offset
-        self.dir = '/home/time/time-software-testing/TIME_Software/main/tempfiles/'
-        self.data1, queue1 = mp.Pipe()
+        self.dir = temp_dir
+        self.data1, queue1 = mp.Pipe() #what are each of these pipes, idk
         self.data2, queue2 = mp.Pipe()
         self.data3, queue3 = mp.Pipe()
         self.data4, queue4 = mp.Pipe()
@@ -39,14 +40,20 @@ class Time_Files:
         # self.p4.start()
 
     def retrieve(self,queue,dir):
+        """
+        The purpose of this function is to retrieve data for the telescope and both of the mces 
+        Inputs: queue - idk
+                dir - the directory where we want to append data
+        Outputs: None
+        """
         # os.nice(-20)
         while not ut.mce_exit.is_set():
             a = []
             b = []
 
             if ut.which_mce[0] == 1 :
-                data1 = self.data1.recv()
-                self.h1 = data1[0]
+                data1 = self.data1.recv() #what is actually in data1, idk
+                self.h1 = data1[0] #what is h1? idk
                 self.head1 = data1[1]
                 self.sync1 = data1[2]
                 self.mce0_on = data1[3]
@@ -69,7 +76,7 @@ class Time_Files:
 
                 time.sleep(1.0)
 
-            queue.send([a,b,self.p])
+            queue.send([a,b,self.p]) #where is it beign sent to idk
 
             self.tel_data = self.data3.recv()
             # self.kms_data = self.data4.recv()
@@ -142,7 +149,11 @@ class Time_Files:
 
 # ============================================================================
     def append_mce_data(self,dir):
-
+        """
+        Purpose: to append mce data into the netcdf files
+        Inputs: dir - the directory for the netcdf files
+        Outputs: None - but it creates files
+        """
         if self.a == 0: # if it's the first file, make a new netcdf file
             self.filestarttime = dt.datetime.utcnow()
             self.filestarttime = self.filestarttime.isoformat()
@@ -150,15 +161,15 @@ class Time_Files:
             mce = nc.new_file(self.filestarttime,dir)
             self.ncfile = dir + "/raw_mce_%s.nc" %(self.filestarttime)
 
-            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
+            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 : #if it is using mce1 and mce0
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, self.head2, self.h1, self.h2, self.mce0_on, self.mce1_on, self.tel_data)
-            elif ut.which_mce[0] == 1 :
+            elif ut.which_mce[0] == 1 : #if it is just mce0
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, self.head1, dummy, self.h1, dummy, self.mce0_on, dummy, self.tel_data)
-            elif ut.which_mce[1] == 1 :
+            elif ut.which_mce[1] == 1 : #if it is just mce1
                 dummy = []
                 nc.data_append(self.ncfile, self.a, self.flags, self.utc, dummy, self.head2, dummy, self.h2, dummy, self.mce1_on, self.tel_data)
-            else:
+            else: #if it's sim data
                 dummy = []
         # elif os.stat(netcdfdir + "/raw_mce_%s.nc" % (self.filestarttime)).st_size >= 20 * 10**6:
         elif self.a % 100 == 0 :
