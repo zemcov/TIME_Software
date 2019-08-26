@@ -9,7 +9,7 @@ from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
-sys.path.append('/home/time_user/main/tempfiles')
+sys.path.append('../main/tempfiles')
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
 from init import tel_dict,mce_dict
 from tel_box import draw_box
