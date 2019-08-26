@@ -1,17 +1,17 @@
+import sys, os, subprocess, time, datetime, socket, struct, threading
+sys.path.append('../TIME_Software/main/tempfiles')
+sys.path.append('../TIME_Software/main/sftp')
+sys.path.append('../TIME_Software/main/')
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 import pyqtgraph as Qt
 import numpy as np
-import sys, os, subprocess, time, datetime, socket, struct, threading
 import pyqtgraph as pg
 import random as rm
 from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
-sys.path.append('../TIME_Software/main/tempfiles')
-sys.path.append('../TIME_Software/main/sftp')
-sys.path.append('../TIME_Software/main/')
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
 from init import tel_dict,mce_dict
 from tel_box import draw_box
