@@ -19,7 +19,6 @@ class Time_Files:
         self.p = 0
         self.flags = flags
         self.offset = offset
-        self.dir = temp_dir
         self.data1, queue1 = mp.Pipe() #what are each of these pipes, idk
         self.data2, queue2 = mp.Pipe()
         self.data3, queue3 = mp.Pipe()
@@ -41,7 +40,7 @@ class Time_Files:
 
     def retrieve(self,queue,dir):
         """
-        The purpose of this function is to retrieve data for the telescope and both of the mces 
+        The purpose of this function is to retrieve data for the telescope and both of the mces
         Inputs: queue - idk
                 dir - the directory where we want to append data
         Outputs: None
