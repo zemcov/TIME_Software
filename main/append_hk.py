@@ -38,7 +38,7 @@ class Time_Files:
         Inputs: dir - the directory where you want the hk data to be placed
         Outputs: None
         Calls: parse_array()
-        Class variables - sets self.hk 
+        Class variables - sets self.hk
                         - sets self.time
         """
         # os.nice(-20)
@@ -153,7 +153,7 @@ class Time_Files:
         """
         Purpose: to append hk data to hk data files
         Inputs: dir - directory where you want to put the hk data files
-        Outputs: None - but a file is created 
+        Outputs: None - but a file is created
         Calls: hnc.append_data()
                hnc.new_file()
         Class variables: -sets self.filestarttime
@@ -173,7 +173,6 @@ class Time_Files:
             self.b = 0
             # if it's a full file, make a new netcdf file
             print(colored('----------- New HK File ------------','green'))
-            dir)
             self.ncfile = dir + "/raw_hk_%s.nc" %(self.filestarttime)
 
             hnc.data_append(self.ncfile, self.b, self.hk_data, self.time_tuple)
