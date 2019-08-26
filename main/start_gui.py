@@ -8,8 +8,8 @@ from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
-sys.path.append('/home/time/time-software-testing/TIME_Software')
-sys.path.append('/home/time/time-softwrae-testing/main/tempfiles')
+sys.path.append('../TIME_Software')
+sys.path.append('../main/tempfiles')
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
 
 #class of all components of GUI
@@ -559,12 +559,12 @@ class mcegui(QtGui.QWidget):
     def initkmirrordata(self):
         # start the kms QThread
         ''' Add back in once KMS is running '''
-        if self.tel_script == 'point_cross.py' :
-            # do something to set KMS in specific position before starting KMS thread
-            print('No KMS!')
-        self.kms_updater = KMS_Thread()
-        self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
-        self.kms_updater.start()
+        # if self.tel_script == 'point_cross.py' :
+        #     # do something to set KMS in specific position before starting KMS thread
+        #     print('No KMS!')
+        # self.kms_updater = KMS_Thread()
+        # self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
+        # self.kms_updater.start()
 
         #place holder data
         self.parallacticangle = 0.0
