@@ -61,7 +61,8 @@ class MainWindow(QtGui.QMainWindow):
         self.offset = mp.Value('d',ut.offset,lock=True)
         ut.new_dir = str(datetime.datetime.utcnow().isoformat())
         self.netcdfdir = config.netcdf_dir
-        os.makedirs(self.netcdfdir, 0755)
+        if not os.path.isdir(self.netcdfdir) :
+            os.makedirs(self.netcdfdir, 0755)
 
     #reacts to button presses and other GUI user input
     def qt_connections(self):
