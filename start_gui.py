@@ -360,6 +360,7 @@ class MainWindow(QtGui.QMainWindow):
                         subprocess.Popen(['./coms/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
                         subprocess.Popen(['./coms/mce1_del.sh'], shell=True)
                         subprocess.Popen(['./coms/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                        print(colored((self.framenumber,self.frameperfile),'green')
                 else :
                     if ut.which_mce[0] == 1 :
                         subprocess.Popen(['./coms/mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
