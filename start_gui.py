@@ -236,6 +236,7 @@ class MainWindow(QtGui.QMainWindow):
             for state in mce_states :
                 if self.datamode == state :
                     self.datamode = mce_states2[mce_states.index(state)]
+                print(colored(self.datamode))
 
             # readout card ---------------------------------------------
             self.readoutcard = self.enterreadoutcard.currentIndex() + 1
