@@ -354,12 +354,12 @@ class MainWindow(QtGui.QMainWindow):
                     if ut.which_mce[0] == 1 :
                         subprocess.Popen(['./coms/mce0_cdm.sh a %s' %(self.datamode)], shell = True)
                         subprocess.Popen(['./coms/mce0_del.sh'], shell=True)
-                        subprocess.Popen(['./coms/mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                        subprocess.Popen(['./coms/mce0_run.sh %s a %s' %(self.framenumber, self.frameperfile)], shell = True)
 
                     if ut.which_mce[1] == 1 :
                         subprocess.Popen(['./coms/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
                         subprocess.Popen(['./coms/mce1_del.sh'], shell=True)
-                        subprocess.Popen(['./coms/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                        subprocess.Popen(['./coms/mce1_run.sh %s a %s' %(self.framenumber, self.frameperfile)], shell = True)
                         print(colored((self.framenumber,self.frameperfile),'green'))
                 else :
                     if ut.which_mce[0] == 1 :
