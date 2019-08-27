@@ -344,10 +344,16 @@ class MainWindow(QtGui.QMainWindow):
                 mce0 = len(os.listdir(dir1))
                 mce1 = len(os.listdir(dir2))
                 if mce0 != 0 :
-                    subprocess.Popen(['rm ' + config.mce0_dir + 'temp*'], shell = True)
+                    if os.path.isfile('rm ' + config.mce0_dir + 'temp*'):
+                        os.remove('rm ' + config.mce0_dir + 'temp*')
+                    # subprocess.Popen(['rm ' + config.mce0_dir + 'temp*'], shell = True)
                 if mce1 != 0 :
-                    subprocess.Popen(['rm ' + config.mce1_dir + 'temp*'], shell = True)
-                subprocess.Popen(['rm ' + config.temp_dir + 'tele_*'], shell = True)
+                    if os.path.isfile('rm ' + config.mce1_dir + 'temp*'):
+                        os.remove('rm ' + config.mce1_dir + 'temp*')
+                    # subprocess.Popen(['rm ' + config.mce1_dir + 'temp*'], shell = True)
+                if os.path.isfile('rm ' + config.temp_dir + 'tele_*'):
+                    os.remove('rm ' + config.temp_dir + 'tele_*')
+                # subprocess.Popen(['rm ' + config.temp_dir + 'tele_*'], shell = True)
 
 
                 #set the data mode for both mces and start them running
@@ -355,12 +361,12 @@ class MainWindow(QtGui.QMainWindow):
                     if ut.which_mce[0] == 1 :
                         subprocess.Popen(['./coms/mce0_cdm.sh a %s' %(self.datamode)], shell = True)
                         subprocess.Popen(['./coms/mce0_del.sh'], shell=True)
-                        subprocess.Popen(['./coms/mce0_run.sh %s a %s' %(self.framenumber, self.frameperfile)], shell = True)
+                        subprocess.Popen(['./coms/mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
 
                     if ut.which_mce[1] == 1 :
                         subprocess.Popen(['./coms/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
                         subprocess.Popen(['./coms/mce1_del.sh'], shell=True)
-                        subprocess.Popen(['./coms/mce1_run.sh %s a %s' %(self.framenumber, self.frameperfile)], shell = True)
+                        subprocess.Popen(['./coms/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
                         print(colored((self.framenumber,self.frameperfile),'green'))
                 else :
                     if ut.which_mce[0] == 1 :
