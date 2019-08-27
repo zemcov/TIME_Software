@@ -2,6 +2,8 @@ import sys, os, subprocess, time, datetime, socket, struct, threading
 sys.path.append('../TIME_Software/main/tempfiles')
 sys.path.append('../TIME_Software/coms')
 sys.path.append('../TIME_Software/main/')
+sys.path.append('../TIME_Software/scans')
+sys.path.append('../TIME_Software/config/')
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 import pyqtgraph as Qt
