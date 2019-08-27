@@ -1154,9 +1154,9 @@ class Tel_Thread(QtCore.QThread):
         else :
             # makes fake data for when we don't want to run the telescope
             tele_array = np.zeros((20,20),dtype=float)
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off1.npy',tele_array)
+            np.save('/home/time/TIME_Software/main/tempfiles/tele_packet_off1.npy',tele_array)
             time.sleep(0.05)
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
+            np.save('/home/time/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
 
 
 class KMS_Thread(QtCore.QThread):
