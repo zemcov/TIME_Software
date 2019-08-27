@@ -73,26 +73,26 @@ class mcegui(QtGui.QWidget):
         if self.showmcedata == 'Yes':
             if self.readoutcard == 'All':
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_stop.sh s'],shell=True)
+                    subprocess.Popen(['./main/mce1_stop.sh s'],shell=True)
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_stop.sh s'],shell=True)
+                    subprocess.Popen(['./main/mce0_stop.sh s'],shell=True)
 
             else :
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
+                    subprocess.Popen(['./main/mce1_stop.sh %s' %(self.readoutcard)], shell=True)
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
+                    subprocess.Popen(['./main/mce0_stop.sh %s' %(self.readoutcard)], shell=True)
 
         # # stop the file transfer process to time-master
-        subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
-        subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
-        subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
+        subprocess.Popen(['./main/mce1_stop_sftp.sh'], shell=True)
+        subprocess.Popen(['./main/mce0_stop_sftp.sh'], shell=True)
+        subprocess.Popen(['./main/hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
         subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
-        subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_*'], shell=True)
+        subprocess.Popen(['rm /home/time/TIME_Software/main/tempfiles/tele_*'], shell=True)
 
         print('Quitting Application')
         sys.exit()
@@ -200,7 +200,7 @@ class mcegui(QtGui.QWidget):
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
-            dir = '/home/time/time-software-testing/TIME_Software/main/'
+            dir = '/home/time/TIME_Software/main/'
             if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
                 parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
                 parafile.write(self.observer+' ')
@@ -228,36 +228,36 @@ class mcegui(QtGui.QWidget):
                 subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
             if mce1 != 0 :
                 subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-            subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_*'], shell = True)
+            subprocess.Popen(['rm /home/time/TIME_Software/main/tempfiles/tele_*'], shell = True)
 
             #set the data mode for both mces and start them running
             if self.readoutcard == 'All':
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_cdm.sh a %s' %(self.datamode)], shell = True)
-                    subprocess.Popen(['./mce0_del.sh'], shell=True)
-                    subprocess.Popen(['./mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                    subprocess.Popen(['./main/mce0_cdm.sh a %s' %(self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce0_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
 
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_cdm.sh a %s' %(self.datamode)], shell = True)
-                    subprocess.Popen(['./mce1_del.sh'], shell=True)
-                    subprocess.Popen(['./mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                    subprocess.Popen(['./main/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce1_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
             else :
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                    subprocess.Popen(['./mce0_del.sh'], shell=True)
-                    subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+                    subprocess.Popen(['./main/mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce0_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                    subprocess.Popen(['./mce1_del.sh'], shell=True)
-                    subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+                    subprocess.Popen(['./main/mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce1_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
             # start file transfer scripts
-            subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
+            subprocess.Popen(['ssh -T time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
             if ut.which_mce[0] == 1 :
-                subprocess.Popen(['ssh -T time-mce-0 python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
+                subprocess.Popen(['ssh -T time-mce-0 python /home/time/TIME_Software/sftp/mce0_sftp.py'], shell=True)
             if ut.which_mce[1] == 1 :
-                subprocess.Popen(['ssh -T time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
+                subprocess.Popen(['ssh -T time-mce-1 python /home/time/TIME_Software/sftp/mce1_sftp.py'], shell=True)
             time.sleep(2.0)
 
             data = np.zeros((33,32))
