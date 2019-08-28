@@ -275,7 +275,7 @@ class mcegui(QtGui.QWidget):
             data = np.zeros((33,32))
             #start other plot making processes
             self.initplot()
-            self.initheatmap(data,data) # give first values for heatmap to create image scale
+            # self.initheatmap(data,data) # give first values for heatmap to create image scale
             self.initfftgraph()
             self.inittelescope()
             # self.initkmirrordata()
@@ -908,14 +908,14 @@ class mcegui(QtGui.QWidget):
         #updates graph, if channel delete is set to yes will clear data first
         else:
 
-            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
-                self.updateheatmap(h1,h2) # give first values for heatmap to create image scale
-            elif ut.which_mce[0] == 1 :
-                dummy = []
-                self.updateheatmap(h1,dummy)
-            else :
-                dummy = []
-                self.updateheatmap(dummy,h2)
+            # if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
+            #     self.updateheatmap(h1,h2) # give first values for heatmap to create image scale
+            # elif ut.which_mce[0] == 1 :
+            #     dummy = []
+            #     self.updateheatmap(h1,dummy)
+            # else :
+            #     dummy = []
+            #     self.updateheatmap(dummy,h2)
 
             # self.updatefftgraph()
 
