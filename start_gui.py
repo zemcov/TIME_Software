@@ -249,20 +249,20 @@ class mcegui(QtGui.QWidget):
                     subprocess.Popen(['./main/mce0_del.sh'], shell=True)
                     subprocess.Popen(['./main/mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
 
-                # if ut.which_mce[1] == 1 :
-                #     subprocess.Popen(['./main/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
-                #     subprocess.Popen(['./main/mce1_del.sh'], shell=True)
-                #     subprocess.Popen(['./main/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                if ut.which_mce[1] == 1 :
+                    subprocess.Popen(['./main/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce1_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
             else :
                 if ut.which_mce[0] == 1 :
                     subprocess.Popen(['./main/mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
                     subprocess.Popen(['./main/mce0_del.sh'], shell=True)
                     subprocess.Popen(['./main/mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
-                # if ut.which_mce[1] == 1 :
-                #     subprocess.Popen(['./main/mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                #     subprocess.Popen(['./main/mce1_del.sh'], shell=True)
-                #     subprocess.Popen(['./main/mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+                if ut.which_mce[1] == 1 :
+                    subprocess.Popen(['./main/mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce1_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
             # start file transfer scripts
             subprocess.Popen(['ssh -T time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
