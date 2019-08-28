@@ -10,7 +10,8 @@ import utils as ut
 import append_data, append_hk
 sys.path.append('../TIME_Software/main')
 sys.path.append('../main/tempfiles')
-import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
+import read_hk, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
+# import kms_socket
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
