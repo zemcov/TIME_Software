@@ -5,6 +5,7 @@ import sys, os, subprocess, time, datetime, socket, struct, threading
 sys.path.append('../TIME_Software/main')
 sys.path.append('../main/tempfiles')
 sys.path.append('../TIME_Software/')
+sys.path.append('../TIME_Software/scans')
 import pyqtgraph as pg
 import random as rm
 from termcolor import colored
