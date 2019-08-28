@@ -63,7 +63,7 @@ def readdata(file,flags):
                 flags[4] = 0
 
     # check for row/col that are off or reporting zeros
-    mce_on = np.zeroes([33,32],dtype=int)
+    mce_on = np.zeros([33,32],dtype=int)
     for i in range(h_shape[0]-1):
         for j in range(h_shape[1]-1):
             if np.sum(h[i][j][:]) == 0.0 :
