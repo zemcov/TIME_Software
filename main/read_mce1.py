@@ -66,8 +66,8 @@ def readdata(file,flags):
     mce_on = np.zeros([33,32],dtype=int)
     print(colored((h_shape[0],h_shape[1]),'red'))
     sys.stdout.flush()
-    for i in range(h_shape[0]-1):
-        for j in range(h_shape[1]-1):
+    for i in range(h_shape[0]):
+        for j in range(h_shape[1]):
             if np.sum(h[i][j][:]) == 0.0 :
                 mce_on[i][j] = 0
             else :
