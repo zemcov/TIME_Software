@@ -89,10 +89,14 @@ class mcegui(QtGui.QWidget):
         subprocess.Popen(['./main/hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
-        subprocess.Popen(['rm /home/time/TIME_Software/main/tempfiles/tele_*'], shell=True)
+        if os.path.isfile('/home/time/Desktop/time-data/mce1/temp*'):
+            os.remove('/home/time/Desktop/time-data/mce1/temp*')
+        if os.path.isfile('/home/time/Desktop/time-data/mce2/temp*'):
+            os.remove('/home/time/Desktop/time-data/mce2/temp*')
+        if os.path.isfile('/home/time/Desktop/time-data/hk/omnilog*'):
+            os.remove('/home/time/Desktop/time-data/hk/omnilog*')
+        if os.path.isfile('/home/time/TIME_Software/main/tempfiles/tele_*'):
+            os.remove('/home/time/TIME_Software/main/tempfiles/tele_*')
 
         print('Quitting Application')
         sys.exit()
