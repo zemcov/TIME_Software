@@ -26,7 +26,7 @@ while True:
             file_name = dir + 'omnilog.%i.txt.gz' % (a)
             print(file_name)
             if os.path.exists(file_name) :
-                subprocess.Popen(['scp', file_name,  'time-master:/home/time/Desktop/time-data/hk/omnilog.%i.txt.gz' % (a)])#.wait()
+                subprocess.Popen(['scp', file_name,  'time@time-master:/home/time/Desktop/time-data/hk/omnilog.%i.txt.gz' % (a)])#.wait()
                 print colored('HK File Transfered : %s' %(file_name),'magenta')
                 a = a + 1
             else:
