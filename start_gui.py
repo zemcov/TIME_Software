@@ -225,10 +225,17 @@ class mcegui(QtGui.QWidget):
             mce0 = len(os.listdir(dir1))
             mce1 = len(os.listdir(dir2))
             if mce0 != 0 :
-                subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
+                if os.isfile('/home/time/Desktop/time-data/mce1/temp*'):
+                    os.remove('/home/time/Desktop/time-data/mce1/temp*')
+                # subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
             if mce1 != 0 :
-                subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-            subprocess.Popen(['rm /home/time/TIME_Software/main/tempfiles/tele_*'], shell = True)
+                if os.isfile('/home/time/Desktop/time-data/mce2/temp*'):
+                    os.remove('/home/time/Desktop/time-data/mce2/temp*')
+                # subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
+
+            if os.isfile('/home/time/TIME_Software/main/tempfiles/tele_*'):
+                os.remove('/home/time/TIME_Software/main/tempfiles/tele_*')
+            # subprocess.Popen(['rm /home/time/TIME_Software/main/tempfiles/tele_*'], shell = True)
 
             #set the data mode for both mces and start them running
             if self.readoutcard == 'All':
@@ -237,20 +244,20 @@ class mcegui(QtGui.QWidget):
                     subprocess.Popen(['./main/mce0_del.sh'], shell=True)
                     subprocess.Popen(['./main/mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
 
-                if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./main/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
-                    subprocess.Popen(['./main/mce1_del.sh'], shell=True)
-                    subprocess.Popen(['./main/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                # if ut.which_mce[1] == 1 :
+                #     subprocess.Popen(['./main/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
+                #     subprocess.Popen(['./main/mce1_del.sh'], shell=True)
+                #     subprocess.Popen(['./main/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
             else :
                 if ut.which_mce[0] == 1 :
                     subprocess.Popen(['./main/mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
                     subprocess.Popen(['./main/mce0_del.sh'], shell=True)
                     subprocess.Popen(['./main/mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
-                if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./main/mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                    subprocess.Popen(['./main/mce1_del.sh'], shell=True)
-                    subprocess.Popen(['./main/mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+                # if ut.which_mce[1] == 1 :
+                #     subprocess.Popen(['./main/mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                #     subprocess.Popen(['./main/mce1_del.sh'], shell=True)
+                #     subprocess.Popen(['./main/mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
             # start file transfer scripts
             subprocess.Popen(['ssh -T time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
