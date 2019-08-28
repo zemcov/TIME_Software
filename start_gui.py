@@ -1015,6 +1015,7 @@ class mcegui(QtGui.QWidget):
                         m2[b][c] = np.log(z2)
                     else :
                         m2[b][c] = None
+            print(m2[0])
 
             b = 0
             c = 0
