@@ -82,7 +82,7 @@ def new_file(filestarttime,dir):
 
     print(os.getcwd())
     if os.path.isfile('/home/time/TIME_Software/main/tempfiles/tempparameters.txt'):
-        print('WE GOT ONE!!!!!!!!!!!!!!!!!'')
+        print('WE GOT ONE!!!!!!!!!!!!!!!!!')
     sys.stdout.flush()
     parafilename = ('/home/time/TIME_Software/main/tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
