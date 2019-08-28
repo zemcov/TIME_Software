@@ -276,7 +276,7 @@ class mcegui(QtGui.QWidget):
             #start other plot making processes
             self.initplot()
             # self.initheatmap(data,data) # give first values for heatmap to create image scale
-            self.initfftgraph()
+            # self.initfftgraph()
             self.inittelescope()
             # self.initkmirrordata()
 
