@@ -5,7 +5,7 @@ import datetime as now
 import numpy as np
 from termcolor import colored
 import utils as ut
-sys.path.append('../TIME_Software/main/tempfiles')
+sys.path.append('../main/tempfiles')
 # os.nice(-20)
 
 def new_file(filestarttime,dir):
@@ -81,8 +81,10 @@ def new_file(filestarttime,dir):
     Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
 
     print(os.getcwd())
+    if os.path.isfile('/home/time/TIME_Software/main/tempfiles/tempparameters.txt'):
+        print(WE GOT ONE!!!!!!!!!!!!!!!!!)
     sys.stdout.flush()
-    parafilename = ('home/time/TIME_Software/main/tempfiles/tempparameters.txt')
+    parafilename = ('/home/time/TIME_Software/main/tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
     parameters = parafile.readline().strip().split()
 
