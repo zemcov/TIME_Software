@@ -225,15 +225,15 @@ class mcegui(QtGui.QWidget):
             mce0 = len(os.listdir(dir1))
             mce1 = len(os.listdir(dir2))
             if mce0 != 0 :
-                if os.isfile('/home/time/Desktop/time-data/mce1/temp*'):
+                if os.path.isfile('/home/time/Desktop/time-data/mce1/temp*'):
                     os.remove('/home/time/Desktop/time-data/mce1/temp*')
                 # subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
             if mce1 != 0 :
-                if os.isfile('/home/time/Desktop/time-data/mce2/temp*'):
+                if os.path.isfile('/home/time/Desktop/time-data/mce2/temp*'):
                     os.remove('/home/time/Desktop/time-data/mce2/temp*')
                 # subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
 
-            if os.isfile('/home/time/TIME_Software/main/tempfiles/tele_*'):
+            if os.path.isfile('/home/time/TIME_Software/main/tempfiles/tele_*'):
                 os.remove('/home/time/TIME_Software/main/tempfiles/tele_*')
             # subprocess.Popen(['rm /home/time/TIME_Software/main/tempfiles/tele_*'], shell = True)
 
