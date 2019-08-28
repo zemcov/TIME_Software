@@ -80,7 +80,7 @@ def new_file(filestarttime,dir):
     global Status_Flags
     Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
 
-    parafilename = ('TIME_Software/main/tempfiles/tempparameters.txt')
+    parafilename = ('/TIME_Software/main/tempfiles/tempparameters.txt')
     parafile = open(parafilename, 'r')
     parameters = parafile.readline().strip().split()
 
