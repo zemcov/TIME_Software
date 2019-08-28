@@ -974,7 +974,7 @@ class mcegui(QtGui.QWidget):
 
         if ut.which_mce[0] == 1 :
 
-            m1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
+            m1 = np.zeros([h1.shape[0],h1.shape[1]],dtype=np.float32)
             for b in range(h1.shape[0]):
                 for c in range(h1.shape[1]):
                     z1 = np.std(h1[b,c,:])
@@ -985,7 +985,7 @@ class mcegui(QtGui.QWidget):
             b = 0
             c = 0
 
-            d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
+            d1 = np.zeros([h1.shape[0],h1.shape[1]],dtype=np.float32)
             for b in range(h1.shape[0]):
                 for c in range(h1.shape[1]):
                     d1[b][c] = (np.mean(h1[b,c,:],dtype=np.float32))
@@ -1007,7 +1007,7 @@ class mcegui(QtGui.QWidget):
         if ut.which_mce[1] == 1 :
 
             # ---------------------------------------------------------
-            m2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
+            m2 = np.zeros([h2.shape[0],h2.shape[1]],dtype=np.float32)
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
                     z2 = np.std(h2[b,c,:])
@@ -1019,7 +1019,7 @@ class mcegui(QtGui.QWidget):
             b = 0
             c = 0
 
-            d2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
+            d2 = np.zeros([h2.shape[0],h2.shape[1]],dtype=np.float32)
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
                     d2[b][c] = (np.mean(h2[b,c,:],dtype=np.float32))
@@ -1030,7 +1030,7 @@ class mcegui(QtGui.QWidget):
 
             self.heatmap2.setImage(m2)
 
-            d2_avg = np.empty([33,32],dtype=np.float32)
+            d2_avg = np.zeros([33,32],dtype=np.float32)
 
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
