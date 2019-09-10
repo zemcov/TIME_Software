@@ -29,6 +29,11 @@ CONTROL_PORT = 8000
 
 NUM_SAMPLES = 800
 STEP_OFFSET = 150
+
+'''
+WARNING! Demo mode has PA values that may be outside of MAX/MIN allowed rotational range
+USE WITH CAUTION!!!
+'''
 DEMO = False
 
 class KalmanFilter(object):
@@ -111,7 +116,7 @@ class KMirror():
 # ===================================================================
 class Stop_Checker():
     """
-    Checks for E-stop Signals
+    Checks for E-stop Signals & Initiates Movement Commands
     """
     def __init__(self):
         GPIO.setmode(GPIO.BCM)
@@ -171,7 +176,7 @@ class Stop_Checker():
 ##################################################################################################################################
     def go_to(self,angle):
         while not self.thread1Stop.is_set() :
-            if get_pos() < (angle - 0.1) or get_pos() > (angle + 0.1) :
+            if get_pos() < (angle - 0.05) or get_pos() > (angle + 0.05) :
                 steps = deg_to_step(angle) - deg_to_step(get_pos())
                 rotate_motor(int(steps), 1000)
                 time.sleep(abs(steps)/2000.0 + 0.1)
@@ -181,7 +186,7 @@ class Stop_Checker():
         return
 ########################################################################################################################################
     def home_motor(self,arg):
-        while get_pos() < (home_pos - 0.1) or get_pos() > (home_pos + 0.1):
+        while get_pos() < (home_pos - 0.05) or get_pos() > (home_pos + 0.05):
             if not self.thread1Stop.is_set() :
                 steps = deg_to_step(home_pos) - deg_to_step(get_pos())
                 rotate_motor(int(steps), 1000)
@@ -244,42 +249,40 @@ class Stop_Checker():
 ##################################################################################################################################
     def run(self):
         print("run is starting")
-##        if DEMO:
-##            with open('pa.txt', 'r') as f:
-##                for line in f.readlines():
-##                    if not self.thread1Stop.is_set():
-##                        pa, flag = line.strip().split(',')
-##                        update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), bool(flag))
-##                        self.masterlist.append(update)
-##                        # print float(pa)/2.0
-##                        time.sleep(1.0/20.0)
-##                    else:
-##                        break
-##                self.thread1Stop.set()
-##        else:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((TELESCOPE_HOST,TELESCOPE_PORT))
-        s.listen(1)
-        print('listening for connection')
-        unpacker = struct.Struct('d i')
-        while not self.thread1Stop.is_set():
-            connection,client= s.accept()
-            print('Socket connected')
-            try:
-                while not self.thread1Stop.is_set():
-                   data = connection.recv(unpacker.size)
-                   if data :
-                       pa,flag = unpacker.unpack(data)
-                       update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
-##                       print(pa,flag,pa_enc(float(pa)))
+       if DEMO:
+           with open('pa.txt', 'r') as f:
+               for line in f.readlines():
+                   if not self.thread1Stop.is_set():
+                       pa, flag = line.strip().split(',')
+                       update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), bool(flag))
                        self.masterlist.append(update)
-                   else : #no more data
+                       time.sleep(1.0/20.0)
+                   else:
                        break
-            except Exception as e:
-                print e
-                s.close()
-            finally :
-                    connection.close()
+               self.thread1Stop.set()
+       else:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind((TELESCOPE_HOST,TELESCOPE_PORT))
+            s.listen(1)
+            print('listening for connection')
+            unpacker = struct.Struct('d i')
+            while not self.thread1Stop.is_set():
+                connection,client= s.accept()
+                print('Socket connected')
+                try:
+                    while not self.thread1Stop.is_set():
+                       data = connection.recv(unpacker.size)
+                       if data :
+                           pa,flag = unpacker.unpack(data)
+                           update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
+                           self.masterlist.append(update)
+                       else : #no more data
+                           break
+                except Exception as e:
+                    print e
+                    s.close()
+                finally :
+                        connection.close()
 ################################################################################################################################
     def step_overload(self,num_steps) :
         steps = num_steps
@@ -299,16 +302,16 @@ class Stop_Checker():
                 break
         self.thread1Stop.set()
 #########################################################################
-#    def vic_socket():
-#        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#        s.connect((CONTROL_HOST, CONTROL_PORT))
-#        packer = packer = struct.Struct('d i')
-#	while not self.thread1Stop.is_set():
-#		data = packer.pack(float(pa),int(slew_flag))
-#    		s.send(data)
-#        	print 'PA Sent to Gui',time.time()
-#	s.close()
-#	print 'vic_socket closed'
+   def gui_socket():
+       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+       s.connect((CONTROL_HOST, CONTROL_PORT))
+       packer = packer = struct.Struct('d i')
+	while not self.thread1Stop.is_set():
+		data = packer.pack(float(pa),int(slew_flag))
+   		s.send(data)
+       	print 'PA Sent to Gui',time.time()
+	s.close()
+	print 'gui_socket closed'
 
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
@@ -326,12 +329,16 @@ class Stop_Checker():
         else :
             t1 = mp.Process(target=self.limits,args=(arg3,))
             t2 = mp.Process(target=self.run)
+            '''
+            Track turned off for socket testing w/o movement
             t3 = mp.Process(target=self.track)
- #           t4 = mp.Process(target=self.vic_socket)
+            '''
+            t4 = mp.Process(target=self.gui_socket)
             t1.start()
             t2.start()
             t3.start()
-#            t4.start()
+            t4.start()
+
         self.stop_check()
 
 
@@ -384,14 +391,18 @@ class Ready(State):
         """
         if event == 'go_home':
             return Verification()
+
         if event == 'start_tracking':
             if self.verified == 1:
                 return Tracking(self.verified)
             print 'Error: K-Mirror must be verified to start tracking'
+
         if event == 'verify':
             return Home()
+
         if event == 'error':
             return EmergencyStop()
+
         if event == 'go_to_pos':
             if get_pos() > minimum and get_pos() < maximum :
                 flag = 'good'
@@ -401,7 +412,7 @@ class Ready(State):
             problem = False
             print("Moving to Position")
             sc = Stop_Checker()
-            sc.main("go_to",float(angle) + 293.65,flag)
+            sc.main("go_to",float(angle) + home_pos,flag)
         return self
 
     def events(self):
