@@ -18,6 +18,7 @@ import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bow
 from init import tel_dict,mce_dict
 from tel_box import draw_box
 import config
+from hanging_threads import start_monitoring
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
@@ -80,7 +81,7 @@ class MainWindow(QtGui.QMainWindow):
     def on_help_clicked(self):
 
         self.browser = QWebEngineView()
-        local_url = QtCore.QUrl.fromLocalFile("/home/time_user/TIME_Software/main/help_doc.html")
+        local_url = QtCore.QUrl.fromLocalFile("../TIME_Software/main/help_doc.html")
         self.browser.load(local_url)
         self.browser.show()
 
@@ -110,13 +111,15 @@ class MainWindow(QtGui.QMainWindow):
         subprocess.Popen(['./coms/hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
-        subprocess.Popen(['rm ' + config.mce0_dir + 'temp*'], shell = True)
-        subprocess.Popen(['rm ' + config.mce1_dir + 'temp*'], shell = True)
-        subprocess.Popen(['rm ' + config.hk_dir + 'omnilog*'], shell=True)
-        subprocess.Popen(['rm ' + config.temp_dir + 'tele*'], shell=True)
+        if len(os.listdir(config.mce0_dir)) != 0 : # if the temp folders are not empty
+            subprocess.Popen(['rm ' + config.mce0_dir + 'temp*'], shell = True)
+            subprocess.Popen(['rm ' + config.mce1_dir + 'temp*'], shell = True)
+            subprocess.Popen(['rm ' + config.hk_dir + 'omnilog*'], shell=True)
+            subprocess.Popen(['rm ' + config.temp_dir + 'tele*'], shell=True)
 
-        # subprocess.Popen(['pkill -9 -f /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock'],shell=True)
         print('Quitting Application')
+        monitor_thread = start_monitoring(seconds_frozen=2)
+        print(monitor_thread)
         sys.exit()
 
     def on_starttel_clicked(self):
