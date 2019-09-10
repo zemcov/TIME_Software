@@ -176,21 +176,21 @@ class Stop_Checker():
 ##################################################################################################################################
     def go_to(self,angle):
         while not self.thread1Stop.is_set() :
-            if get_pos() < (angle - 0.05) or get_pos() > (angle + 0.05) :
+            if get_pos() < (angle - util.toler) or get_pos() > (angle + util.toler) :
                 steps = deg_to_step(angle) - deg_to_step(get_pos())
                 rotate_motor(int(steps), 1000)
-                time.sleep(abs(steps)/2000.0 + 0.1)
+                time.sleep(abs(steps)/2000.0 + util.toler)
             else :
                 break
         self.thread1Stop.set()
         return
 ########################################################################################################################################
     def home_motor(self,arg):
-        while get_pos() < (home_pos - 0.05) or get_pos() > (home_pos + 0.05):
+        while get_pos() < (home_pos - util.toler) or get_pos() > (home_pos + util.toler):
             if not self.thread1Stop.is_set() :
                 steps = deg_to_step(home_pos) - deg_to_step(get_pos())
                 rotate_motor(int(steps), 1000)
-                time.sleep(abs(steps)/2000.0 + 0.1)
+                time.sleep(abs(steps)/2000.0 + util.toler)
             else :
                 break
         self.thread1Stop.set()
