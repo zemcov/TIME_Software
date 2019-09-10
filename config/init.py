@@ -27,7 +27,7 @@ tel_dict = {
 mce_dict = {
 
 "observer":"VLB",
-"mceson":"MCE1",
+"mceson":"SIM",
 "datamode":"Error",
 "readoutcard":"All",
 "framenumber":"1350000",

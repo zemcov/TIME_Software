@@ -6,8 +6,17 @@ import socket, struct, subprocess, os, sys, time
 import time as othertime
 import numpy as np
 import utils as ut
+from config import *
+sys.path.append('../TIME_Software/main/tempfiles')
 
 def start_sock(queue):
+    """
+    Purpose: to open a socket for getting K-mirror data from the K-mirror computer and
+    then sending that data to the GUI
+    Inputs: queue - idk
+    Outputs: None
+    Calls : queue.send()
+    """
     PORT = 8500
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('',PORT))
@@ -18,9 +27,9 @@ def start_sock(queue):
     unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
     kms_data = []
     n = 0
-    while not ut.tel_exit.is_set() :
-       
-        print('collecting data')
+    while not ut.tel_exit.is_set():
+        print(ut.tel_exit.is_set())
+        data = client.recv(unpacker.size)
         if len(data) !=0 :
             # print('Data Received')
             # unpacking data packet ===============================================
@@ -31,7 +40,7 @@ def start_sock(queue):
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
 
             else :
-                np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/kms_packet%i.npy' %(n), kms_data)
+                np.save(config.temp_dir + '/kms_packet%i.npy' %(n), kms_data)
                 kms_data = []
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
             # send positional data to gui window
