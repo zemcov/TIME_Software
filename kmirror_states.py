@@ -336,7 +336,7 @@ class Stop_Checker():
             t4 = mp.Process(target=self.gui_socket)
             t1.start()
             t2.start()
-            t3.start()
+            # t3.start()
             t4.start()
 
         self.stop_check()
