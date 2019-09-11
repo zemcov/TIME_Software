@@ -249,40 +249,40 @@ class Stop_Checker():
 ##################################################################################################################################
     def run(self):
         print("run is starting")
-       if DEMO:
-           with open('pa.txt', 'r') as f:
-               for line in f.readlines():
-                   if not self.thread1Stop.is_set():
-                       pa, flag = line.strip().split(',')
-                       update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), bool(flag))
+       # if DEMO:
+       #     with open('pa.txt', 'r') as f:
+       #         for line in f.readlines():
+       #             if not self.thread1Stop.is_set():
+       #                 pa, flag = line.strip().split(',')
+       #                 update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), bool(flag))
+       #                 self.masterlist.append(update)
+       #                 time.sleep(1.0/20.0)
+       #             else:
+       #                 break
+       #         self.thread1Stop.set()
+       # else:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind((TELESCOPE_HOST,TELESCOPE_PORT))
+        s.listen(1)
+        print('listening for connection')
+        unpacker = struct.Struct('d i')
+        while not self.thread1Stop.is_set():
+            connection,client= s.accept()
+            print('Socket connected')
+            try:
+                while not self.thread1Stop.is_set():
+                   data = connection.recv(unpacker.size)
+                   if data :
+                       pa,flag = unpacker.unpack(data)
+                       update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
                        self.masterlist.append(update)
-                       time.sleep(1.0/20.0)
-                   else:
+                   else : #no more data
                        break
-               self.thread1Stop.set()
-       else:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind((TELESCOPE_HOST,TELESCOPE_PORT))
-            s.listen(1)
-            print('listening for connection')
-            unpacker = struct.Struct('d i')
-            while not self.thread1Stop.is_set():
-                connection,client= s.accept()
-                print('Socket connected')
-                try:
-                    while not self.thread1Stop.is_set():
-                       data = connection.recv(unpacker.size)
-                       if data :
-                           pa,flag = unpacker.unpack(data)
-                           update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
-                           self.masterlist.append(update)
-                       else : #no more data
-                           break
-                except Exception as e:
-                    print e
-                    s.close()
-                finally :
-                        connection.close()
+            except Exception as e:
+                print e
+                s.close()
+            finally :
+                    connection.close()
 ################################################################################################################################
     def step_overload(self,num_steps) :
         steps = num_steps
