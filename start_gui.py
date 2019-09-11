@@ -416,6 +416,16 @@ class MainWindow(QtGui.QMainWindow):
             self.setnewrc.addWidget(self.changechan)
             self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
 
+            self.telwindow = QtGui.QWidget()
+            self.telwindow.setWindowTitle('Telescope Observer Interface')
+            self.telwindow.setGeometry(10,10, 1920, 1080)
+            self.telwindow.setLayout(self.telbox1)
+            self.telwindow.setLayout(self.telbox2)
+            self.telwindow.setLayout(self.telbox3)
+            self.telwindow.setLayout(self.telbox4)
+
+            self.telwindow.show()
+
             #start other plot making processes
             self.initplot()
             self.channelselection()
