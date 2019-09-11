@@ -302,16 +302,16 @@ class Stop_Checker():
                 break
         self.thread1Stop.set()
 #########################################################################
-   def gui_socket():
-       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-       s.connect((CONTROL_HOST, CONTROL_PORT))
-       packer = packer = struct.Struct('d i')
-	while not self.thread1Stop.is_set():
-		data = packer.pack(float(pa),int(slew_flag))
-   		s.send(data)
-       	print 'PA Sent to Gui',time.time()
-	s.close()
-	print 'gui_socket closed'
+    def gui_socket():
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((CONTROL_HOST, CONTROL_PORT))
+        packer = packer = struct.Struct('d i')
+        while not self.thread1Stop.is_set():
+            data = packer.pack(float(pa),int(slew_flag))
+            s.send(data)
+            print 'PA Sent to Gui',time.time()
+        s.close()
+        print 'gui_socket closed'
 
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
