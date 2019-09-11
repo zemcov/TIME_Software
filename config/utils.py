@@ -18,7 +18,6 @@ epoch = 1552238365.0
 time_zone = 7.0 * 60 * 60
 utc_time = []
 which_mce = [1,1,1] # [0] = mce0 , [1] = mce1 , [2] = sim data
-new_dir = ''
 
 def timing(t,s):
     b = float(t) - (float(s) / german_freq)

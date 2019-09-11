@@ -3,8 +3,8 @@
 
 tel_dict = {
 
-"inittel":"No",
-"tel_scan":"2D Raster",
+"inittel":"Tracker",
+"tel_scan":"Tracker",
 "coord_space":"DEC",
 "map_angle":"0",
 "sec":"10",
@@ -21,13 +21,13 @@ tel_dict = {
 "coord2":"15:00:00",
 "coord2_unit":"DEC",
 "epoch":"Apparent",
-"object":"Mars"
+"object":"None"
 }
 # ===================================
 mce_dict = {
 
 "observer":"VLB",
-"mceson":"SIM",
+"mceson":"MCE SIM",
 "datamode":"Error",
 "readoutcard":"All",
 "framenumber":"1350000",

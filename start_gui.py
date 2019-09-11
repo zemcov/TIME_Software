@@ -14,7 +14,7 @@ from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
-import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
+import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
 from init import tel_dict,mce_dict
 from tel_box import draw_box
 import config
@@ -64,10 +64,12 @@ class MainWindow(QtGui.QMainWindow):
         self.n_interval = 0
         self.flags = mp.Array('i',ut.flags,lock=True)
         self.offset = mp.Value('d',ut.offset,lock=True)
-        ut.new_dir = str(datetime.datetime.utcnow().isoformat())
-        self.netcdfdir = config.netcdf_dir
+        # self.netcdfdir = config.netcdf_dir
+        self.netcdfdir = config.netcdf_dir + str(datetime.datetime.utcnow().isoformat())
         if not os.path.isdir(self.netcdfdir) :
-            os.makedirs(self.netcdfdir, 0755)
+            # oldmask = os.umask(000)
+            os.makedirs(self.netcdfdir, 0o755)
+            # os.umask(oldmask)
 
     #reacts to button presses and other GUI user input
     def qt_connections(self):
@@ -108,7 +110,8 @@ class MainWindow(QtGui.QMainWindow):
                     subprocess.Popen(['./coms/mce0_stop_sftp.sh'], shell=True)
 
         # # stop the file transfer process to time-master
-        subprocess.Popen(['./coms/hk_stop_sftp.sh'], shell=True)
+        if self.mceson != 'MCE SIM':
+            subprocess.Popen(['./coms/hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
         if len(os.listdir(config.mce0_dir)) != 0 : # if the temp folders are not empty
@@ -120,6 +123,7 @@ class MainWindow(QtGui.QMainWindow):
         print('Quitting Application')
         monitor_thread = start_monitoring(seconds_frozen=2)
         print(monitor_thread)
+        monitor_thread.stop()
         sys.exit()
 
     def on_starttel_clicked(self):
@@ -213,7 +217,6 @@ class MainWindow(QtGui.QMainWindow):
 
     def on_submitbutton_clicked(self):
 
-        ut.new_dir = '%s' %(datetime.datetime.utcnow().isoformat())
         self.timestarted = datetime.datetime.utcnow().isoformat()
 
         # check if telescope has been started first
@@ -239,7 +242,6 @@ class MainWindow(QtGui.QMainWindow):
             for state in mce_states :
                 if self.datamode == state :
                     self.datamode = mce_states2[mce_states.index(state)]
-                print(colored(self.datamode))
 
             # readout card ---------------------------------------------
             self.readoutcard = self.enterreadoutcard.currentIndex() + 1
@@ -348,14 +350,14 @@ class MainWindow(QtGui.QMainWindow):
                 mce1 = len(os.listdir(dir2))
                 if mce0 != 0 :
                     if os.path.isfile('rm ' + config.mce0_dir + 'temp*'):
-                        os.remove('rm ' + config.mce0_dir + 'temp*')
+                        os.remove(config.mce0_dir + 'temp*')
                     # subprocess.Popen(['rm ' + config.mce0_dir + 'temp*'], shell = True)
                 if mce1 != 0 :
                     if os.path.isfile('rm ' + config.mce1_dir + 'temp*'):
-                        os.remove('rm ' + config.mce1_dir + 'temp*')
+                        os.remove(config.mce1_dir + 'temp*')
                     # subprocess.Popen(['rm ' + config.mce1_dir + 'temp*'], shell = True)
                 if os.path.isfile('rm ' + config.temp_dir + 'tele_*'):
-                    os.remove('rm ' + config.temp_dir + 'tele_*')
+                    os.remove(config.temp_dir + 'tele_*')
                 # subprocess.Popen(['rm ' + config.temp_dir + 'tele_*'], shell = True)
 
 
@@ -1614,7 +1616,6 @@ class KMS_Thread(QtCore.QThread):
         data, queue = mp.Pipe()
         p = mp.Process(target=kms_socket.start_sock , args=(queue,))
         p.start()
-        #subprocess.Popen(['ssh -T vlb9398@vlb-mac python /Users/vlb9398/Desktop/Gui_Code/TIME_Software/main/fake_kms_sock.py'], shell=True)
 
         while not ut.kms_exit.is_set() :
             kms_stuff = data.recv() # pa , flags, time, encoder pos

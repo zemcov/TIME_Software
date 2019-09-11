@@ -5,6 +5,8 @@ import datetime as now
 import numpy as np
 from termcolor import colored
 import utils as ut
+sys.path.append('../TIME_Software/main/tempfiles')
+import config
 # os.nice(-20)
 
 def new_file(filestarttime,dir):
@@ -86,7 +88,7 @@ def new_file(filestarttime,dir):
     global Status_Flags
     Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
 
-    parafilename = ('tempfiles/tempparameters.txt')
+    parafilename = (config.temp_dir + 'tempparameters.txt')
     parafile = open(parafilename, 'r')
     parameters = parafile.readline().strip().split()
 
@@ -106,16 +108,6 @@ def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, mc
     """
     Purpose: to append data to the netcdf file created in the above function
     inputs: nc_file - the file in which you want to append data to
-            p - idk
-            flags - idk
-            times - an array containing time data
-            head1 - mce0 header data
-            head2 - mce1 header data
-            mce0_data - mce0 raw data
-            mce1_data - mce1 raw data
-            mceo_on - data showing which of the mce0s are on
-            mce1_on - data showing which of the mce1s are on
-            tele - telescope data
     Outputs: None
     Calls : None
     """
