@@ -15,7 +15,7 @@ import angle_converter as ac
 
 class TIME_TELE :
 
-    def start_sock(self,queue2,queue,scan_time,sec,map_size,map_len,map_angle,coord1,coord1_unit,coord2,coord2_unit,epoch,object,num_loop,step,coord_space,step_unit,map_size_unit,map_len_unit,map_angle_unit):
+    def start_sock(self,queue2,queue,sec,map_size,map_len,map_angle,coord1,coord1_unit,coord2,coord2_unit,epoch,object,step,coord_space,step_unit,map_size_unit,map_len_unit,map_angle_unit):
         # I am accepting telescope sim data for the gui
         self.i = 0
         PORT = 1806
@@ -24,7 +24,7 @@ class TIME_TELE :
         self.s.connect(('192.168.1.252',PORT))
         print('Socket Connected')
 
-        num_loop, calc_coord1, calc_coord2 = scan_params(map_len,map_len_unit,map_size_unit,scan_time,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
+        num_loop, calc_coord1, calc_coord2 = scan_params(map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
         p2 = mp.Process(target = self.loop_track , args=(num_loop,))
         p2.start()
     # =================================================================================================================
@@ -35,7 +35,7 @@ class TIME_TELE :
                 map_size = float(map_size) // 3600
             else :
                 map_size = float(map_size) // 60
-                
+
         if str(map_angle_unit) != 'deg' :
             if str(map_size_unit) == 'arcsec' :
                 map_size = float(map_size) // 3600

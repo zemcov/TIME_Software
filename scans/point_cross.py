@@ -11,7 +11,7 @@ from pos_counter import scan_params
 
 class TIME_TELE :
 
-    def start_sock(self,queue2,queue,scan_time,sec,map_size,map_angle,coord1,coord2,epoch,object,num_loop,step,coord_space,step_unit,map_size_unit,map_angle_unit):
+    def start_sock(self,queue2,queue,sec,map_size,map_len,map_angle,coord1,coord1_unit,coord2,coord2_unit,epoch,object,step,coord_space,step_unit,map_size_unit,map_len_unit,map_angle_unit):
         # I am accepting telescope sim data for the gui
         PORT = 1806
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

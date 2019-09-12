@@ -15,7 +15,8 @@ import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
-from init import tel_dict,mce_dict
+import init
+print(init.tel_dict)
 from tel_box import draw_box
 import config
 from hanging_threads import start_monitoring
@@ -215,7 +216,7 @@ class MainWindow(QtGui.QMainWindow):
         self.coord1_unit = self.unit4.currentText()
         self.coord2_unit = self.unit5.currentText()
 
-        if self.inittel == 'Yes':
+        if self.inittel == 'YES':
             self.tel_scan = self.telescan.currentText()
             scans = ['1D Raster','2D Raster','Bowtie (constant el)','Pointing Cross']
             script = [raster_script_1d,raster_script_2d,bowtie_scan,point_cross]
@@ -225,12 +226,12 @@ class MainWindow(QtGui.QMainWindow):
             tel_message = 'TELESCOPE INITIALIZED'
             self.off = False
 
-        elif self.inittel == 'No' :
+        elif self.inittel == 'NO' :
             self.tel_script = ' '
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
 
-        elif self.inittel == 'Sim' :
+        elif self.inittel == 'SIM' :
             tel_message = 'TEL SIM SELECTED'
             self.tel_script = 'Sim'
             self.off = False
@@ -243,38 +244,40 @@ class MainWindow(QtGui.QMainWindow):
         print(tel_message)
 
     def on_useinit_clicked(self):
-
+        print(colored("USEINIT Called",'magenta'))
         # mce params ========================
-        self.observer = mce_dict["observer"]
-        self.mceson = mce_dict["mceson"]
-        self.datamode = mce_dict["datamode"]
-        self.readoutcard = mce_dict["readoutcard"]
-        self.framenumber = mce_dict["framenumber"]
-        self.alpha = float(mce_dict["alpha"])
-        self.timeinterval = mce_dict["timeinterval"]
-        self.channeldelete = mce_dict["channeldelete"]
-        self.showmcedata = mce_dict["showmcedata"]
+        self.observer = init.mce_dict["observer"]
+        self.mceson = init.mce_dict["mceson"]
+        print(colored(self.mceson,'magenta'))
+        self.datamode = init.mce_dict["datamode"]
+        self.readoutcard = init.mce_dict["readoutcard"]
+        self.framenumber = init.mce_dict["framenumber"]
+        self.alpha = float(init.mce_dict["alpha"])
+        self.timeinterval = init.mce_dict["timeinterval"]
+        self.channeldelete = init.mce_dict["channeldelete"]
+        self.showmcedata = init.mce_dict["showmcedata"]
         # =====================================
 
         # telescope params ====================
-        self.sec = tel_dict["sec"]
-        self.map_size = tel_dict["map_size"]
-        self.map_len = tel_dict["map_len"]
-        self.map_angle = tel_dict["map_angle"]
-        self.coord1 = tel_dict["coord1"]
-        self.coord2 = tel_dict["coord2"]
-        self.epoch = tel_dict["epoch"]
-        self.object = tel_dict["object"]
-        self.inittel = tel_dict["inittel"]
-        self.tel_scan = tel_dict["tel_scan"]
-        self.step = tel_dict["step"]
-        self.coord_space = tel_dict["coord_space"]
-        self.map_size_unit = tel_dict["map_size_unit"]
-        self.map_len_unit = tel_dict["map_len_unit"]
-        self.map_angle_unit = tel_dict["map_angle_unit"]
-        self.step_unit = tel_dict["step_unit"]
-        self.coord1_unit = tel_dict["coord1_unit"]
-        self.coord2_unit = tel_dict["coord2_unit"]
+        self.sec = init.tel_dict["sec"]
+        self.map_size = init.tel_dict["map_size"]
+        self.map_len = init.tel_dict["map_len"]
+        self.map_angle = init.tel_dict["map_angle"]
+        self.coord1 = init.tel_dict["coord1"]
+        self.coord2 = init.tel_dict["coord2"]
+        self.epoch = init.tel_dict["epoch"]
+        self.object = init.tel_dict["object"]
+        self.inittel = init.tel_dict["inittel"]
+        print(colored(self.inittel,'magenta'))
+        self.tel_scan = init.tel_dict["tel_scan"]
+        self.step = init.tel_dict["step"]
+        self.coord_space = init.tel_dict["coord_space"]
+        self.map_size_unit = init.tel_dict["map_size_unit"]
+        self.map_len_unit = init.tel_dict["map_len_unit"]
+        self.map_angle_unit = init.tel_dict["map_angle_unit"]
+        self.step_unit = init.tel_dict["step_unit"]
+        self.coord1_unit = init.tel_dict["coord1_unit"]
+        self.coord2_unit = init.tel_dict["coord2_unit"]
         # =============================================================================
         # ==============================================================================
         self.starttel.setEnabled(True)
@@ -336,7 +339,7 @@ class MainWindow(QtGui.QMainWindow):
 
         ''' ######################################################################'''
 
-        if self.inittel == 'Yes':
+        if self.inittel == 'YES':
             self.tel_scan = self.telescan.currentText()
             scans = ['1D Raster','2D Raster','Bowtie (constant el)','Pointing Cross']
             script = [raster_script_1d,raster_script_2d,bowtie_scan,point_cross]
@@ -346,12 +349,12 @@ class MainWindow(QtGui.QMainWindow):
             tel_message = 'TELESCOPE INITIALIZED'
             self.off = False
 
-        elif self.inittel == 'No' :
+        elif self.inittel == 'NO' :
             self.tel_script = ' '
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
 
-        elif self.inittel == 'Sim' :
+        elif self.inittel == 'SIM' :
             tel_message = 'TEL SIM SELECTED'
             self.tel_script = 'Sim'
             self.off = False
@@ -428,7 +431,7 @@ class MainWindow(QtGui.QMainWindow):
                 if os.path.isfile('rm ' + config.temp_dir + 'tele_*'):
                     os.remove(config.temp_dir + 'tele_*')
                 # subprocess.Popen(['rm ' + config.temp_dir + 'tele_*'], shell = True)
-
+                sys.exit()
 
                 #set the data mode for both mces and start them running
                 if self.readoutcard == 'All':

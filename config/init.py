@@ -3,10 +3,9 @@
 
 tel_dict = {
 
-"inittel":"No",
-"tel_scan":"1D Raster",
+"inittel":"SIM",
+"tel_scan":"2D Raster",
 "coord_space":"DEC",
-"map_angle":"0",
 "sec":"10",
 "map_size":"1",
 "map_size_unit":"deg",
@@ -23,6 +22,7 @@ tel_dict = {
 "epoch":"Apparent",
 "object":"Test"
 }
+
 # ===================================
 mce_dict = {
 
