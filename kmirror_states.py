@@ -265,7 +265,7 @@ class Stop_Checker():
         s.bind((TELESCOPE_HOST,TELESCOPE_PORT))
         s.listen(1)
         print('listening for connection')
-        unpacker = struct.Struct('d i')
+        unpacker = struct.Struct('i i i i d d')
         while not self.thread1Stop.is_set():
             connection,client= s.accept()
             print('Socket connected')
@@ -273,8 +273,8 @@ class Stop_Checker():
                 while not self.thread1Stop.is_set():
                    data = connection.recv(unpacker.size)
                    if data :
-                       pa,flag = unpacker.unpack(data)
-                       update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
+                      self.blanking,self.direction,self.observing,self.pad,self.utc,self.pa = unpacker.unpack(data)
+                       update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
                        self.masterlist.append(update)
                    else : #no more data
                        break
@@ -305,9 +305,9 @@ class Stop_Checker():
     def gui_socket():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((CONTROL_HOST, CONTROL_PORT))
-        packer = packer = struct.Struct('d i')
+        packer = struct.Struct('d i')
         while not self.thread1Stop.is_set():
-            data = packer.pack(float(pa),int(slew_flag))
+            data = packer.pack(float(self.pa),int(self.direction))
             s.send(data)
             print 'PA Sent to Gui',time.time()
         s.close()
