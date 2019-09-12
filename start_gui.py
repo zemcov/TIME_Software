@@ -33,6 +33,7 @@ class MainWindow(QtGui.QMainWindow):
         # p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(114,160,240)))
         p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
 
+        # start the main input window to specify observing parameters
         self.startwindow = QtGui.QWidget()
         self.startgrid = QtGui.QGridLayout()
         self.startgrid.addLayout(self.parametersquit, 1, 1, 1, 1)
@@ -40,6 +41,67 @@ class MainWindow(QtGui.QMainWindow):
         self.startwindow.setLayout(self.startgrid)
         self.startwindow.setPalette(p)
         self.startwindow.show()
+
+        ''' ######################################################################## '''
+        # open the status window from corona showing current telescope parameters
+        self.status = QtGui.QWidget()
+        self.statusID = int(self.status.winId())
+        self.status_sub = QtGui.QWindow.fromWinId(self.statusID)
+        self.status_con = QtGui.QWidget.createWindowContainer(self.status_sub)
+        self.status_sub_ID = int(self.status_con.winId())
+        self.status_proc = QtCore.QProcess(self.status_con)
+        # self.status_proc.waitForFinished(-1)
+        self.status_proc.start(config.soft_dir + './coms/start_status.sh')
+        if self.status_proc.error() == QtCore.QProcess.FailedToStart:
+            print("process failed to start")
+
+        self.catalog = QtGui.QWidget()
+        self.catalogID = int(self.catalog.winId())
+        self.catalog_sub = QtGui.QWindow.fromWinId(self.catalogID)
+        self.catalog_con = QtGui.QWidget.createWindowContainer(self.catalog_sub)
+        self.catalog_sub_ID = int(self.catalog_con.winId())
+        self.catalog_proc = QtCore.QProcess(self.catalog_con)
+        # self.status_proc.waitForFinished(-1)
+        self.catalog_proc.start(config.soft_dir + './coms/start_catalog.sh')
+        if self.catalog_proc.error() == QtCore.QProcess.FailedToStart:
+            print("process failed to start")
+
+        self.monitor = QtGui.QWidget()
+        self.monitorID = int(self.monitor.winId())
+        self.monitor_sub = QtGui.QWindow.fromWinId(self.monitorID)
+        self.monitor_con = QtGui.QWidget.createWindowContainer(self.monitor_sub)
+        self.monitor_sub_ID = int(self.monitor_con.winId())
+        self.monitor_proc = QtCore.QProcess(self.monitor_con)
+        # self.status_proc.waitForFinished(-1)
+        self.monitor_proc.start(config.soft_dir + './coms/start_monitor.sh')
+        if self.monitor_proc.error() == QtCore.QProcess.FailedToStart:
+            print("process failed to start")
+
+        self.display = QtGui.QWidget()
+        self.displayID = int(self.display.winId())
+        self.display_sub = QtGui.QWindow.fromWinId(self.displayID)
+        self.display_con = QtGui.QWidget.createWindowContainer(self.display_sub)
+        self.display_sub_ID = int(self.display_con.winId())
+        self.display_proc = QtCore.QProcess(self.display_con)
+        # self.status_proc.waitForFinished(-1)
+        self.display_proc.start(config.soft_dir + './coms/start_display.sh')
+        if self.display_proc.error() == QtCore.QProcess.FailedToStart:
+            print("process failed to start")
+
+        # create a separate window showing 4 telescope observing windows
+        # self.telwindow = QtGui.QWidget()
+        # self.telgrid = QtGui.QGridLayout()
+        # self.telwidget = QtGui.QVBoxLayout()
+        # self.telwidget.addWidget(self.status)
+        # # self.telwidget.addWidget(self.catalog)
+        # # self.telwidget.addWidget(self.monitor)
+        # # self.telwidget.addWidget(self.display)
+        # self.telgrid.addLayout(self.telwidget,1,1,1,1)
+        # self.telwindow.setWindowTitle('Telescope Observer Interface')
+        # self.telwindow.setGeometry(10,10, 1920, 1080)
+        # self.telwindow.setLayout(self.telgrid)
+        # self.telwindow.show()
+        ''' ######################################################################## '''
 
         self.init_mce()
         self.qt_connections()
@@ -93,6 +155,11 @@ class MainWindow(QtGui.QMainWindow):
         ut.kms_exit.set()
         ut.hk_exit.set()
 
+        self.status_proc.close()
+        # self.catalog_proc.close()
+        # self.monitor_proc.close()
+        # self.display_proc.close()
+
         # stop all of the mces with their own command
         if self.showmcedata == 'Yes' and self.mceson != 'MCE SIM':
             if self.readoutcard == 'All':
@@ -115,10 +182,10 @@ class MainWindow(QtGui.QMainWindow):
 
         # # delete all MCE temp files still in local and mce computer directory
         if len(os.listdir(config.mce0_dir)) != 0 : # if the temp folders are not empty
-            subprocess.Popen(['rm ' + config.mce0_dir + 'temp*'], shell = True)
-            subprocess.Popen(['rm ' + config.mce1_dir + 'temp*'], shell = True)
-            subprocess.Popen(['rm ' + config.hk_dir + 'omnilog*'], shell=True)
-            subprocess.Popen(['rm ' + config.temp_dir + 'tele*'], shell=True)
+            os.remove(config.mce0_dir + 'temp*')
+            os.remove(config.mce1_dir + 'temp*')
+            os.remove(config.hk_dir + 'omnilog*')
+            os.remove(config.temp_dir + 'tele*')
 
         print('Quitting Application')
         monitor_thread = start_monitoring(seconds_frozen=2)
@@ -415,16 +482,6 @@ class MainWindow(QtGui.QMainWindow):
             self.setnewrc = QtGui.QVBoxLayout()
             self.setnewrc.addWidget(self.changechan)
             self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
-
-            self.telwindow = QtGui.QWidget()
-            self.telwindow.setWindowTitle('Telescope Observer Interface')
-            self.telwindow.setGeometry(10,10, 1920, 1080)
-            self.telwindow.setLayout(self.telbox1)
-            self.telwindow.setLayout(self.telbox2)
-            self.telwindow.setLayout(self.telbox3)
-            self.telwindow.setLayout(self.telbox4)
-
-            self.telwindow.show()
 
             #start other plot making processes
             self.initplot()
