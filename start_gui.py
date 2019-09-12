@@ -44,6 +44,7 @@ class MainWindow(QtGui.QMainWindow):
 
         ''' ######################################################################## '''
         # open the status window from corona showing current telescope parameters
+        '''
         self.status = QtGui.QWidget()
         self.statusID = int(self.status.winId())
         self.status_sub = QtGui.QWindow.fromWinId(self.statusID)
@@ -101,6 +102,7 @@ class MainWindow(QtGui.QMainWindow):
         # self.telwindow.setGeometry(10,10, 1920, 1080)
         # self.telwindow.setLayout(self.telgrid)
         # self.telwindow.show()
+        '''
         ''' ######################################################################## '''
 
         self.init_mce()
@@ -155,7 +157,7 @@ class MainWindow(QtGui.QMainWindow):
         ut.kms_exit.set()
         ut.hk_exit.set()
 
-        self.status_proc.close()
+        # self.status_proc.close()
         # self.catalog_proc.close()
         # self.monitor_proc.close()
         # self.display_proc.close()
@@ -1022,7 +1024,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ra = []
         self.dec = []
 
-    def updatekmirrordata(self,pa,status,time,enc):
+    def updatekmirrordata(self,pa,status):
 
         # error checking based on status flags from kmirror
         kms_error = [10,11,12,13]
@@ -1039,14 +1041,14 @@ class MainWindow(QtGui.QMainWindow):
             self.parallacticangle = pa
             self.positionalerror = rm.randint(0, 90)
             self.status = status
-            self.time = time
-            self.enc = enc
+            self.time = time.time()
+            # self.enc = enc
 
+            # self.enctext.setText('Encoder Position %s' %(enc))
             self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
             self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
             self.statustext.setText('Tel Current Status: %s' %(status))
-            self.kmstimetext.setText('UTC Time: %s' %(time))
-            self.enctext.setText('Encoder Position %s' %(enc))
+            self.kmstimetext.setText('UTC Time: %s' %(self.time))
 
     def updatefftgraph(self):
         #self.y and self.x are defined in updateplot
@@ -1553,6 +1555,7 @@ class MCEThread(QtCore.QThread):
             elif ut.which_mce[2] == 1 :
                 self.new_data.emit(stuff[0],stuff[1],stuff[2])
             else :
+                print(colored('Im RUNNING SIM DATA','yellow'))
                 dummy = []
                 self.new_data.emit(dummy,stuff[1],stuff[2])
             time.sleep(0.01)
@@ -1671,7 +1674,7 @@ class Tel_Thread(QtCore.QThread):
 
 class KMS_Thread(QtCore.QThread):
 
-    new_kms_data = QtCore.pyqtSignal(object,object,object,object) # object is status flag
+    new_kms_data = QtCore.pyqtSignal(object,object) # object is status flag
 
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
@@ -1690,7 +1693,7 @@ class KMS_Thread(QtCore.QThread):
             # with self.flags.get_lock():
             #     self.flags[2] = int(kms_stuff[2])
 
-            self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
+            self.new_kms_data.emit(kms_stuff[0],kms_stuff[1]) #stuff 2 is status flag
 
 #activating the gui main window
 

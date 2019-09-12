@@ -15,8 +15,8 @@ def start_tracker(queue):
     print('Tracker Server Listening')
     s.listen(5)
     client, info = s.accept()
-    print(colored('Socket Connected'),'red')
-    unpacker = struct.Struct('i i i i d d d d d d d d d d d d d d d d I I')
+    print(colored('Socket Connected','red'))
+    unpacker = struct.Struct('i i i i d d d d d d d d d d d d d d d d Q Q')
     n = 0
     mega_tel = []
 
@@ -29,7 +29,7 @@ def start_tracker(queue):
             elvelact, pa, unix_val, unix_delta = unpacker.unpack(data)
             # =======================================================================
 
-            unix = float(unix_val) + float(unix_delta) / 10**(6) - (7*3600) # because unix time is local tucson
+            unix = float(unix_val) + float(unix_delta) / 10**(6) - (7*3600) # because unix time is mountain timezone
             # ------------------------------------------------------------------------
             tel_data = np.array([int(blanking), int(direction), float(observing), float(pad), \
             utc, lst, deltaT, cur_ra, cur_dec, map_ra, map_dec, \

@@ -3,8 +3,8 @@
 
 tel_dict = {
 
-"inittel":"Tracker",
-"tel_scan":"Tracker",
+"inittel":"No",
+"tel_scan":"1D Raster",
 "coord_space":"DEC",
 "map_angle":"0",
 "sec":"10",
@@ -21,7 +21,7 @@ tel_dict = {
 "coord2":"15:00:00",
 "coord2_unit":"DEC",
 "epoch":"Apparent",
-"object":"None"
+"object":"Test"
 }
 # ===================================
 mce_dict = {
