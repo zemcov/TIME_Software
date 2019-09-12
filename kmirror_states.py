@@ -23,9 +23,9 @@ import multiprocessing as mp
 from multiprocessing import Manager
 
 TELESCOPE_HOST = '0.0.0.0'
-TELESCOPE_PORT = 8888
-CONTROL_HOST = '192.168.0.102'
-CONTROL_PORT = 8000
+TELESCOPE_PORT = 8000
+CONTROL_HOST = '192.168.1.143'
+CONTROL_PORT = 8500
 
 NUM_SAMPLES = 800
 STEP_OFFSET = 150
@@ -274,8 +274,8 @@ class Stop_Checker():
                    data = connection.recv(unpacker.size)
                    if data :
                       self.blanking,self.direction,self.observing,self.pad,self.utc,self.pa = unpacker.unpack(data)
-                       update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
-                       self.masterlist.append(update)
+                      update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
+                      self.masterlist.append(update)
                    else : #no more data
                        break
             except Exception as e:
@@ -302,7 +302,7 @@ class Stop_Checker():
                 break
         self.thread1Stop.set()
 #########################################################################
-    def gui_socket():
+    def gui_socket(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((CONTROL_HOST, CONTROL_PORT))
         packer = struct.Struct('d i')
@@ -337,7 +337,7 @@ class Stop_Checker():
             t1.start()
             t2.start()
             # t3.start()
-            t4.start()
+            #t4.start()
 
         self.stop_check()
 

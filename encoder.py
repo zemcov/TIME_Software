@@ -8,7 +8,7 @@ spi = spidev.SpiDev()
 spi.open(0,0)
 spi.max_speed_hz = 7629
 
-home_pos = 294.50
+home_pos = 0.1
 maximum = home_pos + 42.0
 minimum = home_pos - 45.0
 
