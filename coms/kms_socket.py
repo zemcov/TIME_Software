@@ -6,7 +6,7 @@ import socket, struct, subprocess, os, sys, time
 import time as othertime
 import numpy as np
 import utils as ut
-from config import *
+from directory import *
 sys.path.append('../TIME_Software/main/tempfiles')
 
 def start_sock(queue):

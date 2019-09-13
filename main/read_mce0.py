@@ -8,7 +8,7 @@ import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
-import config
+import directory
 h_shape = 0
 p = 0
 
@@ -21,7 +21,7 @@ def netcdfdata(queue1,flags):
     Calls : readdata()
     """
     # os.nice(-20)
-    dir = config.mce0_dir
+    dir = directory.mce0_dir
     a = 0
     print('starting mce0 read')
     while not ut.mce_exit.is_set():
@@ -44,7 +44,7 @@ def netcdfdata(queue1,flags):
 # ===========================================================================================================================
 def readdata(file,flags):
     """
-    Purpose: reads data from a raw mce file 
+    Purpose: reads data from a raw mce file
     Inputs: file - mce_file
             flags - idk
     Outputs: head - header data

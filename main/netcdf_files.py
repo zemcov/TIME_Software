@@ -6,7 +6,7 @@ import numpy as np
 from termcolor import colored
 import utils as ut
 sys.path.append('../TIME_Software/main/tempfiles')
-import config
+import directory
 # os.nice(-20)
 
 def new_file(filestarttime,dir):
@@ -88,7 +88,7 @@ def new_file(filestarttime,dir):
     global Status_Flags
     Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
 
-    parafilename = (config.temp_dir + 'tempparameters.txt')
+    parafilename = (directory.temp_dir + 'tempparameters.txt')
     parafile = open(parafilename, 'r')
     parameters = parafile.readline().strip().split()
 

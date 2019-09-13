@@ -47,8 +47,8 @@ class TIME_TELE :
 
         return pa,other_x,other_y
     #-----------------------------------------------------------------------------------------------------------------------
-    def start_tel(self,queue,map_len,map_len_unit,map_size,map_size_unit,scan_time,coord1,coord1_unit,coord2,coord2_unit,coord_space,step,step_unit):
-
+    def start_tel(self,queue,map_len,map_len_unit,map_size,map_size_unit,scan_time,coord1,coord1_unit,coord2,coord2_unit,coord_space,step,step_unit,numloop):
+        print(colored("FAKE TEL STARTED",'magenta'))
         self.i = 0
         num_loop, calc_coord1, calc_coord2 = scan_params(map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
 

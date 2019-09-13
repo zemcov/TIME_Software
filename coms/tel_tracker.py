@@ -4,7 +4,7 @@ import time
 import numpy as np
 import utils as ut
 from termcolor import colored
-from config import *
+import directory
 sys.path.append('../TIME_Software/main/tempfiles')
 
 def start_tracker(queue):
@@ -40,7 +40,8 @@ def start_tracker(queue):
                 mega_tel.append(tel_data)
             else :
                 print('Tel Time:', unix_val , unix_delta)
-                np.save(config.temp_dir + '/tele_packet%i.npy' %(n), mega_tel)
+                sys.stdout.flush()
+                np.save(directory.temp_dir + '/tele_packet%i.npy' %(n), mega_tel)
                 mega_tel = []
                 mega_tel.append(tel_data)
                 n += 1
