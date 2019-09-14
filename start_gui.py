@@ -159,6 +159,14 @@ class MainWindow(QtGui.QMainWindow):
         self.changechan.clicked.connect(self.on_set_chan_clicked)
         self.helpbutton.clicked.connect(self.on_help_clicked)
         self.useinit.clicked.connect(self.on_useinit_clicked)
+        self.kms_stop.clicked.connect(self.onkmsstop_clicked)
+        self.kms_restart.clicked.connect(self.onkmsrestart_clicked)
+
+    def onkmsrestart_clicked(self):
+        subprocess.Popen(['ssh -T pi@kms python /home/pi/kms-dev/manual_sick_reset.py'],shell=True)
+
+    def onkmsstop_clicked(self):
+        subprocess.Popen(['ssh -T pi@kms python /home/pi/kms-dev/stop.py'],shell=True)
 
     def on_help_clicked(self):
 
@@ -232,7 +240,7 @@ class MainWindow(QtGui.QMainWindow):
         self.coord1_unit = self.unit4.currentText()
         self.coord2_unit = self.unit5.currentText()
 
-        if self.inittel == 'YES':
+        if self.inittel == 'Yes':
             self.tel_scan = self.telescan.currentText()
             scans = ['1D Raster','2D Raster','Bowtie (constant el)','Pointing Cross']
             script = [raster_script_1d,raster_script_2d,bowtie_scan,point_cross]
@@ -242,12 +250,12 @@ class MainWindow(QtGui.QMainWindow):
             tel_message = 'TELESCOPE INITIALIZED'
             self.off = False
 
-        elif self.inittel == 'NO' :
+        elif self.inittel == 'No' :
             self.tel_script = ' '
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
 
-        elif self.inittel == 'SIM' :
+        elif self.inittel == 'Sim' :
             tel_message = 'TEL SIM SELECTED'
             self.tel_script = 'Sim'
             self.off = False
@@ -355,7 +363,7 @@ class MainWindow(QtGui.QMainWindow):
 
         ''' ######################################################################'''
 
-        if self.inittel == 'YES':
+        if self.inittel == 'Yes':
             if self.kmsonoff == 'Yes':
                 self.kms_on_off = 3
             else :
@@ -372,7 +380,7 @@ class MainWindow(QtGui.QMainWindow):
             tel_message = 'TELESCOPE INITIALIZED'
             self.off = False
 
-        elif self.inittel == 'NO' :
+        elif self.inittel == 'No' :
             if self.kmsonoff == 'Yes':
                 self.kms_on_off = 2
             else :
@@ -381,7 +389,7 @@ class MainWindow(QtGui.QMainWindow):
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
 
-        elif self.inittel == 'SIM' :
+        elif self.inittel == 'Sim' :
             tel_message = 'TEL SIM SELECTED'
             self.tel_script = 'Sim'
             self.off = False
@@ -520,6 +528,14 @@ class MainWindow(QtGui.QMainWindow):
             self.setnewrc = QtGui.QVBoxLayout()
             self.setnewrc.addWidget(self.changechan)
             self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
+
+            self.kmsstop = QtGui.QVBoxLayout()
+            self.kmsstop.addWidget(self.kms_stop)
+            self.newgrid.addLayout(self.kmsstop,6,0,1,2)
+
+            self.kmsrestart = QtGui.QVBoxLayout()
+            self.kmsrestart.addWidget(self.kms_restart)
+            self.newgrid.addLayout(self.kmsrestart,7,0,1,2)
 
             #start other plot making processes
             self.initplot()
@@ -682,6 +698,10 @@ class MainWindow(QtGui.QMainWindow):
         self.helpbutton.setStyleSheet("background-color: yellow")
         self.submitbutton = QtGui.QPushButton('Submit')
         self.submitbutton.setStyleSheet("background-color: green")
+        self.kms_stop = QtGui.QPushButton('KMS STOP')
+        self.kms_stop.setStyleSheet("background-color: orange")
+        self.kms_restart = QtGui.QPushButton('KMS RESTART')
+        self.kms_restart.setStyleSheet("background-color: yellow")
         self.initparams.addRow(self.helpbutton)
         self.initparams.addRow(self.quitbutton)
         self.initparams.addRow(self.submitbutton)
@@ -991,10 +1011,10 @@ class MainWindow(QtGui.QMainWindow):
         self.kmsparams.addWidget(self.parallacticangletext)
         self.kmsparams.addWidget(self.positionalerrortext)
         self.kmsparams.addWidget(self.statustext)
-        self.kmsparams.addWidget(self.timetext)
         self.kmsparams.addWidget(self.enctext)
+        self.kmsparams.addWidget(self.timetext)
         self.kmsgui.setLayout(self.kmsparams)
-        self.newgrid.addWidget(self.kmsgui, 5, 0, 2, 2)
+        self.newgrid.addWidget(self.kmsgui, 4, 0, 2, 2)
 
     def inittelescope(self):
 
