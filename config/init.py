@@ -3,7 +3,8 @@
 
 tel_dict = {
 
-"inittel":"YES",
+"inittel":"Sim",
+"kmsonoff":"No",
 "tel_scan":"2D Raster",
 "coord_space":"RA",
 "sec":"10",

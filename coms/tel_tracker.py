@@ -53,3 +53,15 @@ def start_tracker(queue):
 
     s.close()
     sys.exit()
+
+# meant for running tracker without moving the telescope or KMS
+def turn_on_tracker(kms_on_off):
+    PORT = 1806
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('',6666))
+    s.connect(('192.168.1.252',PORT))
+    print('Socket Connected')
+
+    s.send('TIME_START_TELEMETRY %s' %(kms_on_off))
+    reply = s.recv(1024).decode("ascii")
+    print(reply)

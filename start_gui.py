@@ -1,4 +1,4 @@
-import sys, os, subprocess, time, datetime, socket, struct, threading
+import sys, os, subprocess, time, datetime, socket, struct, threading, shutil
 sys.path.append('../TIME_Software/main/tempfiles')
 sys.path.append('../TIME_Software/coms')
 sys.path.append('../TIME_Software/main/')
@@ -6,6 +6,7 @@ sys.path.append('../TIME_Software/scans')
 sys.path.append('../TIME_Software/config/')
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWidgets import QSizePolicy
 import pyqtgraph as Qt
 import numpy as np
 import pyqtgraph as pg
@@ -33,61 +34,77 @@ class MainWindow(QtGui.QMainWindow):
         # p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(114,160,240)))
         p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
 
+
+        self.logo = QtGui.QImage(directory.master_dir + "/timelogo.png")
+        self.logopal = QtGui.QPalette()
+        self.logopal.setBrush(QtGui.QPalette.Window,QtGui.QBrush(self.logo))
+
         # start the main input window to specify observing parameters
         self.startwindow = QtGui.QWidget()
         self.startgrid = QtGui.QGridLayout()
-        self.startgrid.addLayout(self.parametersquit, 1, 1, 1, 1)
-        self.startwindow.setGeometry(10, 10, 640, 480)
+        self.startgrid.addLayout(self.parametersquit,1,1,QtCore.Qt.AlignBottom)
+        self.startwindow.setGeometry(10, 10, 1920, 1080)
         self.startwindow.setLayout(self.startgrid)
+        # self.startwindow.setPalette(self.logopal)
         self.startwindow.setPalette(p)
         self.startwindow.show()
 
         ''' ######################################################################## '''
         # open the status window from corona showing current telescope parameters
-        '''
-        self.status = QtGui.QWidget()
-        self.statusID = int(self.status.winId())
-        self.status_sub = QtGui.QWindow.fromWinId(self.statusID)
-        self.status_con = QtGui.QWidget.createWindowContainer(self.status_sub)
-        self.status_sub_ID = int(self.status_con.winId())
-        self.status_proc = QtCore.QProcess(self.status_con)
-        # self.status_proc.waitForFinished(-1)
-        self.status_proc.start(directory.soft_dir + './coms/start_status.sh')
-        if self.status_proc.error() == QtCore.QProcess.FailedToStart:
-            print("process failed to start")
+        # self.status = QtGui.QWidget()
+        # self.statusID = int(self.status.winId())
+        # self.status_sub = QtGui.QWindow.fromWinId(self.statusID)
+        # self.status_con = QtGui.QWidget.createWindowContainer(self.status_sub)
+        # self.status_sub_ID = int(self.status_con.winId())
+        # self.status_proc = QtCore.QProcess(self.status_con)
+        # # self.status_proc.waitForFinished(-1)
+        # self.status_proc.start(directory.soft_dir + './coms/start_status.sh')
+        # if self.status_proc.error() == QtCore.QProcess.FailedToStart:
+        #     print("process failed to start")
 
-        self.catalog = QtGui.QWidget()
-        self.catalogID = int(self.catalog.winId())
-        self.catalog_sub = QtGui.QWindow.fromWinId(self.catalogID)
-        self.catalog_con = QtGui.QWidget.createWindowContainer(self.catalog_sub)
-        self.catalog_sub_ID = int(self.catalog_con.winId())
-        self.catalog_proc = QtCore.QProcess(self.catalog_con)
-        # self.status_proc.waitForFinished(-1)
-        self.catalog_proc.start(directory.soft_dir + './coms/start_catalog.sh')
-        if self.catalog_proc.error() == QtCore.QProcess.FailedToStart:
-            print("process failed to start")
+        # self.catalog = QtGui.QWidget()
+        # self.catalogID = int(self.catalog.winId())
+        # self.catalog_sub = QtGui.QWindow.fromWinId(self.catalogID)
+        # self.catalog_con = QtGui.QWidget.createWindowContainer(self.catalog_sub)
+        # self.catalog_sub_ID = int(self.catalog_con.winId())
+        # self.catalog_proc = QtCore.QProcess(self.catalog_con)
+        # # self.status_proc.waitForFinished(-1)
+        # self.catalog_proc.start(directory.soft_dir + './coms/start_catalog.sh')
+        # if self.catalog_proc.error() == QtCore.QProcess.FailedToStart:
+        #     print("process failed to start")
 
-        self.monitor = QtGui.QWidget()
-        self.monitorID = int(self.monitor.winId())
-        self.monitor_sub = QtGui.QWindow.fromWinId(self.monitorID)
-        self.monitor_con = QtGui.QWidget.createWindowContainer(self.monitor_sub)
-        self.monitor_sub_ID = int(self.monitor_con.winId())
-        self.monitor_proc = QtCore.QProcess(self.monitor_con)
-        # self.status_proc.waitForFinished(-1)
-        self.monitor_proc.start(directory.soft_dir + './coms/start_monitor.sh')
-        if self.monitor_proc.error() == QtCore.QProcess.FailedToStart:
-            print("process failed to start")
+        # self.monitor = QtGui.QWidget()
+        # self.monitorID = int(self.monitor.winId())
+        # self.monitor_sub = QtGui.QWindow.fromWinId(self.monitorID)
+        # self.monitor_con = QtGui.QWidget.createWindowContainer(self.monitor_sub)
+        # self.monitor_sub_ID = int(self.monitor_con.winId())
+        # self.monitor_proc = QtCore.QProcess(self.monitor_con)
+        # # self.status_proc.waitForFinished(-1)
+        # self.monitor_proc.start(directory.soft_dir + './coms/start_monitor.sh')
+        # if self.monitor_proc.error() == QtCore.QProcess.FailedToStart:
+        #     print("process failed to start")
 
-        self.display = QtGui.QWidget()
-        self.displayID = int(self.display.winId())
-        self.display_sub = QtGui.QWindow.fromWinId(self.displayID)
-        self.display_con = QtGui.QWidget.createWindowContainer(self.display_sub)
-        self.display_sub_ID = int(self.display_con.winId())
-        self.display_proc = QtCore.QProcess(self.display_con)
-        # self.status_proc.waitForFinished(-1)
-        self.display_proc.start(directory.soft_dir + './coms/start_display.sh')
-        if self.display_proc.error() == QtCore.QProcess.FailedToStart:
-            print("process failed to start")
+        # self.display = QtGui.QWidget()
+        # self.displayID = int(self.display.winId())
+        # self.display_sub = QtGui.QWindow.fromWinId(self.displayID)
+        # self.display_con = QtGui.QWidget.createWindowContainer(self.display_sub)
+        # self.display_sub_ID = int(self.display_con.winId())
+        # self.display_proc = QtCore.QProcess(self.display_con)
+        # # self.status_proc.waitForFinished(-1)
+        # self.display_proc.start(directory.soft_dir + './coms/start_display.sh')
+        # if self.display_proc.error() == QtCore.QProcess.FailedToStart:
+        #     print("process failed to start")
+
+        # self.weather = QtGui.QWidget()
+        # self.weatherID = int(self.weather.winId())
+        # self.weather_sub = QtGui.QWindow.fromWinId(self.weatherID)
+        # self.weather_con = QtGui.QWidget.createWindowContainer(self.weather_sub)
+        # self.weather_sub_ID = int(self.weather_con.winId())
+        # self.weather_proc = QtCore.QProcess(self.weather_con)
+        # # self.status_proc.waitForFinished(-1)
+        # self.weather_proc.start(directory.soft_dir + './coms/start_weather.sh')
+        # if self.weather_proc.error() == QtCore.QProcess.FailedToStart:
+        #     print("process failed to start")
 
         # create a separate window showing 4 telescope observing windows
         # self.telwindow = QtGui.QWidget()
@@ -102,7 +119,6 @@ class MainWindow(QtGui.QMainWindow):
         # self.telwindow.setGeometry(10,10, 1920, 1080)
         # self.telwindow.setLayout(self.telgrid)
         # self.telwindow.show()
-        '''
         ''' ######################################################################## '''
 
         self.init_mce()
@@ -147,7 +163,7 @@ class MainWindow(QtGui.QMainWindow):
     def on_help_clicked(self):
 
         self.browser = QWebEngineView()
-        local_url = QtCore.QUrl.fromLocalFile("../TIME_Software/main/help_doc.html")
+        local_url = QtCore.QUrl.fromLocalFile(directory.master_dir + "help_doc.html")
         self.browser.load(local_url)
         self.browser.show()
 
@@ -241,6 +257,8 @@ class MainWindow(QtGui.QMainWindow):
             self.tel_script = 'Tracker'
             self.off = False
 
+        # if we have to click start_tel, then we aren't using auto_fill
+        self.useinit.setEnabled(False)
         print(tel_message)
 
     def on_useinit_clicked(self):
@@ -268,8 +286,8 @@ class MainWindow(QtGui.QMainWindow):
         self.epoch = init.tel_dict["epoch"]
         self.object = init.tel_dict["object"]
         self.inittel = init.tel_dict["inittel"]
+        self.kmsonoff = init.tel_dict["kmsonoff"]
         self.tel_scan = init.tel_dict["tel_scan"]
-        print(self.tel_scan)
         self.step = init.tel_dict["step"]
         self.coord_space = init.tel_dict["coord_space"]
         self.map_size_unit = init.tel_dict["map_size_unit"]
@@ -281,7 +299,6 @@ class MainWindow(QtGui.QMainWindow):
         # =============================================================================
         # ==============================================================================
         self.starttel.setEnabled(True)
-        # self.useinit.setEnabled(False)
 
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -305,7 +322,6 @@ class MainWindow(QtGui.QMainWindow):
 
             # which mces are active --------------------------
             self.mceson = self.whichmces.currentText()
-            print(colored('MCESON SET','red'))
 
             # data mode --------------------------------------
             self.datamode = self.enterdatamode.currentText()
@@ -340,7 +356,11 @@ class MainWindow(QtGui.QMainWindow):
         ''' ######################################################################'''
 
         if self.inittel == 'YES':
-            print('Im using self.inittel == yes')
+            if self.kmsonoff == 'Yes':
+                self.kms_on_off = 3
+            else :
+                self.kms_on_off = 1
+
             if not self.useinit.isEnabled(): # only use self.telescan.currentText() if not using auto_fill
                 self.tel_scan = self.telescan.currentText()
             scans = ['1D Raster','2D Raster','Bowtie (constant el)','Pointing Cross']
@@ -353,6 +373,10 @@ class MainWindow(QtGui.QMainWindow):
             self.off = False
 
         elif self.inittel == 'NO' :
+            if self.kmsonoff == 'Yes':
+                self.kms_on_off = 2
+            else :
+                self.kms_on_off = 0
             self.tel_script = ' '
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
@@ -363,6 +387,10 @@ class MainWindow(QtGui.QMainWindow):
             self.off = False
 
         else :
+            if self.kmsonoff == 'Yes':
+                self.kms_on_off = 3
+            else :
+                self.kms_on_off = 1
             tel_message = 'TRACKER DATA ONLY'
             self.tel_script = 'Tracker'
             self.off = False
@@ -400,14 +428,17 @@ class MainWindow(QtGui.QMainWindow):
             dir = directory.master_dir
             if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
                 parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
-                parafile.write(self.observer+' ')
-                parafile.write(str(self.datamode)+' ')
+                parafile.write(self.observer+'\n')
+                parafile.write(str(self.datamode)+'\n')
                 parafile.write(str(self.readoutcard)+' ')
-                parafile.write(self.framenumber+' ')
-                parafile.write(self.timeinterval+' ')
-                parafile.write(self.channeldelete+' ')
-                parafile.write(self.timestarted+' ')
+                parafile.write(self.framenumber+'\n')
+                parafile.write(self.timeinterval+'\n')
+                parafile.write(self.channeldelete+'\n')
+                parafile.write(self.timestarted+'\n')
+                parafile.write(self.logtext.toPlainText())
                 parafile.close()
+
+            new_tempfile = shutil.copy(dir + 'tempfiles/tempparameters.txt',self.netcdfdir + '/log.txt')
 
             print(colored('Time Started: %s' % (self.timestarted),'magenta'))
             # self.p = int((50 * 10 ** 6) / (33 * 90 * ut.german_freq)) #calculation taken from UBC MCE Wiki
@@ -496,7 +527,7 @@ class MainWindow(QtGui.QMainWindow):
             self.initheatmap(data,data) # give first values for heatmap to create image scale
             self.initfftgraph()
             self.inittelescope()
-            # self.initkmirrordata()
+            self.initkmirrordata()
 
             self.newwindow.show()
 
@@ -534,10 +565,8 @@ class MainWindow(QtGui.QMainWindow):
         self.enterchanneldelete.addItems(['No', 'Yes'])
         self.entershowmcedata = QtGui.QComboBox()
         self.entershowmcedata.addItems(['Yes', 'No'])
-        self.submitbutton = QtGui.QPushButton('Submit')
-        self.submitbutton.setStyleSheet("background-color: green")
 
-        self.mceGroupBox = QtGui.QGroupBox("MCE Parameters")
+        self.mceGroupBox = QtGui.QGroupBox()
         self.parameters = QtGui.QFormLayout()
         self.mcetitle = QtGui.QLabel(self)
         self.mcetitle.setAlignment(QtCore.Qt.AlignCenter)
@@ -553,7 +582,6 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
         self.parameters.addRow('Show MCE Data', self.entershowmcedata)
-        self.parameters.addRow(self.submitbutton)
         self.mceGroupBox.setLayout(self.parameters)
 
         # telescope options =================================================
@@ -566,6 +594,9 @@ class MainWindow(QtGui.QMainWindow):
 
         self.init_tel = QtGui.QComboBox()
         self.init_tel.addItems(['No','Yes','Sim','Tracker'])
+
+        self.kmsonoff = QtGui.QComboBox()
+        self.kmsonoff.addItems(['No','Yes'])
 
         self.tel_sec = QtGui.QLineEdit('6')
         self.tel_map_len = QtGui.QLineEdit('1')
@@ -592,13 +623,14 @@ class MainWindow(QtGui.QMainWindow):
         self.map_space = QtGui.QComboBox()
         self.map_space.addItems(['RA','DEC','AZ','ALT'])
 
-        self.telGroupBox = QtGui.QGroupBox("Telescope Parameters")
+        self.telGroupBox = QtGui.QGroupBox()
         self.telparams = QtGui.QFormLayout()
         self.teltitle = QtGui.QLabel(self)
         self.teltitle.setAlignment(QtCore.Qt.AlignCenter)
         self.teltitle.setText('Telescope Parameters')
         self.telparams.addRow(self.teltitle)
         self.telparams.addRow('Activate Telescope', self.init_tel)
+        self.telparams.addRow('Activate KMS', self.kmsonoff)
         self.telparams.addRow('Scan Strategy', self.telescan)
         self.telparams.addRow('Constant Coordinate System', self.map_space)
         self.telparams.addRow('Delayed Start (sec)', self.tel_delay)
@@ -635,27 +667,56 @@ class MainWindow(QtGui.QMainWindow):
         self.telparams.addRow('Object Catalog Name', self.tel_object)
         self.starttel = QtGui.QPushButton('Initialize Telescope')
         self.starttel.setStyleSheet("background-color: blue")
-        self.helpbutton = QtGui.QPushButton('Help')
-        self.helpbutton.setStyleSheet("background-color: yellow")
         self.telparams.addRow(self.starttel)
-        self.telparams.addRow(self.helpbutton)
         self.telGroupBox.setLayout(self.telparams)
         # =====================================================================
+
         self.useinit = QtGui.QPushButton('Auto-Fill from File')
         self.useinit.setStyleSheet("background-color: orange")
         self.initGroupBox = QtGui.QGroupBox()
         self.initparams = QtGui.QFormLayout()
         self.initparams.addRow(self.useinit)
-        self.initGroupBox.setLayout(self.initparams)
-        # =====================================================================
-        self.parametersquit = QtGui.QVBoxLayout()
-        self.parametersquit.setAlignment(QtCore.Qt.AlignCenter)
-        self.parametersquit.addWidget(self.telGroupBox)
-        self.parametersquit.addWidget(self.mceGroupBox)
-        self.parametersquit.addWidget(self.initGroupBox)
         self.quitbutton = QtGui.QPushButton('Quit')
         self.quitbutton.setStyleSheet("background-color: red")
-        self.parametersquit.addWidget(self.quitbutton)
+        self.helpbutton = QtGui.QPushButton('Help')
+        self.helpbutton.setStyleSheet("background-color: yellow")
+        self.submitbutton = QtGui.QPushButton('Submit')
+        self.submitbutton.setStyleSheet("background-color: green")
+        self.initparams.addRow(self.helpbutton)
+        self.initparams.addRow(self.quitbutton)
+        self.initparams.addRow(self.submitbutton)
+        self.initGroupBox.setLayout(self.initparams)
+
+        # =====================================================================
+        self.parameters = QtGui.QHBoxLayout()
+        self.allbuttons = QtGui.QVBoxLayout()
+        self.parametersquit = QtGui.QHBoxLayout()
+
+        self.telbutton = QtGui.QHBoxLayout()
+        self.telbutton.addWidget(self.telGroupBox)
+
+        self.logbox = QtGui.QVBoxLayout()
+        self.logform = QtGui.QFormLayout()
+        self.logbox.addLayout(self.logform)
+        self.logtitle = QtGui.QLabel(self)
+        self.logtitle.setAlignment(QtCore.Qt.AlignCenter)
+        self.logtitle.setText('Observer Log')
+        self.logform.addRow(self.logtitle)
+        self.logtext = QtGui.QTextEdit('Please make a note about the current run...')
+        self.logtext.setFontPointSize(20)
+        self.logbox.addWidget(self.logtext)
+        # self.logtext.resize(640,640)
+
+        # self.parameters.addWidget(self.telGroupBox)
+        self.parameters.addLayout(self.telbutton)
+        self.parameters.addWidget(self.mceGroupBox)
+        self.parameters.addLayout(self.logbox)
+
+        self.allbuttons.addLayout(self.parameters)
+        self.allbuttons.addWidget(self.initGroupBox)
+        self.parametersquit.setAlignment(QtCore.Qt.AlignCenter)
+        self.parametersquit.addLayout(self.allbuttons)
+
         self.changechan = QtGui.QPushButton('Set New')
         self.changechan.setStyleSheet("background-color: blue")
 
@@ -890,9 +951,10 @@ class MainWindow(QtGui.QMainWindow):
         if self.tel_script == 'point_cross.py' :
             # do something to set KMS in specific position before starting KMS thread
             print('No KMS!')
-        # self.kms_updater = KMS_Thread()
-        # self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
-        # self.kms_updater.start()
+        if self.kms_on_off == 'Yes':
+            self.kms_updater = KMS_Thread()
+            self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
+            self.kms_updater.start()
 
         #place holder data
         self.parallacticangle = 0.0
@@ -941,7 +1003,8 @@ class MainWindow(QtGui.QMainWindow):
                                     map_len = self.map_len, map_angle = self.map_angle, coord1 = self.coord1, coord1_unit = self.coord1_unit,\
                                     coord2 = self.coord2, coord2_unit = self.coord2_unit, epoch = self.epoch,\
                                     object = self.object, step = self.step, coord_space = self.coord_space, map_size_unit = self.map_size_unit,\
-                                    map_len_unit = self.map_len_unit, map_angle_unit = self.map_angle_unit, step_unit = self.step_unit, num_loop = self.num_loop)
+                                    map_len_unit = self.map_len_unit, map_angle_unit = self.map_angle_unit, step_unit = self.step_unit,\
+                                    num_loop = self.num_loop, kms_on_off = self.kms_on_off)
         self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
         self.tel_updater.start()
 
@@ -1006,7 +1069,7 @@ class MainWindow(QtGui.QMainWindow):
         self.telescopewindow.setGeometry(10, 10, 1920, 1080)
         self.telescopewindow.setLayout(self.telegrid)
 
-        if self.off == False :
+        if self.off == False and self.inittel != 'No' and self.inittel != 'Tracker':
             box_leftx,box_lefty,box_rightx,box_righty,box_topx,box_topy,box_botx,box_boty =\
             draw_box(self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.coord_space,\
                         self.map_size,self.map_size_unit,self.map_len,self.map_len_unit)
@@ -1023,10 +1086,9 @@ class MainWindow(QtGui.QMainWindow):
                 self.radeclinedata3.setData(box_topx,box_topy,brush=pg.mkBrush('g'))
                 self.radeclinedata4.setData(box_botx,box_boty,brush=pg.mkBrush('g'))
 
-            self.telescopewindow.show()
         else :
             pass
-
+        self.telescopewindow.show()
         self.repeat = False
 
         self.alt = []
@@ -1572,11 +1634,11 @@ class MCEThread(QtCore.QThread):
 
 class Tel_Thread(QtCore.QThread):
 
-    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object)
+    new_tel_data = QtCore.pyqtSignal(object,object,object,object,object,object,object,object)
 
     def __init__(self, flags, tel_script, off, sec, map_size, map_len, map_angle, coord1, coord1_unit, coord2,\
                     coord2_unit, epoch, object, step, coord_space, map_size_unit,\
-                    map_len_unit, map_angle_unit, step_unit, num_loop, parent = None):
+                    map_len_unit, map_angle_unit, step_unit, num_loop, kms_on_off, parent = None):
 
         QtCore.QThread.__init__(self, parent)
         self.off = off
@@ -1599,6 +1661,7 @@ class Tel_Thread(QtCore.QThread):
         self.coord1_unit = coord1_unit
         self.coord2_unit = coord2_unit
         self.numloop = num_loop
+        self.kms_on_off = kms_on_off
 
     def __del__(self):
         ut.tel_exit.set()
@@ -1606,9 +1669,15 @@ class Tel_Thread(QtCore.QThread):
     def run(self):
         if self.off == False :
 
+            # turn on only the script that activates tracker and sends data packets
+            # does not move the telescope
+            # option to move or not move kms depending on self.kms_on_off
             if self.tel_script == 'Tracker' :
-                from tel_tracker import start_tracker
+                from tel_tracker import start_tracker, turn_on_tracker
                 data, queue = mp.Pipe()
+                p1 = mp.Process(target = turn_on_tracker, args=(self.kms_on_off,))
+                p1.start()
+                time.sleep(0.1) # give tracker time to turn on before accepting packets
                 p = mp.Process(target= start_tracker, args=(queue,))
                 p.start()
 
@@ -1626,6 +1695,7 @@ class Tel_Thread(QtCore.QThread):
                         print(colored('Telescope Scan Completed!','green'))
                         break
 
+            # fake data is generated for both kmirror and telescope
             elif self.tel_script == 'Sim' :
                 print(colored('TEL SIM STARTED','red'))
                 tele_array = np.zeros((20,20),dtype=float)
@@ -1636,7 +1706,7 @@ class Tel_Thread(QtCore.QThread):
                 data, queue = mp.Pipe()
                 p = mp.Process(target=fake_tel.TIME_TELE().start_tel, args=(queue,self.map_len,self.map_len_unit,self.map_size,self.map_size_unit,self.sec,\
                                                                             self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.coord_space,\
-                                                                            self.step,self.step_unit,self.numloop))
+                                                                            self.step,self.step_unit,self.numloop,self.kms_on_off))
                 p.start()
 
                 while True :
@@ -1653,12 +1723,12 @@ class Tel_Thread(QtCore.QThread):
                         break
 
             else :
-                print(colored(self.tel_script,'yellow'))
+                # this will start one of several movement scripts
                 data, queue = mp.Pipe() # this is for tracker
                 data2, queue2 = mp.Pipe() # this is for pos_calculator
                 p = mp.Process(target=self.tel_script.TIME_TELE().start_sock, args=(queue2,queue,self.sec,self.map_size,self.map_len,\
                                         self.map_angle,self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.epoch,self.object,self.step,\
-                                        self.coord_space,self.step_unit,self.map_size_unit,self.map_len_unit,self.map_angle_unit,self.numloop))
+                                        self.coord_space,self.step_unit,self.map_size_unit,self.map_len_unit,self.map_angle_unit,self.numloop,self.kms_on_off))
                 p.start()
 
                 while True :

@@ -88,20 +88,20 @@ def new_file(filestarttime,dir):
     global Status_Flags
     Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
 
-    parafilename = (directory.temp_dir + 'tempparameters.txt')
-    parafile = open(parafilename, 'r')
-    parameters = parafile.readline().strip().split()
+    parafile = (directory.temp_dir + 'tempparameters.txt')
+    with open(parafile, 'r') as f :
+        content = f.readlines()
+    parameters = [x.strip().split('\n') for x in content]
 
     Observer._Encoding = 'ascii'
     Frames._Encoding = 'ascii'
     Datamode._Encoding = 'ascii'
     Rc._Encoding = 'ascii'
 
-    Observer[:] = np.array([parameters[0]],dtype='S3')
-    Frames[:] = np.array([parameters[3]],dtype='S8')
-    Datamode[:] = np.array([parameters[1]],dtype='S2')
-    Rc[:] = np.array([parameters[2]],dtype='S1')
-    parafile.close()
+    Observer[:] = np.array([parameters[0][0]],dtype='S3')
+    Frames[:] = np.array([parameters[3][0]],dtype='S8')
+    Datamode[:] = np.array([parameters[1][0]],dtype='S2')
+    Rc[:] = np.array([parameters[2][0]],dtype='S1')
     mce.close()
 
 def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele):
