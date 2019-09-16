@@ -124,7 +124,7 @@ class Stop_Checker():
         GPIO.setup([12,13,16],GPIO.IN)
         print("Stop Checker Initialized")
         self.thread1Stop = mp.Event()
-	    self.socket_on = 'False'
+        self.socket_on = 'False'
 
 ###############################################################################################################
     def limits(self,flag):
