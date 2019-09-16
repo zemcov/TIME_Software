@@ -310,7 +310,7 @@ class Stop_Checker():
     	s.connect((CONTROL_HOST, CONTROL_PORT))
     	packer = struct.Struct('d i')
 
-        while not self.thread1Stop.is_set() and self.socket_on:
+        while not self.thread1Stop.is_set():
             data = packer.pack(float(self.pa),int(self.direction))
             s.send(data)
             print 'PA Sent to Gui',time.time()
