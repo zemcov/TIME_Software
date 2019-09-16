@@ -231,6 +231,7 @@ class MainWindow(QtGui.QMainWindow):
         self.epoch = self.tel_epoch.currentText()
         self.object = self.tel_object.text()
         self.inittel = self.init_tel.currentText()
+        self.kmsonoff = self.kmsonoff.currentText()
         self.step = self.tel_step.text()
         self.coord_space = self.map_space.currentText()
         self.map_size_unit = self.unit1.currentText()
@@ -251,9 +252,14 @@ class MainWindow(QtGui.QMainWindow):
             self.off = False
 
         elif self.inittel == 'No' :
-            self.tel_script = ' '
-            self.off = True
-            tel_message = 'NO TELESCOPE SELECTED'
+            if self.kmsonoff == 'No':
+                self.tel_script = ' '
+                self.off = True
+                tel_message = 'NO TELESCOPE SELECTED'
+            if self.kmsonoff == 'Yes':
+                self.tel_script = 'Tracker'
+                self.off = False
+                tel_message = 'KMS ONLY'
 
         elif self.inittel == 'Sim' :
             tel_message = 'TEL SIM SELECTED'
@@ -383,6 +389,7 @@ class MainWindow(QtGui.QMainWindow):
         elif self.inittel == 'No' :
             if self.kmsonoff == 'Yes':
                 self.kms_on_off = 2
+                print(colored('I have set the kmsonoff to 2','red'))
             else :
                 self.kms_on_off = 0
             self.tel_script = ' '
@@ -971,8 +978,8 @@ class MainWindow(QtGui.QMainWindow):
         if self.tel_script == 'point_cross.py' :
             # do something to set KMS in specific position before starting KMS thread
             print('No KMS!')
-        if self.kms_on_off == 'Yes':
-            self.kms_updater = KMS_Thread()
+        if self.kms_on_off == 2 or self.kms_on_off == 3:
+            self.kms_updater = KMS_Thread(kms_on_off = self.kms_on_off)
             self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
             self.kms_updater.start()
 
@@ -1691,8 +1698,8 @@ class Tel_Thread(QtCore.QThread):
 
             # turn on only the script that activates tracker and sends data packets
             # does not move the telescope
-            # option to move or not move kms depending on self.kms_on_off
-            if self.tel_script == 'Tracker' :
+
+            if self.tel_script == 'Tracker':
                 from tel_tracker import start_tracker, turn_on_tracker
                 data, queue = mp.Pipe()
                 p1 = mp.Process(target = turn_on_tracker, args=(self.kms_on_off,))
@@ -1779,13 +1786,20 @@ class KMS_Thread(QtCore.QThread):
 
     new_kms_data = QtCore.pyqtSignal(object,object) # object is status flag
 
-    def __init__(self, parent = None):
+    def __init__(self, kms_on_off, parent = None):
         QtCore.QThread.__init__(self, parent)
+        self.kms_on_off = kms_on_off
 
     def __del__(self):
         ut.kms_exit.set()
 
     def run(self):
+        if self.kms_on_off == 2 : #if the kms is starting without telescope, turn on tracker
+            from tel_tracker import turn_on_tracker
+            data, queue = mp.Pipe()
+            p1 = mp.Process(target = turn_on_tracker, args=(self.kms_on_off,))
+            p1.start()
+
         data, queue = mp.Pipe()
         p = mp.Process(target=kms_socket.start_sock , args=(queue,))
         p.start()
