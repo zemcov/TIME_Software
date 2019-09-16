@@ -270,7 +270,7 @@ class Stop_Checker():
         while not self.thread1Stop.is_set():
             connection,client= s.accept()
             print('Socket connected')
-	        self.socket_on = 'True'
+            self.socket_on = 'True'
             try:
                 while not self.thread1Stop.is_set():
                    data = connection.recv(unpacker.size)
@@ -286,8 +286,7 @@ class Stop_Checker():
                 s.close()
             finally :
                     connection.close()
-
-	    self.socket_on = 'False'
+        self.socket_on = 'False'
 ################################################################################################################################
     def step_overload(self,num_steps) :
         steps = num_steps
