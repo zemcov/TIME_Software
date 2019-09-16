@@ -124,7 +124,6 @@ class Stop_Checker():
         GPIO.setup([12,13,16],GPIO.IN)
         print("Stop Checker Initialized")
         self.thread1Stop = mp.Event()
-        self.t4 = '' #init gui mp event object
 
 ###############################################################################################################
     def limits(self,flag):
@@ -270,7 +269,8 @@ class Stop_Checker():
         while not self.thread1Stop.is_set():
             connection,client= s.accept()
             print('Socket connected')
-            self.t4.start() # start the kms gui socket
+            t4 = mp.Process(target=self.gui_socket)
+            t4.start() # start the kms gui socket
             try:
                 while not self.thread1Stop.is_set():
                    data = connection.recv(unpacker.size)
@@ -338,7 +338,6 @@ class Stop_Checker():
             Track turned off for socket testing w/o movement
             t3 = mp.Process(target=self.track)
             '''
-            self.t4 = mp.Process(target=self.gui_socket)
             t1.start()
             t2.start()
             # t3.start()
