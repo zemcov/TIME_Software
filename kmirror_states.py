@@ -124,7 +124,7 @@ class Stop_Checker():
         GPIO.setup([12,13,16],GPIO.IN)
         print("Stop Checker Initialized")
         self.thread1Stop = mp.Event()
-        self.socket_on = 'False'
+        self.t4 = '' #init gui mp event object
 
 ###############################################################################################################
     def limits(self,flag):
@@ -215,7 +215,7 @@ class Stop_Checker():
                 # Wait for a new update to come in
                 while len(self.masterlist) <= old_len:
                     time.sleep(0.02)
-		print("updating...")
+                print("updating...")
                 old_len = len(self.masterlist)
 
                 # NEW UPDATE
@@ -270,7 +270,7 @@ class Stop_Checker():
         while not self.thread1Stop.is_set():
             connection,client= s.accept()
             print('Socket connected')
-            self.socket_on = 'True'
+            self.t4.start() # start the kms gui socket
             try:
                 while not self.thread1Stop.is_set():
                    data = connection.recv(unpacker.size)
@@ -286,7 +286,6 @@ class Stop_Checker():
                 s.close()
             finally :
                     connection.close()
-        self.socket_on = 'False'
 ################################################################################################################################
     def step_overload(self,num_steps) :
         steps = num_steps
@@ -307,19 +306,15 @@ class Stop_Checker():
         self.thread1Stop.set()
 #########################################################################
     def gui_socket(self):
-	while self.socket_on : #if the tel socket has been connected
-        	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        	s.connect((CONTROL_HOST, CONTROL_PORT))
-        	packer = struct.Struct('d i')
-		break
-	else :
-		pass
+    	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    	s.connect((CONTROL_HOST, CONTROL_PORT))
+    	packer = struct.Struct('d i')
 
         while not self.thread1Stop.is_set() and self.socket_on:
             data = packer.pack(float(self.pa),int(self.direction))
             s.send(data)
             print 'PA Sent to Gui',time.time()
-	time.sleep(0.01)
+        time.sleep(0.01)
         s.close()
         print 'gui_socket closed'
 
@@ -343,11 +338,10 @@ class Stop_Checker():
             Track turned off for socket testing w/o movement
             t3 = mp.Process(target=self.track)
             '''
-            t4 = mp.Process(target=self.gui_socket)
+            self.t4 = mp.Process(target=self.gui_socket)
             t1.start()
             t2.start()
             # t3.start()
-            t4.start()
 
         self.stop_check()
 
