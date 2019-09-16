@@ -492,7 +492,6 @@ class MainWindow(QtGui.QMainWindow):
                         subprocess.Popen(['./coms/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
                         subprocess.Popen(['./coms/mce1_del.sh'], shell=True)
                         subprocess.Popen(['./coms/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
-                        print(colored((self.framenumber,self.frameperfile),'green'))
                 else :
                     if ut.which_mce[0] == 1 :
                         subprocess.Popen(['./coms/mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
@@ -1654,7 +1653,6 @@ class MCEThread(QtCore.QThread):
             elif ut.which_mce[2] == 1 :
                 self.new_data.emit(stuff[0],stuff[1],stuff[2])
             else :
-                print(colored('Im RUNNING SIM DATA','yellow'))
                 dummy = []
                 self.new_data.emit(dummy,stuff[1],stuff[2])
             time.sleep(0.01)
