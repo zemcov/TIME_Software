@@ -124,7 +124,7 @@ class Stop_Checker():
         GPIO.setup([12,13,16],GPIO.IN)
         print("Stop Checker Initialized")
         self.thread1Stop = mp.Event()
-	self.socket_on = 'False'
+	    self.socket_on = 'False'
 
 ###############################################################################################################
     def limits(self,flag):
@@ -270,7 +270,7 @@ class Stop_Checker():
         while not self.thread1Stop.is_set():
             connection,client= s.accept()
             print('Socket connected')
-	    self.socket_on = 'True'
+	        self.socket_on = 'True'
             try:
                 while not self.thread1Stop.is_set():
                    data = connection.recv(unpacker.size)
@@ -280,14 +280,14 @@ class Stop_Checker():
                       self.masterlist.append(update)
                    else : #no more data
                        break
-		time.sleep(0.01)
+		    time.sleep(0.01)
             except Exception as e:
                 print e
                 s.close()
             finally :
                     connection.close()
 
-	self.socket_on = 'False'
+	    self.socket_on = 'False'
 ################################################################################################################################
     def step_overload(self,num_steps) :
         steps = num_steps
