@@ -28,7 +28,6 @@ def start_sock(queue):
     kms_data = []
     n = 0
     while not ut.tel_exit.is_set():
-        print(ut.tel_exit.is_set())
         data = client.recv(unpacker.size)
         if len(data) !=0 :
             # print('Data Received')
@@ -40,7 +39,7 @@ def start_sock(queue):
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
 
             else :
-                np.save(config.temp_dir + '/kms_packet%i.npy' %(n), kms_data)
+                np.save(directory.temp_dir + 'kms_packet%i.npy' %(n), kms_data)
                 kms_data = []
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
             # send positional data to gui window
