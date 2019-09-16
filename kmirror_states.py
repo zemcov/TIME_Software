@@ -124,6 +124,13 @@ class Stop_Checker():
         GPIO.setup([12,13,16],GPIO.IN)
         print("Stop Checker Initialized")
         self.thread1Stop = mp.Event()
+        # init kms params
+        self.blanking = 0
+        self.direction = 0
+        self.observing = 0
+        self.pad = 0
+        self.utc = 0
+        self.pa = 0
 
 ###############################################################################################################
     def limits(self,flag):
