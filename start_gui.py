@@ -1142,11 +1142,11 @@ class MainWindow(QtGui.QMainWindow):
             self.time = time
             self.enc = enc_pos
 
-            # self.enctext.setText('Encoder Position %s' %(enc))
+            self.enctext.setText('Encoder Position %s' %(self.enc))
             self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
-            self.positionalerrortext.setText('Positonal Error: %s' % (self.enc))
+            self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
             self.statustext.setText('Tel Current Status: %s' %(self.status))
-            self.kmstimetext.setText('UTC Time: %s' %(self.time))
+            self.kmstimetext.setText('UTC Time: %0.3f' %(self.time))
 
     def updatefftgraph(self):
         #self.y and self.x are defined in updateplot
@@ -1782,7 +1782,7 @@ class Tel_Thread(QtCore.QThread):
 
 class KMS_Thread(QtCore.QThread):
 
-    new_kms_data = QtCore.pyqtSignal(object,object,object,object) # object is status flag
+    new_kms_data = QtCore.pyqtSignal(object,object,object,object) # object 2 is status flag
 
     def __init__(self, kms_on_off, parent = None):
         QtCore.QThread.__init__(self, parent)

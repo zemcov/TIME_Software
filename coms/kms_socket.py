@@ -14,7 +14,7 @@ def start_sock(queue):
     """
     Purpose: to open a socket for getting K-mirror data from the K-mirror computer and
     then sending that data to the GUI
-    Inputs: queue - idk
+    Inputs: KMS Socket (data = client.recv)
     Outputs: None
     Calls : queue.send()
     """
@@ -34,7 +34,6 @@ def start_sock(queue):
             # print('Data Received')
             # unpacking data packet ===============================================
             pa, flag, time, enc_pos = unpacker.unpack(data)
-            # print('pa:',pa)
             # ==================================================================
             if len(kms_data) < 20 :
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
@@ -45,6 +44,7 @@ def start_sock(queue):
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
             # send positional data to gui window
             queue.send([pa, flag, time, enc_pos])
+            print(pa,flag,time,enc_pos)
             n += 1
 
         # else :
