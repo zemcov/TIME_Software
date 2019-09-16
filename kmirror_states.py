@@ -287,7 +287,6 @@ class Stop_Checker():
                       self.masterlist.append(update)
                    else : #no more data
                        break
-                time.sleep(0.01)
             except Exception as e:
                 print e
                 s.close()
@@ -321,7 +320,6 @@ class Stop_Checker():
             data = packer.pack(float(self.pa),int(self.direction),float(time.time()),float(get_pos()))
             s.send(data)
             print 'PA Sent to Gui',time.time()
-        time.sleep(0.01)
         s.close()
         print 'gui_socket closed'
 
