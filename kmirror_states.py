@@ -124,6 +124,7 @@ class Stop_Checker():
         GPIO.setup([12,13,16],GPIO.IN)
         print("Stop Checker Initialized")
         self.thread1Stop = mp.Event()
+	self.socket_on = 'False'
 
 ###############################################################################################################
     def limits(self,flag):
@@ -269,6 +270,7 @@ class Stop_Checker():
         while not self.thread1Stop.is_set():
             connection,client= s.accept()
             print('Socket connected')
+	    self.socket_on = 'True'
             try:
                 while not self.thread1Stop.is_set():
                    data = connection.recv(unpacker.size)
@@ -278,11 +280,14 @@ class Stop_Checker():
                       self.masterlist.append(update)
                    else : #no more data
                        break
+		time.sleep(0.01)
             except Exception as e:
                 print e
                 s.close()
             finally :
                     connection.close()
+
+	self.socket_on = 'False'
 ################################################################################################################################
     def step_overload(self,num_steps) :
         steps = num_steps
@@ -303,13 +308,19 @@ class Stop_Checker():
         self.thread1Stop.set()
 #########################################################################
     def gui_socket(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((CONTROL_HOST, CONTROL_PORT))
-        packer = struct.Struct('d i')
-        while not self.thread1Stop.is_set():
+	while self.socket_on : #if the tel socket has been connected
+        	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        	s.connect((CONTROL_HOST, CONTROL_PORT))
+        	packer = struct.Struct('d i')
+		break
+	else :
+		pass
+
+        while not self.thread1Stop.is_set() and self.socket_on:
             data = packer.pack(float(self.pa),int(self.direction))
             s.send(data)
             print 'PA Sent to Gui',time.time()
+	time.sleep(0.01)
         s.close()
         print 'gui_socket closed'
 
@@ -337,7 +348,7 @@ class Stop_Checker():
             t1.start()
             t2.start()
             # t3.start()
-            #t4.start()
+            t4.start()
 
         self.stop_check()
 
