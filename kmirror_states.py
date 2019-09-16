@@ -280,7 +280,7 @@ class Stop_Checker():
                       self.masterlist.append(update)
                    else : #no more data
                        break
-		    time.sleep(0.01)
+                time.sleep(0.01)
             except Exception as e:
                 print e
                 s.close()
