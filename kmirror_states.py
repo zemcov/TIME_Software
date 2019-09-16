@@ -315,10 +315,10 @@ class Stop_Checker():
     def gui_socket(self):
     	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     	s.connect((CONTROL_HOST, CONTROL_PORT))
-    	packer = struct.Struct('d i')
+    	packer = struct.Struct('d i d d')
 
         while not self.thread1Stop.is_set():
-            data = packer.pack(float(self.pa),int(self.direction))
+            data = packer.pack(float(self.pa),int(self.direction),float(time.time()),float(get_pos()))
             s.send(data)
             print 'PA Sent to Gui',time.time()
         time.sleep(0.01)
