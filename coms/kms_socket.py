@@ -24,7 +24,7 @@ def start_sock(queue):
     s.listen(5)
     client, info = s.accept()
     print('Socket Connected')
-    unpacker = struct.Struct('d i') # d = float , s = char string , i = integer
+    unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
     kms_data = []
     n = 0
     while not ut.tel_exit.is_set():

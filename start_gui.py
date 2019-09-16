@@ -1122,7 +1122,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ra = []
         self.dec = []
 
-    def updatekmirrordata(self,pa,status):
+    def updatekmirrordata(self,pa,status,time,enc_pos):
 
         # error checking based on status flags from kmirror
         kms_error = [10,11,12,13]
@@ -1139,13 +1139,13 @@ class MainWindow(QtGui.QMainWindow):
             self.parallacticangle = pa
             self.positionalerror = rm.randint(0, 90)
             self.status = status
-            self.time = time.time()
-            # self.enc = enc
+            self.time = time
+            self.enc = enc_pos
 
             # self.enctext.setText('Encoder Position %s' %(enc))
             self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
-            self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
-            self.statustext.setText('Tel Current Status: %s' %(status))
+            self.positionalerrortext.setText('Positonal Error: %s' % (self.enc))
+            self.statustext.setText('Tel Current Status: %s' %(self.status))
             self.kmstimetext.setText('UTC Time: %s' %(self.time))
 
     def updatefftgraph(self):
@@ -1782,7 +1782,7 @@ class Tel_Thread(QtCore.QThread):
 
 class KMS_Thread(QtCore.QThread):
 
-    new_kms_data = QtCore.pyqtSignal(object,object) # object is status flag
+    new_kms_data = QtCore.pyqtSignal(object,object,object,object) # object is status flag
 
     def __init__(self, kms_on_off, parent = None):
         QtCore.QThread.__init__(self, parent)
@@ -1808,7 +1808,7 @@ class KMS_Thread(QtCore.QThread):
             # with self.flags.get_lock():
             #     self.flags[2] = int(kms_stuff[2])
 
-            self.new_kms_data.emit(kms_stuff[0],kms_stuff[1]) #stuff 2 is status flag
+            self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
 
 #activating the gui main window
 
