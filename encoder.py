@@ -26,11 +26,11 @@ def get_pos():
 
 def pa_enc(pa):
     ang = 0.0
-    # if np.sign(pa) == -1.0:
-    #     ang = abs(pa/2.0) + home_pos
-    # else :
-    #     ang = -(pa/2.0) + home_pos
-    ang = (pa/2.0) + home_pos
+    if np.sign(pa) == -1.0:
+        ang = abs(pa/2.0) + home_pos
+    else :
+        ang = -(pa/2.0) + home_pos
+    # ang = (pa/2.0) + home_pos
     return ang
 
 def enc_pa(enc):
