@@ -320,6 +320,7 @@ class Stop_Checker():
             data = packer.pack(float(self.pa),int(self.direction),float(time.time()),float(get_pos()))
             s.send(data)
             print 'PA Sent to Gui',time.time()
+            time.sleep(0.05)
         s.close()
         print 'gui_socket closed'
 
