@@ -99,7 +99,7 @@ class MainWindow(QtGui.QMainWindow):
         # if self.display_proc.error() == QtCore.QProcess.FailedToStart:
         #     print("process failed to start")
 
-        # subprocess.Popen(['ssh -T -X -n obs@corona "cd /home/corona/cactus/APA/display; ./tsd_client --geometry 864x487"'],shell=True)
+        subprocess.Popen(['ssh -T -Y -n obs@corona "cd /home/corona/cactus/APA/display; ./tsd_client --geometry 864x487"'],shell=True)
 
         # self.weather = QtGui.QWidget()
         # self.weatherID = int(self.weather.winId())

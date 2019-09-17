@@ -39,7 +39,7 @@ def start_tracker(queue):
             if len(mega_tel) < 20:
                 mega_tel.append(tel_data)
             else :
-                print('Tel Time:', unix_val , unix_delta)
+                print('Tel Time:', pa, unix_val , unix_delta)
                 sys.stdout.flush()
                 np.save(directory.temp_dir + '/tele_packet%i.npy' %(n), mega_tel)
                 mega_tel = []
