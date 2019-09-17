@@ -345,10 +345,10 @@ class Stop_Checker():
         else :
             t1 = mp.Process(target=self.limits,args=(arg3,))
             t2 = mp.Process(target=self.run)
-            # t3 = mp.Process(target=self.track)
+            t3 = mp.Process(target=self.track)
             t1.start()
             t2.start()
-            # t3.start()
+            t3.start()
 
         self.stop_check()
 
