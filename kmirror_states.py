@@ -318,10 +318,13 @@ class Stop_Checker():
     	packer = struct.Struct('d i d d')
 
         while not self.thread1Stop.is_set():
-            data = packer.pack(self.updatelist[-1][0],self.updatelist[-1][1],self.updatelist[-1][2],self.updatelist[-1][3])
-            s.send(data)
-            print 'PA Sent to Gui',self.updatelist[-1][0], time.time()
-            time.sleep(0.05)
+            if len(self.updatelist) != 0 :
+                data = packer.pack(self.updatelist[-1][0],self.updatelist[-1][1],self.updatelist[-1][2],self.updatelist[-1][3])
+                s.send(data)
+                print 'PA Sent to Gui',self.updatelist[-1][0], time.time()
+                time.sleep(0.05)
+            else :
+                pass
         s.close()
         print 'gui_socket closed'
 
