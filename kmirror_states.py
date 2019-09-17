@@ -348,7 +348,7 @@ class Stop_Checker():
             t3 = mp.Process(target=self.track)
             t1.start()
             t2.start()
-            t3.start()
+            # t3.start()
 
         self.stop_check()
 
