@@ -283,7 +283,8 @@ class Stop_Checker():
                    data = connection.recv(unpacker.size)
                    if data :
                       self.blanking,self.direction,self.observing,self.pad,self.utc,self.pa = unpacker.unpack(data)
-                      update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
+                      # update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
+                      update = TelescopeUpdate(float(self.pa), time.time(), time.time(), self.direction)
                       self.masterlist.append(update)
                       self.updatelist.append([float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos)])
                    else : #no more data
