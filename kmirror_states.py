@@ -285,6 +285,7 @@ class Stop_Checker():
                       self.blanking,self.direction,self.observing,self.pad,self.utc,self.pa = unpacker.unpack(data)
                       update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
                       self.masterlist.append(update)
+                      self.updatelist.append(float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos))
                    else : #no more data
                        break
             except Exception as e:
@@ -317,9 +318,9 @@ class Stop_Checker():
     	packer = struct.Struct('d i d d')
 
         while not self.thread1Stop.is_set():
-            data = packer.pack(float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos))
+            data = packer.pack(self.updatelist[-1])
             s.send(data)
-            print 'PA Sent to Gui',self.pa, time.time()
+            print 'PA Sent to Gui',self.updatelist[-1][0], time.time()
             time.sleep(0.05)
         s.close()
         print 'gui_socket closed'
@@ -327,6 +328,7 @@ class Stop_Checker():
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
         self.masterlist = Manager().list()
+        self.updatelist = Manager().list()
         if arg1 == 'go_to':
             t1 = mp.Process(target=self.go_to,args = (arg2,))
             t2 = mp.Process(target=self.limits,args = (arg3,))
