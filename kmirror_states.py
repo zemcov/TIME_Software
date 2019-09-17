@@ -285,7 +285,7 @@ class Stop_Checker():
                       self.blanking,self.direction,self.observing,self.pad,self.utc,self.pa = unpacker.unpack(data)
                       update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
                       self.masterlist.append(update)
-                      self.updatelist.append(float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos))
+                      self.updatelist.append([float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos)])
                    else : #no more data
                        break
             except Exception as e:
@@ -318,7 +318,7 @@ class Stop_Checker():
     	packer = struct.Struct('d i d d')
 
         while not self.thread1Stop.is_set():
-            data = packer.pack(self.updatelist[-1])
+            data = packer.pack(self.updatelist[-1][0],self.updatelist[-1][1],self.updatelist[-1][2],self.updatelist[-1][3])
             s.send(data)
             print 'PA Sent to Gui',self.updatelist[-1][0], time.time()
             time.sleep(0.05)
