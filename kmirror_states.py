@@ -319,7 +319,7 @@ class Stop_Checker():
         while not self.thread1Stop.is_set():
             data = packer.pack(float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos))
             s.send(data)
-            print 'PA Sent to Gui',time.time()
+            print 'PA Sent to Gui',self.pa, time.time()
             time.sleep(0.05)
         s.close()
         print 'gui_socket closed'
