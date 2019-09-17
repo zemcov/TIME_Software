@@ -317,7 +317,7 @@ class Stop_Checker():
     	packer = struct.Struct('d i d d')
 
         while not self.thread1Stop.is_set():
-            data = packer.pack(float(self.pa),int(self.direction),float(time.time()),float(get_pos()))
+            data = packer.pack(float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos))
             s.send(data)
             print 'PA Sent to Gui',time.time()
         s.close()
