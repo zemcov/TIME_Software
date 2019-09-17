@@ -8,8 +8,8 @@ import directory
 
 def loop_files(queue3):
     """
-    Purpose: idk
-    Inputs : queue3 - idk
+    Purpose: Sends telescope data to append_data.py for storage into file
+    Inputs : queue3
     Outputs: None
     Calls: queue3.send()
     """
@@ -41,7 +41,7 @@ def loop_files(queue3):
             tele_file = (dir + 'tele_packet%i.npy' %(a))
             data = np.load(tele_file)
             queue3.send(data)
-            subprocess.Popen(['rm %s' %(tele_file)], shell=True)
+            os.remove(tele_file)
             a += 1
         else :
             time.sleep(0.01)

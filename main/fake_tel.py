@@ -47,10 +47,10 @@ class TIME_TELE :
 
         return pa,other_x,other_y
     #-----------------------------------------------------------------------------------------------------------------------
-    def start_tel(self,queue,map_len,map_len_unit,map_size,map_size_unit,scan_time,coord1,coord1_unit,coord2,coord2_unit,coord_space,step,step_unit,numloop):
+    def start_tel(self,queue,map_len,map_len_unit,map_size,map_size_unit,scan_time,coord1,coord1_unit,coord2,coord2_unit,coord_space,step,step_unit,numloop,kms_on_off):
         print(colored("FAKE TEL STARTED",'magenta'))
         self.i = 0
-        num_loop, calc_coord1, calc_coord2 = scan_params(map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
+        num_loop, calc_coord1, calc_coord2 = scan_params(coord_space,map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
 
         t = [] # to keep track of the last scan, either up or down
     # --------SPEEDS AND PARAMETERS---------------------------------------------
@@ -79,10 +79,10 @@ class TIME_TELE :
         update = int((3600.0/(speeds[0]-15.0))*(area)*rate)
         n = 0
         slew_flag = 3.0 #starts the simulation tracking up to starting position
-        x = float(calc_coord1.degree) # iterative
-        y = float(calc_coord2.degree) # iterative
-        start_x = float(calc_coord1.degree) # static
-        start_y = float(calc_coord2.degree) # static
+        x = float(calc_coord1) # iterative
+        y = float(calc_coord2) # iterative
+        start_x = float(calc_coord1) # static
+        start_y = float(calc_coord2) # static
 
         if str(step_unit) != 'deg':
             if str(step_unit) == 'arcmin' :

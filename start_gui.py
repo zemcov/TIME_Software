@@ -62,6 +62,8 @@ class MainWindow(QtGui.QMainWindow):
         # if self.status_proc.error() == QtCore.QProcess.FailedToStart:
         #     print("process failed to start")
 
+        # subprocess.Popen(['ssh -T -X -n obs@corona "cd /home/corona/cactus/status; ./status -n"'],shell=True)
+
         # self.catalog = QtGui.QWidget()
         # self.catalogID = int(self.catalog.winId())
         # self.catalog_sub = QtGui.QWindow.fromWinId(self.catalogID)
@@ -72,6 +74,8 @@ class MainWindow(QtGui.QMainWindow):
         # self.catalog_proc.start(directory.soft_dir + './coms/start_catalog.sh')
         # if self.catalog_proc.error() == QtCore.QProcess.FailedToStart:
         #     print("process failed to start")
+
+        # subprocess.Popen(['ssh -T -X -n obs@modelo "cd /home/corona/cactus/catalog; ./catalog"'],shell=True)
 
         # self.monitor = QtGui.QWidget()
         # self.monitorID = int(self.monitor.winId())
@@ -95,6 +99,8 @@ class MainWindow(QtGui.QMainWindow):
         # if self.display_proc.error() == QtCore.QProcess.FailedToStart:
         #     print("process failed to start")
 
+        # subprocess.Popen(['ssh -T -X -n obs@corona "cd /home/corona/cactus/APA/display; ./tsd_client --geometry 864x487"'],shell=True)
+
         # self.weather = QtGui.QWidget()
         # self.weatherID = int(self.weather.winId())
         # self.weather_sub = QtGui.QWindow.fromWinId(self.weatherID)
@@ -105,6 +111,8 @@ class MainWindow(QtGui.QMainWindow):
         # self.weather_proc.start(directory.soft_dir + './coms/start_weather.sh')
         # if self.weather_proc.error() == QtCore.QProcess.FailedToStart:
         #     print("process failed to start")
+
+        # subprocess.Popen(['ssh -T -X -n obs@modelo "cd /home/corona/cactus/weather; ./weather"'],shell=True)
 
         # create a separate window showing 4 telescope observing windows
         # self.telwindow = QtGui.QWidget()
@@ -231,7 +239,7 @@ class MainWindow(QtGui.QMainWindow):
         self.epoch = self.tel_epoch.currentText()
         self.object = self.tel_object.text()
         self.inittel = self.init_tel.currentText()
-        self.kmsonoff = self.kmsonoff.currentText()
+        self.kmsonoff = self.kmsonofftext.currentText()
         self.step = self.tel_step.text()
         self.coord_space = self.map_space.currentText()
         self.map_size_unit = self.unit1.currentText()
@@ -392,6 +400,7 @@ class MainWindow(QtGui.QMainWindow):
                 print(colored('I have set the kmsonoff to 2','red'))
             else :
                 self.kms_on_off = 0
+                print(colored('I have set the kmsonoff to 0','red'))
             self.tel_script = ' '
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
@@ -400,6 +409,10 @@ class MainWindow(QtGui.QMainWindow):
             tel_message = 'TEL SIM SELECTED'
             self.tel_script = 'Sim'
             self.off = False
+            if self.kmsonoff == 'Yes':
+                self.kms_on_off = 2
+            else :
+                self.kms_on_off = 0
 
         else :
             if self.kmsonoff == 'Yes':
@@ -617,8 +630,8 @@ class MainWindow(QtGui.QMainWindow):
         self.init_tel = QtGui.QComboBox()
         self.init_tel.addItems(['No','Yes','Sim','Tracker'])
 
-        self.kmsonoff = QtGui.QComboBox()
-        self.kmsonoff.addItems(['No','Yes'])
+        self.kmsonofftext = QtGui.QComboBox()
+        self.kmsonofftext.addItems(['No','Yes'])
 
         self.tel_sec = QtGui.QLineEdit('6')
         self.tel_map_len = QtGui.QLineEdit('1')
@@ -652,7 +665,7 @@ class MainWindow(QtGui.QMainWindow):
         self.teltitle.setText('Telescope Parameters')
         self.telparams.addRow(self.teltitle)
         self.telparams.addRow('Activate Telescope', self.init_tel)
-        self.telparams.addRow('Activate KMS', self.kmsonoff)
+        self.telparams.addRow('Activate KMS', self.kmsonofftext)
         self.telparams.addRow('Scan Strategy', self.telescan)
         self.telparams.addRow('Constant Coordinate System', self.map_space)
         self.telparams.addRow('Delayed Start (sec)', self.tel_delay)
@@ -990,7 +1003,7 @@ class MainWindow(QtGui.QMainWindow):
         self.time = 0.0
         self.enc = 0.0
 
-        self.parallacticangletext = QtGui.QLabel('Parallactic Angle: %s' %(self.parallacticangle))
+        self.parallacticangletext = QtGui.QLabel('Parallactic Angle: %0.2f' %(self.parallacticangle))
         self.parallacticangletext.setAlignment(QtCore.Qt.AlignCenter)
         self.positionalerrortext = QtGui.QLabel('Positional Error: %s' %(self.positionalerror))
         self.positionalerrortext.setAlignment(QtCore.Qt.AlignCenter)
@@ -1000,9 +1013,9 @@ class MainWindow(QtGui.QMainWindow):
         self.kmstitle.setAlignment(QtCore.Qt.AlignCenter)
         self.statustext = QtGui.QLabel('Tel Status: %s' %(self.status))
         self.statustext.setAlignment(QtCore.Qt.AlignCenter)
-        self.kmstimetext = QtGui.QLabel('UTC Time: %s' %(self.time))
+        self.kmstimetext = QtGui.QLabel('UTC Time: %0.2f' %(self.time))
         self.kmstimetext.setAlignment(QtCore.Qt.AlignCenter)
-        self.enctext = QtGui.QLabel('Encoder Position: %s' %(self.enc))
+        self.enctext = QtGui.QLabel('Encoder Position: %0.3f' %(self.enc))
         self.enctext.setAlignment(QtCore.Qt.AlignCenter)
 
         self.kmsgui = QtGui.QWidget()
@@ -1035,9 +1048,10 @@ class MainWindow(QtGui.QMainWindow):
         self.tel_updater.start()
 
         # initialize printouts of current tele values not plotted
-        self.patext = QtGui.QLabel('PA: %s' %('-'))
-        self.slewtext = QtGui.QLabel('Slew Flag: %s' %('-'))
-        self.timetext = QtGui.QLabel('UTC Time: %s' %('-'))
+        self.patext = QtGui.QLabel('PA: -')
+        self.slewtext = QtGui.QLabel('Slew Flag: -')
+        self.timetext = QtGui.QLabel('UTC Time: -')
+        self.timetext.setAlignment(QtCore.Qt.AlignCenter)
         self.barlabel = QtGui.QLabel('Scan Progress (%) ')
         self.progressbar = QtGui.QProgressBar()
         self.progressbar.setRange(0,100)
@@ -1142,8 +1156,8 @@ class MainWindow(QtGui.QMainWindow):
             self.time = time
             self.enc = enc_pos
 
-            self.enctext.setText('Encoder Position %s' %(self.enc))
-            self.parallacticangletext.setText('Parallactic Angle: %s' % (self.parallacticangle))
+            self.enctext.setText('Encoder Position %0.3f' %(self.enc))
+            self.parallacticangletext.setText('Parallactic Angle: %0.2f' % (self.parallacticangle))
             self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
             self.statustext.setText('Tel Current Status: %s' %(self.status))
             self.kmstimetext.setText('UTC Time: %0.3f' %(self.time))
