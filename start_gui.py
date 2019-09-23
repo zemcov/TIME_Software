@@ -50,83 +50,11 @@ class MainWindow(QtGui.QMainWindow):
         self.startwindow.show()
 
         ''' ######################################################################## '''
-        # open the status window from corona showing current telescope parameters
-        # self.status = QtGui.QWidget()
-        # self.statusID = int(self.status.winId())
-        # self.status_sub = QtGui.QWindow.fromWinId(self.statusID)
-        # self.status_con = QtGui.QWidget.createWindowContainer(self.status_sub)
-        # self.status_sub_ID = int(self.status_con.winId())
-        # self.status_proc = QtCore.QProcess(self.status_con)
-        # # self.status_proc.waitForFinished(-1)
-        # self.status_proc.start(directory.soft_dir + './coms/start_status.sh')
-        # if self.status_proc.error() == QtCore.QProcess.FailedToStart:
-        #     print("process failed to start")
-
         # subprocess.Popen(['ssh -T -X -n obs@corona "cd /home/corona/cactus/status; ./status -n"'],shell=True)
-
-        # self.catalog = QtGui.QWidget()
-        # self.catalogID = int(self.catalog.winId())
-        # self.catalog_sub = QtGui.QWindow.fromWinId(self.catalogID)
-        # self.catalog_con = QtGui.QWidget.createWindowContainer(self.catalog_sub)
-        # self.catalog_sub_ID = int(self.catalog_con.winId())
-        # self.catalog_proc = QtCore.QProcess(self.catalog_con)
-        # # self.status_proc.waitForFinished(-1)
-        # self.catalog_proc.start(directory.soft_dir + './coms/start_catalog.sh')
-        # if self.catalog_proc.error() == QtCore.QProcess.FailedToStart:
-        #     print("process failed to start")
-
         # subprocess.Popen(['ssh -T -X -n obs@modelo "cd /home/corona/cactus/catalog; ./catalog"'],shell=True)
-
-        # self.monitor = QtGui.QWidget()
-        # self.monitorID = int(self.monitor.winId())
-        # self.monitor_sub = QtGui.QWindow.fromWinId(self.monitorID)
-        # self.monitor_con = QtGui.QWidget.createWindowContainer(self.monitor_sub)
-        # self.monitor_sub_ID = int(self.monitor_con.winId())
-        # self.monitor_proc = QtCore.QProcess(self.monitor_con)
-        # # self.status_proc.waitForFinished(-1)
-        # self.monitor_proc.start(directory.soft_dir + './coms/start_monitor.sh')
-        # if self.monitor_proc.error() == QtCore.QProcess.FailedToStart:
-        #     print("process failed to start")
-
-        # self.display = QtGui.QWidget()
-        # self.displayID = int(self.display.winId())
-        # self.display_sub = QtGui.QWindow.fromWinId(self.displayID)
-        # self.display_con = QtGui.QWidget.createWindowContainer(self.display_sub)
-        # self.display_sub_ID = int(self.display_con.winId())
-        # self.display_proc = QtCore.QProcess(self.display_con)
-        # # self.status_proc.waitForFinished(-1)
-        # self.display_proc.start(directory.soft_dir + './coms/start_display.sh')
-        # if self.display_proc.error() == QtCore.QProcess.FailedToStart:
-        #     print("process failed to start")
-
-        subprocess.Popen(['ssh -T -Y -n obs@corona "cd /home/corona/cactus/APA/display; ./tsd_client --geometry 864x487"'],shell=True)
-
-        # self.weather = QtGui.QWidget()
-        # self.weatherID = int(self.weather.winId())
-        # self.weather_sub = QtGui.QWindow.fromWinId(self.weatherID)
-        # self.weather_con = QtGui.QWidget.createWindowContainer(self.weather_sub)
-        # self.weather_sub_ID = int(self.weather_con.winId())
-        # self.weather_proc = QtCore.QProcess(self.weather_con)
-        # # self.status_proc.waitForFinished(-1)
-        # self.weather_proc.start(directory.soft_dir + './coms/start_weather.sh')
-        # if self.weather_proc.error() == QtCore.QProcess.FailedToStart:
-        #     print("process failed to start")
-
+        # subprocess.Popen(['ssh -T -Y -n obs@corona "cd /home/corona/cactus/APA/display; ./tsd_client --geometry 864x487"'],shell=True)
+        # subprocess.Popen(['ssh -T -Y -n oper12m@corona "cd /home/corona/cactus/xhchat; ./xhchat :1.0"'],shell=True)
         # subprocess.Popen(['ssh -T -X -n obs@modelo "cd /home/corona/cactus/weather; ./weather"'],shell=True)
-
-        # create a separate window showing 4 telescope observing windows
-        # self.telwindow = QtGui.QWidget()
-        # self.telgrid = QtGui.QGridLayout()
-        # self.telwidget = QtGui.QVBoxLayout()
-        # self.telwidget.addWidget(self.status)
-        # # self.telwidget.addWidget(self.catalog)
-        # # self.telwidget.addWidget(self.monitor)
-        # # self.telwidget.addWidget(self.display)
-        # self.telgrid.addLayout(self.telwidget,1,1,1,1)
-        # self.telwindow.setWindowTitle('Telescope Observer Interface')
-        # self.telwindow.setGeometry(10,10, 1920, 1080)
-        # self.telwindow.setLayout(self.telgrid)
-        # self.telwindow.show()
         ''' ######################################################################## '''
 
         self.init_mce()
@@ -319,6 +247,8 @@ class MainWindow(QtGui.QMainWindow):
         self.coord1_unit = init.tel_dict["coord1_unit"]
         self.coord2_unit = init.tel_dict["coord2_unit"]
         # =============================================================================
+        sys.stdout.flush()
+        sys.stderr.flush()
         # ==============================================================================
         self.starttel.setEnabled(True)
 
@@ -562,8 +492,10 @@ class MainWindow(QtGui.QMainWindow):
             self.initheatmap(data,data) # give first values for heatmap to create image scale
             self.initfftgraph()
             self.inittelescope()
-            self.initkmirrordata()
+            # self.initkmirrordata()
 
+            sys.stdout.flush()
+            sys.stderr.flush()
             self.newwindow.show()
 
     #resets parameter variables after warning box is read
@@ -763,6 +695,9 @@ class MainWindow(QtGui.QMainWindow):
         self.selectchannel = QtGui.QComboBox()
         self.selectrow = QtGui.QComboBox()
 
+        sys.stdout.flush()
+        sys.stderr.flush()
+
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
     def channelselection(self):
@@ -795,7 +730,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i3 == 0
         else :
-            os.system("mpg123" + directory.master_dir + "warning3.mp3")
+            os.system("mpg123 " + directory.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','CHANNEL 1'])
 
         if int(self.selectchannel2.text()) <= 31 :
@@ -806,7 +741,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i4 == 0
         else :
-            os.system("mpg123" + directory.master_dir + "warning3.mp3")
+            os.system("mpg123 " + directory.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','CHANNEL 2'])
 
     def changerow(self):
@@ -818,7 +753,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i1 == 0
         else :
-            os.system("mpg123" + directory.master_dir + "warning3.mp3")
+            os.system("mpg123 " + directory.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','ROW 1'])
 
         if int(self.selectrow2.text()) <= 32 :
@@ -829,7 +764,7 @@ class MainWindow(QtGui.QMainWindow):
                 else :
                     self.i2 == 0
         else :
-            os.system("mpg123" + directory.master_dir + "warning3.mp3")
+            os.system("mpg123 " + directory.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','ROW 2'])
 
     def initplot(self):
@@ -994,6 +929,7 @@ class MainWindow(QtGui.QMainWindow):
             self.kms_updater = KMS_Thread(kms_on_off = self.kms_on_off)
             self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
             self.kms_updater.start()
+            print('kms should be 1',self.kms_on_off)
 
         #place holder data
         self.parallacticangle = 0.0
@@ -1046,6 +982,8 @@ class MainWindow(QtGui.QMainWindow):
                                     num_loop = self.num_loop, kms_on_off = self.kms_on_off)
         self.tel_updater.new_tel_data.connect(self.updatetelescopedata)
         self.tel_updater.start()
+        sys.stdout.flush()
+        sys.stderr.flush()
 
         # initialize printouts of current tele values not plotted
         self.patext = QtGui.QLabel('PA: -')
@@ -1125,10 +1063,10 @@ class MainWindow(QtGui.QMainWindow):
                 self.radeclinedata2.setData(box_rightx,box_righty,brush=pg.mkBrush('g'))
                 self.radeclinedata3.setData(box_topx,box_topy,brush=pg.mkBrush('g'))
                 self.radeclinedata4.setData(box_botx,box_boty,brush=pg.mkBrush('g'))
+            self.telescopewindow.show()
 
         else :
             pass
-        self.telescopewindow.show()
         self.repeat = False
 
         self.alt = []
@@ -1141,7 +1079,7 @@ class MainWindow(QtGui.QMainWindow):
         # error checking based on status flags from kmirror
         kms_error = [10,11,12,13]
         if (status in kms_error) and (self.repeat == False) :
-            os.system("mpg123" + directory.master_dir + "klaxon.mp3")
+            os.system("mpg123 " + directory.master_dir + "klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1202,7 +1140,7 @@ class MainWindow(QtGui.QMainWindow):
 
         if (slew in tel_error) and (self.repeat == False) :
             # use afplay for mac testing
-            os.system("mpg123" + directory.master_dir + "klaxon.mp3")
+            os.system("mpg123 " + directory.master_dir + "klaxon.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1211,7 +1149,7 @@ class MainWindow(QtGui.QMainWindow):
             self.warningbox(['tel',slew]) #slew will be replaced with tel status flag over socket
 
         elif slew == 'done' :
-            os.system("mpg123" + directory.master_dir + "finished.mp3")
+            os.system("mpg123 " + directory.master_dir + "finished.mp3")
             self.repeat = True
             ut.tel_exit.set()
             ut.mce_exit.set()
@@ -1249,7 +1187,7 @@ class MainWindow(QtGui.QMainWindow):
 
             self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
-            self.progressbar.setValue(progress)
+            self.progressbar.setValue(progress[0])
 
     def updateplot(self,h1,h2,index):
 
@@ -1506,7 +1444,6 @@ class MainWindow(QtGui.QMainWindow):
             if ut.which_mce[2] == 1 :
                 np.append(self.data[1],y1)
                 np.append(self.data[2],y2)
-
             self.n_interval += 1
         # =================================================================================================================
         self.oldch1 = self.channel1
@@ -1719,6 +1656,8 @@ class Tel_Thread(QtCore.QThread):
                 time.sleep(0.1) # give tracker time to turn on before accepting packets
                 p = mp.Process(target= start_tracker, args=(queue,))
                 p.start()
+                sys.stdout.flush()
+                sys.stderr.flush()
 
                 while True :
                     if not ut.tel_exit.is_set() :
@@ -1728,9 +1667,12 @@ class Tel_Thread(QtCore.QThread):
                         progress = 0.0
                         self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
                         time.sleep(0.01)
+                        sys.stdout.flush()
+                        sys.stderr.flush()
+                        time.sleep(0.01)
 
                     else :
-                        self.new_tel_data.emit(0,'done',0,0,0,0,0)
+                        self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
                         print(colored('Telescope Scan Completed!','green'))
                         break
 
@@ -1739,7 +1681,7 @@ class Tel_Thread(QtCore.QThread):
                 print(colored('TEL SIM STARTED','red'))
                 tele_array = np.zeros((20,20),dtype=float)
                 np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
-                time.sleep(0.05)
+                time.sleep(0.01)
                 np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
 
                 data, queue = mp.Pipe()
@@ -1757,7 +1699,7 @@ class Tel_Thread(QtCore.QThread):
                         time.sleep(0.01)
 
                     else :
-                        self.new_tel_data.emit(0,'done',0,0,0,0,0)
+                        self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
                         print(colored('Telescope Scan Completed!','green'))
                         break
 
@@ -1769,6 +1711,8 @@ class Tel_Thread(QtCore.QThread):
                                         self.map_angle,self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.epoch,self.object,self.step,\
                                         self.coord_space,self.step_unit,self.map_size_unit,self.map_len_unit,self.map_angle_unit,self.numloop,self.kms_on_off))
                 p.start()
+                sys.stdout.flush()
+                sys.stderr.flush()
 
                 while True :
                     # grab data from tel_tracker.py
@@ -1782,7 +1726,7 @@ class Tel_Thread(QtCore.QThread):
                         time.sleep(0.01)
 
                     else :
-                        self.new_tel_data.emit(0,'done',0,0,0,0,0)
+                        self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
                         print(colored('Telescope Scan Completed!','green'))
                         break
 
@@ -1790,7 +1734,7 @@ class Tel_Thread(QtCore.QThread):
             # makes fake data for when we don't want to run the telescope
             tele_array = np.zeros((20,20),dtype=float)
             np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
-            time.sleep(0.05)
+            time.sleep(0.01)
             np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
 
 
@@ -1823,6 +1767,7 @@ class KMS_Thread(QtCore.QThread):
             #     self.flags[2] = int(kms_stuff[2])
 
             self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
+            time.sleep(0.01)
 
 #activating the gui main window
 

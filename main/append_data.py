@@ -26,7 +26,7 @@ class Time_Files:
         self.p1 = mp.Process(target=read_mce0.netcdfdata, args=(queue1,self.flags,))
         self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,self.flags,))
         self.p3 = mp.Process(target=read_tel.loop_files , args=(queue3,))
-        self.p4 = mp.Process(target=read_kms.loop_files , args=(queue4,))
+        # self.p4 = mp.Process(target=read_kms.loop_files , args=(queue4,))
 
         if ut.which_mce[0] == 1 :
             print('starting read mce0')
@@ -36,7 +36,9 @@ class Time_Files:
             self.p2.start()
 
         self.p3.start()
-        self.p4.start()
+        # self.p4.start()
+        sys.stdout.flush()
+        sys.stderr.flush()
 
     def retrieve(self,queue,dir):
         """
@@ -71,12 +73,12 @@ class Time_Files:
                 a = np.random.normal(0,2,(33,32,100))
                 b = np.random.normal(10,0.1,(33,32,100))
 
-                time.sleep(1.0)
+                time.sleep(0.99)
 
-            queue.send([a,b,self.p]) #where is it beign sent to idk
+            queue.send([a,b,self.p])
 
             self.tel_data = self.data3.recv()
-            self.kms_data = self.data4.recv()
+            # self.kms_data = self.data4.recv()
             # ------------------------------------------
             # if ut.which_mce[2] == 0 : # if we aren't running in sim mode
             self.parse_arrays(dir)

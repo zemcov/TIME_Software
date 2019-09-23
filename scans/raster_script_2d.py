@@ -12,13 +12,16 @@ import tel_tracker
 import utils as ut
 from pos_counter import scan_params
 import angle_converter as ac
+from termcolor import colored
+from multiprocessing import Manager
 
 class TIME_TELE :
 
     def start_sock(self,queue2,queue,sec,map_size,map_len,map_angle,coord1,coord1_unit,coord2,coord2_unit,epoch,\
                     object,step,coord_space,step_unit,map_size_unit,map_len_unit,map_angle_unit,numloop,kms_on_off):
         # I am accepting telescope sim data for the gui
-        self.i = 0
+        self.i = Manager().list()
+        self.i.append(0)
         PORT = 1806
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(('',6666))
@@ -46,14 +49,15 @@ class TIME_TELE :
                 map_size = float(map_size) // 60
         # ===============================================
 
-        cmnd_list = ['TIME_START_TELEMETRY ' + str(kms_on_off),'TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
-                        'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD ' + str(coord_space)]
+        cmnd_list = ['TIME_START_TELEMETRY ' + str(kms_on_off),'TIME_SEND_CMD CMD','TIME_TELESCOPE_WAIT_TIME 2',\
+                        'TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
+                                'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD ' + str(coord_space)]
         #
         i = 0
         while i <= (len(cmnd_list) - 1):
             self.s.send(cmnd_list[i])
             reply = self.s.recv(1024).decode("ascii")
-            print(reply)
+            print(cmnd_list[i],reply)
             if i == 0 :
                 if 'OK' in reply:
                     p = mp.Process(target=tel_tracker.start_tracker, args=(queue,))
@@ -61,43 +65,40 @@ class TIME_TELE :
                     i += 1
                 else :
                     print('ERROR reply')
+                    sys.exit()
             else :
                 if 'OK' in reply :
                     i += 1
                 else :
                     print('ERROR reply')
-
-        '''
-        I am changing calc_coord1 and calc_coord2 to be floats in degrees
-        So we don't need this anymore...
-        '''
-        # c1 = str(calc_coord1.to_string()).split(':')
-        # c2 = str(calc_coord2.to_string()).split(':')
-        # if str(coord1_unit) == 'RA' and str(coord2_unit) == 'DEC' :
-        #     print('choosing RA/DEC')
-        #     old_coord = SkyCoord(c1[0]+'d'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
-        # else :
-        #     old_coord = AltAz(c1[0]+'d'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
-        '''#####################################################################################'''
+                    sys.exit()
 
         ################################################################################################
-        while self.i < int(num_loop) :
+        while self.i[-1] < int(num_loop) :
 
-            if self.i == 0 :
+            if self.i[-1] == 0 :
                 commands = '{} {} {} {}'
                 msg = 'TIME_SEEK ' + commands.format(calc_coord1,calc_coord2,epoch,object)
                 self.s.send(msg)
                 reply = self.s.recv(1024).decode("ascii")
-                print(reply)
+                print(msg,reply)
 
                 self.pos_update()
-                time.sleep((int(sec)+(int(sec)*0.05))*2)
+                time.sleep((int(sec)+int(sec)*0.05)*2)
+                self.s.send('TIME_TURNAROUND_NOTIFY')
+                reply = self.s.recv(1024).decode("ascii")
+                if 'OK' in reply:
+                    pass
+                else :
+                    print('Error Reply')
+                    sys.exit()
+
 
             else :
                 new_coord = '{}{}{}{}{}'
                 # convert all coordinates to same format, then add values to ra and dec
                 if str(coord_space) == 'RA' or str(coord_space) == 'DEC' :
-                    c = SkyCoord(ra = (self.i*float(step))* u.degree, dec = (self.i*float(step)) * u.degree)
+                    c = SkyCoord(ra = (self.i[-1]*float(step))* u.degree, dec = (self.i[-1]*float(step)) * u.degree)
 
                     if str(coord_space) == 'DEC' :
                         # feed new values to telescope
@@ -105,9 +106,7 @@ class TIME_TELE :
                         msg = 'TIME_SEEK ' + commands.format(new_coord,calc_coord2,epoch,object)
                         self.s.send(msg)
                         reply = self.s.recv(1024).decode("ascii")
-                        print(reply)
-                        # new_ra = (c.ra + old_coord.ra).to_string()
-                        # new_coord = new_coord.format(new_ra[:new_ra.find('h')],':',new_ra[new_ra.find('h')+1:new_ra.find('m')],':',new_ra[new_ra.find('m')+1:new_ra.find('s')])
+                        print(msg,reply)
                     else :
                         new_coord = (c.dec.degree + calc_coord2)
                         print('new_coord:',new_coord)
@@ -118,12 +117,10 @@ class TIME_TELE :
                         msg = 'TIME_SEEK ' + commands.format(calc_coord1,new_coord,epoch,object)
                         self.s.send(msg)
                         reply = self.s.recv(1024).decode("ascii")
-                        print(reply)
-                        # new_dec = (c.dec + old_coord.dec).to_string()
-                        # new_coord = new_coord.format(new_dec[:new_dec.find('d')],':',new_dec[new_dec.find('d')+1:new_dec.find('m')],':',new_dec[new_dec.find('m')+1:new_dec.find('s')])
+                        print(msg,reply)
 
                 else :
-                    c = AltAz(az = (self.i*float(step))*u.degree, alt = (self.i*float(steps))*u.degree)
+                    c = AltAz(az = (self.i[-1]*float(step))*u.degree, alt = (self.i[-1]*float(steps))*u.degree)
                     if str(coord_space) == 'ALT' :
                         new_coord = (c.az.degree + calc_coord1)
                         # feed new values to telescope
@@ -131,9 +128,7 @@ class TIME_TELE :
                         msg = 'TIME_SEEK ' + commands.format(new_coord,calc_coord2,epoch,object)
                         self.s.send(msg)
                         reply = self.s.recv(1024).decode("ascii")
-                        print(reply)
-                        # new_az = (c.az + old_coord.az).to_string()
-                        # new_coord = new_coord.format(new_az[:new_az.find('d')],':',new_az[new_az.find('d')+1:new_az.find('m')],':',new_az[new_az.find('m')+1:new_az.find('s')])
+                        print(msg,reply)
                     else :
                         new_coord = (c.alt.degree + calc_coord2)
                         # feed new values to telescope
@@ -141,26 +136,35 @@ class TIME_TELE :
                         msg = 'TIME_SEEK ' + commands.format(calc_coord1,new_coord,epoch,object)
                         self.s.send(msg)
                         reply = self.s.recv(1024).decode("ascii")
-                        print(reply)
-                        # new_alt = (c.alt + old_coord.alt).to_string()
-                        # new_coord = new_coord.format(new_alt[:new_alt.find('d')],':',new_alt[new_alt.find('d')+1:new_alt.find('m')],':',new_alt[new_alt.find('m')+1:new_alt.find('s')])
+                        print(msg,reply)
 
-                time.sleep((int(sec)+(int(sec)*0.05))*2)
+                time.sleep((int(sec)*0.9)*2)
+                self.s.send('TIME_TURNAROUND_NOTIFY')
+                reply = self.s.recv(1024).decode("ascii")
+                if 'OK' in reply:
+                    pass
+                else :
+                    print("Error Reply")
+                    sys.exit()
 
-            self.i += 1
+            self.i[-1] += 1
 
         # Closing Commands ============================
+        msg = 'TIME_START_OBSERVING off'
+        self.s.send(msg)
+        reply = self.s.recv(1024).decode("ascii")
+        print(msg,reply)
         # -------------------------------------------
         msg = 'TIME_START_TRACKING OFF'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
-        print(reply)
+        print(msg,reply)
         # ---------------------------------------------
         msg = 'TIME_START_TELEMETRY 0'
         self.s.send(msg)
         print('Telemetry Off')
         reply = self.s.recv(1024).decode("ascii")
-        print(reply)
+        print(msg,reply)
         if 'OK' in reply :
             ut.tel_exit.set()
         # # ------------------------------------------
@@ -175,12 +179,12 @@ class TIME_TELE :
         msg = 'TIME_START_TRACKING arm'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
-        print(reply)
+        print(msg,reply)
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING neg'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
-        print(reply)
+        print(msg,reply)
 
         time.sleep(2.0)
 
@@ -188,17 +192,18 @@ class TIME_TELE :
         msg = 'TIME_START_TRACKING track'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
-        print(reply)
+        print(msg,reply)
         # ---------------------------------------------------------------
         msg = 'TIME_START_OBSERVING on'
         self.s.send(msg)
         reply = self.s.recv(1024).decode("ascii")
-        print(reply)
+        print(msg,reply)
         # -----------------------------------------------------------------
 
     def loop_track(self,num_loop,queue2):
         while not ut.tel_exit.is_set():
-            tot = int((self.i / num_loop) * 100)
+            tot = int((float(self.i[-1]) / float(num_loop)) * 100.0)
+            sys.stdout.flush()
             queue2.send([tot])
             time.sleep(0.05)
 

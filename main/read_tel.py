@@ -24,6 +24,7 @@ def loop_files(queue3):
             # print('tele_packet_off1.npy')
             tel_data = np.zeros((20,21))
             queue3.send(tel_data)
+            time.sleep(0.01)
             continue
 
         if len(files) != 0 : # check for at least 2 files to exist
@@ -43,5 +44,8 @@ def loop_files(queue3):
             queue3.send(data)
             os.remove(tele_file)
             a += 1
+            time.sleep(0.01)
+            sys.stdout.flush()
+            sys.stderr.flush()
         else :
             time.sleep(0.01)

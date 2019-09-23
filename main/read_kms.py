@@ -38,6 +38,7 @@ def loop_files(queue4):
             queue4.send(data)
             os.remove(kms_file)
             a += 1
+            time.sleep(0.01)
         else :
             time.sleep(0.01)
 

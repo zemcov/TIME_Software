@@ -35,8 +35,7 @@ def netcdfdata(queue1,flags):
             a += 1
             subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
 
-        else :
-            time.sleep(0.01)
+        time.sleep(0.01)
 
     # print(colored('No More Files','red'))
     sys.exit()

@@ -3,7 +3,7 @@
 
 tel_dict = {
 
-"inittel":"Sim",
+"inittel":"Yes",
 "kmsonoff":"No",
 "tel_scan":"2D Raster",
 "coord_space":"RA",
@@ -11,15 +11,15 @@ tel_dict = {
 "num_loop":"2",
 "map_size":"1",
 "map_size_unit":"deg",
-"map_len":"0.5", #only need for 2D map
+"map_len":"1.0", #only need for 2D map
 "map_len_unit":"deg",
 "map_angle":"0",
 "map_angle_unit":"deg",
-"step":"0.05",
+"step":"0.005",
 "step_unit":"deg",
-"coord1":"14:00:00",
+"coord1":"21:30:00",
 "coord1_unit":"RA",
-"coord2":"02:00:00",
+"coord2":"12:10:00",
 "coord2_unit":"DEC",
 "epoch":"J2000.0",
 "object":"Test"
@@ -36,7 +36,7 @@ mce_dict = {
 "framenumber":"1350000",
 "alpha":"0.1",
 "channeldelete":"No",
-"timeinterval":"120",
+"timeinterval":"60",
 "showmcedata":"Yes"
 
 }
