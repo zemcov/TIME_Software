@@ -28,8 +28,7 @@ tel_dict = {
 
 # ===================================
 mce_dict = {
-
-"observer":"VLB",
+"observer":"PGM",
 "mceson":"MCE SIM",
 "datamode":"Error",
 "readoutcard":"All",

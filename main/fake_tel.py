@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
-from astroplan import Observer
+#from astroplan import Observer
 import utils as ut
 from datetime import datetime
 from pos_counter import scan_params

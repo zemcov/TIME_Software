@@ -208,7 +208,7 @@ class MainWindow(QtGui.QMainWindow):
             self.off = False
 
         # if we have to click start_tel, then we aren't using auto_fill
-        self.useinit.setEnabled(False)
+        self.useinit.setEnabled(True)
         print(tel_message)
 
     def on_useinit_clicked(self):
