@@ -21,12 +21,14 @@ while True:
         print colored('HK starting file = %i' %(a),'green')
         a = a + 1
     else :
-        print(colored('hk else statement','green'))
+        # print(colored('hk else statement','green'))
         if os.path.exists(dir + "omnilog.%i.txt.gz" %(a+1)) : #wait to read new file until old file is complete
             file_name = dir + 'omnilog.%i.txt.gz' % (a)
+            print(file_name)
             if os.path.exists(file_name) :
-                subprocess.Popen(['scp', file_name,  'time-master:/home/time/Desktop/time-data/hk/omnilog.%i.txt.gz' % (a)]).wait()
+                subprocess.Popen(['scp', file_name,  'time@time-master:/home/time/Desktop/time-data/hk/omnilog.%i.txt.gz' % (a)])#.wait()
                 print colored('HK File Transfered : %s' %(file_name),'magenta')
                 a = a + 1
             else:
                 print "HK File Doesn't Exist!"
+    sys.stdout.flush()

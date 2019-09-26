@@ -7,7 +7,7 @@ import time
 
 def loop_files(queue3):
     os.nice(-20)
-    dir = '/home/time/time-software-testing/TIME_Software/main/tempfiles/'
+    dir = '/home/time/TIME_Software/main/tempfiles/'
     mega_tel = []
 
     while True :

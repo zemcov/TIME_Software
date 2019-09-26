@@ -2,16 +2,20 @@ from pyqtgraph import QtCore, QtGui
 import pyqtgraph as Qt
 import numpy as np
 import sys, os, subprocess, time, datetime, socket, struct, threading
+sys.path.append('../TIME_Software/main')
+sys.path.append('../main/tempfiles')
+sys.path.append('../TIME_Software/')
+sys.path.append('../TIME_Software/scans')
 import pyqtgraph as pg
 import random as rm
 from termcolor import colored
 import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
+<<<<<<< HEAD:main/start_gui.py
 sys.path.append('../TIME_Software/main')
 sys.path.append('../main/tempfiles')
-import read_hk, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
-# import kms_socket
+import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross
 
 #class of all components of GUI
 class mcegui(QtGui.QWidget):
@@ -73,26 +77,30 @@ class mcegui(QtGui.QWidget):
         if self.showmcedata == 'Yes':
             if self.readoutcard == 'All':
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_stop.sh s'],shell=True)
+                    subprocess.Popen(['./main/mce1_stop.sh s'],shell=True)
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_stop.sh s'],shell=True)
+                    subprocess.Popen(['./main/mce0_stop.sh s'],shell=True)
 
             else :
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_stop.sh %s' %(self.readoutcard)], shell=True)
+                    subprocess.Popen(['./main/mce1_stop.sh %s' %(self.readoutcard)], shell=True)
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_stop.sh %s' %(self.readoutcard)], shell=True)
+                    subprocess.Popen(['./main/mce0_stop.sh %s' %(self.readoutcard)], shell=True)
 
         # # stop the file transfer process to time-master
-        subprocess.Popen(['./mce1_stop_sftp.sh'], shell=True)
-        subprocess.Popen(['./mce0_stop_sftp.sh'], shell=True)
-        subprocess.Popen(['./hk_stop_sftp.sh'], shell=True)
+        subprocess.Popen(['./main/mce1_stop_sftp.sh'], shell=True)
+        subprocess.Popen(['./main/mce0_stop_sftp.sh'], shell=True)
+        subprocess.Popen(['./main/hk_stop_sftp.sh'], shell=True)
 
         # # delete all MCE temp files still in local and mce computer directory
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-        subprocess.Popen(['rm /home/time/Desktop/time-data/hk/omnilog*'], shell=True)
-        subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_*'], shell=True)
+        if os.path.isfile('/home/time/Desktop/time-data/mce1/temp*'):
+            os.remove('/home/time/Desktop/time-data/mce1/temp*')
+        if os.path.isfile('/home/time/Desktop/time-data/mce2/temp*'):
+            os.remove('/home/time/Desktop/time-data/mce2/temp*')
+        if os.path.isfile('/home/time/Desktop/time-data/hk/omnilog*'):
+            os.remove('/home/time/Desktop/time-data/hk/omnilog*')
+        if os.path.isfile('/home/time/TIME_Software/main/tempfiles/tele_*'):
+            os.remove('/home/time/TIME_Software/main/tempfiles/tele_*')
 
         print('Quitting Application')
         sys.exit()
@@ -200,7 +208,7 @@ class mcegui(QtGui.QWidget):
         elif self.showmcedata == 'No':
             self.submitbutton.setEnabled(False)
         else:
-            dir = '/home/time/time-software-testing/TIME_Software/main/'
+            dir = '/home/time/TIME_Software/main/'
             if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
                 parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
                 parafile.write(self.observer+' ')
@@ -225,45 +233,52 @@ class mcegui(QtGui.QWidget):
             mce0 = len(os.listdir(dir1))
             mce1 = len(os.listdir(dir2))
             if mce0 != 0 :
-                subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
+                if os.path.isfile('/home/time/Desktop/time-data/mce1/temp*'):
+                    os.remove('/home/time/Desktop/time-data/mce1/temp*')
+                # subprocess.Popen(['rm /home/time/Desktop/time-data/mce1/temp*'], shell = True)
             if mce1 != 0 :
-                subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
-            subprocess.Popen(['rm /home/time/time-software-testing/main/tempfiles/tele_*'], shell = True)
+                if os.path.isfile('/home/time/Desktop/time-data/mce2/temp*'):
+                    os.remove('/home/time/Desktop/time-data/mce2/temp*')
+                # subprocess.Popen(['rm /home/time/Desktop/time-data/mce2/temp*'], shell = True)
+
+            if os.path.isfile('/home/time/TIME_Software/main/tempfiles/tele_*'):
+                os.remove('/home/time/TIME_Software/main/tempfiles/tele_*')
+            # subprocess.Popen(['rm /home/time/TIME_Software/main/tempfiles/tele_*'], shell = True)
 
             #set the data mode for both mces and start them running
             if self.readoutcard == 'All':
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_cdm.sh a %s' %(self.datamode)], shell = True)
-                    subprocess.Popen(['./mce0_del.sh'], shell=True)
-                    subprocess.Popen(['./mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                    subprocess.Popen(['./main/mce0_cdm.sh a %s' %(self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce0_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
 
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_cdm.sh a %s' %(self.datamode)], shell = True)
-                    subprocess.Popen(['./mce1_del.sh'], shell=True)
-                    subprocess.Popen(['./mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                    subprocess.Popen(['./main/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce1_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
             else :
                 if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                    subprocess.Popen(['./mce0_del.sh'], shell=True)
-                    subprocess.Popen(['./mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+                    subprocess.Popen(['./main/mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce0_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                    subprocess.Popen(['./mce1_del.sh'], shell=True)
-                    subprocess.Popen(['./mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+                    subprocess.Popen(['./main/mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
+                    subprocess.Popen(['./main/mce1_del.sh'], shell=True)
+                    subprocess.Popen(['./main/mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
 
             # start file transfer scripts
-            subprocess.Popen(['ssh -T time-hk python /home/time/time-software-testing/TIME_Software/sftp/hk_sftp.py'], shell=True)
+            subprocess.Popen(['ssh -T time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
             if ut.which_mce[0] == 1 :
-                subprocess.Popen(['ssh -T time-mce-0 python /home/time/time-software-testing/TIME_Software/sftp/mce0_sftp.py'], shell=True)
+                subprocess.Popen(['ssh -T time-mce-0 python /home/time/TIME_Software/sftp/mce0_sftp.py'], shell=True)
             if ut.which_mce[1] == 1 :
-                subprocess.Popen(['ssh -T time-mce-1 python /home/time/time-software-testing/TIME_Software/sftp/mce1_sftp.py'], shell=True)
+                subprocess.Popen(['ssh -T time-mce-1 python /home/time/TIME_Software/sftp/mce1_sftp.py'], shell=True)
             time.sleep(2.0)
 
             data = np.zeros((33,32))
             #start other plot making processes
             self.initplot()
-            self.initheatmap(data,data) # give first values for heatmap to create image scale
+            # self.initheatmap(data,data) # give first values for heatmap to create image scale
             # self.initfftgraph()
             self.inittelescope()
             # self.initkmirrordata()
@@ -896,14 +911,14 @@ class mcegui(QtGui.QWidget):
         #updates graph, if channel delete is set to yes will clear data first
         else:
 
-            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
-                self.updateheatmap(h1,h2) # give first values for heatmap to create image scale
-            elif ut.which_mce[0] == 1 :
-                dummy = []
-                self.updateheatmap(h1,dummy)
-            else :
-                dummy = []
-                self.updateheatmap(dummy,h2)
+            # if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
+            #     self.updateheatmap(h1,h2) # give first values for heatmap to create image scale
+            # elif ut.which_mce[0] == 1 :
+            #     dummy = []
+            #     self.updateheatmap(h1,dummy)
+            # else :
+            #     dummy = []
+            #     self.updateheatmap(dummy,h2)
 
             # self.updatefftgraph()
 
@@ -962,7 +977,7 @@ class mcegui(QtGui.QWidget):
 
         if ut.which_mce[0] == 1 :
 
-            m1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
+            m1 = np.zeros([h1.shape[0],h1.shape[1]],dtype=np.float32)
             for b in range(h1.shape[0]):
                 for c in range(h1.shape[1]):
                     z1 = np.std(h1[b,c,:])
@@ -973,7 +988,7 @@ class mcegui(QtGui.QWidget):
             b = 0
             c = 0
 
-            d1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
+            d1 = np.zeros([h1.shape[0],h1.shape[1]],dtype=np.float32)
             for b in range(h1.shape[0]):
                 for c in range(h1.shape[1]):
                     d1[b][c] = (np.mean(h1[b,c,:],dtype=np.float32))
@@ -995,7 +1010,7 @@ class mcegui(QtGui.QWidget):
         if ut.which_mce[1] == 1 :
 
             # ---------------------------------------------------------
-            m2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
+            m2 = np.zeros([h2.shape[0],h2.shape[1]],dtype=np.float32)
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
                     z2 = np.std(h2[b,c,:])
@@ -1003,11 +1018,12 @@ class mcegui(QtGui.QWidget):
                         m2[b][c] = np.log(z2)
                     else :
                         m2[b][c] = None
+            print(m2[0])
 
             b = 0
             c = 0
 
-            d2 = np.empty([h2.shape[0],h2.shape[1]],dtype=np.float32)
+            d2 = np.zeros([h2.shape[0],h2.shape[1]],dtype=np.float32)
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
                     d2[b][c] = (np.mean(h2[b,c,:],dtype=np.float32))
@@ -1018,7 +1034,7 @@ class mcegui(QtGui.QWidget):
 
             self.heatmap2.setImage(m2)
 
-            d2_avg = np.empty([33,32],dtype=np.float32)
+            d2_avg = np.zeros([33,32],dtype=np.float32)
 
             for b in range(h2.shape[0]):
                 for c in range(h2.shape[1]):
@@ -1154,9 +1170,9 @@ class Tel_Thread(QtCore.QThread):
         else :
             # makes fake data for when we don't want to run the telescope
             tele_array = np.zeros((20,20),dtype=float)
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off1.npy',tele_array)
+            np.save('/home/time/TIME_Software/main/tempfiles/tele_packet_off1.npy',tele_array)
             time.sleep(0.05)
-            np.save('/home/time/time-software-testing/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
+            np.save('/home/time/TIME_Software/main/tempfiles/tele_packet_off2.npy',tele_array)
 
 
 class KMS_Thread(QtCore.QThread):

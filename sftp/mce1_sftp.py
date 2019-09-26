@@ -30,5 +30,6 @@ while end - begin < dt.timedelta(seconds = 5):
             else:
                 print "File Doesn't Exist!"
         end = dt.datetime.utcnow()
+    sys.stdout.flush()
 
 sys.exit()
