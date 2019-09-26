@@ -8,13 +8,14 @@ import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
+import directory
 
 h_shape = 0
 p = 0
 
 def netcdfdata(queue2,flags):
     # os.nice(-20)
-    dir = '/home/time/Desktop/time-data/mce2/'
+    dir = directory.mce1_dir
     a = 0
     while not ut.mce_exit.is_set():
         mce_file_len = len(os.listdir(dir))
@@ -28,8 +29,7 @@ def netcdfdata(queue2,flags):
             a += 1
             subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
 
-        else :
-            time.sleep(0.01)
+        time.sleep(0.01)
 
     print(colored('No More Files','red'))
     sys.exit()
@@ -97,7 +97,11 @@ def read_header(l):
                 value = ''.join(map(str,value))
             if key == 'sync_box_num' :
                 frame_num.append(value)
+                print('sync_box_num', value)
+            if key == 'frame_num':
+                print('frame_num', value)
             value = int(value)
             values.append(value)
     values = np.asarray(values)
+    sys.stdout.flush()
     return values, frame_num

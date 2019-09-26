@@ -4,19 +4,27 @@ import utils as ut
 import os, subprocess, sys
 from termcolor import colored
 import time
+import directory
 
 def loop_files(queue3):
-    os.nice(-20)
-    dir = '/home/time/time-software-testing/TIME_Software/main/tempfiles/'
+    """
+    Purpose: Sends telescope data to append_data.py for storage into file
+    Inputs : queue3
+    Outputs: None
+    Calls: queue3.send()
+    """
+    # os.nice(-20)
+    dir = directory.temp_dir
     mega_tel = []
 
     while True :
 
         files = [dir + x for x in os.listdir(dir) if x.startswith("tele_packet")]
         if os.path.isfile(dir + 'tele_packet_off1.npy') :
-            print('tele_packet_off1.npy')
+            # print('tele_packet_off1.npy')
             tel_data = np.zeros((20,21))
             queue3.send(tel_data)
+            time.sleep(0.01)
             continue
 
         if len(files) != 0 : # check for at least 2 files to exist
@@ -34,7 +42,10 @@ def loop_files(queue3):
             tele_file = (dir + 'tele_packet%i.npy' %(a))
             data = np.load(tele_file)
             queue3.send(data)
-            subprocess.Popen(['rm %s' %(tele_file)], shell=True)
+            os.remove(tele_file)
             a += 1
+            time.sleep(0.01)
+            sys.stdout.flush()
+            sys.stderr.flush()
         else :
             time.sleep(0.01)

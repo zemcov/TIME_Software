@@ -5,9 +5,18 @@ import datetime as now
 import numpy as np
 from termcolor import colored
 import utils as ut
+sys.path.append('../TIME_Software/main/tempfiles')
+import directory
 # os.nice(-20)
 
 def new_file(filestarttime,dir):
+    """
+    Purpose: to create a new netcdf file for the mce/K-mirror/telescope data
+    Inputs: filestarttime - the time of the first set of data that is appended to the file
+            dir - the directory in which you want to create the netcdf files
+    Outputs : None
+    Calls : None
+    """
     mce = nc.Dataset(dir + "/raw_mce_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
      # GUI PARAMETERS ---------------------------------------------------------------------------------
@@ -79,23 +88,29 @@ def new_file(filestarttime,dir):
     global Status_Flags
     Status_Flags = mce.createVariable('status','i4',('t','k','sf'))
 
-    parafilename = ('tempfiles/tempparameters.txt')
-    parafile = open(parafilename, 'r')
-    parameters = parafile.readline().strip().split()
+    parafile = (directory.temp_dir + 'tempparameters.txt')
+    with open(parafile, 'r') as f :
+        content = f.readlines()
+    parameters = [x.strip().split('\n') for x in content]
 
     Observer._Encoding = 'ascii'
     Frames._Encoding = 'ascii'
     Datamode._Encoding = 'ascii'
     Rc._Encoding = 'ascii'
 
-    Observer[:] = np.array([parameters[0]],dtype='S3')
-    Frames[:] = np.array([parameters[3]],dtype='S8')
-    Datamode[:] = np.array([parameters[1]],dtype='S2')
-    Rc[:] = np.array([parameters[2]],dtype='S1')
-    parafile.close()
+    Observer[:] = np.array([parameters[0][0]],dtype='S3')
+    Frames[:] = np.array([parameters[3][0]],dtype='S8')
+    Datamode[:] = np.array([parameters[1][0]],dtype='S2')
+    Rc[:] = np.array([parameters[2][0]],dtype='S1')
     mce.close()
 
 def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele):
+    """
+    Purpose: to append data to the netcdf file created in the above function
+    inputs: nc_file - the file in which you want to append data to
+    Outputs: None
+    Calls : None
+    """
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         Time[p,:,:] = times

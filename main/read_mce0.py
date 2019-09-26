@@ -8,13 +8,20 @@ import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import utils as ut
-
+import directory
 h_shape = 0
 p = 0
 
 def netcdfdata(queue1,flags):
+    """
+    Purpose: read the mce0 data
+    inputs: queue1 - idk
+            flags - idk
+    outputs: None
+    Calls : readdata()
+    """
     # os.nice(-20)
-    dir = '/home/time/Desktop/time-data/mce1/'
+    dir = directory.mce0_dir
     a = 0
     print('starting mce0 read')
     while not ut.mce_exit.is_set():
@@ -22,21 +29,31 @@ def netcdfdata(queue1,flags):
         mce_file_name = dir + 'temp.%0.3i' %(a)
         mce_file = os.path.exists(dir + 'temp.%0.3i' %(a+1))
         mce_run = os.path.exists(dir + 'temp.run')
-
         if mce_file and mce_run:
             head,h,frame_num,mce_on = readdata(mce_file_name,flags)
             queue1.send([h,head,frame_num,mce_on])
             a += 1
             subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
 
-        else :
-            time.sleep(0.01)
+        time.sleep(0.01)
 
     # print(colored('No More Files','red'))
     sys.exit()
 
 # ===========================================================================================================================
 def readdata(file,flags):
+    """
+    Purpose: reads data from a raw mce file
+    Inputs: file - mce_file
+            flags - idk
+    Outputs: head - header data
+             h - mce data? idk
+             frame_num - an array of frame numbers
+             mce_on - mce on/off data
+             l - idk
+    Calls: mce_data_jon.MCEFILE()
+           read_header()
+    """
     global h_shape
     global p
     f = mce_data_jon.MCEFile(file)
@@ -76,16 +93,23 @@ def readdata(file,flags):
     head, frame_num = read_header(l)
     p += 1
 
-    return head, h, frame_num, mce_on
+    return head, h, frame_num, mce_on, l
 
 # ===========================================================================
 def read_header(l):
+    """
+    Purpose: reads header data from a mce file
+    Inputs: l - idk
+    Outputs: frame_num - an array of frame numbers
+             values - an array of values from the header dictionary
+    Calls: None
+    """
     keys = []
     values = []
     frame_num = []
-
     for i in range(len(l.headers)):
         for key,value in l.headers[i].items():
+            print(key)
             if key == '_rc_present':
                 for i in range(len(value)):
                     if value[i] == True:
@@ -97,7 +121,11 @@ def read_header(l):
                 value = ''.join(map(str,value))
             if key == 'sync_box_num' :
                 frame_num.append(value)
+                print('sync num', value)
+            if key == 'frame_counter':
+                print('frame num',value)
             value = int(value)
             values.append(value)
     values = np.asarray(values)
+    sys.stdout.flush()
     return values, frame_num

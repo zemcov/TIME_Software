@@ -4,12 +4,13 @@ import datetime as dt
 from termcolor import colored
 import numpy as np
 import utils as ut
+import directory
 
 class HK_Reader :
 
     def __init__(self,offset):
-        self.dir = '/home/time/Desktop/time-data/hk/'
-        self.dir2 = '/data/netcdffiles/'
+        self.dir = directory.hk_dir
+        self.dir2 = directory.netcdf_dir
         self.name_dict = None
         self.n = 0
         self.bad_counter = 0
@@ -17,6 +18,12 @@ class HK_Reader :
         self.offset = offset
 
     def loop_files(self,queue3):
+        """
+        Purpose: idk
+        inputs: queue3 - idk
+        Outputs : None
+        Calls: queue3.send()
+        """
         while True : #force it to wait until files exist before continuing
             files = [self.dir + x for x in os.listdir(self.dir) if x.startswith("omnilog")]
             if len(files) != 0 :
@@ -43,6 +50,12 @@ class HK_Reader :
         sys.exit()
 
     def hk_read(self,hk):
+        """
+        Purpose: to read hk files and maybe more? idk
+        input : hk - hk data file
+        outputs: mega_hk - idk
+        calls : None
+        """
         mega_hk = []
         name = []
         data = []
@@ -93,6 +106,10 @@ class HK_Reader :
             self.bad_counter += 1
 
         # makng dict entry for name as integer ====================================
+        """
+            Creating a Dictionary of HK Sensors
+            :return: writes dictionary to file (.txt)
+        """
         if self.n == 0 :
             if os.path.exists(self.dir2 + '/hk_dict.txt'): # if we already have a saved dictionary :
                 f = open(self.dir2 + '/hk_dict.txt','r')
@@ -120,8 +137,10 @@ class HK_Reader :
         f.close()
 
         #==============================================
-        ''' Routine for Sorting Data by Time Index '''
-        #==============================================
+        '''
+            Routine for Sorting Data by Time Index
+            :return: mega_hk
+        '''
         sort_name = [x for _,x in sorted(zip(time,name))]
         sort_data = [x for _,x in sorted(zip(time,data))]
         sort_time = sorted(time)
@@ -136,12 +155,13 @@ class HK_Reader :
                     num = int(k)
                     val = v
             sort_name[i] = float(num)
+
             # only incremment index for a new timestamp,not for file num or for t =======
             if l == 0 : # if start of a new time (or new file)
                 new_time = sort_time[i]
-                time2 =  np.zeros(1000)
-                names2 = np.zeros(1000)
-                data2 = np.zeros(1000)
+                time2 =  np.zeros(500)
+                names2 = np.zeros(500)
+                data2 = np.zeros(500)
                 time2[num] = sort_time[i]
                 names2[num] = float(sort_name[i])
                 data2[num] = sort_data[i]
@@ -157,7 +177,7 @@ class HK_Reader :
                     new_time = sort_time[i]
                     l = 0 # reset timer for new timestamp
                     # ==================================================================
-                    if len(self.name_dict.keys()) <= 1000 : # make sure num of sensors isn't over array limit
+                    if len(self.name_dict.keys()) <= 500 : # make sure num of sensors isn't over array limit
                         hk_data = np.array((time2,names2,data2)) # make monolithic array, only of one timestamp
                         mega_hk.append(hk_data)
 
@@ -165,9 +185,9 @@ class HK_Reader :
                         print(len(self.name_dict.keys()))
                         print(colored("Number of reported sensors over size limit!",'red'))
 
-                    time2 = np.zeros(1000)
-                    names2 = np.zeros(1000)
-                    data2 = np.zeros(1000)
+                    time2 = np.zeros(500)
+                    names2 = np.zeros(500)
+                    data2 = np.zeros(500)
                     time2[num] = sort_time[i]
                     names2[num] = float(sort_name[i])
                     data2[num] = sort_data[i]

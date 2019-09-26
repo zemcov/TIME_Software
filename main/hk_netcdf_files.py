@@ -7,12 +7,19 @@ from termcolor import colored
 import utils as ut
 
 def new_file(filestarttime,dir):
+    """
+    Purpose: to create an hk .nc file
+    inputs: filestarttime - the time for the first set of data appended to the file
+            dir - the directory in which to create this netcdf file
+    outputs: None - but a file is created
+    Calls: None
+    """
     hk = nc.Dataset(dir + "/raw_hk_%s.nc" %(filestarttime),"w",format="NETCDF4_CLASSIC")
 
     # Dimensions for Data Arrays -------------------------------------------------------------------
     hk.createDimension('t',None)
     hk.createDimension('hk_col',3)
-    hk.createDimension('hk_row',1000)
+    hk.createDimension('hk_row',500)
     hk.createDimension('hk_num', int(ut.german_freq))
     hk.createDimension('tuple',2)
 
@@ -25,6 +32,15 @@ def new_file(filestarttime,dir):
     hk.close()
 
 def data_append(nc_file, p, data, time):
+    """
+    Purpose: to append data to the hk netcdf files
+    input: nc_file - the name of the nc file that data is being appended to
+           p - idk
+           data - hk data to be appended
+           time - time data to be appended
+    outputs: None
+    calls: None
+    """
     if os.path.exists(nc_file):
         hk = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         HK_Data[p,:,:,:] = data
