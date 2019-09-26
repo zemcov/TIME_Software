@@ -84,7 +84,7 @@ class MainWindow(QtGui.QMainWindow):
         self.netcdfdir = directory.netcdf_dir + str(int(time.time()))
         if not os.path.isdir(self.netcdfdir) :
             # oldmask = os.umask(000)
-            os.makedirs(self.netcdfdir, 0o755)
+            os.makedirs(self.netcdfdir,0o755)
             # os.umask(oldmask)
 
     #reacts to button presses and other GUI user input
@@ -263,7 +263,9 @@ class MainWindow(QtGui.QMainWindow):
             self.warningbox('gui')
             self.submitbutton.setEnabled(False)
 
-        if self.useinit.isEnabled() == 'False':
+        print(self.useinit.isEnabled())
+        # sys.exit()
+        if not self.useinit.isEnabled():
             print('I know useinit is false')
             #set variables to user input
             # observer ---------------------------------------
