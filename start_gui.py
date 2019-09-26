@@ -207,8 +207,6 @@ class MainWindow(QtGui.QMainWindow):
             self.tel_script = 'Tracker'
             self.off = False
 
-        # if we have to click start_tel, then we aren't using auto_fill
-        self.useinit.setEnabled(False)
         print(tel_message)
 
     def on_useinit_clicked(self):
@@ -246,9 +244,6 @@ class MainWindow(QtGui.QMainWindow):
         self.step_unit = init.tel_dict["step_unit"]
         self.coord1_unit = init.tel_dict["coord1_unit"]
         self.coord2_unit = init.tel_dict["coord2_unit"]
-        # =============================================================================
-        sys.stdout.flush()
-        sys.stderr.flush()
         # ==============================================================================
         self.starttel.setEnabled(True)
 
