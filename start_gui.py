@@ -207,6 +207,7 @@ class MainWindow(QtGui.QMainWindow):
             self.tel_script = 'Tracker'
             self.off = False
 
+        self.useinit.setEnabled(False)
         print(tel_message)
 
     def on_useinit_clicked(self):
@@ -246,6 +247,7 @@ class MainWindow(QtGui.QMainWindow):
         self.coord2_unit = init.tel_dict["coord2_unit"]
         # ==============================================================================
         self.starttel.setEnabled(True)
+        self.useinit.setEnabled(True)
 
 
     #sets parameter variables to user input and checks if valid - will start MCE
@@ -261,14 +263,15 @@ class MainWindow(QtGui.QMainWindow):
             self.warningbox('gui')
             self.submitbutton.setEnabled(False)
 
-        ''' ###################################################################'''
-        if not self.useinit.isEnabled():
+        if self.useinit.isEnabled() == 'False':
+            print('I know useinit is false')
             #set variables to user input
             # observer ---------------------------------------
             self.observer = self.enterobserver.text()
 
             # which mces are active --------------------------
             self.mceson = self.whichmces.currentText()
+            print(self.mceson)
 
             # data mode --------------------------------------
             self.datamode = self.enterdatamode.currentText()
@@ -299,8 +302,6 @@ class MainWindow(QtGui.QMainWindow):
 
             # keep mce data on screen -----------------------------------
             self.showmcedata = self.entershowmcedata.currentText()
-
-        ''' ######################################################################'''
 
         if self.inittel == 'Yes':
             if self.kmsonoff == 'Yes':
