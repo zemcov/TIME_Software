@@ -1,0 +1,2 @@
+# ignore these files from being git committed
+config/directory.py

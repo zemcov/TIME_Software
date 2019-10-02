@@ -24,12 +24,13 @@ from hanging_threads import start_monitoring
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
     #initializes mcegui class and calls other init functions
-    def __init__(self, parent = None):
+    def __init__(self, testing, parent = None):
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle('TIME Live Data Visualization Suite')
-        # self.setAutoFillBackground(true)
-        self.getparameters()
 
+        self.init_mce()
+
+        # self.setAutoFillBackground(true)
         p = QtGui.QPalette()
         # p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(114,160,240)))
         p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
@@ -42,10 +43,24 @@ class MainWindow(QtGui.QMainWindow):
         # start the main input window to specify observing parameters
         self.startwindow = QtGui.QWidget()
         self.startgrid = QtGui.QGridLayout()
-        self.startgrid.addLayout(self.parametersquit,1,1,QtCore.Qt.AlignBottom)
-        self.startwindow.setGeometry(10, 10, 1920, 1080)
+
+        if testing == 'test' :
+            self.twpinit = QtGui.QPushButton('Start Test Suite')
+            self.twpinit.setStyleSheet("background-color: purple")
+            self.twpparams = QtGui.QFormLayout()
+            self.twpparams.addRow(self.twpinit)
+            self.twpinit.clicked.connect(self.training_wheels_protocol)
+            self.startgrid.addLayout(self.twpparams,1,1,QtCore.Qt.AlignBottom)
+            self.startwindow.setGeometry(2, 2, 480, 270)
+
+        else :
+            self.getparameters()
+            self.qt_connections()
+            self.startgrid.addLayout(self.parametersquit,1,1,QtCore.Qt.AlignBottom)
+            self.startwindow.setGeometry(10, 10, 1920, 1080)
+
         self.startwindow.setLayout(self.startgrid)
-        # self.startwindow.setPalette(self.logopal)
+        self.startwindow.setPalette(self.logopal)
         self.startwindow.setPalette(p)
         self.startwindow.show()
 
@@ -56,9 +71,6 @@ class MainWindow(QtGui.QMainWindow):
         # subprocess.Popen(['ssh -T -Y -n oper12m@corona "cd /home/corona/cactus/xhchat; ./xhchat :1.0"'],shell=True)
         # subprocess.Popen(['ssh -T -X -n obs@modelo "cd /home/corona/cactus/weather; ./weather"'],shell=True)
         ''' ######################################################################## '''
-
-        self.init_mce()
-        self.qt_connections()
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
@@ -97,6 +109,122 @@ class MainWindow(QtGui.QMainWindow):
         self.useinit.clicked.connect(self.on_useinit_clicked)
         self.kms_stop.clicked.connect(self.onkmsstop_clicked)
         self.kms_restart.clicked.connect(self.onkmsrestart_clicked)
+
+    def training_wheels_protocol(self):
+
+        self.timestarted = datetime.datetime.utcnow().isoformat()
+
+        # mce params
+        self.observer = 'TWP'
+        self.mceson = 'MCE SIM'
+        ut.which_mce[0] = 0
+        ut.which_mce[1] = 0
+        ut.which_mce[2] = 1
+        self.datamode = 10
+        self.readoutcard = 'All'
+        self.framenumber = '1350000'
+        self.alpha = 0.1
+        self.timeinterval = '60'
+        self.channeldelete = 'No'
+        self.showmcedata = 'Yes'
+
+        # telescope params
+        self.inittel = 'Sim'
+        self.tel_script = 'Sim'
+        self.off = False
+        self.kms_on_off = 0
+        self.num_loop = '2'
+        self.sec = '10.0'
+        self.map_size = '1.0'
+        self.map_len = '1.0'
+        self.map_angle = '0'
+        self.coord1 = '21:30:00'
+        self.coord2 = '12:10:00'
+        self.epoch = 'J2000.0'
+        self.object = 'Test'
+        self.kmsonoff = 'No'
+        self.tel_scan = '2D Raster'
+        self.step = '0.05'
+        self.coord_space = 'RA'
+        self.map_size_unit = 'deg'
+        self.map_len_unit = 'deg'
+        self.map_angle_unit = 'deg'
+        self.step_unit = 'deg'
+        self.coord1_unit = 'RA'
+        self.coord2_unit = 'DEC'
+
+        dir = directory.master_dir
+        if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
+            parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
+            parafile.write(self.observer+'\n')
+            parafile.write(str(self.datamode)+'\n')
+            parafile.write(str(self.readoutcard)+' ')
+            parafile.write(self.framenumber+'\n')
+            parafile.write(self.timeinterval+'\n')
+            parafile.write(self.channeldelete+'\n')
+            parafile.write(self.timestarted+'\n')
+            parafile.close()
+
+        new_tempfile = shutil.copy(dir + 'tempfiles/tempparameters.txt',self.netcdfdir + '/log.txt')
+
+        self.startwindow.hide()
+
+        self.newwindow = QtGui.QWidget()
+        self.newwindow.setWindowTitle('TIME Live Data Viewer')
+        self.newgrid = QtGui.QGridLayout()
+        self.newgraphs = QtGui.QVBoxLayout()
+        self.newwindow.setGeometry(10, 10, 1920, 1080)
+        self.newwindow.setLayout(self.newgrid)
+        self.newgrid.addLayout(self.newgraphs, 0,2,8,8)
+
+        p = QtGui.QPalette()
+        p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
+        self.newwindow.setPalette(p)
+
+        self.readoutcardselect = QtGui.QComboBox()
+        self.selectchannel = QtGui.QComboBox()
+        self.selectrow = QtGui.QComboBox()
+
+        self.quitbutton = QtGui.QPushButton('Instant Kill')
+        self.quitbutton.setStyleSheet("background-color: red")
+        self.changechan = QtGui.QPushButton('Set New')
+        self.changechan.setStyleSheet("background-color: blue")
+        self.kms_stop = QtGui.QPushButton('KMS STOP')
+        self.kms_stop.setStyleSheet("background-color: orange")
+        self.kms_restart = QtGui.QPushButton('KMS RESTART')
+        self.kms_restart.setStyleSheet("background-color: yellow")
+
+        self.newquitbutton = QtGui.QVBoxLayout()
+        self.newquitbutton.addWidget(self.quitbutton)
+        self.newgrid.addLayout(self.newquitbutton, 9,0,1,2)
+
+        self.setnewrc = QtGui.QVBoxLayout()
+        self.setnewrc.addWidget(self.changechan)
+        self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
+
+        self.kmsstop = QtGui.QVBoxLayout()
+        self.kmsstop.addWidget(self.kms_stop)
+        self.newgrid.addLayout(self.kmsstop,6,0,1,2)
+
+        self.kmsrestart = QtGui.QVBoxLayout()
+        self.kmsrestart.addWidget(self.kms_restart)
+        self.newgrid.addLayout(self.kmsrestart,7,0,1,2)
+
+        self.kms_stop.clicked.connect(self.onkmsstop_clicked)
+        self.kms_restart.clicked.connect(self.onkmsrestart_clicked)
+        self.changechan.clicked.connect(self.on_set_chan_clicked)
+        self.quitbutton.clicked.connect(self.on_quitbutton_clicked)
+
+        #start other plot making processes
+        self.initplot()
+        self.channelselection()
+        data = np.zeros((33,32))
+        self.initheatmap(data,data) # give first values for heatmap to create image scale
+        self.initfftgraph()
+        self.inittelescope()
+        self.initkmirrordata()
+
+        self.newwindow.show()
 
     def onkmsrestart_clicked(self):
         subprocess.Popen(['ssh -T pi@kms python /home/pi/kms-dev/manual_sick_reset.py'],shell=True)
@@ -327,10 +455,8 @@ class MainWindow(QtGui.QMainWindow):
         elif self.inittel == 'No' :
             if self.kmsonoff == 'Yes':
                 self.kms_on_off = 2
-                print(colored('I have set the kmsonoff to 2','red'))
             else :
                 self.kms_on_off = 0
-                print(colored('I have set the kmsonoff to 0','red'))
             self.tel_script = ' '
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
@@ -347,7 +473,7 @@ class MainWindow(QtGui.QMainWindow):
         else :
             if self.kmsonoff == 'Yes':
                 self.kms_on_off = 3
-            else :
+            else:
                 self.kms_on_off = 1
             tel_message = 'TRACKER DATA ONLY'
             self.tel_script = 'Tracker'
@@ -492,7 +618,7 @@ class MainWindow(QtGui.QMainWindow):
             self.initheatmap(data,data) # give first values for heatmap to create image scale
             self.initfftgraph()
             self.inittelescope()
-            # self.initkmirrordata()
+            self.initkmirrordata()
 
             sys.stdout.flush()
             sys.stderr.flush()
@@ -643,7 +769,7 @@ class MainWindow(QtGui.QMainWindow):
         self.initGroupBox = QtGui.QGroupBox()
         self.initparams = QtGui.QFormLayout()
         self.initparams.addRow(self.useinit)
-        self.quitbutton = QtGui.QPushButton('Quit')
+        self.quitbutton = QtGui.QPushButton('Instant Kill')
         self.quitbutton.setStyleSheet("background-color: red")
         self.helpbutton = QtGui.QPushButton('Help')
         self.helpbutton.setStyleSheet("background-color: yellow")
@@ -922,14 +1048,12 @@ class MainWindow(QtGui.QMainWindow):
 
     def initkmirrordata(self):
         # start the kms QThread
-        if self.tel_script == 'point_cross.py' :
-            # do something to set KMS in specific position before starting KMS thread
-            print('No KMS!')
-        if self.kms_on_off == 2 or self.kms_on_off == 3:
-            self.kms_updater = KMS_Thread(kms_on_off = self.kms_on_off)
-            self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
-            self.kms_updater.start()
-            print('kms should be 1',self.kms_on_off)
+        # if self.tel_script == 'point_cross.py' :
+        #     # do something to set KMS in specific position before starting KMS thread
+        #     print('No KMS!')
+        self.kms_updater = KMS_Thread(kms_on_off = self.kms_on_off)
+        self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
+        self.kms_updater.start()
 
         #place holder data
         self.parallacticangle = 0.0
@@ -970,6 +1094,14 @@ class MainWindow(QtGui.QMainWindow):
         self.kmsparams.addWidget(self.timetext)
         self.kmsgui.setLayout(self.kmsparams)
         self.newgrid.addWidget(self.kmsgui, 4, 0, 2, 2)
+
+        self.kms_dial = QtGui.QDial()
+        self.kms_dial.setNotchesVisible(True)
+        # self.kms_dial.initStyleOption()
+        self.kms_dial.setValue(0.0)
+        self.kms_dial.setMinimum(-90.0)
+        self.kms_dial.setMaximum(90.0)
+        self.newgrid.addWidget(self.kms_dial, 1, 0, 2, 2)
 
     def inittelescope(self):
 
@@ -1088,17 +1220,12 @@ class MainWindow(QtGui.QMainWindow):
             self.warningbox(['kms',status])
 
         else :
-            self.parallacticangle = pa
-            self.positionalerror = rm.randint(0, 90)
-            self.status = status
-            self.time = time
-            self.enc = enc_pos
-
             self.enctext.setText('Encoder Position %0.3f' %(self.enc))
-            self.parallacticangletext.setText('Parallactic Angle: %0.2f' % (self.parallacticangle))
-            self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
-            self.statustext.setText('Tel Current Status: %s' %(self.status))
-            self.kmstimetext.setText('UTC Time: %0.3f' %(self.time))
+            self.parallacticangletext.setText('Parallactic Angle: %0.2f' % (pa))
+            self.positionalerrortext.setText('Positonal Error: %s' % (rm.randint(0, 90)))
+            self.statustext.setText('Tel Current Status: %s' %(status))
+            self.kmstimetext.setText('UTC Time: %0.3f' %(time))
+            self.kms_dial.setValue(pa)
 
     def updatefftgraph(self):
         #self.y and self.x are defined in updateplot
@@ -1187,7 +1314,7 @@ class MainWindow(QtGui.QMainWindow):
 
             self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
-            self.progressbar.setValue(progress[0])
+            self.progressbar.setValue(progress)
 
     def updateplot(self,h1,h2,index):
 
@@ -1680,9 +1807,7 @@ class Tel_Thread(QtCore.QThread):
             elif self.tel_script == 'Sim' :
                 print(colored('TEL SIM STARTED','red'))
                 tele_array = np.zeros((20,20),dtype=float)
-                np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
-                time.sleep(0.01)
-                np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
+                np.save(directory.temp_dir + 'tele_packet_off.npy',tele_array)
 
                 data, queue = mp.Pipe()
                 p = mp.Process(target=fake_tel.TIME_TELE().start_tel, args=(queue,self.map_len,self.map_len_unit,self.map_size,self.map_size_unit,self.sec,\
@@ -1732,10 +1857,8 @@ class Tel_Thread(QtCore.QThread):
 
         else :
             # makes fake data for when we don't want to run the telescope
-            tele_array = np.zeros((20,20),dtype=float)
-            np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
-            time.sleep(0.01)
-            np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
+            tele_array = np.zeros((20,21),dtype=float)
+            np.save(directory.temp_dir + 'tele_packet_off.npy',tele_array)
 
 
 class KMS_Thread(QtCore.QThread):
@@ -1750,29 +1873,55 @@ class KMS_Thread(QtCore.QThread):
         ut.kms_exit.set()
 
     def run(self):
+
         if self.kms_on_off == 2 : #if the kms is starting without telescope, turn on tracker
             from tel_tracker import turn_on_tracker
             data, queue = mp.Pipe()
             p1 = mp.Process(target = turn_on_tracker, args=(self.kms_on_off,))
             p1.start()
+            p = mp.Process(target=kms_socket.start_sock , args=(queue,))
+            p.start()
 
-        data, queue = mp.Pipe()
-        p = mp.Process(target=kms_socket.start_sock , args=(queue,))
-        p.start()
+            while not ut.kms_exit.is_set() :
+                kms_stuff = data.recv() # pa , flags, time, encoder pos
+                # send updated data to the gui
+                # with self.flags.get_lock():
+                #     self.flags[2] = int(kms_stuff[2])
+                self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
+                time.sleep(0.01)
 
-        while not ut.kms_exit.is_set() :
-            kms_stuff = data.recv() # pa , flags, time, encoder pos
-            # send updated data to the gui
-            # with self.flags.get_lock():
-            #     self.flags[2] = int(kms_stuff[2])
+        elif self.kms_on_off == 3 :
+            data, queue = mp.Pipe()
+            p = mp.Process(target=kms_socket.start_sock , args=(queue,))
+            p.start()
 
-            self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
-            time.sleep(0.01)
+            while not ut.kms_exit.is_set() :
+                kms_stuff = data.recv() # pa , flags, time, encoder pos
+                # send updated data to the gui
+                # with self.flags.get_lock():
+                #     self.flags[2] = int(kms_stuff[2])
+                self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3])
+                time.sleep(0.01)
+
+        else : #simulate data coming from the KMS
+            print(colored('KMS SIM STARTED','red'))
+            kms_array = np.zeros((20,4),dtype=float)
+            np.save(directory.temp_dir + 'kms_packet_off.npy',kms_array)
+            fake_pa = 0.0
+
+            while not ut.kms_exit.is_set() :
+                fake_pa = fake_pa + 0.05
+                self.new_kms_data.emit(fake_pa,1,time.time(),fake_pa)
+                time.sleep(0.1)
+
 
 #activating the gui main window
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName('TIME Data Visualization Suite')
-    ex = MainWindow()
+    if len(sys.argv) == 2 :
+        ex = MainWindow(sys.argv[1])
+    else :
+        ex = MainWindow(False)
     sys.exit(app.exec_())

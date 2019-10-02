@@ -21,6 +21,12 @@ def loop_files(queue4):
 
         files = [dir + x for x in os.listdir(dir) if x.startswith("kms_packet")]
 
+        if os.path.isfile(dir + 'kms_packet_off.npy') :
+            kms_data = np.zeros((20,4))
+            queue4.send(kms_data)
+            time.sleep(0.01)
+            continue
+
         if len(files) != 0 : # check for at least 2 files to exist
             tel_file = max(files, key = os.path.getctime) # grab the oldest of the unparsed files
             a = int(tel_file.replace(dir,'').replace('kms_packet','').replace('.npy',''))
