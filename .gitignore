@@ -1,2 +1,5 @@
 # ignore the directory file when you commit
 config/directory.py
+
+*.pyc
+*~

@@ -3,7 +3,7 @@
 
 tel_dict = {
 
-"inittel":"Yes",
+"inittel":"No",
 "kmsonoff":"No",
 "tel_scan":"2D Raster",
 "coord_space":"RA",
@@ -28,7 +28,7 @@ tel_dict = {
 
 # ===================================
 mce_dict = {
-"observer":"PGM",
+"observer":"VLB",
 "mceson":"MCE SIM",
 "datamode":"Error",
 "readoutcard":"All",
