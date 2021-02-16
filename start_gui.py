@@ -490,7 +490,7 @@ class MainWindow(QtGui.QMainWindow):
             self.initheatmap(data,data) # give first values for heatmap to create image scale
             self.initfftgraph()
             self.inittelescope()
-            # self.initkmirrordata()
+            self.initkmirrordata()
 
             sys.stdout.flush()
             sys.stderr.flush()
@@ -833,7 +833,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.heatmap1 = pg.ImageView(view= self.heatmapplot1)
         self.heatmap1.setPredefinedGradient('thermal')
-        self.heatmap1.autoLevels()
+        # self.heatmap1.autoLevels()
 
         if ut.which_mce[0] == 1 or ut.which_mce[2] == 1:
             self.heatmap1.setImage(h1)
@@ -847,7 +847,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.heatmap2 = pg.ImageView(view= self.heatmapplot2)
         self.heatmap2.setPredefinedGradient('thermal')
-        self.heatmap2.autoLevels()
+        # self.heatmap2.autoLevels()
 
         if ut.which_mce[1] == 1 or ut.which_mce[2] == 1:
             self.heatmap2.setImage(h2)

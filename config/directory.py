@@ -7,7 +7,6 @@ mce1_dir = '/home/time/Desktop/time-data/mce2/' #the directory where you want to
 temp_dir = '/home/time/TIME_Software/main/tempfiles/' #the directory for tempfiles ex: path/to/TIME_Software/main/tempfiles/
 hk_dir = '/home/time/Desktop/time-data/hk/' #the directory where you want to store hk data
 
-
 # for victoria's mac
 #netcdf_dir = '/Users/vlb9398/Desktop/netcdffiles/' #the directory for the netcdf files
 #master_dir = '/Users/vlb9398/Desktop/TIME_Software/main/' # the main directory for the time software ex: path/to/TIME_Software/main/
