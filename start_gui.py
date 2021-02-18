@@ -279,8 +279,8 @@ class MainWindow(QtGui.QMainWindow):
                     self.datamode = mce_states2[mce_states.index(state)]
 
             # readout card ---------------------------------------------
-            self.readoutcard = self.enterreadoutcard.currentIndex() + 1
-            if self.readoutcard == 9:
+            self.readoutcard = self.enterreadoutcard.currentIndex() - 1
+            if self.readoutcard < 0:
                 self.readoutcard = 'All'
                 self.currentreadoutcard = 2
                 self.currentreadoutcarddisplay = 'MCE 1 RC 2'
@@ -423,14 +423,16 @@ class MainWindow(QtGui.QMainWindow):
                         print("Copying mce_rsync.py to mce%i..." % mce_index)
                         subprocess.call('scp ./coms/mce_rsync.py time@time-mce-%i:%s' % (mce_index, SYNC_SCRIPT_DEST), shell = True)
                         print("Changing data_mode on mce%i..." % mce_index)
-                        subprocess.call('./coms/mce_cdm.sh %i a %s %s' % (mce_index, self.readoutcard, self.datamode), shell = True)
+                        subprocess.call('./coms/mce_cdm.sh %i a %s' % (mce_index, self.datamode), shell = True)
                         print("Clearing remote temp files on mce%i..." % mce_index)
                         subprocess.call('./coms/mce_del.sh %i' % (mce_index), shell=True)
 
                 for mce_index in range(2):
                     if ut.which_mce[mce_index] == 1 :
                         print("Starting acquision on mce%i..." % mce_index)
-                        subprocess.Popen(['./coms/mce_run.sh %i %s %s %s' % (mce_index, self.framenumber, rc, self.frameperfile)], shell = True)
+                        cmd = './coms/mce_run.sh %i %s %s %s' % (mce_index, self.framenumber, rc, self.frameperfile)
+                        print(cmd)
+                        subprocess.Popen([cmd], shell = True)
 
                 # start file transfer scripts
                 for mce_index in range(2):
@@ -500,16 +502,16 @@ class MainWindow(QtGui.QMainWindow):
         self.enterobserver.setMaxLength(3)
         self.enterdatamode = QtGui.QComboBox()
         self.enterdatamode.addItems(
-            ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
+            ['Mixed Mode (25:7)', 'Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
         self.whichmces = QtGui.QComboBox()
         self.whichmces.addItems(['MCE0','MCE1','Both','MCE SIM'])
         self.enterreadoutcard = QtGui.QComboBox()
+        self.enterreadoutcard.addItem('All')
         for i in range(8):
             if i < 4:
                 self.enterreadoutcard.addItem('MCE 0 RC %s' % (i % 4 + 1))
             else:
                 self.enterreadoutcard.addItem('MCE 1 RC %s' % (i % 4 + 1))
-        self.enterreadoutcard.addItem('All')
         self.enterframenumber = QtGui.QLineEdit('1350000')
         self.enterframenumber.setMaxLength(9)
         self.heatalpha = QtGui.QLineEdit('0.1')
@@ -1356,16 +1358,17 @@ class MainWindow(QtGui.QMainWindow):
         #updates graph, if channel delete is set to yes will clear data first
         else:
 
-            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
-                self.updateheatmap(h1,h2) # give first values for heatmap to create image scale
-            elif ut.which_mce[0] == 1 :
-                dummy = []
-                self.updateheatmap(h1,dummy)
-            elif ut.which_mce[2] == 1 :
-                self.updateheatmap(h1,h2)
-            else :
-                dummy = []
-                self.updateheatmap(dummy,h2)
+            # TODO: fix
+            # ~ if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
+                # ~ self.updateheatmap(h1,h2) # give first values for heatmap to create image scale
+            # ~ elif ut.which_mce[0] == 1 :
+                # ~ dummy = []
+                # ~ self.updateheatmap(h1,dummy)
+            # ~ elif ut.which_mce[2] == 1 :
+                # ~ self.updateheatmap(h1,h2)
+            # ~ else :
+                # ~ dummy = []
+                # ~ self.updateheatmap(dummy,h2)
 
             self.updatefftgraph()
 

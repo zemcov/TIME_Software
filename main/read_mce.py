@@ -13,36 +13,36 @@ from config import directory
 h_shape = 0
 p = 0
 
-def netcdfdata(queue1,flags):
+def netcdfdata(mce_index, queue1, flags):
     """
-    Purpose: read the mce0 data
+    Purpose: read the mce0 or mce1 data
     inputs: queue1 - idk
             flags - idk
     outputs: None
     Calls : readdata()
     """
     # os.nice(-20)
-    dir = directory.mce0_dir
+    dir = directory.mce_dir_template % mce_index
     a = 0
-    print('starting mce0 read')
+    print('starting mce%i read' % mce_index)
     while not ut.mce_exit.is_set():
         mce_file_len = len(os.listdir(dir))
         mce_file_name = dir + 'temp.%0.3i' %(a)
         mce_file = os.path.exists(dir + 'temp.%0.3i' %(a+1))
         mce_run = os.path.exists(dir + 'temp.run')
         if mce_file and mce_run:
-            head,h,frame_num,mce_on = readdata(mce_file_name,flags)
+            head,h,frame_num,mce_on = readdata(mce_index, mce_file_name, flags)
             queue1.send([h,head,frame_num,mce_on])
             a += 1
             subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
 
-        time.sleep(0.01)
+        time.sleep(0.01) # Rate limit
 
     # print(colored('No More Files','red'))
     sys.exit()
 
 # ===========================================================================================================================
-def readdata(file,flags):
+def readdata(mce_index, file, flags):
     """
     Purpose: reads data from a raw mce file
     Inputs: file - mce_file
@@ -57,6 +57,8 @@ def readdata(file,flags):
     """
     global h_shape
     global p
+    
+    print("Processing mce%i file %s" % (mce_index, file))
     f = mce_data_jon.MCEFile(file)
     l = f.Read(row_col=True, unfilter='DC', all_headers=True)
     h = l.data
@@ -71,18 +73,18 @@ def readdata(file,flags):
 
     else :
         if (h.shape != h_shape):
-            # print(colored('WARNING! MCE0 Frame Size Has Changed','red'))
+            print(colored('WARNING! MCE%i Frame Size Has Changed' % (mce_index),'red'))
             sys.stdout.flush()
             with flags.get_lock():
-                flags[3] = 11
+                flags[3 + mce_index] = 11
             h = np.zeros((h_shape[0],h_shape[1],h_shape[2]))
 
         else :
             with flags.get_lock():
-                flags[3] = 0
+                flags[3 + mce_index] = 0
     # -------------------------------------------------------------------------
     # check for row/col that are off or reporting zeros
-    mce_on = np.empty([33,32],dtype=int)
+    mce_on = np.empty((h_shape[0],h_shape[1]),dtype=int)
     for i in range(h_shape[0]):
         for j in range(h_shape[1]):
             if np.sum(h[i][j][:]) == 0.0 :
@@ -94,7 +96,7 @@ def readdata(file,flags):
     head, frame_num = read_header(l)
     p += 1
 
-    return head, h, frame_num, mce_on, l
+    return head, h, frame_num, mce_on
 
 # ===========================================================================
 def read_header(l):
@@ -109,8 +111,8 @@ def read_header(l):
     values = []
     frame_num = []
     for i in range(len(l.headers)):
-        for key,value in l.headers[i].items():
-            print(key)
+        for key in sorted(l.headers[i].keys()):
+            value = l.headers[i][key]
             if key == '_rc_present':
                 for i in range(len(value)):
                     if value[i] == True:
@@ -122,9 +124,9 @@ def read_header(l):
                 value = ''.join(map(str,value))
             if key == 'sync_box_num' :
                 frame_num.append(value)
-                print('sync num', value)
-            if key == 'frame_counter':
-                print('frame num',value)
+                # ~ print('sync num', value)
+            # ~ if key == 'frame_counter':
+                # ~ print('frame num',value)
             value = int(value)
             values.append(value)
     values = np.asarray(values)

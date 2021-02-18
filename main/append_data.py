@@ -9,7 +9,7 @@ import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import config.utils as ut
-import read_mce0, read_mce1, read_tel, read_kms
+import read_mce, read_tel, read_kms
 from config import init
 
 class Time_Files:
@@ -23,8 +23,8 @@ class Time_Files:
         self.data2, queue2 = mp.Pipe()
         self.data3, queue3 = mp.Pipe()
         self.data4, queue4 = mp.Pipe()
-        self.p1 = mp.Process(target=read_mce0.netcdfdata, args=(queue1,self.flags,))
-        self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,self.flags,))
+        self.p1 = mp.Process(target=read_mce.netcdfdata, args=(0,queue1,self.flags,))
+        self.p2 = mp.Process(target=read_mce.netcdfdata , args=(1,queue2,self.flags,))
         self.p3 = mp.Process(target=read_tel.loop_files , args=(queue3,))
         # self.p4 = mp.Process(target=read_kms.loop_files , args=(queue4,))
 
