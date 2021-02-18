@@ -400,22 +400,15 @@ class MainWindow(QtGui.QMainWindow):
 
             if self.mceson != "MCE SIM" :
 
-                # check for leftover files from previous run and delete
-                dir1 = directory.mce0_dir
-                dir2 = directory.mce1_dir
-                mce0 = len(os.listdir(dir1))
-                mce1 = len(os.listdir(dir2))
-                if mce0 != 0 :
-                    if os.path.isfile('rm ' + directory.mce0_dir + 'temp*'):
-                        os.remove(directory.mce0_dir + 'temp*')
-                    # subprocess.Popen(['rm ' + directory.mce0_dir + 'temp*'], shell = True)
-                if mce1 != 0 :
-                    if os.path.isfile('rm ' + directory.mce1_dir + 'temp*'):
-                        os.remove(directory.mce1_dir + 'temp*')
-                    # subprocess.Popen(['rm ' + directory.mce1_dir + 'temp*'], shell = True)
-                if os.path.isfile('rm ' + directory.temp_dir + 'tele_*'):
-                    os.remove(directory.temp_dir + 'tele_*')
-                # subprocess.Popen(['rm ' + directory.temp_dir + 'tele_*'], shell = True)
+                print("Clearing out local temp files...")
+                tmp_dirs = [
+                    directory.mce0_dir + 'temp.*',
+                    directory.mce1_dir + 'temp.*',
+                    directory.temp_dir + 'tele_*',
+                    ]
+                for td in tmp_dirs:
+                    # os.remove doesn't support wildcards
+                    subprocess.call('rm ' + td, shell=True)
 
                 #set the data mode for both mces and start them running
                 rc = self.readoutcard
@@ -433,7 +426,7 @@ class MainWindow(QtGui.QMainWindow):
                         subprocess.call('./coms/mce_cdm.sh %i a %s %s' % (mce_index, self.readoutcard, self.datamode), shell = True)
                         print("Clearing remote temp files on mce%i..." % mce_index)
                         subprocess.call('./coms/mce_del.sh %i' % (mce_index), shell=True)
-                        
+
                 for mce_index in range(2):
                     if ut.which_mce[mce_index] == 1 :
                         print("Starting acquision on mce%i..." % mce_index)
