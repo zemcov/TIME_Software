@@ -8,9 +8,9 @@ from termcolor import colored
 import time
 from multiprocessing import Pipe
 import multiprocessing as mp
-import utils as ut
+import config.utils as ut
 import read_mce0, read_mce1, read_tel, read_kms
-import init
+from config import init
 
 class Time_Files:
 

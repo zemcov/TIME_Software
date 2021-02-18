@@ -7,11 +7,11 @@ import astropy.units as u
 from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, AltAz
 import multiprocessing as mp
-import tel_tracker
+from coms import tel_tracker
 # import termcolor as colored
-import utils as ut
-from pos_counter import scan_params
-import angle_converter as ac
+import config.utils as ut
+from main.pos_counter import scan_params
+import main.angle_converter as ac
 from termcolor import colored
 from multiprocessing import Manager
 

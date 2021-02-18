@@ -1,9 +1,4 @@
 import sys, os, subprocess, time, datetime, socket, struct, threading, shutil
-sys.path.append('../TIME_Software/main/tempfiles')
-sys.path.append('../TIME_Software/coms')
-sys.path.append('../TIME_Software/main/')
-sys.path.append('../TIME_Software/scans')
-sys.path.append('../TIME_Software/config/')
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QSizePolicy
@@ -13,13 +8,14 @@ import pyqtgraph as pg
 import random as rm
 from termcolor import colored
 import multiprocessing as mp
-import utils as ut
-import append_data, append_hk
-import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
-import init
-from tel_box import draw_box
-import directory
 from hanging_threads import start_monitoring
+
+from coms import kms_socket, tel_tracker
+from main import append_data, append_hk, read_hk, fake_tel
+from main.tel_box import draw_box
+from scans import raster_script_1d, raster_script_2d, bowtie_scan, point_cross
+from config import init, directory
+import config.utils as ut
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):

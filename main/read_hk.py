@@ -3,8 +3,8 @@ import gzip, os, sys, subprocess
 import datetime as dt
 from termcolor import colored
 import numpy as np
-import utils as ut
-import directory
+import config.utils as ut
+from config import directory
 
 class HK_Reader :
 

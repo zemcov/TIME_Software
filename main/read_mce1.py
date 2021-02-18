@@ -7,8 +7,8 @@ from termcolor import colored
 import time
 from multiprocessing import Pipe
 import multiprocessing as mp
-import utils as ut
-import directory
+import config.utils as ut
+from config import directory
 
 h_shape = 0
 p = 0

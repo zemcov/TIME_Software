@@ -1,10 +1,10 @@
 # this parses telescope data files
 import numpy as np
-import utils as ut
+import config.utils as ut
 import os, subprocess, sys
 from termcolor import colored
 import time
-import directory
+from config import directory
 
 def loop_files(queue3):
     """

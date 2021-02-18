@@ -4,9 +4,8 @@ import time as t
 import datetime as now
 import numpy as np
 from termcolor import colored
-import utils as ut
-sys.path.append('../TIME_Software/main/tempfiles')
-import directory
+import config.utils as ut
+from config import directory
 # os.nice(-20)
 
 def new_file(filestarttime,dir):

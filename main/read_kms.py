@@ -1,8 +1,8 @@
 # this parses kms data
 import numpy as np
 import subprocess, os, sys, time
-import directory
-import utils as ut
+from config import directory
+import config.utils as ut
 from termcolor import colored
 
 dir = directory.temp_dir

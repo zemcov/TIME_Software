@@ -2,10 +2,9 @@ from __future__ import division
 import socket, struct, subprocess, os, sys
 import time
 import numpy as np
-import utils as ut
+import config.utils as ut
 from termcolor import colored
-import directory
-sys.path.append('../TIME_Software/main/tempfiles')
+from config import directory
 
 def start_tracker(queue):
     # os.nice(-20)

@@ -4,7 +4,7 @@ import time as t
 import datetime as now
 import numpy as np
 from termcolor import colored
-import utils as ut
+import config.utils as ut
 
 def new_file(filestarttime,dir):
     """

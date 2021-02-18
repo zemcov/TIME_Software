@@ -8,7 +8,7 @@ from termcolor import colored
 import time
 from multiprocessing import Pipe
 import multiprocessing as mp
-import utils as ut
+import config.utils as ut
 import read_hk
 
 class Time_Files:

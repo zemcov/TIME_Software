@@ -5,8 +5,8 @@ import socket, struct, subprocess, os, sys
 import time
 import numpy as np
 import multiprocessing as mp
-import tel_tracker
-from pos_counter import scan_params
+from coms import tel_tracker
+from main.pos_counter import scan_params
 
 class TIME_TELE :
 

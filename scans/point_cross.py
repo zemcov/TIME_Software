@@ -4,10 +4,10 @@ import socket, struct, subprocess, os, sys
 import time
 import numpy as np
 import multiprocessing as mp
-import tel_tracker
+from coms import tel_tracker
 from termcolor import colored
-import utils as ut
-from pos_counter import scan_params
+import config.utils as ut
+from main.pos_counter import scan_params
 
 class TIME_TELE :
 

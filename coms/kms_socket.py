@@ -5,10 +5,8 @@
 import socket, struct, subprocess, os, sys, time
 import time as othertime
 import numpy as np
-import utils as ut
-sys.path.append('../TIME_Software/config')
-sys.path.append('../TIME_Software/main/tempfiles')
-import directory
+import config.utils as ut
+from config import directory
 
 def start_sock(queue):
     """
