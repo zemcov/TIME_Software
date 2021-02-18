@@ -23,8 +23,12 @@ from hanging_threads import start_monitoring
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
+    
     #initializes mcegui class and calls other init functions
     def __init__(self, parent = None):
+        
+        self.telescope_initialized = False
+        
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle('TIME Live Data Visualization Suite')
         # self.setAutoFillBackground(true)
@@ -124,20 +128,14 @@ class MainWindow(QtGui.QMainWindow):
 
         # stop all of the mces with their own command
         if self.showmcedata == 'Yes' and self.mceson != 'MCE SIM':
+            rc = self.readoutcard
             if self.readoutcard == 'All':
-                if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./coms/mce1_stop.sh s'],shell=True)
-                if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./coms/mce0_stop.sh s'],shell=True)
-
-            else :
-                if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['./coms/mce1_stop.sh %s' %(self.readoutcard)], shell=True)
-                    subprocess.Popen(['./coms/mce1_stop_sftp.sh'], shell=True)
-                if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['./coms/mce0_stop.sh %s' %(self.readoutcard)], shell=True)
-                    subprocess.Popen(['./coms/mce0_stop_sftp.sh'], shell=True)
-
+                rc = 's'
+            for mce_index in range(2):
+                if ut.which_mce[mce_index] == 1 :
+                    subprocess.call('./coms/mce_stop.sh %i %s' % (mce_index, rc), shell=True)
+                    subprocess.call('./coms/mce_stop_rsync.sh %i' % (mce_index), shell=True)
+                    
         # # stop the file transfer process to time-master
         if self.mceson != 'MCE SIM':
             subprocess.Popen(['./coms/hk_stop_sftp.sh'], shell=True)
@@ -176,6 +174,7 @@ class MainWindow(QtGui.QMainWindow):
         self.step_unit = self.unit3.currentText()
         self.coord1_unit = self.unit4.currentText()
         self.coord2_unit = self.unit5.currentText()
+        self.telescope_initialized = True
 
         if self.inittel == 'Yes':
             self.tel_scan = self.telescan.currentText()
@@ -258,10 +257,10 @@ class MainWindow(QtGui.QMainWindow):
         self.timestarted = datetime.datetime.utcnow().isoformat()
 
         # check if telescope has been started first
-        if not self.starttel.isEnabled() :
+        if not self.telescope_initialized:
             print("Please Initialize Telescope First")
             self.warningbox('gui')
-            self.submitbutton.setEnabled(False)
+            return
 
         print(self.useinit.isEnabled())
         # sys.exit()
@@ -423,32 +422,33 @@ class MainWindow(QtGui.QMainWindow):
                 # subprocess.Popen(['rm ' + directory.temp_dir + 'tele_*'], shell = True)
 
                 #set the data mode for both mces and start them running
+                rc = self.readoutcard
                 if self.readoutcard == 'All':
-                    if ut.which_mce[0] == 1 :
-                        subprocess.Popen(['./coms/mce0_cdm.sh a %s' %(self.datamode)], shell = True)
-                        subprocess.Popen(['./coms/mce0_del.sh'], shell=True)
-                        subprocess.Popen(['./coms/mce0_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
+                    rc = 's'
 
-                    if ut.which_mce[1] == 1 :
-                        subprocess.Popen(['./coms/mce1_cdm.sh a %s' %(self.datamode)], shell = True)
-                        subprocess.Popen(['./coms/mce1_del.sh'], shell=True)
-                        subprocess.Popen(['./coms/mce1_run.sh %s s %s' %(self.framenumber, self.frameperfile)], shell = True)
-                else :
-                    if ut.which_mce[0] == 1 :
-                        subprocess.Popen(['./coms/mce0_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                        subprocess.Popen(['./coms/mce0_del.sh'], shell=True)
-                        subprocess.Popen(['./coms/mce0_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+                # Remote location to copy the mce sync script to
+                SYNC_SCRIPT_DEST = '/data/cryo/mce_rsync.py'
 
-                    if ut.which_mce[1] == 1 :
-                        subprocess.Popen(['./coms/mce1_cdm.sh a %s %s' %(self.readoutcard, self.datamode)], shell = True)
-                        subprocess.Popen(['./coms/mce1_del.sh'], shell=True)
-                        subprocess.Popen(['./coms/mce1_run.sh %s %s %s' %(self.framenumber, self.readoutcard, self.frameperfile)], shell = True)
+                for mce_index in range(2):
+                    if ut.which_mce[mce_index] == 1 :
+                        print("Copying mce_rsync.py to mce%i..." % mce_index)
+                        subprocess.call('scp ./coms/mce_rsync.py time@time-mce-%i:%s' % (mce_index, SYNC_SCRIPT_DEST), shell = True)
+                        print("Changing data_mode on mce%i..." % mce_index)
+                        subprocess.call('./coms/mce_cdm.sh %i a %s %s' % (mce_index, self.readoutcard, self.datamode), shell = True)
+                        print("Clearing remote temp files on mce%i..." % mce_index)
+                        subprocess.call('./coms/mce_del.sh %i' % (mce_index), shell=True)
+                        
+                for mce_index in range(2):
+                    if ut.which_mce[mce_index] == 1 :
+                        print("Starting acquision on mce%i..." % mce_index)
+                        subprocess.Popen(['./coms/mce_run.sh %i %s %s %s' % (mce_index, self.framenumber, rc, self.frameperfile)], shell = True)
 
                 # start file transfer scripts
-                if ut.which_mce[0] == 1 :
-                    subprocess.Popen(['ssh -T time@time-mce-0 python /home/time/TIME_Software/coms/mce0_sftp.py'], shell=True)
-                if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['ssh -T time@time-mce-1 python /home/time/TIME_Software/coms/mce1_sftp.py'], shell=True)
+                for mce_index in range(2):
+                    if ut.which_mce[mce_index] == 1 :
+                        dirname = directory.mce_dir_template % mce_index
+                        subprocess.Popen(['ssh -T time@time-mce-%i python3 %s time@time-master:%s' % (mce_index, SYNC_SCRIPT_DEST, dirname)], shell=True)
+           
                 time.sleep(2.0)
 
             # subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
