@@ -30,7 +30,7 @@ def Main():
         print('Received from the server :',str(data.decode('ascii')))
 
         # ask the client whether he wants to continue
-        ans = input('\nDo you want to continue(y/n) :')
+        ans = eval(input('\nDo you want to continue(y/n) :'))
         if ans == 'y':
             continue
         else:

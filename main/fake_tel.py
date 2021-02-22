@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude,
 #from astroplan import Observer
 import config.utils as ut
 from datetime import datetime
-from pos_counter import scan_params
+from .pos_counter import scan_params
 from termcolor import colored
 # from astroplan import download_IERS_A
 # download_IERS_A()

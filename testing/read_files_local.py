@@ -113,7 +113,7 @@ class Time_Files:
     def read_header(self, f):
         keys = []
         values = []
-        for key,value in f.header.items():
+        for key,value in list(f.header.items()):
             if key == '_rc_present':
                 for i in range(len(value)):
                     if value[i] == True:

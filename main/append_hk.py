@@ -1,15 +1,15 @@
 import numpy as np
 from os import stat
-import os, sys, mce_data, subprocess, errno
-import netcdf_files as nc
-import hk_netcdf_files as hnc
+import os, sys, subprocess, errno
+from . import netcdf_files as nc
+from . import hk_netcdf_files as hnc
 import datetime as dt
 from termcolor import colored
 import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import config.utils as ut
-import read_hk
+from . import read_hk
 
 class Time_Files:
 

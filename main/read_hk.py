@@ -117,20 +117,20 @@ class HK_Reader :
                 f.close()
                 self.name_dict = eval(dict_data)
                 for i in range(len(name)):
-                    if name[i] not in self.name_dict.values():
-                            self.name_dict.update({len(self.name_dict.keys())+1.0:name[i]})
+                    if name[i] not in list(self.name_dict.values()):
+                            self.name_dict.update({len(list(self.name_dict.keys()))+1.0:name[i]})
             else :
                 master_names = []
                 for i in range(len(name)):
                     if name[i] not in master_names:
                         master_names.append(name[i])
                 name_num = np.arange(0.0,len(master_names),1.0)
-                self.name_dict = dict(zip(name_num,master_names))
+                self.name_dict = dict(list(zip(name_num,master_names)))
 
         else :
             for i in range(len(name)):
-                if name[i] not in self.name_dict.values():
-                        self.name_dict.update({len(self.name_dict.keys())+1.0:name[i]})
+                if name[i] not in list(self.name_dict.values()):
+                        self.name_dict.update({len(list(self.name_dict.keys()))+1.0:name[i]})
         # =========================================================================
         f = open(self.dir2 + '/hk_dict.txt','w')
         f.write(str(self.name_dict))
@@ -150,7 +150,7 @@ class HK_Reader :
         for i in range(len(sort_time)-1):
             # change all hk sensor names to integers for storage
             # num = int(self.name_dict.keys()[self.name_dict.values().index(sort_name[i])])
-            for k,v in self.name_dict.iteritems():
+            for k,v in self.name_dict.items():
                 if v == sort_name[i] :
                     num = int(k)
                     val = v
@@ -177,12 +177,12 @@ class HK_Reader :
                     new_time = sort_time[i]
                     l = 0 # reset timer for new timestamp
                     # ==================================================================
-                    if len(self.name_dict.keys()) <= 500 : # make sure num of sensors isn't over array limit
+                    if len(list(self.name_dict.keys())) <= 500 : # make sure num of sensors isn't over array limit
                         hk_data = np.array((time2,names2,data2)) # make monolithic array, only of one timestamp
                         mega_hk.append(hk_data)
 
                     else :
-                        print(len(self.name_dict.keys()))
+                        print(len(list(self.name_dict.keys())))
                         print(colored("Number of reported sensors over size limit!",'red'))
 
                     time2 = np.zeros(500)

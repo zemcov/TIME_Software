@@ -1,7 +1,8 @@
 import numpy as np
 from os import stat
-import os, sys, mce_data_jon, subprocess
-import netcdf_files as nc
+import os, sys, subprocess
+import timefpu.mce_data as mce_data
+from . import netcdf_files as nc
 import datetime as dt
 from termcolor import colored
 import time
@@ -52,14 +53,14 @@ def readdata(mce_index, file, flags):
              frame_num - an array of frame numbers
              mce_on - mce on/off data
              l - idk
-    Calls: mce_data_jon.MCEFILE()
+    Calls: mce_data.MCEFILE()
            read_header()
     """
     global h_shape
     global p
     
     print("Processing mce%i file %s" % (mce_index, file))
-    f = mce_data_jon.MCEFile(file)
+    f = mce_data.MCEFile(file)
     l = f.Read(row_col=True, unfilter='DC', all_headers=True)
     h = l.data
 

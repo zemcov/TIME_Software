@@ -16,3 +16,9 @@
 
 **kms_working_copy** <br>
   This is a frozen copy of the Kmirror System software from its testing in the RIT lab from Nov 2018. It is not to be modified without prior permission. This code was is capable of replicating smooth tracking of the system in multiple modes, has the SICK safety system enabled for use with limit switches and emergency stop buttons, and can communicate by sockets to simulate command position inputs from a telescope. <br>
+
+*Installation*
+
+Now running on Python 3.x
+
+sudo pip3 install PyQt5 pyqtgraph PyQtWebEngine termcolor hanging_threads netcdf4 astropy

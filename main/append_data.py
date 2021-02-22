@@ -1,15 +1,15 @@
 import numpy as np
 from os import stat
-import os, sys, mce_data, subprocess, errno
-import netcdf_files as nc
-import hk_netcdf_files as hnc
+import os, sys, subprocess, errno
+from . import netcdf_files as nc
+from . import hk_netcdf_files as hnc
 import datetime as dt
 from termcolor import colored
 import time
 from multiprocessing import Pipe
 import multiprocessing as mp
 import config.utils as ut
-import read_mce, read_tel, read_kms
+from . import read_mce, read_tel, read_kms
 from config import init
 
 class Time_Files:
@@ -132,10 +132,10 @@ class Time_Files:
 
         if ut.which_mce[1] == 1 :
             ut.utc_time = ut.sync_to_utc(self.sync2,self.offset.value)
-            self.utc = zip(ut.utc_time,self.sync2) # tuples of (utc,sync)
+            self.utc = list(zip(ut.utc_time,self.sync2)) # tuples of (utc,sync)
         if ut.which_mce[0] == 1 :
             ut.utc_time = ut.sync_to_utc(self.sync1,self.offset.value)
-            self.utc = zip(ut.utc_time,self.sync1) # tuples of (utc,sync)
+            self.utc = list(zip(ut.utc_time,self.sync1)) # tuples of (utc,sync)
 
         # new_utc = self.utc[::5]
         # # print(len(self.utc),len([x[0] for x in new_utc]),len(self.tel_data[:,-1]))

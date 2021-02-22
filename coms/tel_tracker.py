@@ -1,4 +1,4 @@
-from __future__ import division
+
 import socket, struct, subprocess, os, sys
 import time
 import numpy as np

@@ -1,4 +1,11 @@
-import sys, os, subprocess, time, datetime, socket, struct, threading, shutil
+#!/usr/bin/env python3
+
+import sys
+
+if sys.version_info.major != 3:
+    sys.exit("This software is expecting Python 3.x")
+
+import os, subprocess, time, datetime, socket, struct, threading, shutil
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QSizePolicy

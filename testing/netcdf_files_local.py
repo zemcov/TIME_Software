@@ -88,7 +88,7 @@ def mce_append(nc_file, p, h1, h2, head1, head2, flags):
 
 def hk_append(nc_file, n, time, data, name, tele_time):
     hk = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-    if (name + '_NC') in hk.variables.keys():
+    if (name + '_NC') in list(hk.variables.keys()):
         hk.variables[name + '_NC'][n,:,:] = [float(time),float(data)]
     else :
         #trying to make the netcdf name the same as the sensor name

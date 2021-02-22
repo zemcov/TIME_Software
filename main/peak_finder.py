@@ -1,6 +1,6 @@
 ###### Things with ###### are places where there obviously might need to be changes
 
-from __future__ import division
+
 
 import sys, os
 
@@ -30,7 +30,7 @@ def load(path):
     time_ind = 0
     time_get_inds = [time_ind + i for i in np.arange(100)*nvar]
     mce_time = f.variables['mce0_header'][:,time_get_inds,0].flatten()
-    print mce_time.shape
+    print(mce_time.shape)
 
     # Extract counts from MCE data
 ##### this picks the right MCE to use [0 or 1]
@@ -39,7 +39,7 @@ def load(path):
     detector_index_1 = 0   # [0 to 32]
     detector_index_2 = 0   # [0 to 31]
     mce_counts = f.variables['mce'+str(mce)+'_raw_data_all'][:,detector_index_1,detector_index_2,:].flatten()
-    print mce_counts.shape
+    print(mce_counts.shape)
 
     # Extract time and pointing from telescope data
     time_ind = 4
@@ -71,7 +71,7 @@ class dataset:
         if os.path.exists(path):
             self.time, self.ra, self.dec, self.counts = load(path)
         else:
-            print 'file not found'
+            print('file not found')
             return
 
     # functional form to fit
