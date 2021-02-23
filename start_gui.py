@@ -143,18 +143,26 @@ class MainWindow(QtGui.QMainWindow):
         if self.mceson != 'MCE SIM':
             subprocess.Popen(['./coms/hk_stop_sftp.sh'], shell=True)
 
-        # # delete all MCE temp files still in local and mce computer directory
-        if len(os.listdir(directory.mce0_dir)) != 0 : # if the temp folders are not empty
-            os.remove(directory.mce0_dir + 'temp*')
-            os.remove(directory.mce1_dir + 'temp*')
-            os.remove(directory.hk_dir + 'omnilog*')
-            os.remove(directory.temp_dir + 'tele*')
+        self.clear_temp_files()
 
         print('Quitting Application')
         monitor_thread = start_monitoring(seconds_frozen=2)
         print(monitor_thread)
         monitor_thread.stop()
         sys.exit()
+        
+    def clear_temp_files(self):
+    
+        print("Clearing out local temp files...")
+        tmp_dirs = [
+            directory.mce0_dir + 'temp.*',
+            directory.mce1_dir + 'temp.*',
+            directory.temp_dir + 'tele*',
+            directory.hk_dir + 'omnilog*',
+            ]
+        for td in tmp_dirs:
+            # os.remove doesn't support wildcards
+            subprocess.call('rm ' + td, shell=True)
 
     def on_starttel_clicked(self):
 
@@ -407,15 +415,7 @@ class MainWindow(QtGui.QMainWindow):
 
             if self.mceson != "MCE SIM" :
 
-                print("Clearing out local temp files...")
-                tmp_dirs = [
-                    directory.mce0_dir + 'temp.*',
-                    directory.mce1_dir + 'temp.*',
-                    directory.temp_dir + 'tele_*',
-                    ]
-                for td in tmp_dirs:
-                    # os.remove doesn't support wildcards
-                    subprocess.call('rm ' + td, shell=True)
+                self.clear_temp_files()
 
                 #set the data mode for both mces and start them running
                 rc = self.readoutcard
