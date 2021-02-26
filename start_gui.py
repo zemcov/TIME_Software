@@ -523,6 +523,7 @@ class MainWindow(QtGui.QMainWindow):
 
             sys.stdout.flush()
             sys.stderr.flush()
+            self.newwindow.closeEvent = self.on_quitbutton_clicked
             self.newwindow.show()
 
     #resets parameter variables after warning box is read
