@@ -23,22 +23,26 @@ class Time_Files:
         self.data2, queue2 = mp.Pipe()
         self.data3, queue3 = mp.Pipe()
         self.data4, queue4 = mp.Pipe()
-        self.p1 = mp.Process(target=read_mce.netcdfdata, args=(0,queue1,self.flags,))
-        self.p2 = mp.Process(target=read_mce.netcdfdata , args=(1,queue2,self.flags,))
-        self.p3 = mp.Process(target=read_tel.loop_files , args=(queue3,))
-        # self.p4 = mp.Process(target=read_kms.loop_files , args=(queue4,))
+        self.procs = []
+        self.procs.append(mp.Process(name='Data Process MCE0', target=read_mce.netcdfdata, args=(0,queue1,self.flags,)))
+        self.procs.append(mp.Process(name='Data Process MCE1',target=read_mce.netcdfdata , args=(1,queue2,self.flags,)))
+        self.procs.append(mp.Process(name='Data Process Tel',target=read_tel.loop_files , args=(queue3,)))
+        # self.procs.append(mp.Process(name='Data Process KMS',target=read_kms.loop_files , args=(queue4,)))
 
-        if ut.which_mce[0] == 1 :
-            print('starting read mce0')
-            self.p1.start()
-        if ut.which_mce[1] == 1 :
-            print('starting read mce1')
-            self.p2.start()
-
-        self.p3.start()
-        # self.p4.start()
+        for mce_index in range(2):
+            if ut.which_mce[mce_index] == 1 :
+                print('starting read mce%i' % mce_index)
+                self.procs[mce_index].start()
+        self.procs[2].start()
+        # self.procs[3].start()
+        
         sys.stdout.flush()
         sys.stderr.flush()
+        
+    # ~ def close(self):
+        # ~ for i in range(len(self.procs)):
+            # ~ print("Joining process %i (%s)" % (i, self.procs[i]))
+            # ~ self.procs[i].join()
 
     def retrieve(self,queue,dir):
         """
@@ -48,7 +52,28 @@ class Time_Files:
         Outputs: None
         """
         # os.nice(-20)
+        last_time = 0
         while not ut.mce_exit.is_set():
+            
+            time.sleep(0.01) # Rate limit
+            
+            if time.time() - last_time > 1:
+                print("append_data.retrieve is still alive")
+                # ~ print("append_data.retrieve is still alive, waiting on event %i" % id(ut.mce_exit))
+                last_time = time.time()
+            
+            # The call to recv() blocks, which prevents us from properly
+            # exiting the program.  Therefore, don't call recv() unless
+            # we know we have something to read.
+            if (ut.which_mce[0] == 1) and not self.data1.poll():
+                continue
+            if (ut.which_mce[1] == 1) and not self.data2.poll():
+                continue
+            if not self.data3.poll():
+                continue
+            # ~ if not self.data4.poll():
+                # ~ continue
+                
             a = []
             b = []
 
@@ -84,7 +109,18 @@ class Time_Files:
             self.parse_arrays(dir)
             self.append_mce_data(dir)
             self.p += 1
-            time.sleep(0.01)
+                
+        # ~ print("append_data.retrieve is closing processes")
+        # ~ self.close()
+        
+        print("append_data.retrieve is closing connections")
+        for d in [self.data1, self.data2, self.data3, self.data4]:
+            d.close()
+        for d in [self.data1, self.data2, self.data3, self.data4]:
+            d.close()
+        
+        print("append_data.retrieve is exiting")
+        sys.stdout.flush()
 
     def parse_arrays(self,dir):
         # self.hold_h1 = []

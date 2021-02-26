@@ -26,6 +26,8 @@ def netcdfdata(mce_index, queue1, flags):
     dir = directory.mce_dir_template % mce_index
     a = 0
     print('starting mce%i read' % mce_index)
+    last_time = 0
+    
     while not ut.mce_exit.is_set():
         mce_file_len = len(os.listdir(dir))
         mce_file_name = dir + 'temp.%0.3i' %(a)
@@ -38,9 +40,17 @@ def netcdfdata(mce_index, queue1, flags):
             subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
 
         time.sleep(0.01) # Rate limit
+        
+        if time.time() - last_time > 5:
+            print("read_mce.netcdfdata for mce %i is still alive" % mce_index)
+            # ~ print("read_mce.netcdfdata for mce %i is still alive, waiting on event %i" % (mce_index,id(ut.mce_exit)))
+            last_time = time.time()
+        
+    print("read_mce.netcdfdata for mce %i is exiting" % mce_index)
+    sys.stdout.flush()
 
     # print(colored('No More Files','red'))
-    sys.exit()
+    # ~ sys.exit()
 
 # ===========================================================================================================================
 def readdata(mce_index, file, flags):

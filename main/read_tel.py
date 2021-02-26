@@ -16,12 +16,13 @@ def loop_files(queue3):
     # os.nice(-20)
     dir = directory.temp_dir
     mega_tel = []
+    last_time = 0
 
-    while True :
+    while not ut.tel_exit.is_set():
 
         files = [dir + x for x in os.listdir(dir) if x.startswith("tele_packet")]
         if os.path.isfile(dir + 'tele_packet_off1.npy') :
-            # print('tele_packet_off1.npy')
+            print('tele_packet_off1.npy')
             tel_data = np.zeros((20,21))
             queue3.send(tel_data)
             time.sleep(0.01)
@@ -36,6 +37,10 @@ def loop_files(queue3):
 
         else :
             time.sleep(0.01)
+        
+        if time.time() - last_time > 5:
+            print("read_tel.loop_files inital loop is still alive")
+            last_time = time.time()
 
     while not ut.tel_exit.is_set():
         if os.path.exists(dir + 'tele_packet%i.npy' %(a+1)) : #wait to read new file until old file is complete
@@ -49,3 +54,10 @@ def loop_files(queue3):
             sys.stderr.flush()
         else :
             time.sleep(0.01)
+            
+        if time.time() - last_time > 5:
+            print("read_tel.loop_files main loop is still alive")
+            last_time = time.time()
+            
+    print("read_tel.loop_files is exiting")
+    sys.stdout.flush()
