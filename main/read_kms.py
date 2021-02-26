@@ -7,12 +7,12 @@ from termcolor import colored
 
 dir = directory.temp_dir
 
-def loop_files(queue4):
+def loop_files(queue):
     """
     Purpose: Sends data to append_data.py for storage in file
-    Inputs: queue4
+    Inputs: queue
     Outputs: None
-    Calls: queue4.send()
+    Calls: queue.put()
     """
     dir = directory.temp_dir
     mega_kms = []
@@ -35,7 +35,7 @@ def loop_files(queue4):
         if os.path.exists(dir + 'kms_packet%i.npy' %(a+1)) : #wait to read new file until old file is complete
             kms_file = (dir + 'kms_packet%i.npy' %(a))
             data = np.load(kms_file)
-            queue4.send(data)
+            queue.put(data)
             os.remove(kms_file)
             a += 1
             time.sleep(0.01)

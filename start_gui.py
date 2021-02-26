@@ -1616,7 +1616,7 @@ class MCEThread(QtCore.QThread):
         ut.mce_exit.set()
 
     def run(self):
-        data, queue = mp.Pipe()
+        queue = mp.Queue()
         p = mp.Process(name='append_data',target=append_data.Time_Files(flags = self.flags, offset = self.offset).retrieve, args=(queue,self.netcdfdir,))
         # p2 = mp.Process(name='append_hk',target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         p.start()
@@ -1631,10 +1631,10 @@ class MCEThread(QtCore.QThread):
                 print("MCEThread.run is still alive")
                 last_time = time.time()
             
-            if not data.poll():
-                continue # No new data, don't block in recv()
+            if queue.empty():
+                continue 
             
-            stuff = data.recv()
+            stuff = queue.get()
             if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
                 self.new_data.emit(stuff[0],stuff[1],stuff[2])
             elif ut.which_mce[0] == 1 :
@@ -1695,7 +1695,7 @@ class Tel_Thread(QtCore.QThread):
 
             if self.tel_script == 'Tracker':
                 from tel_tracker import start_tracker, turn_on_tracker
-                data, queue = mp.Pipe()
+                queue = mp.Queue()
                 p1 = mp.Process(name='turn_on_tracker',target = turn_on_tracker, args=(self.kms_on_off,))
                 p1.start()
                 time.sleep(0.1) # give tracker time to turn on before accepting packets
@@ -1707,9 +1707,9 @@ class Tel_Thread(QtCore.QThread):
                 while True :
                     if not ut.tel_exit.is_set() :
                         time.sleep(0.01) # Rate limit
-                        if not data.poll():
+                        if queue.empty():
                             continue # No new data, don't block in recv()  
-                        tel_stuff = data.recv()
+                        tel_stuff = queue.get()
                         with self.flags.get_lock() :
                             self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
                         progress = 0.0
@@ -1731,7 +1731,7 @@ class Tel_Thread(QtCore.QThread):
                 time.sleep(0.01)
                 np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
 
-                data, queue = mp.Pipe()
+                queue = mp.Queue()
                 p = mp.Process(name='fake_tel.TIME_TELE().start_tel',target=fake_tel.TIME_TELE().start_tel, args=(queue,self.map_len,self.map_len_unit,self.map_size,self.map_size_unit,self.sec,\
                                                                             self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.coord_space,\
                                                                             self.step,self.step_unit,self.numloop,self.kms_on_off))
@@ -1740,9 +1740,9 @@ class Tel_Thread(QtCore.QThread):
                 while True :
                     if not ut.tel_exit.is_set() :
                         time.sleep(0.01) # Rate limit
-                        if not data.poll():
+                        if queue.empty():
                             continue # No new data, don't block in recv()      
-                        tel_stuff = data.recv()
+                        tel_stuff = queue.get()
                         with self.flags.get_lock() :
                             self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
                         self.new_tel_data.emit(tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6],tel_stuff[7])
@@ -1753,8 +1753,8 @@ class Tel_Thread(QtCore.QThread):
 
             else :
                 # this will start one of several movement scripts
-                data, queue = mp.Pipe() # this is for tracker
-                data2, queue2 = mp.Pipe() # this is for pos_calculator
+                queue = mp.Queue() # this is for tracker
+                queue2 = mp.Queue() # this is for pos_calculator
                 p = mp.Process(name='self.tel_script.TIME_TELE().start_sock',target=self.tel_script.TIME_TELE().start_sock, args=(queue2,queue,self.sec,self.map_size,self.map_len,\
                                         self.map_angle,self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.epoch,self.object,self.step,\
                                         self.coord_space,self.step_unit,self.map_size_unit,self.map_len_unit,self.map_angle_unit,self.numloop,self.kms_on_off))
@@ -1766,10 +1766,10 @@ class Tel_Thread(QtCore.QThread):
                     # grab data from tel_tracker.py
                     if not ut.tel_exit.is_set() :
                         time.sleep(0.01) # Rate limit
-                        if not (data.poll() and data2.poll()):
+                        if (queue.empty() or queue2.empty()):
                             continue # No new data, don't block in recv()                       
-                        tel_stuff = data.recv()
-                        progress = data2.recv() # this could end up blocking if rate is different from tel_stuff
+                        tel_stuff = queue.get()
+                        progress = queue2.get() # this could end up blocking if rate is different from tel_stuff
                         with self.flags.get_lock() :
                             self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
                         # pa,float(direction),el,az,map_ra,map_dec,ut
@@ -1803,19 +1803,18 @@ class KMS_Thread(QtCore.QThread):
     def run(self):
         if self.kms_on_off == 2 : #if the kms is starting without telescope, turn on tracker
             from tel_tracker import turn_on_tracker
-            data, queue = mp.Pipe()
             p1 = mp.Process(name='turn_on_tracker',target = turn_on_tracker, args=(self.kms_on_off,))
             p1.start()
 
-        data, queue = mp.Pipe()
+        queue = mp.Queue()
         p = mp.Process(name='kms_socket.start_sock',target=kms_socket.start_sock , args=(queue,))
         p.start()
 
         while not ut.kms_exit.is_set() :
             time.sleep(0.01) # Rate limit
-            if not data.poll():
+            if queue.empty():
                 continue # No new data, don't block in recv()  
-            kms_stuff = data.recv() # pa , flags, time, encoder pos
+            kms_stuff = queue.get() # pa , flags, time, encoder pos
             # send updated data to the gui
             # with self.flags.get_lock():
             #     self.flags[2] = int(kms_stuff[2])

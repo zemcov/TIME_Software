@@ -6,7 +6,6 @@ from . import hk_netcdf_files as hnc
 import datetime as dt
 from termcolor import colored
 import time
-from multiprocessing import Pipe
 import multiprocessing as mp
 import config.utils as ut
 from . import read_mce, read_tel, read_kms
@@ -19,15 +18,13 @@ class Time_Files:
         self.p = 0
         self.flags = flags
         self.offset = offset
-        self.data1, queue1 = mp.Pipe() #what are each of these pipes, idk
-        self.data2, queue2 = mp.Pipe()
-        self.data3, queue3 = mp.Pipe()
-        self.data4, queue4 = mp.Pipe()
+        
+        self.queues = [mp.Queue() for i in range(4)]
         self.procs = []
-        self.procs.append(mp.Process(name='Data Process MCE0', target=read_mce.netcdfdata, args=(0,queue1,self.flags,)))
-        self.procs.append(mp.Process(name='Data Process MCE1',target=read_mce.netcdfdata , args=(1,queue2,self.flags,)))
-        self.procs.append(mp.Process(name='Data Process Tel',target=read_tel.loop_files , args=(queue3,)))
-        # self.procs.append(mp.Process(name='Data Process KMS',target=read_kms.loop_files , args=(queue4,)))
+        self.procs.append(mp.Process(name='Data Process MCE0', target=read_mce.netcdfdata, args=(0,self.queues[0],self.flags,)))
+        self.procs.append(mp.Process(name='Data Process MCE1',target=read_mce.netcdfdata , args=(1,self.queues[1],self.flags,)))
+        self.procs.append(mp.Process(name='Data Process Tel',target=read_tel.loop_files , args=(self.queues[2],)))
+        # self.procs.append(mp.Process(name='Data Process KMS',target=read_kms.loop_files , args=(self.queues[3],)))
 
         for mce_index in range(2):
             if ut.which_mce[mce_index] == 1 :
@@ -62,23 +59,22 @@ class Time_Files:
                 # ~ print("append_data.retrieve is still alive, waiting on event %i" % id(ut.mce_exit))
                 last_time = time.time()
             
-            # The call to recv() blocks, which prevents us from properly
-            # exiting the program.  Therefore, don't call recv() unless
-            # we know we have something to read.
-            if (ut.which_mce[0] == 1) and not self.data1.poll():
+            # Wait until everything is ready
+            data_ready = True
+            for mce_index in range(2):
+                if (ut.which_mce[mce_index] == 1) and self.queues[mce_index].empty():
+                    data_ready = False
+            for qi in [2]: # [2,3]:
+                if self.queues[qi].empty():
+                    data_ready = False
+            if not data_ready:
                 continue
-            if (ut.which_mce[1] == 1) and not self.data2.poll():
-                continue
-            if not self.data3.poll():
-                continue
-            # ~ if not self.data4.poll():
-                # ~ continue
                 
             a = []
             b = []
 
             if ut.which_mce[0] == 1 :
-                data1 = self.data1.recv() #what is actually in data1, idk
+                data1 = self.queues[0].get() #what is actually in data1, idk
                 self.h1 = data1[0] #what is h1? idk
                 self.head1 = data1[1]
                 self.sync1 = data1[2]
@@ -87,7 +83,7 @@ class Time_Files:
                 # ---------------------------------------------------------
 
             if ut.which_mce[1] == 1 :
-                data2 = self.data2.recv()
+                data2 = self.queues[1].get()
                 self.h2 = data2[0]
                 self.head2 = data2[1]
                 self.sync2 = data2[2]
@@ -100,10 +96,10 @@ class Time_Files:
 
                 time.sleep(0.99)
 
-            queue.send([a,b,self.p])
+            queue.put([a,b,self.p])
 
-            self.tel_data = self.data3.recv()
-            # self.kms_data = self.data4.recv()
+            self.tel_data = self.queues[2].get()
+            # self.kms_data = self.queues[3].get()
             # ------------------------------------------
             # if ut.which_mce[2] == 0 : # if we aren't running in sim mode
             self.parse_arrays(dir)
@@ -114,10 +110,8 @@ class Time_Files:
         # ~ self.close()
         
         print("append_data.retrieve is closing connections")
-        for d in [self.data1, self.data2, self.data3, self.data4]:
-            d.close()
-        for d in [self.data1, self.data2, self.data3, self.data4]:
-            d.close()
+        for q in self.queues:
+            q.close()
         
         print("append_data.retrieve is exiting")
         sys.stdout.flush()

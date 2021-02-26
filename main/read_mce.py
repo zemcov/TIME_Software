@@ -6,7 +6,6 @@ from . import netcdf_files as nc
 import datetime as dt
 from termcolor import colored
 import time
-from multiprocessing import Pipe
 import multiprocessing as mp
 import config.utils as ut
 from config import directory
@@ -14,10 +13,10 @@ from config import directory
 h_shape = 0
 p = 0
 
-def netcdfdata(mce_index, queue1, flags):
+def netcdfdata(mce_index, queue, flags):
     """
     Purpose: read the mce0 or mce1 data
-    inputs: queue1 - idk
+    inputs: queue - idk
             flags - idk
     outputs: None
     Calls : readdata()
@@ -35,7 +34,7 @@ def netcdfdata(mce_index, queue1, flags):
         mce_run = os.path.exists(dir + 'temp.run')
         if mce_file and mce_run:
             head,h,frame_num,mce_on = readdata(mce_index, mce_file_name, flags)
-            queue1.send([h,head,frame_num,mce_on])
+            queue.put([h,head,frame_num,mce_on])
             a += 1
             subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
 
