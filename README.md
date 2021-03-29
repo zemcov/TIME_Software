@@ -21,4 +21,4 @@
 
 Now running on Python 3.x
 
-sudo pip3 install PyQt5 pyqtgraph PyQtWebEngine termcolor hanging_threads netcdf4 astropy
+sudo pip3 install PyQt5 pyqtgraph PyQtWebEngine termcolor hanging_threads netcdf4 astropy astroplan
