@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
-#from astroplan import Observer
+from astroplan import Observer
 import config.utils as ut
 from datetime import datetime
 from .pos_counter import scan_params
@@ -110,9 +110,9 @@ class TIME_TELE :
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
                             if coord_space == 'RA' :
-                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
                             else :
-                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -131,9 +131,9 @@ class TIME_TELE :
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
                             if coord_space == 'DEC' :
-                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
                             else :
-                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -154,9 +154,9 @@ class TIME_TELE :
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
                             if coord_space == 'RA' :
-                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
                             else :
-                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -175,9 +175,9 @@ class TIME_TELE :
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
                             if coord_space == 'DEC' :
-                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
                             else :
-                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -199,9 +199,9 @@ class TIME_TELE :
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
                             if coord_space == 'RA' :
-                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
                             else :
-                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)
@@ -222,9 +222,9 @@ class TIME_TELE :
 
                             tot = (float(self.i) / float(num_loop)) * 100.0
                             if coord_space == 'DEC' :
-                                queue.send([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),other_y,other_x,x,y,othertime.time()])
                             else :
-                                queue.send([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
+                                queue.put([tot,pa,int(slew_flag),y,x,other_x,other_y,othertime.time()])
 
                             n = n + (1/rate)
                             othertime.sleep(1/rate)

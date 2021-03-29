@@ -26,10 +26,10 @@ import config.utils as ut
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
-    
+
     #initializes mcegui class and calls other init functions
     def __init__(self, parent = None):
-        
+
         self.telescope_initialized = False
         self.showmcedata = None
         self.startwindow = None
@@ -40,7 +40,7 @@ class MainWindow(QtGui.QMainWindow):
         self.updater = None
         self.tel_updater = None
         self.kms_updater = None
-        
+
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle('TIME Live Data Visualization Suite')
         # self.setAutoFillBackground(true)
@@ -76,7 +76,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.init_mce()
         self.qt_connections()
-        
+
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
         self.timeinterval = 1
@@ -129,15 +129,15 @@ class MainWindow(QtGui.QMainWindow):
         self.browser.show()
 
     def on_quitbutton_clicked(self, event=None):
-        
+
         print("Running quit function")
-        
+
         print('=== Setting Exit Flags ===')
         ut.mce_exit.set()
         ut.tel_exit.set()
         ut.kms_exit.set()
         ut.hk_exit.set()
-        
+
         print('=== Stopping MCEs ===')
 
         # stop all of the mces with their own command
@@ -149,23 +149,23 @@ class MainWindow(QtGui.QMainWindow):
                 if ut.which_mce[mce_index] == 1 :
                     subprocess.call('./coms/mce_stop.sh %i %s' % (mce_index, rc), shell=True)
                     subprocess.call('./coms/mce_stop_rsync.sh %i' % (mce_index), shell=True)
-                    
+
         # # stop the file transfer process to time-master
         # ~ if self.mceson != 'MCE SIM':
             # ~ subprocess.Popen(['./coms/hk_stop_sftp.sh'], shell=True)
 
-        self.clear_temp_files()
-        
+        # self.clear_temp_files()
+
         # ~ monitor_thread = start_monitoring(seconds_frozen=2)
         # ~ print(monitor_thread)
         # ~ monitor_thread.stop()
-        
+
 
         print('=== Closing Windows ===')
         for window in [self.startwindow, self.browser, self.newwindow, self.heatmapwindow, self.telescopewindow]:
             if window is not None:
-                window.close()        
-        
+                window.close()
+
         print('=== Closing Processes ===')
         for proc, name in zip([self.updater, self.tel_updater,self.kms_updater],['MCE','Telescope','KMS']):
             if proc is not None:
@@ -175,15 +175,15 @@ class MainWindow(QtGui.QMainWindow):
                 print(name + " updater process ended")
             else:
                 print(name + " updater process was not used")
-                
+
         print('=== Application Exit ===')
         app.exit()
-        
+
         print("=== System Exit ===")
         sys.exit()
-        
+
     def clear_temp_files(self):
-    
+
         print("Clearing out local temp files...")
         tmp_dirs = [
             directory.mce0_dir + 'temp.*',
@@ -446,7 +446,7 @@ class MainWindow(QtGui.QMainWindow):
 
             if self.mceson != "MCE SIM" :
 
-                self.clear_temp_files()
+                # self.clear_temp_files()
 
                 #set the data mode for both mces and start them running
                 rc = self.readoutcard
@@ -477,7 +477,7 @@ class MainWindow(QtGui.QMainWindow):
                     if ut.which_mce[mce_index] == 1 :
                         dirname = directory.mce_dir_template % mce_index
                         subprocess.Popen(['ssh -T time@time-mce-%i python3 %s time@time-master:%s' % (mce_index, SYNC_SCRIPT_DEST, dirname)], shell=True)
-           
+
                 time.sleep(2.0)
 
             # subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
@@ -1215,7 +1215,7 @@ class MainWindow(QtGui.QMainWindow):
 
             self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
-            self.progressbar.setValue(progress[0])
+            self.progressbar.setValue(progress)
 
     def updateplot(self,h1,h2,index):
 
@@ -1396,18 +1396,17 @@ class MainWindow(QtGui.QMainWindow):
         # ==============================================================================================================
         #updates graph, if channel delete is set to yes will clear data first
         else:
-
-            # TODO: fix
-            # ~ if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
-                # ~ self.updateheatmap(h1,h2) # give first values for heatmap to create image scale
-            # ~ elif ut.which_mce[0] == 1 :
-                # ~ dummy = []
-                # ~ self.updateheatmap(h1,dummy)
-            # ~ elif ut.which_mce[2] == 1 :
-                # ~ self.updateheatmap(h1,h2)
-            # ~ else :
-                # ~ dummy = []
-                # ~ self.updateheatmap(dummy,h2)
+            #TODO: fix
+            if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
+                self.updateheatmap(h1,h2) # give first values for heatmap to create image scale
+            elif ut.which_mce[0] == 1 :
+                dummy = []
+                self.updateheatmap(h1,dummy)
+            elif ut.which_mce[2] == 1 :
+                self.updateheatmap(h1,h2)
+            else :
+                dummy = []
+                self.updateheatmap(dummy,h2)
 
             self.updatefftgraph()
 
@@ -1625,16 +1624,16 @@ class MCEThread(QtCore.QThread):
         last_time = 0
 
         while not ut.mce_exit.is_set():
-            
+
             time.sleep(0.01) # Rate limit
-            
+
             if time.time() - last_time > 5:
                 print("MCEThread.run is still alive")
                 last_time = time.time()
-            
+
             if queue.empty():
-                continue 
-            
+                continue
+
             stuff = queue.get()
             if ut.which_mce[0] == 1 and ut.which_mce[1] == 1 :
                 self.new_data.emit(stuff[0],stuff[1],stuff[2])
@@ -1646,11 +1645,11 @@ class MCEThread(QtCore.QThread):
             else :
                 dummy = []
                 self.new_data.emit(dummy,stuff[1],stuff[2])
-                
+
         print("MCEThread.run is waiting for subprocesses to join")
         p.join()
         # ~ p2.join()
-        
+
         print("MCEThread.run is exiting")
         sys.stdout.flush()
 
@@ -1709,7 +1708,7 @@ class Tel_Thread(QtCore.QThread):
                     if not ut.tel_exit.is_set() :
                         time.sleep(0.01) # Rate limit
                         if queue.empty():
-                            continue # No new data, don't block in recv()  
+                            continue # No new data, don't block in recv()
                         tel_stuff = queue.get()
                         with self.flags.get_lock() :
                             self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
@@ -1742,7 +1741,7 @@ class Tel_Thread(QtCore.QThread):
                     if not ut.tel_exit.is_set() :
                         time.sleep(0.01) # Rate limit
                         if queue.empty():
-                            continue # No new data, don't block in recv()      
+                            continue # No new data, don't block in recv()
                         tel_stuff = queue.get()
                         with self.flags.get_lock() :
                             self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
@@ -1768,14 +1767,14 @@ class Tel_Thread(QtCore.QThread):
                     if not ut.tel_exit.is_set() :
                         time.sleep(0.01) # Rate limit
                         if (queue.empty() or queue2.empty()):
-                            continue # No new data, don't block in recv()                       
+                            continue # No new data, don't block in recv()
                         tel_stuff = queue.get()
                         progress = queue2.get() # this could end up blocking if rate is different from tel_stuff
                         with self.flags.get_lock() :
                             self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
                         # pa,float(direction),el,az,map_ra,map_dec,ut
                         self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-                        
+
 
                     else :
                         self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
@@ -1814,7 +1813,7 @@ class KMS_Thread(QtCore.QThread):
         while not ut.kms_exit.is_set() :
             time.sleep(0.01) # Rate limit
             if queue.empty():
-                continue # No new data, don't block in recv()  
+                continue # No new data, don't block in recv()
             kms_stuff = queue.get() # pa , flags, time, encoder pos
             # send updated data to the gui
             # with self.flags.get_lock():

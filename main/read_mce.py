@@ -1,6 +1,7 @@
 import numpy as np
 from os import stat
 import os, sys, subprocess
+sys.path.append('/home/butler/time_analysis/py')
 import timefpu.mce_data as mce_data
 from . import netcdf_files as nc
 import datetime as dt
@@ -26,7 +27,7 @@ def netcdfdata(mce_index, queue, flags):
     a = 0
     print('starting mce%i read' % mce_index)
     last_time = 0
-    
+
     while not ut.mce_exit.is_set():
         mce_file_len = len(os.listdir(dir))
         mce_file_name = dir + 'temp.%0.3i' %(a)
@@ -39,12 +40,12 @@ def netcdfdata(mce_index, queue, flags):
             subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
 
         time.sleep(0.01) # Rate limit
-        
+
         if time.time() - last_time > 5:
             print("read_mce.netcdfdata for mce %i is still alive" % mce_index)
             # ~ print("read_mce.netcdfdata for mce %i is still alive, waiting on event %i" % (mce_index,id(ut.mce_exit)))
             last_time = time.time()
-        
+
     print("read_mce.netcdfdata for mce %i is exiting" % mce_index)
     sys.stdout.flush()
 
@@ -67,7 +68,7 @@ def readdata(mce_index, file, flags):
     """
     global h_shape
     global p
-    
+
     print("Processing mce%i file %s" % (mce_index, file))
     f = mce_data.MCEFile(file)
     l = f.Read(row_col=True, unfilter='DC', all_headers=True)

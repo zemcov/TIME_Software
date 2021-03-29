@@ -1,7 +1,7 @@
 import astropy.units as u
 from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
-#from astroplan import Observer
+from astroplan import Observer
 import numpy as np
 from datetime import datetime
 from termcolor import colored
