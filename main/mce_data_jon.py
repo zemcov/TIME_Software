@@ -86,8 +86,8 @@ def deprecate_arg(new_val, kwargs, new_arg, old_arg):
     # Note this pops the bad value from kwargs
     if old_arg in kwargs:
         if deprecation_warnings:
-            print 'Use of argument "%s" is deprecated, the new word is "%s".' % \
-                (old_arg, new_arg)
+            print('Use of argument "%s" is deprecated, the new word is "%s".' % \
+                (old_arg, new_arg))
         return kwargs.pop(old_arg)
     return new_val
 
@@ -157,16 +157,16 @@ def _rangify(start, count, n, name='items'):
     if start < 0:
         start = n + start
     if start > n:
-        print 'Warning: %s requested at %i, beyond available %s.' %\
-            (name, start, name)
+        print('Warning: %s requested at %i, beyond available %s.' %\
+            (name, start, name))
         start = n
     if count == None:
         count = n - start
     if count < 0:
         count = n - start + count
     if start + count > n:
-        print 'Warning: %i %s requested, exceeding available %s.' %\
-            (count, name, name)
+        print('Warning: %i %s requested, exceeding available %s.' %\
+            (count, name, name))
         count = n - start
     return start, count
 
@@ -264,12 +264,12 @@ class SmallMCEFile:
         vals = [ self._rfMCEParam('rc%i'%r, param) for r in rcs ]
         for r,v in zip(rcs[1:], vals[1:]):
             if v == None and vals[0] != None:
-                print 'Warning: param \'%s\' not found on rc%i.' % \
-                    (param, r)
+                print('Warning: param \'%s\' not found on rc%i.' % \
+                    (param, r))
                 continue
             if vals[0] != v:
-                print 'Warning: param \'%s\' is not consistent accross RCs.' % \
-                    (param)
+                print('Warning: param \'%s\' is not consistent accross RCs.' % \
+                    (param))
                 break
         return vals[0]
 
@@ -282,11 +282,11 @@ class SmallMCEFile:
         """
         if self.runfile == None:
             if self.runfilename == False:
-                raise RuntimeError, 'Can\'t determine content params without runfile.'
+                raise(RuntimeError, 'Can\'t determine content params without runfile.')
             self._ReadRunfile()
         # In a pinch we could get these params from the runfile.
         if self.size_ro == 0:
-            raise RuntimeError, 'Can\'t determine content params without data file.'
+            raise(RuntimeError, 'Can\'t determine content params without data file.')
         # Switch on firmware revision to determine 'num_cols_reported' support
         fw_rev = self._GetRCAItem('fw_rev')
         if fw_rev >= 0x5000001:
@@ -318,14 +318,14 @@ class SmallMCEFile:
 
         # Check 1: Warn if count_rc does not fit evenly into count_cc
         if count_cc % count_rc != 0:
-            print 'Warning: imperfect RC->CC frame packing (%i->%i).' % \
-                (count_rc, count_cc)
+            print('Warning: imperfect RC->CC frame packing (%i->%i).' % \
+                (count_rc, count_cc))
 
         # Check 2: Warn if decimation/packing is such that samples are
         #     not evenly spaced in time.
         if count_rc != count_cc:
             if count_rc * self.divid != count_cc:
-                print 'Warning: bizarro uneven RC->CC frame packing.'
+                print('Warning: bizarro uneven RC->CC frame packing.')
 
         # Determine the final data count, per channel.  Any times
         # that are not represented in all channels are lost.
@@ -365,7 +365,7 @@ class SmallMCEFile:
             file_size = stat(self.filename).st_size
             self.n_ro = file_size / self.frame_bytes
             if file_size % self.frame_bytes != 0:
-                print 'Warning: partial frame at end of file.'
+                print('Warning: partial frame at end of file.')
 
     def _UpdateNFrames(self):
         # Partial GetInfo... no error checking.
@@ -386,7 +386,7 @@ class SmallMCEFile:
         format = HeaderFormat()
         if head_binary is None:
             if self.filename is None:
-                raise RuntimeError, 'Can\'t read header without data file.'
+                raise(RuntimeError, 'Can\'t read header without data file.')
             fin = open(self.filename)
             if offset is not None:
                 fin.seek(offset)
@@ -432,8 +432,8 @@ class SmallMCEFile:
         # Check max frame size
         if count * self.frame_bytes > MAX_READ_SIZE:
             # Users: override this by changing the value of mce_data.MAX_READ_SIZE
-            print 'Warning: maximum read of %i bytes exceeded; limiting.' % \
-                MAX_READ_SIZE
+            print('Warning: maximum read of %i bytes exceeded; limiting.' % \
+                MAX_READ_SIZE)
             count = MAX_READ_SIZE / self.frame_bytes
 
         # Open, seek, read.
@@ -443,8 +443,8 @@ class SmallMCEFile:
         a = numpy.fromfile(file=fin, dtype='<i4', count=count*f_dwords)
         n_frames = len(a) / f_dwords
         if len(a) != count*f_dwords:
-            print 'Warning: read problem, only %i of %i requested frames were read.'% \
-                  (len(a)/f_dwords, count)
+            print('Warning: read problem, only %i of %i requested frames were read.'% \
+                  (len(a)/f_dwords, count))
         # Trim and reshape
         a = a[:n_frames*f_dwords]
         a.shape = (n_frames, f_dwords)
@@ -655,7 +655,7 @@ class SmallMCEFile:
         # Check data mode for processing instructions
         dm_data = MCE_data_modes.get('%i'%self.data_mode)
         if dm_data == None:
-            print 'Warning: unimplemented data mode %i, treating as 0.'%self.data_mode
+            print('Warning: unimplemented data mode %i, treating as 0.'%self.data_mode)
             dm_data = MCE_data_modes['0']
 
         # Handle data packing
@@ -678,7 +678,7 @@ class SmallMCEFile:
         data_out.n_frames = data.shape[1]
         data_out.header = self.header
         if all_headers:
-			data_out.headers = [self._ReadHeader(head_binary=frames_in[h]) for h in range(start, count)]
+	           data_out.headers = [self._ReadHeader(head_binary=frames_in[h]) for h in range(start, count)]
 
         # Unravel the field= vs. fields=[...] logic
         if field == None:
@@ -715,8 +715,8 @@ class SmallMCEFile:
                 elif unfilter == False:
                     pass
                 else:
-                    raise ValueError, \
-                        "unexpected value for unfilter= argument to MCEFile.Read"
+                    raise(ValueError, \
+                        "unexpected value for unfilter= argument to MCEFile.Read")
             if data_out.data_is_dict:
                 data_out.data[f] = new_data
             else:
@@ -789,7 +789,7 @@ class MCERunfile:
             if not array and len(f) <= 1: return f[0]
             return f
         if type!='string':
-            print 'Unknown type "%s", returning string.' % type
+            print('Unknown type "%s", returning string.' % type)
         if array:
             return data.split()
         return data
@@ -897,8 +897,8 @@ def unwrap(*args, **kwargs):
     This in a alias for unwrap_array, which you should use now.
     """
     if deprecation_warnings:
-        print 'Use of "unwrap" function is deprecated, the new name '\
-            ' is "unwrap_array".'
+        print('Use of "unwrap" function is deprecated, the new name '\
+            ' is "unwrap_array".')
     return unwrap_array(*args, **kwargs)
 
 #
@@ -945,7 +945,7 @@ class MCEButterworth(MCEFilter):
         return H
 
     def spectrum(self, *args, **kwargs):
-        print '*** please use "transfer" method instead of "spectrum" method.'
+        print('*** please use "transfer" method instead of "spectrum" method.')
         return self.transfer(*args, **kwargs)
 
     def gain(self):
@@ -1043,8 +1043,8 @@ class MCEButterworth(MCEFilter):
             params = fparams
         # Did this all work out?
         if params == None or len(params) != 6:
-            raise ValueError, "Invalid filter parameters for ftype='%i'" %\
-                ftype
+            raise(ValueError, "Invalid filter parameters for ftype='%i'" %\
+                ftype)
         return cls(params)
 
     @classmethod

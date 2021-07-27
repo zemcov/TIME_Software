@@ -19,10 +19,10 @@ class Time_Files:
         self.p = 0
         self.flags = flags
         self.offset = offset
-        self.data1, queue1 = mp.Pipe() #what are each of these pipes, idk
-        self.data2, queue2 = mp.Pipe()
-        self.data3, queue3 = mp.Pipe()
-        self.data4, queue4 = mp.Pipe()
+        self.data1, queue1 = mp.Pipe() # pipe to grab data from MCE0
+        self.data2, queue2 = mp.Pipe() # pipe to grab data from MCE1
+        self.data3, queue3 = mp.Pipe() # pipe to grab data from Telescope socket
+        self.data4, queue4 = mp.Pipe() # pipe to grab data from KMS socket
         self.p1 = mp.Process(target=read_mce0.netcdfdata, args=(queue1,self.flags,))
         self.p2 = mp.Process(target=read_mce1.netcdfdata , args=(queue2,self.flags,))
         self.p3 = mp.Process(target=read_tel.loop_files , args=(queue3,))
@@ -30,13 +30,15 @@ class Time_Files:
 
         if ut.which_mce[0] == 1 :
             print('starting read mce0')
-            self.p1.start()
+            self.p1.start() # start MCE0 data collection
         if ut.which_mce[1] == 1 :
             print('starting read mce1')
-            self.p2.start()
+            self.p2.start() # start MCE1 data collection
 
-        self.p3.start()
-        # self.p4.start()
+        self.p3.start() # start telescope data collection
+        # self.p4.start() # start kms data collection
+
+        # flush to let the print statements through
         sys.stdout.flush()
         sys.stderr.flush()
 
@@ -69,7 +71,7 @@ class Time_Files:
                 self.mce1_on = data2[3]
                 b = self.h2
 
-            if ut.which_mce[2] == 1 :
+            if ut.which_mce[2] == 1 : # generate random fake data when in SIM mode
                 a = np.random.normal(0,2,(33,32,100))
                 b = np.random.normal(10,0.1,(33,32,100))
 

@@ -20,6 +20,8 @@ import init
 from tel_box import draw_box
 import directory
 from hanging_threads import start_monitoring
+sys.path.append('../time_analysis/py/timefpu/')
+import coordinates as coords
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
@@ -363,6 +365,7 @@ class MainWindow(QtGui.QMainWindow):
             ut.which_mce[1] = 1
             ut.which_mce[2] = 0
         elif self.mceson == 'MCE SIM':
+            self.rand_data = np.load('/home/time_user/20210616_tsgen.npz',allow_pickle=True)['I'] # shape = (16,204115,60)
             ut.which_mce[0] = 0
             ut.which_mce[1] = 0
             ut.which_mce[2] = 1
@@ -454,8 +457,10 @@ class MainWindow(QtGui.QMainWindow):
             # subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
             data = np.zeros((33,32))
 
+            # get rid of the input window, we don't want people trying to resubmit
             self.startwindow.hide()
 
+            # create widget for KMS and MCE data =======================================================
             self.newwindow = QtGui.QWidget()
             self.newwindow.setWindowTitle('TIME Live Data Viewer')
             self.newgrid = QtGui.QGridLayout()
@@ -464,36 +469,50 @@ class MainWindow(QtGui.QMainWindow):
             self.newwindow.setLayout(self.newgrid)
             self.newgrid.addLayout(self.newgraphs, 0,2,8,8)
 
+            # Color the background of main window to white
             p = QtGui.QPalette()
             p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
             self.newwindow.setPalette(p)
 
+            # Quit Button closes out the entire GUI, or would if the threads didn't hang... ¯\_(ツ)_/¯
             self.newquitbutton = QtGui.QVBoxLayout()
             self.newquitbutton.addWidget(self.quitbutton)
             self.newgrid.addLayout(self.newquitbutton, 9,0,1,2)
 
+            # Button to input new Row/Col detector number for MCE0/MCE1
             self.setnewrc = QtGui.QVBoxLayout()
             self.setnewrc.addWidget(self.changechan)
             self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
 
+            # button stops the Kmirror
             self.kmsstop = QtGui.QVBoxLayout()
             self.kmsstop.addWidget(self.kms_stop)
             self.newgrid.addLayout(self.kmsstop,6,0,1,2)
 
+            # Button restarts Kmirror after error or emergency
             self.kmsrestart = QtGui.QVBoxLayout()
             self.kmsrestart.addWidget(self.kms_restart)
             self.newgrid.addLayout(self.kmsrestart,7,0,1,2)
+            # =============================================================================================
 
-            #start other plot making processes
+            #start processes that retrieve data from threads and add to plots
+            # this contains dummy placeholder data to start
             self.initplot()
+            # controls change in MCE column/row view, switches between detectors
             self.channelselection()
+            # all zeros heatmap to start, it needs data to init a plot object
             self.initheatmap(data,data) # give first values for heatmap to create image scale
+            # FFT of MCE0 and MCE1 for given detector
             self.initfftgraph()
+            # Starts AZ/ALT and RA/DEC data telescope plotting window
             self.inittelescope()
+            # Just creates and edits the wheel widget that mimics position of Kmirror in Cabin
             self.initkmirrordata()
 
+            # flush these so that our print statements show up
             sys.stdout.flush()
             sys.stderr.flush()
+            # show the new plotting window
             self.newwindow.show()
 
     #resets parameter variables after warning box is read
@@ -1045,6 +1064,7 @@ class MainWindow(QtGui.QMainWindow):
         self.telescopewindow.setGeometry(10, 10, 1920, 1080)
         self.telescopewindow.setLayout(self.telegrid)
 
+        #create boxes detailing the area of our observation on the Alt/Az and RA/DEC position graphs
         if self.off == False and self.inittel != 'No' and self.inittel != 'Tracker':
             box_leftx,box_lefty,box_rightx,box_righty,box_topx,box_topy,box_botx,box_boty =\
             draw_box(self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.coord_space,\
@@ -1055,8 +1075,9 @@ class MainWindow(QtGui.QMainWindow):
                 self.altazlinedata2.setData(box_rightx,box_righty,brush=pg.mkBrush('g'))
                 self.altazlinedata3.setData(box_topx,box_topy,brush=pg.mkBrush('g'))
                 self.altazlinedata4.setData(box_botx,box_boty,brush=pg.mkBrush('g'))
-
+            #
             else :
+                # print(box_leftx, box_lefty, box_rightx, box_righty, box_topx, box_topy, box_botx, box_boty)
                 self.radeclinedata1.setData(box_leftx,box_lefty,brush=pg.mkBrush('g'))
                 self.radeclinedata2.setData(box_rightx,box_righty,brush=pg.mkBrush('g'))
                 self.radeclinedata3.setData(box_topx,box_topy,brush=pg.mkBrush('g'))
@@ -1135,7 +1156,6 @@ class MainWindow(QtGui.QMainWindow):
     def updatetelescopedata(self,progress,pa,slew,alt,az,ra,dec,time):
         # error checking based on status flags from telescope
         tel_error = [10,11,12]
-
         if (slew in tel_error) and (self.repeat == False) :
             # use afplay for mac testing
             os.system("mpg123 " + directory.master_dir + "klaxon.mp3")
@@ -1167,7 +1187,6 @@ class MainWindow(QtGui.QMainWindow):
 
             altazcolor = pg.mkBrush('b')
             radeccolor = pg.mkBrush('r')
-
             if len(self.az) < 800 :
                 self.az.append(float(az))
                 self.alt.append(float(alt))
@@ -1185,7 +1204,7 @@ class MainWindow(QtGui.QMainWindow):
 
             self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
-            self.progressbar.setValue(progress[0])
+            self.progressbar.setValue(progress) #index [0] maybe needed for real runs
 
     def updateplot(self,h1,h2,index):
 
@@ -1205,10 +1224,23 @@ class MainWindow(QtGui.QMainWindow):
 
         if ut.which_mce[2] == 1 :
 
-            y1 = np.asarray(h1)[self.row1,self.channel1,:]
-            self.y1 = y1
+            ''' NEW RANDOM GENERATED MCE DATA METHOD ================================================'''
+            if (index*100) > self.rand_data.shape[1] : # don't try to index past end of dataset
+                y1 = np.asarray(h1)[self.row1,self.channel1,:] # old method with random num gen
+                y2 = np.asarray(h2)[self.row2,self.channel2,:] # old method with random num gen
 
-            y2 = np.asarray(h2)[self.row2,self.channel2,:]
+            else : # if we run out of data from the file, just keep plotting random stuff
+                x1,f1 = coords.muxcr_to_xf(self.row1,self.channel1)
+                x2,f2 = coords.muxcr_to_xf(self.row2,self.channel2)
+                if index == 0 :
+                    y1 = self.rand_data[x1,0:100,f1]/(1.4*10**9) # first index just do 100 data points
+                    y2 = self.rand_data[x2,0:100,f2]/(1.4*10**9) # first index just do 100 data points
+                else :
+                    y1 = self.rand_data[x1,(index*100)-100:(index*100),f1]/(1.4*10**9) # all others, just move up by 100
+                    y2 = self.rand_data[x2,(index*100)-100:(index*100),f2]/(1.4*10**9) # all others, just move up by 100
+            ''' ====================================================================================='''
+
+            self.y1 = y1
             self.y2 = y2
 
         #creates x values for current time interval and colors points based on current channel ===
@@ -1586,7 +1618,9 @@ class MCEThread(QtCore.QThread):
         ut.mce_exit.set()
 
     def run(self):
+        # create data PIPE where data is attached to GUI and queue is attached to append_data.py
         data, queue = mp.Pipe()
+
         p = mp.Process(target=append_data.Time_Files(flags = self.flags, offset = self.offset).retrieve, args=(queue,self.netcdfdir,))
         # p2 = mp.Process(target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         p.start()
@@ -1714,12 +1748,13 @@ class Tel_Thread(QtCore.QThread):
 
                 while True :
                     # grab data from tel_tracker.py
-                    if not ut.tel_exit.is_set() :
+                    if not ut.tel_exit.is_set():
                         tel_stuff = data.recv()
                         progress = data2.recv() # this could end up blocking if rate is different from tel_stuff
                         with self.flags.get_lock() :
                             self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
                         # pa,float(direction),el,az,map_ra,map_dec,ut
+                        #tel_stuff = pa,slew,alt,az,ra,dec,time
                         self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
                         time.sleep(0.01)
 

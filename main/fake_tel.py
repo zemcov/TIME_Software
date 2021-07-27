@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.time import Time as thetime
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz, Angle, Latitude, Longitude, ICRS, Galactic, FK4, FK5
-#from astroplan import Observer
+from astroplan import Observer
 import utils as ut
 from datetime import datetime
 from pos_counter import scan_params
 from termcolor import colored
-# from astroplan import download_IERS_A
+from astroplan import download_IERS_A
 # download_IERS_A()
 
 class TIME_TELE :
@@ -79,9 +79,9 @@ class TIME_TELE :
         update = int((3600.0/(speeds[0]-15.0))*(area)*rate)
         n = 0
         slew_flag = 3.0 #starts the simulation tracking up to starting position
-        x = float(calc_coord1) # iterative
+        x = float(calc_coord1) - map_len/2.# iterative
         y = float(calc_coord2) # iterative
-        start_x = float(calc_coord1) # static
+        start_x = float(calc_coord1) - map_len / 2.# static
         start_y = float(calc_coord2) # static
 
         if str(step_unit) != 'deg':
