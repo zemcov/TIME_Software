@@ -23,12 +23,17 @@ import multiprocessing as mp
 from multiprocessing import Manager
 
 TELESCOPE_HOST = '0.0.0.0'
-TELESCOPE_PORT = 8888
-CONTROL_HOST = '192.168.0.102'
-CONTROL_PORT = 8000
+TELESCOPE_PORT = 8000
+CONTROL_HOST = '192.168.1.143'
+CONTROL_PORT = 8500
 
 NUM_SAMPLES = 800
 STEP_OFFSET = 150
+
+'''
+WARNING! Demo mode has PA values that may be outside of MAX/MIN allowed rotational range
+USE WITH CAUTION!!!
+'''
 DEMO = False
 
 class KalmanFilter(object):
@@ -111,7 +116,7 @@ class KMirror():
 # ===================================================================
 class Stop_Checker():
     """
-    Checks for E-stop Signals
+    Checks for E-stop Signals & Initiates Movement Commands
     """
     def __init__(self):
         GPIO.setmode(GPIO.BCM)
@@ -119,6 +124,13 @@ class Stop_Checker():
         GPIO.setup([12,13,16],GPIO.IN)
         print("Stop Checker Initialized")
         self.thread1Stop = mp.Event()
+        # init kms params
+        self.blanking = 0
+        self.direction = 0
+        self.observing = 0
+        self.pad = 0
+        self.utc = 0
+        self.pa = 0
 
 ###############################################################################################################
     def limits(self,flag):
@@ -171,21 +183,21 @@ class Stop_Checker():
 ##################################################################################################################################
     def go_to(self,angle):
         while not self.thread1Stop.is_set() :
-            if get_pos() < (angle - 0.1) or get_pos() > (angle + 0.1) :
+            if get_pos() < (angle - toler) or get_pos() > (angle + toler) :
                 steps = deg_to_step(angle) - deg_to_step(get_pos())
                 rotate_motor(int(steps), 1000)
-                time.sleep(abs(steps)/2000.0 + 0.1)
+                time.sleep(abs(steps)/2000.0 + toler)
             else :
                 break
         self.thread1Stop.set()
         return
 ########################################################################################################################################
     def home_motor(self,arg):
-        while get_pos() < (home_pos - 0.1) or get_pos() > (home_pos + 0.1):
+        while get_pos() < (home_pos - toler) or get_pos() > (home_pos + toler):
             if not self.thread1Stop.is_set() :
                 steps = deg_to_step(home_pos) - deg_to_step(get_pos())
                 rotate_motor(int(steps), 1000)
-                time.sleep(abs(steps)/2000.0 + 0.1)
+                time.sleep(abs(steps)/2000.0 + toler)
             else :
                 break
         self.thread1Stop.set()
@@ -209,7 +221,7 @@ class Stop_Checker():
                 # Wait for a new update to come in
                 while len(self.masterlist) <= old_len:
                     time.sleep(0.02)
-		print("updating...")
+                print("updating...")
                 old_len = len(self.masterlist)
 
                 # NEW UPDATE
@@ -244,35 +256,36 @@ class Stop_Checker():
 ##################################################################################################################################
     def run(self):
         print("run is starting")
-##        if DEMO:
-##            with open('pa.txt', 'r') as f:
-##                for line in f.readlines():
-##                    if not self.thread1Stop.is_set():
-##                        pa, flag = line.strip().split(',')
-##                        update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), bool(flag))
-##                        self.masterlist.append(update)
-##                        # print float(pa)/2.0
-##                        time.sleep(1.0/20.0)
-##                    else:
-##                        break
-##                self.thread1Stop.set()
-##        else:
+       # if DEMO:
+       #     with open('pa.txt', 'r') as f:
+       #         for line in f.readlines():
+       #             if not self.thread1Stop.is_set():
+       #                 pa, flag = line.strip().split(',')
+       #                 update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), bool(flag))
+       #                 self.masterlist.append(update)
+       #                 time.sleep(1.0/20.0)
+       #             else:
+       #                 break
+       #         self.thread1Stop.set()
+       # else:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((TELESCOPE_HOST,TELESCOPE_PORT))
         s.listen(1)
         print('listening for connection')
-        unpacker = struct.Struct('d i')
+        unpacker = struct.Struct('i i i i d d')
         while not self.thread1Stop.is_set():
             connection,client= s.accept()
             print('Socket connected')
+            t4 = mp.Process(target=self.gui_socket)
+            t4.start() # start the kms gui socket
             try:
                 while not self.thread1Stop.is_set():
                    data = connection.recv(unpacker.size)
                    if data :
-                       pa,flag = unpacker.unpack(data)
-                       update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), flag)
-##                       print(pa,flag,pa_enc(float(pa)))
-                       self.masterlist.append(update)
+                      self.blanking,self.direction,self.observing,self.pad,self.utc,self.pa = unpacker.unpack(data)
+                      update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
+                      self.masterlist.append(update)
+                      self.updatelist.append([float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos)])
                    else : #no more data
                        break
             except Exception as e:
@@ -299,20 +312,26 @@ class Stop_Checker():
                 break
         self.thread1Stop.set()
 #########################################################################
-#    def vic_socket():
-#        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#        s.connect((CONTROL_HOST, CONTROL_PORT))
-#        packer = packer = struct.Struct('d i')
-#	while not self.thread1Stop.is_set():
-#		data = packer.pack(float(pa),int(slew_flag))
-#    		s.send(data)
-#        	print 'PA Sent to Gui',time.time()
-#	s.close()
-#	print 'vic_socket closed'
+    def gui_socket(self):
+    	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    	s.connect((CONTROL_HOST, CONTROL_PORT))
+    	packer = struct.Struct('d i d d')
+
+        while not self.thread1Stop.is_set():
+            if len(self.updatelist) != 0 :
+                data = packer.pack(self.updatelist[-1][0],self.updatelist[-1][1],self.updatelist[-1][2],self.updatelist[-1][3])
+                s.send(data)
+                print 'PA Sent to Gui',self.updatelist[-1][0], time.time()
+                time.sleep(0.05)
+            else :
+                pass
+        s.close()
+        print 'gui_socket closed'
 
 ###############################################################################################################################
     def main(self,arg1,arg2,arg3):
         self.masterlist = Manager().list()
+        self.updatelist = Manager().list()
         if arg1 == 'go_to':
             t1 = mp.Process(target=self.go_to,args = (arg2,))
             t2 = mp.Process(target=self.limits,args = (arg3,))
@@ -327,11 +346,10 @@ class Stop_Checker():
             t1 = mp.Process(target=self.limits,args=(arg3,))
             t2 = mp.Process(target=self.run)
             t3 = mp.Process(target=self.track)
- #           t4 = mp.Process(target=self.vic_socket)
             t1.start()
             t2.start()
             t3.start()
-#            t4.start()
+
         self.stop_check()
 
 
@@ -384,14 +402,18 @@ class Ready(State):
         """
         if event == 'go_home':
             return Verification()
+
         if event == 'start_tracking':
             if self.verified == 1:
                 return Tracking(self.verified)
             print 'Error: K-Mirror must be verified to start tracking'
+
         if event == 'verify':
             return Home()
+
         if event == 'error':
             return EmergencyStop()
+
         if event == 'go_to_pos':
             if get_pos() > minimum and get_pos() < maximum :
                 flag = 'good'
@@ -401,7 +423,7 @@ class Ready(State):
             problem = False
             print("Moving to Position")
             sc = Stop_Checker()
-            sc.main("go_to",float(angle) + 293.65,flag)
+            sc.main("go_to",float(angle) + home_pos,flag)
         return self
 
     def events(self):

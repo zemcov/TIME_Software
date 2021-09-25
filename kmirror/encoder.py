@@ -8,8 +8,8 @@ spi = spidev.SpiDev()
 spi.open(0,0)
 spi.max_speed_hz = 7629
 
-home_pos = 294.50
-maximum = home_pos + 45.0
+home_pos = 294.5
+maximum = home_pos + 42.0
 minimum = home_pos - 45.0
 
 def get_pos():
@@ -26,10 +26,11 @@ def get_pos():
 
 def pa_enc(pa):
     ang = 0.0
-    if np.sign(pa) == -1.0:
-        ang = abs(pa/2.0) + home_pos
-    else :
-        ang = -(pa/2) + home_pos
+    # if np.sign(pa) == -1.0:
+    #     ang = abs(pa/2.0) + home_pos
+    # else :
+    #     ang = -(pa/2.0) + home_pos
+    ang = (pa/2.0) + home_pos
     return ang
 
 def enc_pa(enc):

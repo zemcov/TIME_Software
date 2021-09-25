@@ -1,6 +1,7 @@
 PACKET_FORMAT = 'fd???'
 DEG_TO_STEP = 0.36  # 21.6', 1296"
 GEAR_RATIO = 160.0
+toler = 0.05 # sets the minimum allowed offset between actual and commanded position
 
 deg_to_arcmin = lambda a: float(a) * 60.0
 deg_to_arcsec = lambda a: float(a) * 3600.0
