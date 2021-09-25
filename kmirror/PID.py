@@ -34,7 +34,7 @@ class PID:
     """PID Controller
     """
 
-    def __init__(self, P=0.2, I=0.0, D=0.0):
+    def __init__(self, P=2.0, I=0.5, D=0.0):
 
         self.Kp = P
         self.Ki = I
@@ -61,7 +61,7 @@ class PID:
 
         self.output = 0.0
 
-    def update(self, feedback_value):
+    def update(self, feedback_value, tel_utc):
         """Calculates PID value for given reference feedback
 
         .. math::
@@ -75,7 +75,8 @@ class PID:
         """
         error = self.SetPoint - feedback_value
 
-        self.current_time = time.time()
+        # self.current_time = time.time()
+        self.current_time = tel_utc
         delta_time = self.current_time - self.last_time
         delta_error = error - self.last_error
 
@@ -99,6 +100,8 @@ class PID:
             self.last_error = error
 
             self.output = self.PTerm + (self.Ki * self.ITerm) + (self.Kd * self.DTerm)
+
+        return delta_time,self.current_time,delta_error,error,self.PTerm,self.ITerm,self.DTerm
 
     def setKp(self, proportional_gain):
         """Determines how aggressively the PID reacts to the current error with setting Proportional Gain"""

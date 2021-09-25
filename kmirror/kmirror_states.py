@@ -12,7 +12,7 @@ https://dev.to/karn/building-a-simple-state-machine-in-python
 from state import *
 import RPi.GPIO as GPIO
 from safety import *
-from encoder import get_pos, home_pos, minimum, maximum, pa_enc
+from encoder import get_pos, home_pos, minimum, maximum, pa_enc, enc_pa
 from util import *
 from rotate_motor import rotate_motor, twos_comp
 import sys, subprocess
@@ -21,19 +21,16 @@ import numpy as np
 import PID
 import multiprocessing as mp
 from multiprocessing import Manager
+# from datetime import timezone,timedelta
+import datetime
 
 TELESCOPE_HOST = '0.0.0.0'
 TELESCOPE_PORT = 8000
-CONTROL_HOST = '192.168.1.143'
+CONTROL_HOST = '192.168.1.104'
 CONTROL_PORT = 8500
 
 NUM_SAMPLES = 800
 STEP_OFFSET = 150
-
-'''
-WARNING! Demo mode has PA values that may be outside of MAX/MIN allowed rotational range
-USE WITH CAUTION!!!
-'''
 DEMO = False
 
 class KalmanFilter(object):
@@ -88,10 +85,10 @@ class KMirror():
         self.pid.setSampleTime(0.01)
         self.pid.setWindup(250.0)
 
-    def move_cmd(self, steps, set_point, vel_est):#, speed):
+    def move_cmd(self, steps, set_point, vel_est, tel_utc):#, speed):
         self.dest_pos = self.encoder_pos_s + steps
         self.pid.SetPoint = self.encoder_pos_s + set_point
-        self.pid.update(self.encoder_pos_s)
+        dtime,current_time,delta_error,error,PTerm,ITerm,DTerm = self.pid.update(self.encoder_pos_s,tel_utc)
         self.speed = self.pid.output
         if sign(self.speed) == sign(vel_est):
             if abs(self.speed) == self.speed:
@@ -109,14 +106,17 @@ class KMirror():
 
             # --------------------------------------------------------------------------------
         else:
+            print('########################### Velocity Not Updated! ###########################')
             self.speed = 0.0
+
+        return self.speed,dtime,current_time,delta_error,error,PTerm,ITerm,DTerm
 
     def update(self):
         self.encoder_pos_s = deg_to_step(get_pos())
 # ===================================================================
 class Stop_Checker():
     """
-    Checks for E-stop Signals & Initiates Movement Commands
+    Checks for E-stop Signals
     """
     def __init__(self):
         GPIO.setmode(GPIO.BCM)
@@ -183,21 +183,21 @@ class Stop_Checker():
 ##################################################################################################################################
     def go_to(self,angle):
         while not self.thread1Stop.is_set() :
-            if get_pos() < (angle - toler) or get_pos() > (angle + toler) :
+            if get_pos() < (angle - 0.1) or get_pos() > (angle + 0.1) :
                 steps = deg_to_step(angle) - deg_to_step(get_pos())
                 rotate_motor(int(steps), 1000)
-                time.sleep(abs(steps)/2000.0 + toler)
+                time.sleep(abs(steps)/2000.0 + 0.1)
             else :
                 break
         self.thread1Stop.set()
         return
 ########################################################################################################################################
     def home_motor(self,arg):
-        while get_pos() < (home_pos - toler) or get_pos() > (home_pos + toler):
+        while get_pos() < (home_pos - 0.1) or get_pos() > (home_pos + 0.1):
             if not self.thread1Stop.is_set() :
                 steps = deg_to_step(home_pos) - deg_to_step(get_pos())
                 rotate_motor(int(steps), 1000)
-                time.sleep(abs(steps)/2000.0 + toler)
+                time.sleep(abs(steps)/2000.0 + 0.1)
             else :
                 break
         self.thread1Stop.set()
@@ -213,6 +213,9 @@ class Stop_Checker():
         estimated_measurement_variance = 1
         kalman_filter = KalmanFilter(process_variance, estimated_measurement_variance)
         kmirror = KMirror()
+        est_tel_vel = np.zeros((2400,2))
+        comm_vel = np.zeros((2400,9))
+        n = 0
 
         try:
             # ===================================== TRACKING ALGORITHM MAIN LOOP =====================================
@@ -221,7 +224,7 @@ class Stop_Checker():
                 # Wait for a new update to come in
                 while len(self.masterlist) <= old_len:
                     time.sleep(0.02)
-                print("updating...")
+                    # print("updating...")
                 old_len = len(self.masterlist)
 
                 # NEW UPDATE
@@ -232,7 +235,7 @@ class Stop_Checker():
                     tele_vel = self.masterlist[-1].abs_degree_pos - self.masterlist[-2].abs_degree_pos
                     time_delta = self.masterlist[-1].when_sent - self.masterlist[-2].when_sent
                     if time_delta == 0.0 :
-		    	tele_vel /= 0.1
+                        tele_vel /= 0.1
                     if (tele_vel > 0 and measured_speed[-1] < 0) or (tele_vel < 0 and measured_speed[-1] > 0) or \
                         self.masterlist[-1].flag != self.masterlist[-2].flag:
                         kalman_filter.reset(tele_vel)
@@ -240,13 +243,21 @@ class Stop_Checker():
                     kalman_speed.append(kalman_filter.get_latest_estimated_measurement())
                     measured_speed.append(tele_vel)
 
-                    if len(self.masterlist) >= 3:
+                    if len(self.masterlist) >= 3 :
                         kmirror.update()
                     encoder_pos_d = step_to_deg(kmirror.encoder_pos_s)
+                    print('moving : ',encoder_pos_d)
                     set_point = deg_to_step(ang_subtract(self.masterlist[-1].abs_degree_pos, encoder_pos_d))
                     set_point *= ang_subtract_sign(self.masterlist[-1].abs_degree_pos, encoder_pos_d)
                     steps_to_move = int(set_point) + STEP_OFFSET * sign(kmirror.speed)
-                    kmirror.move_cmd(steps_to_move, set_point, kalman_speed[-1])
+                    est_tel_vel[n,:]=[kalman_speed[-1],self.masterlist[-1].when_sent] # saving estimated telescope velocity
+                    comm_speed,dtime,current_time,delta_error,error,PTerm,ITerm,DTerm = kmirror.move_cmd(steps_to_move, set_point, kalman_speed[-1],self.masterlist[-1].when_sent)
+                    comm_vel[n,:]=[comm_speed,self.masterlist[-1].when_sent,dtime,current_time,delta_error,error,PTerm,ITerm,DTerm]
+                    n += 1
+                    if n % 40 == 0:
+                        np.save('kms_test_1.npy',comm_vel)
+                        np.save('kms_test_2.npy',est_tel_vel)
+                        print('OTHER STUFF SAVED!')
 
             # ========================================================================================================
         except KeyboardInterrupt:
@@ -256,42 +267,81 @@ class Stop_Checker():
 ##################################################################################################################################
     def run(self):
         print("run is starting")
-       # if DEMO:
-       #     with open('pa.txt', 'r') as f:
-       #         for line in f.readlines():
-       #             if not self.thread1Stop.is_set():
-       #                 pa, flag = line.strip().split(',')
-       #                 update = TelescopeUpdate(pa_enc(float(pa)), time.time(), time.time(), bool(flag))
-       #                 self.masterlist.append(update)
-       #                 time.sleep(1.0/20.0)
-       #             else:
-       #                 break
-       #         self.thread1Stop.set()
-       # else:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((TELESCOPE_HOST,TELESCOPE_PORT))
-        s.listen(1)
-        print('listening for connection')
-        unpacker = struct.Struct('i i i i d d')
-        while not self.thread1Stop.is_set():
-            connection,client= s.accept()
-            print('Socket connected')
-            t4 = mp.Process(target=self.gui_socket)
-            t4.start() # start the kms gui socket
-            try:
-                while not self.thread1Stop.is_set():
-                   data = connection.recv(unpacker.size)
-                   if data :
-                      self.blanking,self.direction,self.observing,self.pad,self.utc,self.pa = unpacker.unpack(data)
-                      update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), time.time(), self.direction)
-                      self.masterlist.append(update)
-                      self.updatelist.append([float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos)])
-                   else : #no more data
-                       break
-            except Exception as e:
-                print e
-                s.close()
-            finally :
+        kms_data = np.zeros((2400,9))
+
+        ''' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ '''
+        if DEMO :
+            while not self.thread1Stop.is_set():
+                save_data = []
+                n = 0
+                sim_data = np.load('kms_comm_test_090121.npy')
+                try:
+                    while not self.thread1Stop.is_set():
+                       if n < sim_data.shape[0] :
+                            self.pa = sim_data[n,1]
+                            self.direction = sim_data[n,-1]
+                            self.utc = sim_data[n,0]
+                            n += 1
+                            save_data.append([self.utc,self.pa,float(enc_pa(get_pos())),time.time(),self.direction])
+                            if n % 40 == 0 :
+                               np.save('kms_test.npy',save_data)
+
+                            # need to convert UTC hours to UNIX time
+                            dt = datetime.date.today()
+                            timestamp = (dt - datetime.date(1970, 1, 1)).total_seconds()
+
+                            update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), (timestamp + self.utc*60*60), self.direction)
+                            # print(self.utc,self.pa,pa_enc(float(self.pa)))
+                            self.masterlist.append(update)
+                            self.updatelist.append([float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos)])
+                       else : #no more data
+                            self.thread1Stop.set()
+                            break
+                except Exception as e:
+                    print(e)
+                finally :
+                    print('shutdown')
+            ''' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ '''
+        else :
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind((TELESCOPE_HOST,TELESCOPE_PORT))
+            s.listen(1)
+            print('listening for connection')
+            unpacker = struct.Struct('i i i i d d d d d d')
+            while not self.thread1Stop.is_set():
+                connection,client= s.accept()
+                print('Socket connected')
+                time.sleep(1.0)
+                # t4 = mp.Process(target=self.gui_socket)
+                # t4.start() # start the kms gui socket
+                n = 0
+                try:
+                    while not self.thread1Stop.is_set():
+                       data = connection.recv(unpacker.size)
+                       if data :
+                            self.blank,self.direction,self.obs,self.pad, azvelcmd, elvelcmd, azvelact, elvelact, self.utc,self.pa = unpacker.unpack(data)
+                            kms_data[n,:]=[self.utc,self.pa,float(enc_pa(get_pos())),time.time(),self.direction,azvelcmd, elvelcmd, azvelact, elvelact]
+                            n += 1
+                            if n == (kms_data.shape[0]-1) :
+                               np.save('kms_test_0.npy',kms_data)
+                               print('I SAVED STUFF... HOPEFULLY :)')
+                               self.thread1Stop.set()
+
+                            # need to convert UTC hours to UNIX time
+                            dt = datetime.date.today()
+                            timestamp = (dt - datetime.date(1970, 1, 1)).total_seconds()
+                            update = TelescopeUpdate(pa_enc(float(self.pa)), time.time(), timestamp + (self.utc*60*60), self.direction)
+                            # print(self.utc,self.pa,pa_enc(float(self.pa)))
+                            self.masterlist.append(update)
+                            self.updatelist.append([float(self.pa),int(self.direction),float(time.time()),float(get_pos()-home_pos)])
+                       else : #no more data
+                           self.thread1Stop.set()
+                           break
+                except KeyboardInterrupt :
+                    self.thread1Stop.set()
+                    s.close()
+                finally :
                     connection.close()
 ################################################################################################################################
     def step_overload(self,num_steps) :
@@ -313,9 +363,10 @@ class Stop_Checker():
         self.thread1Stop.set()
 #########################################################################
     def gui_socket(self):
-    	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    	s.connect((CONTROL_HOST, CONTROL_PORT))
-    	packer = struct.Struct('d i d d')
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((CONTROL_HOST, CONTROL_PORT))
+        packer = struct.Struct('d i d d')
 
         while not self.thread1Stop.is_set():
             if len(self.updatelist) != 0 :
@@ -332,6 +383,7 @@ class Stop_Checker():
     def main(self,arg1,arg2,arg3):
         self.masterlist = Manager().list()
         self.updatelist = Manager().list()
+
         if arg1 == 'go_to':
             t1 = mp.Process(target=self.go_to,args = (arg2,))
             t2 = mp.Process(target=self.limits,args = (arg3,))
@@ -346,10 +398,11 @@ class Stop_Checker():
             t1 = mp.Process(target=self.limits,args=(arg3,))
             t2 = mp.Process(target=self.run)
             t3 = mp.Process(target=self.track)
+            # t4 = mp.Process(target=self.gui_socket)
             t1.start()
             t2.start()
             t3.start()
-
+            # t4.start()
         self.stop_check()
 
 
@@ -402,18 +455,14 @@ class Ready(State):
         """
         if event == 'go_home':
             return Verification()
-
         if event == 'start_tracking':
             if self.verified == 1:
                 return Tracking(self.verified)
             print 'Error: K-Mirror must be verified to start tracking'
-
         if event == 'verify':
             return Home()
-
         if event == 'error':
             return EmergencyStop()
-
         if event == 'go_to_pos':
             if get_pos() > minimum and get_pos() < maximum :
                 flag = 'good'
@@ -423,7 +472,7 @@ class Ready(State):
             problem = False
             print("Moving to Position")
             sc = Stop_Checker()
-            sc.main("go_to",float(angle) + home_pos,flag)
+            sc.main("go_to",float(angle) + 293.65,flag)
         return self
 
     def events(self):
