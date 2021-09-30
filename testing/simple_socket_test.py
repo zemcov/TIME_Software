@@ -19,7 +19,7 @@ def gui_ports():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                s.bind(('192.168.1.252',PORT))
+                s.bind(('',PORT))
                 # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
                 s.connect(('192.168.1.252',PORT)) # this is to connect locally
                 print('connected to the socketmanager from the GUI')
