@@ -14,7 +14,7 @@ def gui_ports():
         conn_flag = False
         PORT = 1806
         while not conn_flag:
-            print('trying to connecto the telescope from the GUI')
+            print('trying to connecto the socket manager from the GUI')
             time.sleep(2)
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,12 +22,11 @@ def gui_ports():
                 s.bind(('',PORT))
                 # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
                 s.connect(('',PORT)) # this is to connect locally
-                print('connected to the GUI from the kmirror')
+                print('connected to the socketmanager from the GUI')
                 conn_flag = True
             except ConnectionRefusedError:
                 pass
 
-        print('Socket 1 Connected -----------------------------')
         s.send('TIME_START_TELEMETRY 2'.encode())
         reply = s.recv(1024).decode("ascii")
         print(reply)
@@ -37,7 +36,6 @@ def gui_ports():
         # l.shutdown()
         # l.close()
         s.close()
-        break
     # '''
     # This is the telescope listening for the GUI
     # '''
@@ -118,7 +116,7 @@ def kms_ports():
     # '''
     # data_file = '/home/time_user/kmirror_testing/TIME_Software/kms_test_0_perm.npy'
     # data = np.load(data_file, allow_pickle=True)
-    print(data.shape)
+    # print(data.shape)
     PORT = 8500
     sim_gui_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sim_gui_s.bind(('',PORT))
