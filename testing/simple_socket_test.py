@@ -119,7 +119,7 @@ def kms_ports():
     # print(data.shape)
     PORT = 8500
     sim_gui_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sim_gui_s.bind(('',PORT))
+    sim_gui_s.bind(('192.168.1.255',PORT))
     print('GUI Listening for KMS')
     sim_gui_s.listen(5)
     client, info = sim_gui_s.accept()
