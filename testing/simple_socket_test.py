@@ -15,7 +15,7 @@ def gui_ports():
         PORT = 1806
         while not conn_flag:
             print('trying to connect to 1806')
-            time.sleep(2)
+            time.sleep(120)
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
