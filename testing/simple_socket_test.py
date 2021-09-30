@@ -19,9 +19,9 @@ def gui_ports():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                s.bind(('',PORT))
+                s.bind(('192.168.1.255',PORT))
                 # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
-                s.connect(('',PORT)) # this is to connect locally
+                s.connect(('192.168.1.255',PORT)) # this is to connect locally
                 print('connected to the socketmanager from the GUI')
                 conn_flag = True
             except Exception:
@@ -32,6 +32,8 @@ def gui_ports():
         print(reply)
     except KeyboardInterrupt:
         s.send('TIME_START_TELEMETRY 0'.encode())
+        reply = s.recv(1024).decode("ascii")
+        print(reply)
         s.shutdown()
         # l.shutdown()
         # l.close()
