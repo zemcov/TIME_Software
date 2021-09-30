@@ -10,30 +10,37 @@ PORTS
 8500 - kms listens for telescope
 '''
 def gui_ports():
+    try:
+        conn_flag = False
+        PORT = 1806
+        while not conn_flag:
+            print('trying to connecto the telescope from the GUI')
+            time.sleep(2)
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(('',PORT))
+                # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
+                s.connect(('',PORT)) # this is to connect locally
+                print('connected to the GUI from the kmirror')
+                conn_flag = True
+            except ConnectionRefusedError:
+                pass
 
-    conn_flag = False
-    PORT = 1806
-    while not conn_flag:
-        print('trying to connecto the GUI from the kmirror')
-        time.sleep(2)
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind(('',PORT))
-            # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
-            s.connect(('',PORT)) # this is to connect locally
-            print('connected to the GUI from the kmirror')
-            conn_flag = True
-        except ConnectionRefusedError:
-            pass
-
-    print('Socket 1 Connected -----------------------------')
-    s.send('TIME_START_TELEMETRY 2'.encode())
-    reply = s.recv(1024).decode("ascii")
-    print(reply)
-    '''
-    This is the telescope listening for the GUI
-    '''
+        print('Socket 1 Connected -----------------------------')
+        s.send('TIME_START_TELEMETRY 2'.encode())
+        reply = s.recv(1024).decode("ascii")
+        print(reply)
+    except KeyboardInterrupt:
+        s.send('TIME_START_TELEMETRY 0'.encode())
+        s.shutdown()
+        # l.shutdown()
+        # l.close()
+        s.close()
+        break
+    # '''
+    # This is the telescope listening for the GUI
+    # '''
     # print('Starting socket')
     # c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # PORT = 1806
@@ -109,8 +116,8 @@ def kms_ports():
     # '''
     # This is simulating the GUI receiving data from the kmirror
     # '''
-    data_file = '/home/time_user/kmirror_testing/TIME_Software/kms_test_0_perm.npy'
-    data = np.load(data_file, allow_pickle=True)
+    # data_file = '/home/time_user/kmirror_testing/TIME_Software/kms_test_0_perm.npy'
+    # data = np.load(data_file, allow_pickle=True)
     print(data.shape)
     PORT = 8500
     sim_gui_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
