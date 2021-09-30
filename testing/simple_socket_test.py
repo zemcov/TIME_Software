@@ -24,7 +24,7 @@ def gui_ports():
                 s.connect(('',PORT)) # this is to connect locally
                 print('connected to the socketmanager from the GUI')
                 conn_flag = True
-            except ConnectionRefusedError:
+            except Exception:
                 pass
 
         s.send('TIME_START_TELEMETRY 2'.encode())
