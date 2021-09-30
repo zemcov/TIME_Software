@@ -64,7 +64,17 @@ def kms_ports():
     # sim_gui_s.close()
 
 def gui_ports():
+    PORT = 1806
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(('',PORT))
+    # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
+    s.connect(('',PORT)) # this is to connect locally
 
+    print('Socket 1 Connected -----------------------------')
+    s.send('TIME_START_TELEMETRY 2'.encode())
+    reply = s.recv(1024).decode("ascii")
+    print(reply)
     '''
     This is the telescope listening for the GUI
     '''
