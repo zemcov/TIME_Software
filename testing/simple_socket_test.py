@@ -9,67 +9,23 @@ PORTS
 8000 - Telescope listens for kms
 8500 - kms listens for telescope
 '''
-
-def kms_ports():
-    '''
-    This is simulating the GUI receiving data from the kmirror
-    '''
-    data_file = '/home/time_user/kmirror_testing/TIME_Software/kms_test_0_perm.npy'
-    data = np.load(data_file, allow_pickle=True)
-    print(data.shape)
-    PORT = 8500
-    sim_gui_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sim_gui_s.bind(('',PORT))
-    print('GUI Listening for KMS')
-    sim_gui_s.listen(5)
-    client, info = sim_gui_s.accept()
-    print('Socket Connected at 8500 hooray!')
-    unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
-    while True:
-        data = client.recv(unpacker.size)
-        decode_data = unpacker.unpack(data)
-        print('data being sent to GUI from KMS', decode_data)
-    '''
-    Below this is to simulate the telescope sending data to the kmirror
-    '''
-    # kms_connect_flag = False
-    # while not kms_connect_flag:
-    #     print('trying to connect to KMS on port 8000')
-    #     time.sleep(1)
-    #     try:
-    #         PORT = 8000
-    #         kms_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #         kms_s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    #         # s.bind(('',PORT))
-    #         kms_s.connect(('', PORT))
-    #         print('Connected to KMS on port 8000')
-    #         kms_connect_flag = True
-    #     except ConnectionRefusedError:
-    #         pass
-    #
-    # packer = struct.Struct('i i i i d d d d d d')
-    # for i in range(data.shape[0]):
-    #     print('sending pack %s' %i)
-    #     blank = 0; direction=1; obs=1; pad=1; azvelcmd=data[i,5]; elvelcmd=data[i,6]
-    #     azvelact=data[i,7];elvelact=data[i,8];utc=data[i,0];pa=data[i,1]
-    #     send_data = packer.pack(blank, direction, obs, pad, azvelcmd, elvelcmd, azvelact, elvelact, utc, pa)
-    #     kms_s.send(send_data)
-    #     time.sleep(1)
-    #
-    # print('awaiting signals')
-    # time.sleep(10) #sleep for 20
-    # # kms_s.shutdown()
-    # kms_s.close()
-    # # sim_gui_s.shutdown()
-    # sim_gui_s.close()
-
 def gui_ports():
+
+    conn_flag = False
     PORT = 1806
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(('',PORT))
-    # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
-    s.connect(('',PORT)) # this is to connect locally
+    while not conn_flag:
+        print('trying to connecto the GUI from the kmirror')
+        time.sleep(2)
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(('',PORT))
+            # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
+            s.connect(('',PORT)) # this is to connect locally
+            print('connected to the GUI from the kmirror')
+            conn_flag = True
+        except ConnectionRefusedError:
+            pass
 
     print('Socket 1 Connected -----------------------------')
     s.send('TIME_START_TELEMETRY 2'.encode())
@@ -139,15 +95,72 @@ def gui_ports():
     n = 0
 
     while True:
-
-        try :
+        try:
             data = client.recv(unpacker.size)
             if len(data) !=0 :
                 # unpacking data packet ===============================================
                 decode_data = unpacker.unpack(data)
                 print('data being sent to GUI from telescope', decode_data)
+        except:
+            pass
 
-if __name__ == '__main__':
+
+def kms_ports():
+    # '''
+    # This is simulating the GUI receiving data from the kmirror
+    # '''
+    data_file = '/home/time_user/kmirror_testing/TIME_Software/kms_test_0_perm.npy'
+    data = np.load(data_file, allow_pickle=True)
+    print(data.shape)
+    PORT = 8500
+    sim_gui_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sim_gui_s.bind(('',PORT))
+    print('GUI Listening for KMS')
+    sim_gui_s.listen(5)
+    client, info = sim_gui_s.accept()
+    print('Socket Connected at 8500 hooray!')
+    unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
+    while True:
+        data = client.recv(unpacker.size)
+        decode_data = unpacker.unpack(data)
+        print('data being sent to GUI from KMS', decode_data)
+    # '''
+    # Below this is to simulate the telescope sending data to the kmirror
+    # '''
+    # kms_connect_flag = False
+    # while not kms_connect_flag:
+    #     print('trying to connect to KMS on port 8000')
+    #     time.sleep(1)
+    #     try:
+    #         PORT = 8000
+    #         kms_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #         kms_s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    #         # s.bind(('',PORT))
+    #         kms_s.connect(('', PORT))
+    #         print('Connected to KMS on port 8000')
+    #         kms_connect_flag = True
+    #     except ConnectionRefusedError:
+    #         pass
+    #
+    # packer = struct.Struct('i i i i d d d d d d')
+    # for i in range(data.shape[0]):
+    #     print('sending pack %s' %i)
+    #     blank = 0; direction=1; obs=1; pad=1; azvelcmd=data[i,5]; elvelcmd=data[i,6]
+    #     azvelact=data[i,7];elvelact=data[i,8];utc=data[i,0];pa=data[i,1]
+    #     send_data = packer.pack(blank, direction, obs, pad, azvelcmd, elvelcmd, azvelact, elvelact, utc, pa)
+    #     kms_s.send(send_data)
+    #     time.sleep(1)
+    #
+    # print('awaiting signals')
+    # time.sleep(10) #sleep for 20
+    # # kms_s.shutdown()
+    # kms_s.close()
+    # # sim_gui_s.shutdown()
+    # sim_gui_s.close()
+
+
+
+if __name__ == "__main__":
 
     # gui_ports()
     # kms_ports()
