@@ -91,8 +91,7 @@ def gui_ports():
     l = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     l.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     l.bind(('',PORT))
-    print('.')
-    print('Server Listening ------------------------------', time.localtime())
+    print('Server Listening ------------------------------')
     l.listen(5)
     client, info = l.accept()
     reply = client.recv(1024).decode('ascii')
@@ -112,25 +111,25 @@ def gui_ports():
             pass
 
 
-def kms_ports():
+# def kms_ports():
     # '''
     # This is simulating the GUI receiving data from the kmirror
     # '''
     # data_file = '/home/time_user/kmirror_testing/TIME_Software/kms_test_0_perm.npy'
     # data = np.load(data_file, allow_pickle=True)
     # print(data.shape)
-    PORT = 8500
-    sim_gui_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sim_gui_s.bind(('192.168.1.255',PORT))
-    print('GUI Listening for KMS')
-    sim_gui_s.listen(5)
-    client, info = sim_gui_s.accept()
-    print('Socket Connected at 8500 hooray!')
-    unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
-    while True:
-        data = client.recv(unpacker.size)
-        decode_data = unpacker.unpack(data)
-        print('data being sent to GUI from KMS', decode_data)
+    # PORT = 8500
+    # sim_gui_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # sim_gui_s.bind(('192.168.1.255',PORT))
+    # print('GUI Listening for KMS')
+    # sim_gui_s.listen(5)
+    # client, info = sim_gui_s.accept()
+    # print('Socket Connected at 8500 hooray!')
+    # unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
+    # while True:
+    #     data = client.recv(unpacker.size)
+    #     decode_data = unpacker.unpack(data)
+    #     print('data being sent to GUI from KMS', decode_data)
     # '''
     # Below this is to simulate the telescope sending data to the kmirror
     # '''
@@ -172,6 +171,6 @@ if __name__ == "__main__":
     # gui_ports()
     # kms_ports()
     t1 = mp.Process(target=gui_ports,args = ())
-    t2 = mp.Process(target=kms_ports,args=())
+    # t2 = mp.Process(target=kms_ports,args=())
     t1.start()
-    t2.start()
+    # t2.start()
