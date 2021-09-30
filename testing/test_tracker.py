@@ -6,22 +6,29 @@ import multiprocessing as mp
 def start_tracker():
     PORT = 4444
     l = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    l.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     l.bind(('',PORT))
-    print('Server Listening')
+    print('Server Listening on port %s' % PORT)
     l.listen(5)
 
     PORT = 1806
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('',6666))
-    s.connect(('192.168.1.252',PORT))
-    print('Socket 1 Connected')
-    s.send('TIME_START_TELEMETRY BOTH')
+    # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
+    s.connect(('',PORT)) # this is to connect locally
+
+    print('Socket 1 Connected on port %s' % PORT)
+    s.send('TIME_START_TELEMETRY 2'.encode())
     reply = s.recv(1024).decode("ascii")
     print(reply)
 
+
     client, info = l.accept()
+    reply = client.recv(1024).decode('ascii')
     print('Socket 2 Connected')
-    unpacker = struct.Struct('i i i i d d d d d d d d d d d d d d d d I I') # d = float , s = char string , i = integer
+    print(reply)
+    unpacker = struct.Struct('i i i i d d d d d d d d d d d d d d d d Q Q') # d = float , s = char string , i = integer
     n = 0
 
     while True :
@@ -42,11 +49,13 @@ def start_tracker():
                 n += 1
 
         except KeyboardInterrupt :
-            s.send('TIME_START_TELEMETRY off')
+            s.send('TIME_START_TELEMETRY 0'.encode())
+            s.shutdown()
+            l.shutdown()
+            l.close()
             s.close()
             break
 
-    l.close()
     sys.exit()
 
 if __name__ == '__main__' :

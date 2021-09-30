@@ -4,6 +4,7 @@ sys.path.append('../TIME_Software/coms')
 sys.path.append('../TIME_Software/main/')
 sys.path.append('../TIME_Software/scans')
 sys.path.append('../TIME_Software/config/')
+sys.path.append('../TIME_software/testing/')
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QSizePolicy
@@ -12,16 +13,17 @@ import numpy as np
 import pyqtgraph as pg
 import random as rm
 from termcolor import colored
-import multiprocessing as mp
 import utils as ut
 import append_data, append_hk
 import read_hk, kms_socket, raster_script_1d, raster_script_2d, tel_tracker, bowtie_scan, point_cross, fake_tel
+import test_tracker
 import init
 from tel_box import draw_box
 import directory
 from hanging_threads import start_monitoring
 sys.path.append('../time_analysis/py/timefpu/')
 import coordinates as coords
+import multiprocessing as mp
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
@@ -30,7 +32,7 @@ class MainWindow(QtGui.QMainWindow):
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle('TIME Live Data Visualization Suite')
         # self.setAutoFillBackground(true)
-        self.getparameters()
+        self.getparameters() #load in the parameters from the initial pop up window
 
         p = QtGui.QPalette()
         # p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(114,160,240)))
@@ -59,11 +61,13 @@ class MainWindow(QtGui.QMainWindow):
         # subprocess.Popen(['ssh -T -X -n obs@modelo "cd /home/corona/cactus/weather; ./weather"'],shell=True)
         ''' ######################################################################## '''
 
-        self.init_mce()
-        self.qt_connections()
+        self.init_mce() #set up the mce graphs
+        self.qt_connections() #set up the buttons
 
-    #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
+        '''
+        sets all of the variables for mce/graph, deletes old gui_data_test files
+        '''
         self.timeinterval = 1
         self.observer = ''
         self.datamode = ''
@@ -83,7 +87,7 @@ class MainWindow(QtGui.QMainWindow):
         self.flags = mp.Array('i',ut.flags,lock=True)
         self.offset = mp.Value('d',ut.offset,lock=True)
         # self.netcdfdir = directory.netcdf_dir
-        self.netcdfdir = directory.netcdf_dir + str(int(time.time()))
+        self.netcdfdir = directory.netcdf_dir + str(int(time.time())) +'/'
         if not os.path.isdir(self.netcdfdir) :
             # oldmask = os.umask(000)
             os.makedirs(self.netcdfdir,0o755)
@@ -91,13 +95,13 @@ class MainWindow(QtGui.QMainWindow):
 
     #reacts to button presses and other GUI user input
     def qt_connections(self):
-        self.quitbutton.clicked.connect(self.on_quitbutton_clicked)
-        self.submitbutton.clicked.connect(self.on_submitbutton_clicked)
-        self.starttel.clicked.connect(self.on_starttel_clicked)
-        self.changechan.clicked.connect(self.on_set_chan_clicked)
-        self.helpbutton.clicked.connect(self.on_help_clicked)
+        self.quitbutton.clicked.connect(self.on_quitbutton_clicked) #quit button
+        self.submitbutton.clicked.connect(self.on_submitbutton_clicked) #submitting parameters
+        self.starttel.clicked.connect(self.on_starttel_clicked) #start the telescope
+        self.changechan.clicked.connect(self.on_set_chan_clicked) #change mce channel
+        self.helpbutton.clicked.connect(self.on_help_clicked) #help button
         self.useinit.clicked.connect(self.on_useinit_clicked)
-        self.kms_stop.clicked.connect(self.onkmsstop_clicked)
+        self.kms_stop.clicked.connect(self.onkmsstop_clicked) #stop the kmirror mirror
         self.kms_restart.clicked.connect(self.onkmsrestart_clicked)
 
     def onkmsrestart_clicked(self):
@@ -114,6 +118,9 @@ class MainWindow(QtGui.QMainWindow):
         self.browser.show()
 
     def on_quitbutton_clicked(self):
+        '''
+        This doesn't seem to be closing all of the threads properly
+        '''
         ut.mce_exit.set()
         ut.tel_exit.set()
         ut.kms_exit.set()
@@ -353,6 +360,7 @@ class MainWindow(QtGui.QMainWindow):
             self.tel_script = 'Tracker'
             self.off = False
 
+        self.kms_on_off = 2 #### For testing the GUI
         print(tel_message)
 
         # -----------------------------------------------------------
@@ -451,7 +459,8 @@ class MainWindow(QtGui.QMainWindow):
                 if ut.which_mce[0] == 1 :
                     subprocess.Popen(['ssh -T time@time-mce-0 python /home/time/TIME_Software/coms/mce0_sftp.py'], shell=True)
                 if ut.which_mce[1] == 1 :
-                    subprocess.Popen(['ssh -T time@time-mce-1 python /home/time/TIME_Software/coms/mce1_sftp.py'], shell=True)
+                    print('connecting to time-mce-1')
+                    subprocess.Popen(['ssh -T time@time-mce-1.caltech.edu python /home/time/TIME_Software/coms/mce1_sftp.py'], shell=True)
                 time.sleep(2.0)
 
             # subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
@@ -1609,6 +1618,7 @@ class MCEThread(QtCore.QThread):
     new_data = QtCore.pyqtSignal(object,object,object)
 
     def __init__(self,offset,flags,netcdfdir,parent = None):
+        print(netcdfdir, '----------')
         QtCore.QThread.__init__(self, parent)
         self.netcdfdir = netcdfdir
         self.flags = flags
@@ -1676,11 +1686,11 @@ class Tel_Thread(QtCore.QThread):
 
     def run(self):
         if self.off == False :
-
             # turn on only the script that activates tracker and sends data packets
             # does not move the telescope
 
             if self.tel_script == 'Tracker':
+                print('tracker')
                 from tel_tracker import start_tracker, turn_on_tracker
                 data, queue = mp.Pipe()
                 p1 = mp.Process(target = turn_on_tracker, args=(self.kms_on_off,))
@@ -1717,9 +1727,10 @@ class Tel_Thread(QtCore.QThread):
                 np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
 
                 data, queue = mp.Pipe()
-                p = mp.Process(target=fake_tel.TIME_TELE().start_tel, args=(queue,self.map_len,self.map_len_unit,self.map_size,self.map_size_unit,self.sec,\
-                                                                            self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.coord_space,\
-                                                                            self.step,self.step_unit,self.numloop,self.kms_on_off))
+                data2, queue2 = mp.Pipe()
+                p = mp.Process(target=fake_tel.TIME_TELE().start_tel, args=(queue2,queue,self.sec,self.map_size,self.map_len,\
+                                        self.map_angle,self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.epoch,self.object,self.step,\
+                                        self.coord_space,self.step_unit,self.map_size_unit,self.map_len_unit,self.map_angle_unit,self.numloop,self.kms_on_off))
                 p.start()
 
                 while True :
@@ -1783,11 +1794,12 @@ class KMS_Thread(QtCore.QThread):
         ut.kms_exit.set()
 
     def run(self):
-        if self.kms_on_off == 2 : #if the kms is starting without telescope, turn on tracker
-            from tel_tracker import turn_on_tracker
-            data, queue = mp.Pipe()
-            p1 = mp.Process(target = turn_on_tracker, args=(self.kms_on_off,))
-            p1.start()
+        print('Simulating running the KMS!!!! ---------')
+        # if self.kms_on_off == 2 : #if the kms is starting without telescope, turn on tracker
+        #     from tel_tracker import turn_on_tracker
+        #     data, queue = mp.Pipe()
+        #     p1 = mp.Process(target = turn_on_tracker, args=(self.kms_on_off,))
+        #     p1.start()
 
         data, queue = mp.Pipe()
         p = mp.Process(target=kms_socket.start_sock , args=(queue,))

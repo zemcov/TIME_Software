@@ -11,6 +11,11 @@ from datetime import datetime
 from pos_counter import scan_params
 from termcolor import colored
 from astroplan import download_IERS_A
+sys.path.append('/home/time_user/TIME_Software/Scans/')
+import test_tracker
+import time
+import multiprocessing as mp
+
 # download_IERS_A()
 
 class TIME_TELE :
@@ -47,10 +52,102 @@ class TIME_TELE :
 
         return pa,other_x,other_y
     #-----------------------------------------------------------------------------------------------------------------------
-    def start_tel(self,queue,map_len,map_len_unit,map_size,map_size_unit,scan_time,coord1,coord1_unit,coord2,coord2_unit,coord_space,step,step_unit,numloop,kms_on_off):
+    def start_tel(self, queue2,queue, sec,map_size,map_len,\
+                            map_angle,coord1,coord1_unit,coord2,coord2_unit,epoch,object,step,\
+                            coord_space,step_unit,map_size_unit,map_len_unit,map_angle_unit,numloop,kms_on_off):
         print(colored("FAKE TEL STARTED",'magenta'))
+        PORT = 1806
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.bind(('',6666))
+        # self.s.connect(('192.168.1.252',PORT))
+        self.s.connect(('', PORT))
+        print('Connected on port %s' % PORT)
+        reply = self.s.recv(1024).decode("ascii")
+        print(reply)
+        self.s.send(b'Hello simple_socket_test')
         self.i = 0
         num_loop, calc_coord1, calc_coord2 = scan_params(coord_space,map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
+        commands = '{} {} {} {}'
+        print(colored(commands.format(coord1,coord2,epoch,object),'yellow'))
+
+        # cmnd_list = ['TIME_START_TELEMETRY ' + str(kms_on_off),'TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE_EXTRA 1.1','TIME_MAP_SIZE ' + str(map_size),\
+                        # 'TIME_MAP_ANGLE ' + str(map_angle),'TIME_MAP_COORD ' + str(coord_space),'TIME_TELESCOPE_WAIT_TIME 2','TIME_SEEK ' + commands.format(calc_coord1,calc_coord2,epoch,object)]
+
+
+        i = 0
+        # while i <= (len(cmnd_list) - 1):
+        #     # self.s.send(cmnd_list[i].encode())
+        #     reply = self.s.recv(1024).decode("ascii")
+        #     print(reply, i)
+        #     if i == 0 :
+        #         # if 'OK' in reply:
+        #         p = mp.Process(target=test_tracker.start_tracker, args=(queue,))
+        #         p.start()
+        #         i += 1
+        #         # else :
+        #         #     print('ERROR reply')
+        #     else :
+        #         # if 'OK' in reply :
+        #         i += 1
+        #         # else :
+        #         #     print('ERROR reply')
+
+        self.pos_update()
+        time.sleep((int(sec)+(int(sec)*0.05))*2)
+
+        msg = 'TIME_START_OBSERVING off'
+        self.s.send(msg.encode())
+        reply = self.s.recv(1024).decode("ascii")
+        if 'OK' in reply  :
+            print(reply)
+
+        msg = 'TIME_START_TRACKING off'
+        self.s.send(msg.encode())
+        reply = self.s.recv(1024).decode("ascii")
+        print(reply)
+        if 'OK' in reply :
+            ut.tel_exit.set()
+
+        self.s.send(b'TIME_START_TELEMETRY 0')
+        print('Telemetry Off')
+        reply = self.s.recv(1024).decode("ascii")
+        print(reply)
+
+        print("Telescope Socket Closed")
+        self.s.close()
+        sys.exit()
+
+    def pos_update(self):
+
+        # ---------------------------------------------------------------
+        msg = 'TIME_START_TRACKING arm'
+        self.s.send(msg.encode())
+        reply = self.s.recv(1024).decode("ascii")
+        if 'OK' in reply  :
+            print(reply)
+        # --------------------------------------------------------------
+        msg = 'TIME_START_TRACKING neg'
+        self.s.send(msg.encode())
+        reply = self.s.recv(1024).decode("ascii")
+        if 'OK' in reply  :
+            print(reply)
+
+        time.sleep(2.0)
+        # --------------------------------------------------------------
+        msg = 'TIME_START_TRACKING track'
+        self.s.send(msg.encode())
+        reply = self.s.recv(1024).decode("ascii")
+        if 'OK' in reply  :
+            print(reply)
+        # ---------------------------------------------------------------
+        msg = 'TIME_START_OBSERVING on'
+        self.s.send(msg.encode())
+        reply = self.s.recv(1024).decode("ascii")
+        if 'OK' in reply  :
+            print(reply)
+        # # -----------------------------------------------------------------
+
+        return
 
         t = [] # to keep track of the last scan, either up or down
     # --------SPEEDS AND PARAMETERS---------------------------------------------
@@ -70,6 +167,8 @@ class TIME_TELE :
         else :
             map_len = float(map_len)
 
+
+        '''
         # speeds = [float(map_size)*3600.0/float(scan_time),3600.0] # arcseconds per second, 3600 arcseconds per degree
         speeds = [1800.0,3600.0]
         area = float(map_len) #degrees wide of observing field
@@ -234,8 +333,8 @@ class TIME_TELE :
                             if t[-1] == 3.0:
                                 slew_flag = 2.0
                             start_y = start_y + step
-
             else :
                 ut.tel_exit.set()
             #---------------------------------------------------------------------------------------------------------------------
         sys.exit()
+        '''
