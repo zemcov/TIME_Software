@@ -2,7 +2,7 @@ import numpy as np
 from os import stat
 import os, sys, subprocess
 sys.path.append('/home/butler/time_analysis/py')
-import timefpu.mce_data as mce_data
+# import timefpu.mce_data as mce_data
 from . import netcdf_files as nc
 import datetime as dt
 from termcolor import colored

@@ -4,7 +4,7 @@ import sys
 
 if sys.version_info.major != 3:
     sys.exit("This software is expecting Python 3.x")
-
+from matplotlib import cm
 import os, subprocess, time, datetime, socket, struct, threading, shutil
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
@@ -16,13 +16,15 @@ import random as rm
 from termcolor import colored
 import multiprocessing as mp
 from hanging_threads import start_monitoring
-
+from matplotlib import cm
 from coms import kms_socket, tel_tracker
 from main import append_data, append_hk, read_hk, fake_tel
 from main.tel_box import draw_box
 from scans import raster_script_1d, raster_script_2d, bowtie_scan, point_cross
 from config import init, directory
 import config.utils as ut
+sys.path.append('/home/time_user/TIME_Software/loadcurves/')
+from gui_loadcurve import *
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
@@ -318,12 +320,18 @@ class MainWindow(QtGui.QMainWindow):
 
             # data mode --------------------------------------
             self.datamode = self.enterdatamode.currentText()
-            mce_states = ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)']
-            mce_states2 = [0,1,12,2,11,10,7,5,4]
+            if self.datamode == 'Load Curves':
+                self.loadcurve_flag = True
+            else:
+                self.loadcurve_flag = False
+            mce_states = ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)', 'Load Curves']
+            #want loadcurve to be the same as ??
+            #for now I'm going to say that the load curve is the same as RAw or SQ1 Feedback
+            mce_states2 = [0,1,12,2,11,10,7,5,4, 12]
+
             for state in mce_states :
                 if self.datamode == state :
                     self.datamode = mce_states2[mce_states.index(state)]
-
             # readout card ---------------------------------------------
             self.readoutcard = self.enterreadoutcard.currentIndex() - 1
             if self.readoutcard < 0:
@@ -481,50 +489,97 @@ class MainWindow(QtGui.QMainWindow):
                 time.sleep(2.0)
 
             # subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
-            data = np.zeros((33,32))
+            if self.loadcurve_flag == True:
+                data = np.zeros((33,32))
 
-            self.startwindow.hide()
+                self.startwindow.hide()
 
-            self.newwindow = QtGui.QWidget()
-            self.newwindow.setWindowTitle('TIME Live Data Viewer')
-            self.newgrid = QtGui.QGridLayout()
-            self.newgraphs = QtGui.QVBoxLayout()
-            self.newwindow.setGeometry(10, 10, 1920, 1080)
-            self.newwindow.setLayout(self.newgrid)
-            self.newgrid.addLayout(self.newgraphs, 0,2,8,8)
+                self.newwindow = QtGui.QWidget()
+                self.newwindow.setWindowTitle('TIME Live Data Viewer')
+                self.newgrid = QtGui.QGridLayout()
+                self.newgraphs = QtGui.QVBoxLayout()
+                self.newwindow.setGeometry(10, 10, 1920, 1080)
+                self.newwindow.setLayout(self.newgrid)
+                self.newgrid.addLayout(self.newgraphs, 0,2,8,8)
 
-            p = QtGui.QPalette()
-            p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
-            self.newwindow.setPalette(p)
+                p = QtGui.QPalette()
+                p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
+                self.newwindow.setPalette(p)
 
-            self.newquitbutton = QtGui.QVBoxLayout()
-            self.newquitbutton.addWidget(self.quitbutton)
-            self.newgrid.addLayout(self.newquitbutton, 9,0,1,2)
+                self.newquitbutton = QtGui.QVBoxLayout()
+                self.newquitbutton.addWidget(self.quitbutton)
+                self.newgrid.addLayout(self.newquitbutton, 9,0,1,2)
 
-            self.setnewrc = QtGui.QVBoxLayout()
-            self.setnewrc.addWidget(self.changechan)
-            self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
+                self.setnewrc = QtGui.QVBoxLayout()
+                self.setnewrc.addWidget(self.changechan)
+                self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
 
-            self.kmsstop = QtGui.QVBoxLayout()
-            self.kmsstop.addWidget(self.kms_stop)
-            self.newgrid.addLayout(self.kmsstop,6,0,1,2)
+                self.kmsstop = QtGui.QVBoxLayout()
+                self.kmsstop.addWidget(self.kms_stop)
+                self.newgrid.addLayout(self.kmsstop,6,0,1,2)
 
-            self.kmsrestart = QtGui.QVBoxLayout()
-            self.kmsrestart.addWidget(self.kms_restart)
-            self.newgrid.addLayout(self.kmsrestart,7,0,1,2)
+                self.kmsrestart = QtGui.QVBoxLayout()
+                self.kmsrestart.addWidget(self.kms_restart)
+                self.newgrid.addLayout(self.kmsrestart,7,0,1,2)
 
-            #start other plot making processes
-            self.initplot()
-            self.channelselection()
-            self.initheatmap(data,data) # give first values for heatmap to create image scale
-            self.initfftgraph()
-            self.inittelescope()
-            self.initkmirrordata()
+                self.init_lc_plots()
+                self.channelselection()
+                # self.initheatmap(data,data) # give first values for heatmap to create image scale
+                # self.initfftgraph()
+                # self.inittelescope()
+                # self.initkmirrordata()
 
-            sys.stdout.flush()
-            sys.stderr.flush()
-            self.newwindow.closeEvent = self.on_quitbutton_clicked
-            self.newwindow.show()
+                sys.stdout.flush()
+                sys.stderr.flush()
+                self.newwindow.closeEvent = self.on_quitbutton_clicked
+                self.newwindow.show()
+
+            else:
+                print('init normal plot!!!- ----------')
+                data = np.zeros((33,32))
+
+                self.startwindow.hide()
+
+                self.newwindow = QtGui.QWidget()
+                self.newwindow.setWindowTitle('TIME Live Data Viewer')
+                self.newgrid = QtGui.QGridLayout()
+                self.newgraphs = QtGui.QVBoxLayout()
+                self.newwindow.setGeometry(10, 10, 1920, 1080)
+                self.newwindow.setLayout(self.newgrid)
+                self.newgrid.addLayout(self.newgraphs, 0,2,8,8)
+
+                p = QtGui.QPalette()
+                p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
+                self.newwindow.setPalette(p)
+
+                self.newquitbutton = QtGui.QVBoxLayout()
+                self.newquitbutton.addWidget(self.quitbutton)
+                self.newgrid.addLayout(self.newquitbutton, 9,0,1,2)
+
+                self.setnewrc = QtGui.QVBoxLayout()
+                self.setnewrc.addWidget(self.changechan)
+                self.newgrid.addLayout(self.setnewrc, 8,0,1,2)
+
+                self.kmsstop = QtGui.QVBoxLayout()
+                self.kmsstop.addWidget(self.kms_stop)
+                self.newgrid.addLayout(self.kmsstop,6,0,1,2)
+
+                self.kmsrestart = QtGui.QVBoxLayout()
+                self.kmsrestart.addWidget(self.kms_restart)
+                self.newgrid.addLayout(self.kmsrestart,7,0,1,2)
+
+                #start other plot making processes
+                self.initplot()
+                self.channelselection()
+                self.initheatmap(data,data) # give first values for heatmap to create image scale
+                self.initfftgraph()
+                self.inittelescope()
+                self.initkmirrordata()
+
+                sys.stdout.flush()
+                sys.stderr.flush()
+                self.newwindow.closeEvent = self.on_quitbutton_clicked
+                self.newwindow.show()
 
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
@@ -541,7 +596,7 @@ class MainWindow(QtGui.QMainWindow):
         self.enterobserver.setMaxLength(3)
         self.enterdatamode = QtGui.QComboBox()
         self.enterdatamode.addItems(
-            ['Mixed Mode (25:7)', 'Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)'])
+            ['Mixed Mode (25:7)', 'Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)', 'Load Curves'])
         self.whichmces = QtGui.QComboBox()
         self.whichmces.addItems(['MCE0','MCE1','Both','MCE SIM'])
         self.enterreadoutcard = QtGui.QComboBox()
@@ -794,6 +849,42 @@ class MainWindow(QtGui.QMainWindow):
         else :
             os.system("mpg123 " + directory.master_dir + "warning3.mp3")
             self.warningbox(['rc_wrong','ROW 2'])
+
+    def init_lc_plots(self):
+        self.starttime = datetime.datetime.utcnow()
+        # passes the variable set by the user to the graph (user sets timeinterval)
+        self.totaltimeinterval = int(self.timeinterval)
+        self.n_intervals = 1 #
+
+        self.mce = 1 #want to check what this means ? need to review some of the code
+        #want to store old data before we update to new data to keep the flow moving !
+        self.data = [0, 0, 0]
+
+        self.mcegraphdata1 = pg.ScatterPlotItem()
+        self.mcegraphdata2 = pg.ScatterPlotItem()
+        self.mcegraph1 = pg.PlotWidget()
+        self.mcegraph2 = pg.PlotWidget()
+        self.mcegraph1.addItem(self.mcegraphdata1)
+        self.mcegraph2.addItem(self.mcegraphdata2)
+        self.newgraphs.addWidget(self.mcegraph1, stretch=2)
+        self.newgraphs.addWidget(self.mcegraph2, stretch=2)
+        self.mcegraph1.setLabel('bottom', 'Time [sec]')
+        self.mcegraph1.setLabel('left', 'Counts [ADU]')
+        self.mcegraph1.setTitle('MCE0 Load Curve')
+        self.graph1legend = self.mcegraph1.addLegend()
+
+        self.mcegraph2.setLabel('bottom', 'Bias Current [$\\mu A$]')
+        self.mcegraph2.setLabel('left', 'SQ1 Feedback [$\\mu A$]')
+        self.mcegraph2.setTitle('MCE1 Load Curve')
+        self.graph2legend = self.mcegraph2.addLegend()
+
+        self.data_line_dict_1 = {}
+        self.data_line_dict_2 = {}
+
+        self.updater = MCEThread(offset = self.offset, flags = self.flags, netcdfdir = self.netcdfdir)
+        self.updater.new_data.connect(self.update_lc_plot)
+        self.updater.start()
+
 
     def initplot(self):
         #initialize graph objects & graph time scales
@@ -1217,6 +1308,103 @@ class MainWindow(QtGui.QMainWindow):
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
             self.progressbar.setValue(progress)
 
+    def setColumnCount(self, legend, columnCount):
+        """change the orientation of all items of the legend
+        """
+        def _addItemToLayout(legend, sample, label):
+            col = legend.layout.columnCount()
+            row = legend.layout.rowCount()
+            if row:
+                row -= 1
+            nCol = legend.columnCount * 2
+            # FIRST ROW FULL
+            if col == nCol:
+                for col in range(0, nCol, 2):
+                    # FIND RIGHT COLUMN
+                    if not legend.layout.itemAt(row, col):
+                        break
+                if col + 2 == nCol:
+                    # MAKE NEW ROW
+                    col = 0
+                    row += 1
+            legend.layout.addItem(sample, row, col)
+            legend.layout.addItem(label, row, col + 1)
+
+        legend.columnCount = columnCount
+        legend.rowCount = int(len(legend.items) / columnCount)
+        for i in range(legend.layout.count() - 1, -1, -1):
+            legend.layout.removeAt(i)  # clear layout
+        for sample, label in legend.items:
+            _addItemToLayout(legend, sample, label)
+        legend.updateSize()
+
+
+    def update_lc_plot(self, h1, h2, index):
+        self.index = index
+
+        dir = '/home/time_user/'
+        T = '293' #perhaps we want to make this an argument that can be passed through the GUI
+        i = 0
+        #when the load curve flag is set we get an array of y and x values
+        ut.which_mce[0] = 1
+        ut.which_mce[1] = 0
+        ut.which_mce[2] = 0
+        # #get data from mce 0
+        if ut.which_mce[0] == 1 :
+            if self.index == 0:
+                col_test = 17
+                print('Plotting the loadcurves now!')
+                current_x, current_y = loadcurve_plotting(T, dir, i=i, cols=32, rows=33)
+                col_x = current_x[col_test, :,:]; col_y = current_y[col_test,:,:]
+        # #get data from mce 1
+        # if ut.which_mce[1] == 1 :
+        # #get data from both
+        # if ut.which_mce[2] == 1 :
+
+        if self.index == 0:
+            nrows = 32
+            n = 32
+            color_arr = cm.rainbow(np.linspace(0, 1, n)) * 255
+            colors = color_arr[:,0:3]
+            print(np.nanmin(col_x))
+            # print(col_x)
+            if self.index == 0:
+                for r in range(nrows):
+                    color = colors[r]
+                    print(color)
+                    pen = pg.mkPen(color=color)
+                    print(col_y[r])
+                    # self.mcegraph1.setXRange(np.nanmin(col_x), np.nanmax(col_x)*1.4, padding=0)
+                    # self.mcegraph2.setXRange(np.nanmin(col_x), np.nanmax(col_x)*1.4, padding=0)
+                    self.mcegraph1.setXRange(300, 600, padding=0)
+                    self.mcegraph2.setXRange(300, 600, padding=0)
+                    self.mcegraph1.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
+                    self.mcegraph2.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
+                    self.data_line_dict_1[r] =  self.mcegraph1.plot(col_x[r], col_y[r], pen=pen, name='row %s' % r)
+                    pen = pg.mkPen(color=color)
+                    self.data_line_dict_2[r] =  self.mcegraph2.plot(col_x[r], col_y[r], pen=pen, name='row %s' % r)
+
+            # else:
+            #     for r in range(nrows):
+            #         # color=cm.rainbow(1/(r+1))
+            #         pen = pg.mkPen(color=colors[r])
+            #         self.data_line_dict_1[r].setData(x, y1 * r / 32, pen=pen, name='row %s' % r)
+            #         self.data_line_dict_2[r].setData(x, y1 * r / 32, pen=pen, name='row %s' % r)
+            #
+            #         self.i1 = 0
+            #         self.i2 = 0
+            #         self.i3 = 0
+            #         self.i4 = 0
+
+            self.setColumnCount(self.graph1legend, 5)
+            self.setColumnCount(self.graph2legend, 5)
+
+            # self.graph1legend.setColumns(5)
+            # self.graph2legend.setColumns(5)
+
+            self.oldch1 = self.channel1
+            self.oldch2 = self.channel2
+
     def updateplot(self,h1,h2,index):
 
         self.index = index
@@ -1241,6 +1429,8 @@ class MainWindow(QtGui.QMainWindow):
             y2 = np.asarray(h2)[self.row2,self.channel2,:]
             self.y2 = y2
 
+
+
         #creates x values for current time interval and colors points based on current channel ===
         self.endtime = datetime.datetime.utcnow()
         self.timetaken = self.endtime - self.starttime
@@ -1248,9 +1438,23 @@ class MainWindow(QtGui.QMainWindow):
         x = np.linspace(self.index,self.index + 1,self.frameperfile)
         self.x = x
 
-        syms = ['d','o','s','t','+','d','o']
-        symbols = ['b','r','g','y','c','m','k','w']
+        syms = ['d','o','s','t','+','d','o'] #these are the actual symbols
+        symbols = ['b','r','g','y','c','m','k','w'] #these represent colors
         # =====================================================================================
+        # This handles the normal plot of MCE points
+        # if not self.loadcurve_flag:
+        # if self.loadcurve_flag:
+        #
+        #     if self.index != 0:
+        #         #color keys
+        #         self.pointcolor1 = []
+        #
+        #         color=cm.rainbow(np.linspace(0,1,32)) #32 is the number of rows
+        #         for i in range(32): #iterate each row, might want to change the 32 to be dynamic if rows are missing
+        #         #or they could just be nans in which case we do not care!
+        #             self.pointcolor1.extend([pg.mkBrush(color[i]) for j in range(self.frameperfile)])
+        #             self.pointcolor2.extend([pg.mkBrush(color[i]) for j in range(self.frameperfile)])
+
         if self.index != 0 :
             #picks color based on current channel =============================================
             self.pointcolor1 = []
@@ -1278,11 +1482,10 @@ class MainWindow(QtGui.QMainWindow):
 
         #creates graphdata item on first update
         if self.index == 0:
-
             self.mcegraph1.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
             self.mcegraph2.setXRange(self.index, self.index + self.totaltimeinterval - 1, padding=0)
-
             self.updatefftgraph()
+
             self.data[0] = x
 
             if ut.which_mce[0] == 1 :
@@ -1391,7 +1594,7 @@ class MainWindow(QtGui.QMainWindow):
             if ut.which_mce[2] == 1 :
                 self.data[1] = y1
                 self.data[2] = y2
-
+        #testf
             self.n_interval = 0 #reset counter
         # ==============================================================================================================
         #updates graph, if channel delete is set to yes will clear data first
@@ -1407,8 +1610,9 @@ class MainWindow(QtGui.QMainWindow):
             else :
                 dummy = []
                 self.updateheatmap(dummy,h2)
+            if not self.loadcurve_flag:
 
-            self.updatefftgraph()
+                self.updatefftgraph()
 
             if self.channeldelete == 'Yes' and self.oldch1 != self.channel1 and self.oldch2 != self.channel2:
 
@@ -1628,7 +1832,7 @@ class MCEThread(QtCore.QThread):
             time.sleep(0.01) # Rate limit
 
             if time.time() - last_time > 5:
-                print("MCEThread.run is still alive")
+                # print("MCEThread.run is still alive")
                 last_time = time.time()
 
             if queue.empty():
