@@ -10,6 +10,7 @@ def start_tracker(queue):
     # os.nice(-20)
     PORT = 4444
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('',PORT))
     print('Tracker Server Listening')
     s.listen(5)
@@ -52,6 +53,7 @@ def start_tracker(queue):
             print('waiting for data')
         time.sleep(0.01)
 
+    s.shutdown(1)
     s.close()
     sys.exit()
 
@@ -59,10 +61,11 @@ def start_tracker(queue):
 def turn_on_tracker(kms_on_off):
     PORT = 1806
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('',6666))
     s.connect(('192.168.1.252',PORT))
     print('Socket Connected')
 
-    s.send('TIME_START_TELEMETRY %s' %(kms_on_off))
+    s.send(f'TIME_START_TELEMETRY {kms_on_off}'.encode())
     reply = s.recv(1024).decode("ascii")
     print(reply)

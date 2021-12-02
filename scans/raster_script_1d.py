@@ -52,19 +52,19 @@ class TIME_TELE :
         time.sleep((int(sec)+(int(sec)*0.05))*2)
 
         msg = 'TIME_START_OBSERVING off'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
             print(reply)
 
         msg = 'TIME_START_TRACKING off'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         print(reply)
         if 'OK' in reply :
             ut.tel_exit.set()
 
-        self.s.send('TIME_START_TELEMETRY 0')
+        self.s.send('TIME_START_TELEMETRY 0'.encode())
         print('Telemetry Off')
         reply = self.s.recv(1024).decode("ascii")
         print(reply)
@@ -77,13 +77,13 @@ class TIME_TELE :
 
         # ---------------------------------------------------------------
         msg = 'TIME_START_TRACKING arm'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
             print(reply)
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING neg'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
             print(reply)
@@ -91,13 +91,13 @@ class TIME_TELE :
         time.sleep(2.0)
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING track'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
             print(reply)
         # ---------------------------------------------------------------
         msg = 'TIME_START_OBSERVING on'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         if 'OK' in reply  :
             print(reply)

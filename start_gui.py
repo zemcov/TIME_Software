@@ -23,7 +23,7 @@ from main.tel_box import draw_box
 from scans import raster_script_1d, raster_script_2d, bowtie_scan, point_cross
 from config import init, directory
 import config.utils as ut
-sys.path.append('/home/time_user/TIME_Software/loadcurves/')
+sys.path.append('../loadcurves/')
 from gui_loadcurve import *
 
 #class of all components of GUI
@@ -885,6 +885,79 @@ class MainWindow(QtGui.QMainWindow):
         self.updater.new_data.connect(self.update_lc_plot)
         self.updater.start()
 
+        self.lc_indexer = 0
+
+        self.lc_queue = mp.Queue()
+        rser_cr = {}
+        lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, rser_cr))
+        # p2 = mp.Process(name='append_hk',target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
+        lc_p.start()
+
+
+    def loadcurve_thread(self, lc_queue, lc_indexer, rser_cr):
+        T = 293
+        cols=32; rows=33
+        init_bias = np.load(directory.time_analysis + f'bias_list_{T}.npy',allow_pickle=True) #This file relies on read load curves being run at least once
+        import calib.time202001 as calib
+        bias_min = init_bias[:, 1]
+        opt_num_fin = init_bias[:, 3]
+        fname = directory.time_analysis + 'partial_load_test_5/partial_load_test_5'
+        folder = directory.time_analysis + 'partial_load_test_5'
+        fname_full = directory.time_analysis + 'iv_45deg_pid330mk_294k_beammap0'
+
+        bias_x, bias_y = showivecg(fname)
+        bias_y = bias_y.swapaxes(0,1)
+        transition = np.zeros((cols))
+        if lc_indexer == 0:
+
+            full_lc = loadcurve.load_loadcurves_muxcr(fname_full, calib)
+
+            for c in range(cols):
+                   for r in range(rows):
+                         rser_cr[(c, r)] = full_lc[c][r].r_ser
+
+            lc_queue.put([rser_cr])
+        partial_lc = loadcurveecg.load_loadcurves_muxcr(folder, calib, r_ser_override = rser_cr, partial=True)
+        tes_p_masked = {}
+        tes_r = {}
+        for c in range(cols):
+               for r in range(rows):
+                   tes_p_masked[(c, r)] = partial_lc[c][r].tes_p_masked
+                   tes_r[(c, r)] = partial_lc[c][r].tes_r
+        lc_data_arr = np.zeros((4, cols, rows, 20))
+        #lc data arr indexes :
+        # 0 - final_resistance
+        # 1 - final_power
+        # 2 - bias_current
+        # 3 - response_current
+
+        for mux_c in range(cols): #detector position
+            for mux_r in range(rows): #detector frequency
+                # use turn function to find detectors in transition
+                x = tes_r[(mux_c, mux_r)]
+                y = tes_p_masked[(mux_c, mux_r)]*1e12
+                h = bias_y[mux_c, mux_r]
+                y =  bias_x[mux_c]
+                x =  mux_c
+                y =  mux_r
+                res_detect, p_detect, current_x_detect, current_y_detect, flags = transition_sizes(tes_p_masked[(mux_c, mux_r)]*1e12, tes_r[(mux_c, mux_r)], bias_y[mux_c, mux_r], bias_x[mux_c], mux_c, mux_r)
+                lc_data_arr[0,mux_c,mux_r,:] = res_detect
+                lc_data_arr[1,mux_c,mux_r,:] = p_detect
+                lc_data_arr[2,mux_c,mux_r,:] = current_x_detect
+                lc_data_arr[3,mux_c,mux_r,:] = current_y_detect
+
+            opt_num = find_mode_limits(lc_data_arr[0,:,:,:], lc_data_arr[1,:,:,:], lc_data_arr[2,:,:,:], lc_data_arr[3,:,:,:], col = mux_c, temp = T)
+
+        np.save(directory.temp_lc + 'temp_cur_x_%s' % lc_indexer, lc_data_arr, allow_pickle=True)
+        np.save(directory.temp_lc + 'opt_num_%s' % lc_indexer, opt_num, allow_pickle=True)
+        # for col in range(cols):
+        #     if opt_num[col] < opt_num_fin[col]:
+        #         transition[k] = 0
+        #     else:
+        #         transition[k] = 1
+        np.save(directory.temp_lc + 'transitions_%s' % lc_indexer, transition, allow_pickle=True)
+        return
+
 
     def initplot(self):
         #initialize graph objects & graph time scales
@@ -1342,59 +1415,58 @@ class MainWindow(QtGui.QMainWindow):
     def update_lc_plot(self, h1, h2, index):
         self.index = index
 
-        dir = '/home/time_user/'
-        T = '293' #perhaps we want to make this an argument that can be passed through the GUI
-        i = 0
-        #when the load curve flag is set we get an array of y and x values
-        ut.which_mce[0] = 1
-        ut.which_mce[1] = 0
-        ut.which_mce[2] = 0
-        # #get data from mce 0
-        if ut.which_mce[0] == 1 :
-            if self.index == 0:
-                col_test = 17
-                print('Plotting the loadcurves now!')
-                current_x, current_y = loadcurve_plotting(T, dir, i=i, cols=32, rows=33)
-                col_x = current_x[col_test, :,:]; col_y = current_y[col_test,:,:]
-        # #get data from mce 1
-        # if ut.which_mce[1] == 1 :
-        # #get data from both
-        # if ut.which_mce[2] == 1 :
 
-        if self.index == 0:
-            nrows = 32
-            n = 32
+
+        temp_file = directory.temp_lc + 'temp_cur_x_%s.npy' % self.lc_indexer
+        if os.path.exists(temp_file):
+            lc_data_arr = np.load(directory.temp_lc + 'temp_cur_x_%s.npy' % self.lc_indexer, allow_pickle=True)
+            #lc_data_arr structure
+            # 0 - final_resistance
+            # 1 - final_power
+            # 2 - bias_current
+            # 3 - response_current
+            opt_num     = np.load(directory.temp_lc + 'opt_num_%s.npy' % self.lc_indexer, allow_pickle=True)
+            transition  = np.load(directory.temp_lc + 'transitions_%s.npy' % self.lc_indexer, allow_pickle=True)
+            rser_cr = self.lc_queue.get()[0]
+            self.lc_queue = mp.Queue()
+            self.lc_indexer += 1
+            lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, rser_cr))
+            lc_p.start()
+            T = '293' #perhaps we want to make this an argument that can be passed through the GUI
+            #when the load curve flag is set we get an array of y and x values
+            ut.which_mce[0] = 1
+            ut.which_mce[1] = 0
+            ut.which_mce[2] = 0
+            # #get data from mce 0
+            if ut.which_mce[0] == 1 :
+                if self.index == 0:
+                    col_test = 6
+                    print('Plotting the loadcurves now!')
+                    # current_x, current_y = loadcurve_plotting(T, dir, i=i, cols=32, rows=33)
+                    col_x = lc_data_arr[2,col_test,:,:]; col_y = lc_data_arr[3,col_test,:,:]
+            # #get data from mce 1
+            # if ut.which_mce[1] == 1 :
+            # #get data from both
+            # if ut.which_mce[2] == 1 :
+
+            n = 32 #number of rows
             color_arr = cm.rainbow(np.linspace(0, 1, n)) * 255
             colors = color_arr[:,0:3]
-            print(np.nanmin(col_x))
-            # print(col_x)
-            if self.index == 0:
-                for r in range(nrows):
-                    color = colors[r]
-                    print(color)
-                    pen = pg.mkPen(color=color)
-                    print(col_y[r])
-                    # self.mcegraph1.setXRange(np.nanmin(col_x), np.nanmax(col_x)*1.4, padding=0)
-                    # self.mcegraph2.setXRange(np.nanmin(col_x), np.nanmax(col_x)*1.4, padding=0)
-                    self.mcegraph1.setXRange(300, 600, padding=0)
-                    self.mcegraph2.setXRange(300, 600, padding=0)
-                    self.mcegraph1.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
-                    self.mcegraph2.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
-                    self.data_line_dict_1[r] =  self.mcegraph1.plot(col_x[r], col_y[r], pen=pen, name='row %s' % r)
-                    pen = pg.mkPen(color=color)
-                    self.data_line_dict_2[r] =  self.mcegraph2.plot(col_x[r], col_y[r], pen=pen, name='row %s' % r)
+            for r in range(n):
+                color = colors[r]
+                pen = pg.mkPen(color=color)
+                self.mcegraph1.setXRange(np.nanmin(col_x), np.nanmax(col_x)*1.4, padding=0)
+                self.mcegraph2.setXRange(np.nanmin(col_x), np.nanmax(col_x)*1.4, padding=0)
+                # self.mcegraph1.setXRange(500, 600, padding=0)
+                # self.mcegraph2.setXRange(500, 600, padding=0)
+                self.mcegraph1.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
+                self.mcegraph2.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
+                # self.mcegraph1.setYRange(-20, 15, padding=0)
+                # self.mcegraph2.setYRange(-20, 15, padding=0)
+                self.data_line_dict_1[r] =  self.mcegraph1.plot(col_x[r], col_y[r], pen=pen, name='row %s' % r)
+                pen = pg.mkPen(color=color)
+                self.data_line_dict_2[r] =  self.mcegraph2.plot(col_x[r], col_y[r], pen=pen, name='row %s' % r)
 
-            # else:
-            #     for r in range(nrows):
-            #         # color=cm.rainbow(1/(r+1))
-            #         pen = pg.mkPen(color=colors[r])
-            #         self.data_line_dict_1[r].setData(x, y1 * r / 32, pen=pen, name='row %s' % r)
-            #         self.data_line_dict_2[r].setData(x, y1 * r / 32, pen=pen, name='row %s' % r)
-            #
-            #         self.i1 = 0
-            #         self.i2 = 0
-            #         self.i3 = 0
-            #         self.i4 = 0
 
             self.setColumnCount(self.graph1legend, 5)
             self.setColumnCount(self.graph2legend, 5)
@@ -1900,8 +1972,22 @@ class Tel_Thread(QtCore.QThread):
             if self.tel_script == 'Tracker':
                 from tel_tracker import start_tracker, turn_on_tracker
                 queue = mp.Queue()
-                p1 = mp.Process(name='turn_on_tracker',target = turn_on_tracker, args=(self.kms_on_off,))
-                p1.start()
+                '''  This has been deprecated. Need access to socket for shutdown after scan finished.
+                # p1 = mp.Process(name='turn_on_tracker',target = turn_on_tracker, args=(self.kms_on_off,))
+                # p1.start()
+                '''
+                PORT = 1806
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(('',6666))
+                s.connect(('192.168.1.252',PORT))
+                print('Socket Connected')
+
+                s.send(f'TIME_START_TELEMETRY {kms_on_off}'.encode())
+                reply = s.recv(1024).decode("ascii")
+                print(reply)
+
+
                 time.sleep(0.1) # give tracker time to turn on before accepting packets
                 p = mp.Process(name='start_tracker',target= start_tracker, args=(queue,))
                 p.start()
@@ -1924,6 +2010,11 @@ class Tel_Thread(QtCore.QThread):
 
                     else :
                         self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
+                        if self.tel_script == 'Tracker':
+                            # send shutdown sequence to close telemetry
+                            s.send('TIME_START_TELEMETRY 0'.encode())
+                            s.shutdown(1)
+                            s.close()
                         print(colored('Telescope Scan Completed!','green'))
                         break
 
@@ -2006,24 +2097,48 @@ class KMS_Thread(QtCore.QThread):
 
     def run(self):
         if self.kms_on_off == 2 : #if the kms is starting without telescope, turn on tracker
-            from tel_tracker import turn_on_tracker
-            p1 = mp.Process(name='turn_on_tracker',target = turn_on_tracker, args=(self.kms_on_off,))
-            p1.start()
+            ''' This has been deprecated. Need access to socket for shutdown after scan finished.
+            # from tel_tracker import turn_on_tracker
+            # p1 = mp.Process(name='turn_on_tracker',target = turn_on_tracker, args=(self.kms_on_off,))
+            # p1.start()
+            '''
+            PORT = 1806
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(('',6666))
+            s.connect(('192.168.1.252',PORT))
+            print('Socket Connected')
+
+            s.send(f'TIME_START_TELEMETRY {kms_on_off}'.encode())
+            reply = s.recv(1024).decode("ascii")
+            print(reply)
 
         queue = mp.Queue()
         p = mp.Process(name='kms_socket.start_sock',target=kms_socket.start_sock , args=(queue,))
         p.start()
 
-        while not ut.kms_exit.is_set() :
-            time.sleep(0.01) # Rate limit
-            if queue.empty():
-                continue # No new data, don't block in recv()
-            kms_stuff = queue.get() # pa , flags, time, encoder pos
-            # send updated data to the gui
-            # with self.flags.get_lock():
-            #     self.flags[2] = int(kms_stuff[2])
+        while True :
 
-            self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
+            if not ut.kms_exit.is_set() :
+                time.sleep(0.01) # Rate limit
+                if queue.empty():
+                    continue # No new data, don't block in recv()
+                kms_stuff = queue.get() # pa , flags, time, encoder pos
+                # send updated data to the gui
+                # with self.flags.get_lock():
+                #     self.flags[2] = int(kms_stuff[2])
+
+                self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
+
+            else :
+                self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
+                if self.kms_on_off == 2:
+                    # send shutdown sequence to close telemetry
+                    s.send('TIME_START_TELEMETRY 0'.encode())
+                    s.shutdown(1)
+                    s.close()
+                    print(colored('Telescope Scan Completed!','green'))
+                break
 
 #activating the gui main window
 

@@ -154,7 +154,7 @@ def find_mode_limits(xvals,yvals,cxvals,cyvals,col=None,temp=0):
             plt.xlabel('Resistance [ohm]')
             plt.ylabel('TES Power [pW]')
             plt.title('Optimal Transition Column %s' %(col))
-            plt.savefig('plots/transition_tests_%s_%sK.png'%(col,temp))
+            plt.savefig('/home/time_user/garb/transition_tests_%s_%sK.png'%(col,temp))
             plt.clf()
 
             #print(colored('opt_num: %s'%(opt_num), 'magenta'))
@@ -325,6 +325,12 @@ def loadcurve_plotting(T, dir, i,cols=32, rows=33, auto=False):
 
             opt_num = find_mode_limits(final_res, final_p, current_x, current_y, col = mux_c, temp = T)
             opt_num_array.append(opt_num)
+        #
+        # np.save('/home/time_user/temp_lc/temp_cur_x_%s' % i, current_x)
+        # np.save('/home/time_user/temp_lc/temp_cur_y_%s' % i, current_x)
+        # np.save('/home/time_user/temp_lc/temp_cur_final_res_%s' % i, final_res)
+        # np.save('/home/time_user/temp_lc/temp_cur_final_p_%s' % i, final_p)
+
 
         return current_x, current_y
         # if any column doesn't have equal to num working detector as test file
@@ -431,23 +437,6 @@ def main(T, dir, cols=32, rows=33):
                          rser_cr[(c, r)] = full_lc[c][r].r_ser
 
             bias_y = bias_y.swapaxes(0,1) # why are we swapping axes here?
-            partial_lc = loadcurveecg.load_loadcurves_muxcr(folder, calib, r_ser_override = rser_cr, partial=True)
-
-            tes_p_masked = {}
-            tes_r = {}
-            for c in range(0, cols):
-                for r in range(0, rows):
-                         tes_p_masked[(c, r)] = partial_lc[c][r].tes_p_masked
-                         tes_r[(c, r)] = partial_lc[c][r].tes_r
-
-
-            colors = plt.cm.jet(np.linspace(0,1,rows))
-            final_res = np.zeros((cols,rows,20))
-            final_p = np.zeros((cols,rows,20))
-            current_x = np.zeros((cols,rows,20))
-            current_y = np.zeros((cols,rows,20))
-
-
             partial_lc = loadcurveecg.load_loadcurves_muxcr(folder, calib, r_ser_override = rser_cr, partial=True)
 
             #why are we redefining tes_p_masked before we even use the first version of it ?

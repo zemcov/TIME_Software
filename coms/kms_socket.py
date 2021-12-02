@@ -18,11 +18,12 @@ def start_sock(queue):
     """
     PORT = 8500
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('',PORT))
-    print('KMS Server Listening')
+    print('KMS GUI Socket Listening')
     s.listen(5)
     client, info = s.accept()
-    print('Socket Connected')
+    print('KMS GUI Socket Connected')
     unpacker = struct.Struct('d i d d') # d = float , s = char string , i = integer
     kms_data = []
     n = 0
@@ -48,5 +49,6 @@ def start_sock(queue):
         # else :
         #     print('waiting for data')
 
+    s.shutdown(1)
     s.close()
     sys.exit()
