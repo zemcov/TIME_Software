@@ -237,7 +237,7 @@ class MainWindow(QtGui.QMainWindow):
                 tel_message = 'NO TELESCOPE SELECTED'
             if self.kmsonoff == 'Yes':
                 self.tel_script = 'Tracker'
-                self.off = False
+                self.off = True
                 tel_message = 'KMS ONLY'
 
         elif self.inittel == 'Sim' :
@@ -2077,11 +2077,41 @@ class Tel_Thread(QtCore.QThread):
                         break
 
         else :
-            # makes fake data for when we don't want to run the telescope
-            tele_array = np.zeros((20,20),dtype=float)
-            np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
-            time.sleep(0.01)
-            np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
+            
+            from tel_tracker import start_tracker, turn_on_tracker
+            queue = mp.Queue()
+
+            if True:
+                time.sleep(0.1) # give tracker time to turn on before accepting packets
+                p = mp.Process(name='start_tracker',target= start_tracker, args=(queue,))
+                p.start()
+                sys.stdout.flush()
+                sys.stderr.flush()
+
+                while True :
+                    if not ut.tel_exit.is_set() :
+                        time.sleep(0.01) # Rate limit
+                        if queue.empty():
+                            continue # No new data, don't block in recv()
+                        tel_stuff = queue.get()
+                        with self.flags.get_lock() :
+                            self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
+                        progress = 0.0
+                        self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+                        time.sleep(0.01)
+                        sys.stdout.flush()
+                        sys.stderr.flush()
+
+                    else :
+                        self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
+                        break
+
+            else :
+                # makes fake data for when we don't want to run the telescope
+                tele_array = np.zeros((20,20),dtype=float)
+                np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
+                time.sleep(0.01)
+                np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
 
 
 class KMS_Thread(QtCore.QThread):
