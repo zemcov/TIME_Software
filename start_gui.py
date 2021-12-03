@@ -23,7 +23,7 @@ from main.tel_box import draw_box
 from scans import raster_script_1d, raster_script_2d, bowtie_scan, point_cross
 from config import init, directory
 import config.utils as ut
-sys.path.append('../loadcurves/')
+sys.path.append('loadcurves')
 from gui_loadcurve import *
 
 #class of all components of GUI
@@ -237,7 +237,7 @@ class MainWindow(QtGui.QMainWindow):
                 tel_message = 'NO TELESCOPE SELECTED'
             if self.kmsonoff == 'Yes':
                 self.tel_script = 'Tracker'
-                self.off = False
+                self.off = True
                 tel_message = 'KMS ONLY'
 
         elif self.inittel == 'Sim' :
@@ -897,7 +897,7 @@ class MainWindow(QtGui.QMainWindow):
     def loadcurve_thread(self, lc_queue, lc_indexer, rser_cr):
         T = 293
         cols=32; rows=33
-        init_bias = np.load(directory.time_analysis + f'bias_list_{T}.npy',allow_pickle=True) #This file relies on read load curves being run at least once
+        init_bias = np.load(directory.time_analysis + 'bias_list_%s.npy'%(T),allow_pickle=True) #This file relies on read load curves being run at least once
         import calib.time202001 as calib
         bias_min = init_bias[:, 1]
         opt_num_fin = init_bias[:, 3]
@@ -1983,7 +1983,7 @@ class Tel_Thread(QtCore.QThread):
                 s.connect(('192.168.1.252',PORT))
                 print('Socket Connected')
 
-                s.send(f'TIME_START_TELEMETRY {kms_on_off}'.encode())
+                s.send('TIME_START_TELEMETRY %s'.encode() %(kms_on_off))
                 reply = s.recv(1024).decode("ascii")
                 print(reply)
 
@@ -2109,7 +2109,7 @@ class KMS_Thread(QtCore.QThread):
             s.connect(('192.168.1.252',PORT))
             print('Socket Connected')
 
-            s.send(f'TIME_START_TELEMETRY {kms_on_off}'.encode())
+            s.send('TIME_START_TELEMETRY 2'.encode())
             reply = s.recv(1024).decode("ascii")
             print(reply)
 
@@ -2131,7 +2131,7 @@ class KMS_Thread(QtCore.QThread):
                 self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
 
             else :
-                self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
+                self.new_kms_data.emit('done','done','done','done')
                 if self.kms_on_off == 2:
                     # send shutdown sequence to close telemetry
                     s.send('TIME_START_TELEMETRY 0'.encode())
