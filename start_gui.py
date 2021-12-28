@@ -116,6 +116,10 @@ class MainWindow(QtGui.QMainWindow):
         self.useinit.clicked.connect(self.on_useinit_clicked)
         self.kms_stop.clicked.connect(self.onkmsstop_clicked)
         self.kms_restart.clicked.connect(self.onkmsrestart_clicked)
+        self.set_bias.clicked.connect(self.bias_bool)
+
+    def bias_bool(self):
+        self.bias_ready = True
 
     def onkmsrestart_clicked(self):
         subprocess.Popen(['ssh -T pi@kms python /home/pi/kms-dev/manual_sick_reset.py'],shell=True)
@@ -500,7 +504,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.newgraphs = QtGui.QVBoxLayout()
                 self.newwindow.setGeometry(10, 10, 1920, 1080)
                 self.newwindow.setLayout(self.newgrid)
-                self.newgrid.addLayout(self.newgraphs, 0,2,8,8)
+                self.newgrid.addLayout(self.newgraphs, 0,3,8,8)
 
                 p = QtGui.QPalette()
                 p.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QColor(255,255,255)))
@@ -508,7 +512,7 @@ class MainWindow(QtGui.QMainWindow):
 
                 self.newquitbutton = QtGui.QVBoxLayout()
                 self.newquitbutton.addWidget(self.quitbutton)
-                self.newgrid.addLayout(self.newquitbutton, 9,0,1,2)
+                # self.newgrid.addLayout(self.newquitbutton, 9,0,1,2)
 
                 self.setnewrc = QtGui.QVBoxLayout()
                 self.setnewrc.addWidget(self.changechan)
@@ -522,8 +526,13 @@ class MainWindow(QtGui.QMainWindow):
                 self.kmsrestart.addWidget(self.kms_restart)
                 self.newgrid.addLayout(self.kmsrestart,7,0,1,2)
 
+                self.bias_button = QtGui.QVBoxLayout()
+                self.bias_button.addWidget(self.set_bias)
+                self.newgrid.addLayout(self.bias_button, 9,0,1,2)
+                # self.bias_ready = True
                 self.init_lc_plots()
                 self.channelselection()
+                self.set_bias_levels()
                 # self.initheatmap(data,data) # give first values for heatmap to create image scale
                 # self.initfftgraph()
                 # self.inittelescope()
@@ -734,6 +743,8 @@ class MainWindow(QtGui.QMainWindow):
         self.submitbutton.setStyleSheet("background-color: green")
         self.kms_stop = QtGui.QPushButton('KMS STOP')
         self.kms_stop.setStyleSheet("background-color: orange")
+        self.set_bias = QtGui.QPushButton('Set Bias')
+        self.set_bias.setStyleSheet("background-color: green")
         self.kms_restart = QtGui.QPushButton('KMS RESTART')
         self.kms_restart.setStyleSheet("background-color: yellow")
         self.initparams.addRow(self.helpbutton)
@@ -783,6 +794,57 @@ class MainWindow(QtGui.QMainWindow):
 
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
+
+    def read_new_bias(self):
+        ncols = 3
+        self.is_checked_0 = np.zeros((32), dtype='bool')
+        self.is_checked_1 = np.zeros((32), dtype='bool')
+        for n in range(32):
+            ind = n % ncols
+            self.is_checked_0[n] = not self.bias_box_1[n].isChecked()
+            self.is_checked_1[n] = not self.bias_box_2[n].isChecked()
+        master_bias0 = int(self.master_b1.text())
+        master_bias1 = int(self.master_b1.text())
+
+        self.bias_0_vals[self.is_checked_0] = master_bias0
+        self.bias_1_vals[self.is_checked_1] = master_bias1
+
+        # self.bias_ready = True
+
+    def set_bias_levels(self):
+        ncols = 3
+
+        self.b1_checkboxes = [QtGui.QGridLayout() for i in range(ncols)]
+        self.master_bias_1 = QtGui.QFormLayout()
+        self.master_b1 = QtGui.QLineEdit('2000')
+        self.master_bias_1.addRow('mce0 Bias Level', self.master_b1)
+
+        self.newgrid.addLayout(self.master_bias_1, 1, 0, 1, 2)
+        self.bias_box_1 = [QtGui.QCheckBox() for i in range(32)]
+        self.bias_levels = {}
+        for n in range(32):
+            self.bias_box_1[n].setText('col %s' % n)
+
+            ind = n % ncols
+            row = n // ncols
+            self.b1_checkboxes[ind].addWidget(self.bias_box_1[n], row, 0, 1, 1)
+        [self.newgrid.addLayout(self.b1_checkboxes[i], 2, i,1,1) for i in range(ncols)]
+
+        self.b2_checkboxes = [QtGui.QGridLayout() for i in range(ncols)]
+        self.master_bias_2 = QtGui.QFormLayout()
+        self.master_b2 = QtGui.QLineEdit('2000')
+        self.master_bias_2.addRow('mce1 Bias Level', self.master_b2)
+        self.newgrid.addLayout(self.master_bias_2, 4, 0, 1, 2)
+        self.bias_box_2 = [QtGui.QCheckBox() for i in range(32)]
+        self.bias_levels = {}
+        for n in range(32):
+            self.bias_box_2[n].setText('col %s' % n)
+
+            ind = n % ncols
+            row = n // ncols
+            self.b2_checkboxes[ind].addWidget(self.bias_box_2[n], row, 0, 1, 1)
+        [self.newgrid.addLayout(self.b2_checkboxes[i], 5, i,1,1) for i in range(ncols)]
+
     def channelselection(self):
 
         self.channelreadoutbox1 = QtGui.QFormLayout()
@@ -886,15 +948,21 @@ class MainWindow(QtGui.QMainWindow):
         self.updater.start()
 
         self.lc_indexer = 0
+        self.old_lc = -1
 
         self.lc_queue = mp.Queue()
         rser_cr = {}
+        self.bias_0_vals = np.zeros((32))
+        self.bias_0_vals[:] = 2000
+        self.bias_1_vals = np.zeros((32))
+        self.bias_1_vals[:] = 2000
+        self.bias_ready = False
         lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, rser_cr))
         # p2 = mp.Process(name='append_hk',target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         lc_p.start()
 
 
-    def loadcurve_thread(self, lc_queue, lc_indexer, rser_cr):
+    def loadcurve_thread(self, lc_queue, lc_indexer, rser_cr, bias=None):
         T = 293
         cols=32; rows=33
         init_bias = np.load(directory.time_analysis + 'bias_list_%s.npy'%(T),allow_pickle=True) #This file relies on read load curves being run at least once
@@ -905,6 +973,7 @@ class MainWindow(QtGui.QMainWindow):
         folder = directory.time_analysis + 'partial_load_test_5'
         fname_full = directory.time_analysis + 'iv_45deg_pid330mk_294k_beammap0'
 
+        # iv_main('iv_test_0','293',calib, bias)
         bias_x, bias_y = showivecg(fname)
         bias_y = bias_y.swapaxes(0,1)
         transition = np.zeros((cols))
@@ -1413,69 +1482,88 @@ class MainWindow(QtGui.QMainWindow):
 
 
     def update_lc_plot(self, h1, h2, index):
+        # print('looping')
+        self.read_new_bias()
         self.index = index
 
-
-
+        self.i1 = self.i2 = self.i3 = self.i4 = 0
+        new_channel = False
+        plot_flag = False
         temp_file = directory.temp_lc + 'temp_cur_x_%s.npy' % self.lc_indexer
         if os.path.exists(temp_file):
-            lc_data_arr = np.load(directory.temp_lc + 'temp_cur_x_%s.npy' % self.lc_indexer, allow_pickle=True)
-            #lc_data_arr structure
-            # 0 - final_resistance
-            # 1 - final_power
-            # 2 - bias_current
-            # 3 - response_current
-            opt_num     = np.load(directory.temp_lc + 'opt_num_%s.npy' % self.lc_indexer, allow_pickle=True)
-            transition  = np.load(directory.temp_lc + 'transitions_%s.npy' % self.lc_indexer, allow_pickle=True)
+
+            # print(self.lc_indexer, temp_file, os.path.exists(temp_file))
+            if self.lc_indexer > self.old_lc: #for debugging !
+                self.lc_data_arr = np.load(directory.temp_lc + 'temp_cur_x_%s.npy' % self.lc_indexer, allow_pickle=True)
+                #lc_data_arr structure
+                # 0 - final_resistance
+                # 1 - final_power
+                # 2 - bias_current
+                # 3 - response_current
+                opt_num     = np.load(directory.temp_lc + 'opt_num_%s.npy' % self.lc_indexer, allow_pickle=True)
+                transition  = np.load(directory.temp_lc + 'transitions_%s.npy' % self.lc_indexer, allow_pickle=True)
+
+                self.old_lc = self.lc_indexer
+                plot_flag = True
+
+        if self.bias_ready:
             rser_cr = self.lc_queue.get()[0]
             self.lc_queue = mp.Queue()
-            self.lc_indexer += 1
-            lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, rser_cr))
+            lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, rser_cr, self.bias_0_vals))
             lc_p.start()
-            T = '293' #perhaps we want to make this an argument that can be passed through the GUI
-            #when the load curve flag is set we get an array of y and x values
+            self.bias_ready = False
+            self.lc_indexer += 1
+
+            # T = '293' #perhaps we want to make this an argument that can be passed through the GUI
+            # #when the load curve flag is set we get an array of y and x values
             ut.which_mce[0] = 1
             ut.which_mce[1] = 0
             ut.which_mce[2] = 0
-            # #get data from mce 0
-            if ut.which_mce[0] == 1 :
-                if self.index == 0:
-                    col_test = 6
-                    print('Plotting the loadcurves now!')
-                    # current_x, current_y = loadcurve_plotting(T, dir, i=i, cols=32, rows=33)
-                    col_x = lc_data_arr[2,col_test,:,:]; col_y = lc_data_arr[3,col_test,:,:]
-            # #get data from mce 1
-            # if ut.which_mce[1] == 1 :
-            # #get data from both
-            # if ut.which_mce[2] == 1 :
+            plot_flag = True
 
-            n = 32 #number of rows
-            color_arr = cm.rainbow(np.linspace(0, 1, n)) * 255
-            colors = color_arr[:,0:3]
+        if self.oldch1 != self.channel1 or self.oldch2 != self.channel2:
+            print('changing to channel %s' % self.channel1)
+            new_channel = True
+            self.oldch1 = self.channel1
+            self.oldch2 = self.channel2
+        n = 32 #number of rows
+        color_arr = cm.rainbow(np.linspace(0, 1, n)) * 255
+        colors = color_arr[:,0:3]
+
+        #there is a slight inefficiency here we probably don't want to redraw everytime we get a new set of data this should just be on the first pass
+        if plot_flag and self.lc_indexer==0: #
+            # self.channel1 = 6
+            col_x = self.lc_data_arr[2,self.channel1,:,:]; col_y = self.lc_data_arr[3,self.channel1,:,:]
             for r in range(n):
                 color = colors[r]
                 pen = pg.mkPen(color=color)
-                self.mcegraph1.setXRange(np.nanmin(col_x), np.nanmax(col_x)*1.4, padding=0)
-                self.mcegraph2.setXRange(np.nanmin(col_x), np.nanmax(col_x)*1.4, padding=0)
+                self.mcegraph1.setXRange(np.nanmin(self.lc_data_arr[2,:,:,:]), np.nanmax(self.lc_data_arr[2,:,:,:])*1.4, padding=0)
+                self.mcegraph2.setXRange(np.nanmin(self.lc_data_arr[2,:,:,:]), np.nanmax(self.lc_data_arr[2,:,:,:])*1.4, padding=0)
                 # self.mcegraph1.setXRange(500, 600, padding=0)
                 # self.mcegraph2.setXRange(500, 600, padding=0)
-                self.mcegraph1.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
-                self.mcegraph2.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
+                self.mcegraph1.setYRange(np.nanmin(self.lc_data_arr[3,:,:,:]), np.nanmax(self.lc_data_arr[3,:,:,:])*1.4, padding=0)
+                self.mcegraph2.setYRange(np.nanmin(self.lc_data_arr[3,:,:,:]), np.nanmax(self.lc_data_arr[3,:,:,:])*1.4, padding=0)
                 # self.mcegraph1.setYRange(-20, 15, padding=0)
                 # self.mcegraph2.setYRange(-20, 15, padding=0)
                 self.data_line_dict_1[r] =  self.mcegraph1.plot(col_x[r], col_y[r], pen=pen, name='row %s' % r)
                 pen = pg.mkPen(color=color)
                 self.data_line_dict_2[r] =  self.mcegraph2.plot(col_x[r], col_y[r], pen=pen, name='row %s' % r)
 
-
             self.setColumnCount(self.graph1legend, 5)
             self.setColumnCount(self.graph2legend, 5)
+        if new_channel:
+            print('?')
+            print(self.channel1)
+            col_x = self.lc_data_arr[2,self.channel1,:,:]; col_y = self.lc_data_arr[3,self.channel1,:,:]
+            for r in range(n):
+                self.data_line_dict_1[r].setData(col_x[r], col_y[r])
+                self.data_line_dict_2[r].setData(col_x[r], col_y[r])
+                self.mcegraph1.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
+                self.mcegraph2.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
 
-            # self.graph1legend.setColumns(5)
-            # self.graph2legend.setColumns(5)
+        # self.graph1legend.setColumns(5)
+        # self.graph2legend.setColumns(5)
 
-            self.oldch1 = self.channel1
-            self.oldch2 = self.channel2
 
     def updateplot(self,h1,h2,index):
 
@@ -2077,7 +2165,7 @@ class Tel_Thread(QtCore.QThread):
                         break
 
         else :
-            
+
             from tel_tracker import start_tracker, turn_on_tracker
             queue = mp.Queue()
 

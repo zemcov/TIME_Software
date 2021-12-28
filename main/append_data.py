@@ -18,7 +18,7 @@ class Time_Files:
         self.p = 0
         self.flags = flags
         self.offset = offset
-        
+
         self.queues = [mp.Queue() for i in range(4)]
         self.procs = []
         self.procs.append(mp.Process(name='Data Process MCE0', target=read_mce.netcdfdata, args=(0,self.queues[0],self.flags,)))
@@ -32,10 +32,10 @@ class Time_Files:
                 self.procs[mce_index].start()
         self.procs[2].start()
         # self.procs[3].start()
-        
+
         sys.stdout.flush()
         sys.stderr.flush()
-        
+
     # ~ def close(self):
         # ~ for i in range(len(self.procs)):
             # ~ print("Joining process %i (%s)" % (i, self.procs[i]))
@@ -51,14 +51,14 @@ class Time_Files:
         # os.nice(-20)
         last_time = 0
         while not ut.mce_exit.is_set():
-            
+
             time.sleep(0.01) # Rate limit
-            
+
             if time.time() - last_time > 1:
-                print("append_data.retrieve is still alive")
+                # print("append_data.retrieve is still alive"
                 # ~ print("append_data.retrieve is still alive, waiting on event %i" % id(ut.mce_exit))
                 last_time = time.time()
-            
+
             # Wait until everything is ready
             data_ready = True
             for mce_index in range(2):
@@ -69,7 +69,7 @@ class Time_Files:
                     data_ready = False
             if not data_ready:
                 continue
-                
+
             a = []
             b = []
 
@@ -105,14 +105,14 @@ class Time_Files:
             self.parse_arrays(dir)
             self.append_mce_data(dir)
             self.p += 1
-                
+
         # ~ print("append_data.retrieve is closing processes")
         # ~ self.close()
-        
+
         print("append_data.retrieve is closing connections")
         for q in self.queues:
             q.close()
-        
+
         print("append_data.retrieve is exiting")
         sys.stdout.flush()
 
