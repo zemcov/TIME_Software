@@ -27,10 +27,12 @@ def load_loadcurves_muxcr(foldername, calib, r_ser_override={}, partial=False):
 	if not os.path.isdir(foldername):
 		raise ValueError("Specified load curve folder doesn't exist: " + str(foldername))
 
-	filename = os.path.join(foldername, os.path.basename(foldername))
+	# filename = os.path.join(foldername, os.path.basename(foldername))
 
-	biasfilename = filename + '.bias'
-
+	# biasfilename = filename + '.bias'
+	biasfilename = '/home/time/TIME_Software/main/tempfiles/iv_pid375mK_opteff_300K/iv_pid375mK_opteff_300K.bias'
+	filename = '/home/time/TIME_Software/main/tempfiles/iv_pid375mK_opteff_300K/iv_pid375mK_opteff_300K'
+	print(biasfilename, filename)
 
 
 	if not os.path.isfile(filename) or not os.path.isfile(biasfilename):

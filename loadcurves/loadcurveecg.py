@@ -92,16 +92,12 @@ def load_loadcurves_muxcr(foldername, calib, r_ser_override={}, partial=False):
 			# Note that the mce_data is r,c but we are returning c,r
 			# for this function
 
-			if np.mean(tr) != 0:
-				#print(np.mean(tr))
-				#if np.isnan(tr).all() == False:
-				lc = LoadCurve(bias_raw[c], tr, calib, fj, r_ser_override.get((c,r),None), partial)
-				i = i+1
-				#print('counter', i)
-			else:
-				#print(r,c)
-				i = i+1
-				#print('counter', i)
+			#print(np.mean(tr))
+			#if np.isnan(tr).all() == False:
+			lc = LoadCurve(bias_raw[c], tr, calib, fj, r_ser_override.get((c,r),None), partial)
+			i = i+1
+
+			#print('counter', i)
 
 			lccol.append(lc)
 

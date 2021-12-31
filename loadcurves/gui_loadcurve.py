@@ -85,10 +85,10 @@ def find_mode_limits(xvals,yvals,cxvals,cyvals,col=None,temp=0):
             else:
                 count += 1
 
-        #print('num of good det : ' ,count)
+        print('num of good det : ' ,count)
         if count == 0 :
             #print('Error')
-            return 0
+            return 0,0,0
 
         else :
 
@@ -146,23 +146,23 @@ def find_mode_limits(xvals,yvals,cxvals,cyvals,col=None,temp=0):
             #print ("Optimal value: " + str(limits[-1]))
             # plotting the actual points as scatter plot
 
-            plt.figure(4)
-            plt.scatter(xvals, yvals, color = "m", marker = "o", s = 30)
-            #creates region of optimal x values
-            plt.axvspan(limits[0], limits[-1], alpha = 0.5)
-            plt.axvline((limits[-1]), color = 'r')
-            plt.xlabel('Resistance [ohm]')
-            plt.ylabel('TES Power [pW]')
-            plt.title('Optimal Transition Column %s' %(col))
-            plt.savefig('/home/time_user/garb/transition_tests_%s_%sK.png'%(col,temp))
-            plt.clf()
+            # plt.figure(4)
+            # plt.scatter(xvals, yvals, color = "m", marker = "o", s = 30)
+            # #creates region of optimal x values
+            # plt.axvspan(limits[0], limits[-1], alpha = 0.5)
+            # plt.axvline((limits[-1]), color = 'r')
+            # plt.xlabel('Resistance [ohm]')
+            # plt.ylabel('TES Power [pW]')
+            # plt.title('Optimal Transition Column %s' %(col))
+            # plt.savefig('/home/time_user/garb/transition_tests_%s_%sK.png'%(col,temp))
+            # plt.clf()
 
             #print(colored('opt_num: %s'%(opt_num), 'magenta'))
-            return opt_num #powerx,powery,biasx,biasy
+            return opt_num, limits[0], limits[-1] #powerx,powery,biasx,biasy
 
     except ValueError:
         #print('Empty Arrays')
-        return 0
+        return 0,0,0
 
 def size():
     bias_X = np.zeros((32,33,20))
@@ -174,7 +174,8 @@ def size():
 
 def transition_sizes(y,x,bias_y,bias_x, mux_c, mux_r):
     flags = []
-    m_chng, err = turn(y,x,bias_y,bias_x, mux_c, mux_r) #grabs data where transition is
+    # m_chng, err = turn(y,x,bias_y,bias_x, mux_c, mux_r) #grabs data where transition is
+    m_chng = None
     if m_chng == None:
         xnew = np.zeros(20)
         ynew = np.zeros(20)
