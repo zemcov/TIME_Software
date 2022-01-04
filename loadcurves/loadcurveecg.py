@@ -44,18 +44,18 @@ def load_loadcurves_muxcr(foldername, calib, r_ser_override={}, partial=False):
 	f = mce_data.MCEFile(filename)
 
 	tes_raw = -1.0*f.Read(row_col=True, unfilter='DC', unwrap=True).data
-	#bias_raw = np.loadtxt(biasfilename, skiprows=1)
-	bias_raw = np.load(biasfilename, allow_pickle = True)
+	bias_raw = np.loadtxt(biasfilename, skiprows=1)
+	# bias_raw = np.load(biasfilename, allow_pickle = True)
 	#print(bias_raw.shape)
 
 	# Store LC with ascending bias
 	reverse = False
 	for i in range(len(bias_raw)):
 		if bias_raw[i,1] < bias_raw[i,0]:
-			bias_raw[i] = np.flip(bias_raw[i])
-		# if bias_raw[1] < bias_raw[0]:
-		# 	bias_raw = bias_raw[::-1]
-		# 	reverse = True
+			bias_raw[i] = bias_raw[i,::-1]
+	# if bias_raw[1] < bias_raw[0]:
+	# 	bias_raw = bias_raw[::-1]
+	# 	reverse = True
 	reverse = True
 	#print(bias_raw[6,0:9])
 	#print(bias_raw[6,-10:-1])

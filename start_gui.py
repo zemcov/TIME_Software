@@ -805,11 +805,11 @@ class MainWindow(QtGui.QMainWindow):
             ind = n % ncols
             self.is_checked_0[n] = not self.bias_box_1[n].isChecked()
             self.is_checked_1[n] = not self.bias_box_2[n].isChecked()
-        master_bias0 = int(self.master_b1.text())
-        master_bias1 = int(self.master_b1.text())
+        self.master_bias0 = int(self.master_b1.text())
+        self.master_bias1 = int(self.master_b1.text())
 
-        self.bias_0_vals[self.is_checked_0] = master_bias0
-        self.bias_1_vals[self.is_checked_1] = master_bias1
+        self.bias_0_vals[self.is_checked_0] = self.master_bias0
+        self.bias_1_vals[self.is_checked_1] = self.master_bias1
 
         # self.bias_ready = True
 
@@ -932,8 +932,8 @@ class MainWindow(QtGui.QMainWindow):
         self.mcegraph2.addItem(self.mcegraphdata2)
         self.newgraphs.addWidget(self.mcegraph1, stretch=2)
         self.newgraphs.addWidget(self.mcegraph2, stretch=2)
-        self.mcegraph1.setLabel('bottom', 'Time [sec]')
-        self.mcegraph1.setLabel('left', 'Counts [ADU]')
+        self.mcegraph1.setLabel('bottom', 'Bias Current [DAC]')
+        self.mcegraph1.setLabel('left', 'OFfset SQ1 Feedback [DAC]')
         self.mcegraph1.setTitle('MCE0 Load Curve')
         self.graph1legend = self.mcegraph1.addLegend()
 
@@ -955,102 +955,79 @@ class MainWindow(QtGui.QMainWindow):
         self.lc_queue = mp.Queue()
         rser_cr = {}
         self.bias_0_vals = np.zeros((32),dtype='int')
-        self.bias_0_vals[:] = 2000
+        self.bias_0_vals[:] = 3000
         self.bias_1_vals = np.zeros((32),dtype='int')
         self.bias_1_vals[:] = 2000
         self.bias_ready = False
-        lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, rser_cr, self.bias_0_vals))
+        self.master_bias0 = 3000
+        self.is_checked_0 = np.zeros((32), dtype='bool')
+        self.is_checked_0[:] = True
+        lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, rser_cr, self.bias_0_vals, self.is_checked_0))
         # p2 = mp.Process(name='append_hk',target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         lc_p.start()
 
 
-    def loadcurve_thread(self, lc_queue, lc_indexer, rser_cr, bias=None, T=293):
+    def loadcurve_thread(self, lc_queue, lc_indexer, rser_cr, bias, columns, T=293):
         T = 293
         cols=32; rows=33
         init_bias = np.load(directory.time_analysis + 'bias_list_%s.npy'%(T),allow_pickle=True) #This file relies on read load curves being run at least once
         sys.path.append('/home/time/time_analysis/py/timefpu/')
         import calib.time202001 as calib
         bias_min = init_bias[:, 1]
+        col_vals = tuple(np.where(columns == True)[0])
 
-        # generate_lc_data('iteration_%s' % lc_indexer, temp, calib, bias, bias_start=2000, \
-        #                         bias_step=2, bias_count=1001, zap_bias=30000, zap_time=1.0, settle_time=2000.0, \
-        #                         bias_pause=0.1, bias_final=0, data_mode=1)
+        col_str = '-c'
+        for val in col_vals:
+            col_str += ' %s' % val
         # opt_num_fin = init_bias[:, 3]
         data_name = 'iteration_%s' % lc_indexer
+        count = 5000 - bias + 1
         str_list = tuple([data_name] + [bias[i] for i in range(bias.size)])
-        print('sending signal to bias detectors')
+        # print('sending signal to bias detectors')
         print('ssh -T -X -n time@m192.168.1.81 python partial_iv_curve.py -r %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % str_list)
-        subprocess.Popen(['ssh -T -X -n time@192.168.1.81 python /home/time/time_analysis/py/timefpu/partial_iv_curve.py -r %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % str_list] ,shell=True)
+        # script_path = 'ssh -X -n time@192.168.1.81 python /home/time/b3_analysis/load_curve/ivcurve_copy.py '
+        # default_commands = ' --bias_start 5000 --zap_bias 8000 --zap_time 1 --settle_bias 5000 --settle_time 1 --bias_step -1 --bias_count %s --bias_pause 0.03 --bias_final %s --data_mode 10 -d %s' % (count, bias, data_name)
+        # command = script_path + col_str + default_commands
+        # print(command)
         dname = '/home/time/TIME_Software/main/tempfiles/temp_lc/' + data_name
         fname = os.path.join(dname, data_name)
-        time.sleep(120) #wait for loadcurves to be made to save computational resources
-        while not os.path.exists(fname):
-            print('waiting for %s' %fname)
-            time.sleep(2)
+        if lc_indexer is not 0:
+            # subprocess.Popen([command], shell=True)
+            subprocess.Popen(['ssh -T -X -n time@192.168.1.81 python /home/time/time_analysis/py/timefpu/partial_iv_curve.py -r %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % str_list] ,shell=True)
+            while not os.path.exists(fname):
+                print('waiting for %s' %fname)
+                time.sleep(2)
 
-
-        # mas_data = os.environ['MAS_DATA']
-        # dname = os.path.join(mas_data, 'initial_lc_test')
-        # fname = os.path.join(dname, data_name)
-        # # folder = directory.time_analysis + 'partial_load_test_5'
         folder = dname
-        # fname_full = directory.time_analysis + 'iv_45deg_pid330mk_294k_beammap0'
-        fname_full = '/home/time/TIME_Software/main/tempfiles/iv_pid375mK_opteff_300K/'
-
-        bias_x, bias_y = showivecg(fname)
-        bias_y = bias_y.swapaxes(0,1)
-        transition = np.zeros((cols))
+        fname_full = '/home/time/TIME_Software/main/tempfiles/iv_pid375mK_opteff_300K/iv_pid375mK_opteff_300K'
+        lower_lim = upper_lim = np.zeros((32))
         if lc_indexer == 0:
+            rser = {}
+            lc_queue.put([rser_cr, lower_lim, upper_lim])
+            lc_data_arr = np.zeros((4, cols, rows, 5))
+            np.save(directory.temp_lc + 'temp_cur_x_%s' % lc_indexer, lc_data_arr, allow_pickle=True)
 
-            full_lc = loadcurve.load_loadcurves_muxcr(fname_full, calib)
+            print('done making files')
+        else:
+            bias_x, bias_y = showivecg(fname)
+            bias_y = bias_y.swapaxes(0,1)
+            bias_max = np.argmax(bias)
 
-            for c in range(cols):
-                   for r in range(rows):
-                         rser_cr[(c, r)] = full_lc[c][r].r_ser
+            lc_data_arr = np.zeros((4, cols, rows, bias_x.shape[1]))
 
-        partial_lc = loadcurveecg.load_loadcurves_muxcr(folder, calib, r_ser_override = rser_cr, partial=True)
-        tes_p_masked = {}
-        tes_r = {}
-        for c in range(cols):
-               for r in range(rows):
-                   tes_p_masked[(c, r)] = partial_lc[c][r].tes_p_masked
-                   tes_r[(c, r)] = partial_lc[c][r].tes_r
-        lc_data_arr = np.zeros((4, cols, rows, 20))
-        #lc data arr indexes :
-        # 0 - final_resistance
-        # 1 - final_power
-        # 2 - bias_current
-        # 3 - response_current
-        lower_limits = np.zeros((32)); upper_limits = np.zeros((32))
-        for mux_c in range(cols): #detector position
-            for mux_r in range(rows): #detector frequency
-                # use turn function to find detectors in transition
-                x = tes_r[(mux_c, mux_r)]
-                y = tes_p_masked[(mux_c, mux_r)]*1e12
-                h = bias_y[mux_c, mux_r]
-                y =  bias_x[mux_c]
-                x =  mux_c
-                y =  mux_r
-                res_detect, p_detect, current_x_detect, current_y_detect, flags = transition_sizes(tes_p_masked[(mux_c, mux_r)]*1e12, tes_r[(mux_c, mux_r)], bias_y[mux_c, mux_r], bias_x[mux_c], mux_c, mux_r)
-                lc_data_arr[0,mux_c,mux_r,:] = res_detect
-                lc_data_arr[1,mux_c,mux_r,:] = p_detect
-                lc_data_arr[2,mux_c,mux_r,:] = current_x_detect
-                lc_data_arr[3,mux_c,mux_r,:] = current_y_detect
+            lower_limits = np.zeros((32)); upper_limits = np.zeros((32))
+            for mux_c in range(cols): #detector position
+                for mux_r in range(rows): #detector frequency
 
-            opt_num, low, up = find_mode_limits(lc_data_arr[0,:,:,:], lc_data_arr[1,:,:,:], lc_data_arr[2,:,:,:], lc_data_arr[3,:,:,:], col = mux_c, temp = T)
-            lower_limits[mux_c] = low; upper_limits[mux_c] = up
-        print('putting loadcurve data into queue')
-        lc_queue.put([rser_cr, lower_limits, upper_limits])
-        print('making files')
-        np.save(directory.temp_lc + 'temp_cur_x_%s' % lc_indexer, lc_data_arr, allow_pickle=True)
-        np.save(directory.temp_lc + 'opt_num_%s' % lc_indexer, opt_num, allow_pickle=True)
-        # for col in range(cols):
-        #     if opt_num[col] < opt_num_fin[col]:
-        #         transition[k] = 0
-        #     else:
-        #         transition[k] = 1
-        np.save(directory.temp_lc + 'transitions_%s' % lc_indexer, transition, allow_pickle=True)
-        print('done making files')
+                    lc_data_arr[2,mux_c,mux_r,:] = bias_x[mux_c]
+                    lc_data_arr[3,mux_c,mux_r,:] = bias_y[mux_c, mux_r] * 1e-3 #kDAC
+
+            rser_cr = {}
+            print('putting loadcurve data into queue')
+            lc_queue.put([rser_cr, lower_lim, upper_lim])
+            print('making files')
+            np.save(directory.temp_lc + 'temp_cur_x_%s' % lc_indexer, lc_data_arr, allow_pickle=True)
+            print('done making files')
         return
 
 
@@ -1520,14 +1497,15 @@ class MainWindow(QtGui.QMainWindow):
 
             # print(self.lc_indexer, temp_file, os.path.exists(temp_file))
             if self.lc_indexer > self.old_lc: #for debugging !
+                print('new data loaded')
                 self.lc_data_arr = np.load(directory.temp_lc + 'temp_cur_x_%s.npy' % self.lc_indexer, allow_pickle=True)
                 #lc_data_arr structure
                 # 0 - final_resistance
                 # 1 - final_power
                 # 2 - bias_current
                 # 3 - response_current
-                opt_num     = np.load(directory.temp_lc + 'opt_num_%s.npy' % self.lc_indexer, allow_pickle=True)
-                transition  = np.load(directory.temp_lc + 'transitions_%s.npy' % self.lc_indexer, allow_pickle=True)
+                # opt_num     = np.load(directory.temp_lc + 'opt_num_%s.npy' % self.lc_indexer, allow_pickle=True)
+                # transition  = np.load(directory.temp_lc + 'transitions_%s.npy' % self.lc_indexer, allow_pickle=True)
 
                 self.old_lc = self.lc_indexer
                 plot_flag = True
@@ -1541,7 +1519,8 @@ class MainWindow(QtGui.QMainWindow):
             self.lc_indexer += 1
 
             self.lc_queue = mp.Queue()
-            lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, self.rser_cr, self.bias_0_vals))
+
+            lc_p = mp.Process(name='append_data',target=self.loadcurve_thread, args=(self.lc_queue, self.lc_indexer, self.rser_cr, self.bias_0_vals, self.is_checked_0))
             lc_p.start()
             self.bias_ready = False
 
@@ -1568,10 +1547,10 @@ class MainWindow(QtGui.QMainWindow):
             col_x = self.lc_data_arr[2,self.channel1,:,:]; col_y = self.lc_data_arr[3,self.channel1,:,:]
             low_lim = self.lc_lower_limit[self.channel1]
             up_lim = self.lc_upper_limit[self.channel1]
-            pen = pg.mkPen(color='w')
-            self.lower_plot0 = self.mcegraph1.plot([low_lim,low_lim], [np.nanmin(col_y), np.nanmax(col_y)], pen=pen)
-            pen = pg.mkPen(color='r')
-            self.upper_plot0 = self.mcegraph1.plot([up_lim, up_lim], [np.nanmin(col_y), np.nanmax(col_y)], pen=pen)
+            # pen = pg.mkPen(color='w')
+            # self.lower_plot0 = self.mcegraph1.plot([low_lim,low_lim], [np.nanmin(col_y), np.nanmax(col_y)], pen=pen)
+            # pen = pg.mkPen(color='r')
+            # self.upper_plot0 = self.mcegraph1.plot([up_lim, up_lim], [np.nanmin(col_y), np.nanmax(col_y)], pen=pen)
             for r in range(n):
                 color = colors[r]
                 pen = pg.mkPen(color=color)
@@ -1593,14 +1572,14 @@ class MainWindow(QtGui.QMainWindow):
             col_x = self.lc_data_arr[2,self.channel1,:,:]; col_y = self.lc_data_arr[3,self.channel1,:,:]
             low_lim = self.lc_lower_limit[self.channel1]
             up_lim = self.lc_upper_limit[self.channel1]
-            print(low_lim, up_lim)
-            self.lower_plot0.setData([low_lim, low_lim], [np.nanmin(col_y), np.nanmax(col_y)])
-            self.upper_plot0.setData([up_lim, up_lim], [np.nanmin(col_y), np.nanmax(col_y)])
+
+            # self.lower_plot0.setData([low_lim, low_lim], [np.nanmin(col_y), np.nanmax(col_y)])
+            # self.upper_plot0.setData([up_lim, up_lim], [np.nanmin(col_y), np.nanmax(col_y)])
             for r in range(n):
                 self.data_line_dict_1[r].setData(col_x[r], col_y[r])
                 self.data_line_dict_2[r].setData(col_x[r], col_y[r])
-                self.mcegraph1.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
-                self.mcegraph2.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
+                # self.mcegraph1.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
+                # self.mcegraph2.setYRange(np.nanmin(col_y), np.nanmax(col_y)*1.4, padding=0)
 
         # self.graph1legend.setColumns(5)
         # self.graph2legend.setColumns(5)
@@ -1905,6 +1884,10 @@ class MainWindow(QtGui.QMainWindow):
 
             b = 0
             c = 0
+            # std = np.std(d1)
+            # bad_dets = np.where(np.abs(d1) > std)[0]
+            # d1[bad_dets] = 0
+
 
             self.heatmap1.setImage(m1)
 
@@ -1915,8 +1898,13 @@ class MainWindow(QtGui.QMainWindow):
                     self.roll_avg_1[b][c] = ((1-self.alpha)*self.roll_avg_1[b][c]) + (self.alpha * d1[b][c])
                     d1_avg[b][c] = d1[b][c] - self.roll_avg_1[b][c]
 
+            # std = np.std(d1_avg)
+            # bad_dets = np.where(np.abs(d1_avg) > std)[0]
+            # d1_avg[bad_dets] = np.nan
+
             self.heatmap3.setImage(d1_avg)
             # self.heatmap3.setLevels(self.h1_var - self.h1_avg , self.h1_var + self.h1_avg)
+            # self.heatmap3.setLevels(-6 ,6)
 
         if ut.which_mce[1] == 1 or ut.which_mce[2] == 1:
 
@@ -1938,6 +1926,7 @@ class MainWindow(QtGui.QMainWindow):
                 for c in range(h2.shape[1]):
                     d2[b][c] = (np.mean(h2[b,c,:],dtype=np.float32))
 
+
             b = 0
             c = 0
             # ----------------------------------------------------------
@@ -1951,6 +1940,11 @@ class MainWindow(QtGui.QMainWindow):
                     self.roll_avg_2[b][c] = ((1-self.alpha)*self.roll_avg_2[b][c]) + (self.alpha * d2[b][c])
                     d2_avg[b][c] = d2[b][c] - self.roll_avg_2[b][c]
 
+
+            # std = np.std(d1_avg)
+            # bad_dets = np.where(np.abs(d_avg) > std)[0]
+            # d1_avg[bad_dets] = np.nan
+            # self.heatmap3.setImage(d1_avg)
             self.heatmap4.setImage(d2_avg)
             # self.heatmap4.setLevels(self.h2_var - self.h2_avg , self.h2_var + self.h2_avg)
 
@@ -2206,41 +2200,41 @@ class Tel_Thread(QtCore.QThread):
                         break
 
         else :
-
-            from tel_tracker import start_tracker, turn_on_tracker
-            queue = mp.Queue()
-
-            if True:
-                time.sleep(0.1) # give tracker time to turn on before accepting packets
-                p = mp.Process(name='start_tracker',target= start_tracker, args=(queue,))
-                p.start()
-                sys.stdout.flush()
-                sys.stderr.flush()
-
-                while True :
-                    if not ut.tel_exit.is_set() :
-                        time.sleep(0.01) # Rate limit
-                        if queue.empty():
-                            continue # No new data, don't block in recv()
-                        tel_stuff = queue.get()
-                        with self.flags.get_lock() :
-                            self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
-                        progress = 0.0
-                        self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-                        time.sleep(0.01)
-                        sys.stdout.flush()
-                        sys.stderr.flush()
-
-                    else :
-                        self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
-                        break
-
-            else :
-                # makes fake data for when we don't want to run the telescope
-                tele_array = np.zeros((20,20),dtype=float)
-                np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
-                time.sleep(0.01)
-                np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
+            pass
+            # from tel_tracker import start_tracker, turn_on_tracker
+            # queue = mp.Queue()
+            #
+            # if True:
+            #     time.sleep(0.1) # give tracker time to turn on before accepting packets
+            #     p = mp.Process(name='start_tracker',target= start_tracker, args=(queue,))
+            #     p.start()
+            #     sys.stdout.flush()
+            #     sys.stderr.flush()
+            #
+            #     while True :
+            #         if not ut.tel_exit.is_set() :
+            #             time.sleep(0.01) # Rate limit
+            #             if queue.empty():
+            #                 continue # No new data, don't block in recv()
+            #             tel_stuff = queue.get()
+            #             with self.flags.get_lock() :
+            #                 self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
+            #             progress = 0.0
+            #             self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
+            #             time.sleep(0.01)
+            #             sys.stdout.flush()
+            #             sys.stderr.flush()
+            #
+            #         else :
+            #             self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
+            #             break
+            #
+            # else :
+            #     # makes fake data for when we don't want to run the telescope
+            #     tele_array = np.zeros((20,20),dtype=float)
+            #     np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
+            #     time.sleep(0.01)
+            #     np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
 
 
 class KMS_Thread(QtCore.QThread):

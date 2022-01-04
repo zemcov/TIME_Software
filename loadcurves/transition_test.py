@@ -74,94 +74,94 @@ def find_mode_limits(xvals,yvals,cxvals,cyvals,col=None,temp=0):
     cxvalues = []
     cyvalues = []
     count = 0
-    try:
-        for i in range(len(xvals)):
-            if np.mean(xvals[i]) == 0.0 :
-                xvals[i][:] = np.nan
-                yvals[i][:] = np.nan
-                cxvals[i][:] = np.nan
-                cyvals[i][:] = np.nan
-            else:
-                count += 1
+    # try:
+    for i in range(len(xvals)):
+        if np.mean(xvals[i]) == 0.0 :
+            xvals[i][:] = np.nan
+            yvals[i][:] = np.nan
+            cxvals[i][:] = np.nan
+            cyvals[i][:] = np.nan
+        else:
+            count += 1
 
-        print('num of good det : ' ,count)
-        if count == 0 :
-            print('Error')
-            return 0
+    # print('num of good det : ' ,count)
+    # if count == 0 :
+    #     print('Error')
+    #     return 0
 
-        else :
+    else :
 
-            # removing outliers
-            mean = np.nanmean(yvals)
-            std = np.nanstd(yvals)
-            dist_from_mean = abs(yvals - mean)
-            max_dev = 1
-            not_outlier = dist_from_mean < max_dev * std
+        # removing outliers
+        mean = np.nanmean(yvals)
+        std = np.nanstd(yvals)
+        dist_from_mean = abs(yvals - mean)
+        max_dev = 1
+        not_outlier = dist_from_mean < max_dev * std
 
-            for k in range(len(yvals)):
-                for l in range(len(yvals[1])):
-                    if not_outlier[k,l] == False :
-                        yvals[k,l] = np.nan
-                        xvals[k,l] = np.nan
+        for k in range(len(yvals)):
+            for l in range(len(yvals[1])):
+                if not_outlier[k,l] == False :
+                    yvals[k,l] = np.nan
+                    xvals[k,l] = np.nan
 
-            x_sampler = np.linspace(np.nanmin(xvals),np.nanmax(xvals),num=100) #same data set just outliers removed
+        x_sampler = np.linspace(np.nanmin(xvals),np.nanmax(xvals),num=100) #same data set just outliers removed
 
-            modes = []
-            maxcount = 0
-            counts = [0]*100
+        modes = []
+        maxcount = 0
+        counts = [0]*100
 
-            for j in range(len(x_sampler)):
-                for l in range(len(xvals)):
-                    if xvals[l][0] != np.nan:
-                        if x_sampler[j] > np.nanmin(xvals[l]) and x_sampler[j] < np.nanmax(xvals[l]): #xvals[l] each detector
-                            counts[j] += 1 #counting how many intersections
-                        if counts[j] > maxcount:
-                            maxcount = counts[j]
+        for j in range(len(x_sampler)):
+            for l in range(len(xvals)):
+                if xvals[l][0] != np.nan:
+                    if x_sampler[j] > np.nanmin(xvals[l]) and x_sampler[j] < np.nanmax(xvals[l]): #xvals[l] each detector
+                        counts[j] += 1 #counting how many intersections
+                    if counts[j] > maxcount:
+                        maxcount = counts[j]
 
-            for k in counts:
-                if k == maxcount:
-                     modes.append(k)
+        for k in counts:
+            if k == maxcount:
+                 modes.append(k)
 
-            min_x = np.nanmin(xvals)
-            max_x = np.nanmax(xvals)
+        min_x = np.nanmin(xvals)
+        max_x = np.nanmax(xvals)
 
-            num_det = np.max(counts)
-            mask = np.where(counts == num_det)[0]
-            limits = x_sampler[mask]
-            n_mask = np.logical_and(xvals.flatten() < limits[-1],xvals.flatten() > limits[0]) # saves the indices from xvals that match the boolean statements
-            n_mask = n_mask.reshape(33,20)
-            cxvals = np.array(cxvals)[n_mask]
-            cyvals = np.array(cyvals)[n_mask]
+        num_det = np.max(counts)
+        mask = np.where(counts == num_det)[0]
+        limits = x_sampler[mask]
+        n_mask = np.logical_and(xvals.flatten() < limits[-1],xvals.flatten() > limits[0]) # saves the indices from xvals that match the boolean statements
+        n_mask = n_mask.reshape(33,20)
+        cxvals = np.array(cxvals)[n_mask]
+        cyvals = np.array(cyvals)[n_mask]
 
-            opt_num = 3
+        opt_num = 3
 
 
-            # opt_num = 0
-            # for h in range(len(xvals)):
-            #     if np.any(n_mask[h][:]) == True :
-            #         opt_num += 1
+        # opt_num = 0
+        # for h in range(len(xvals)):
+        #     if np.any(n_mask[h][:]) == True :
+        #         opt_num += 1
 
-            print ("Range of optimal values: " +  str(limits[0] ) + str(limits[-1]))
-            print ("Optimal value: " + str(limits[-1]))
-            # plotting the actual points as scatter plot
+        # print ("Range of optimal values: " +  str(limits[0] ) + str(limits[-1]))
+        # print ("Optimal value: " + str(limits[-1]))
+        # # plotting the actual points as scatter plot
+        #
+        # plt.figure(4)
+        # plt.scatter(xvals, yvals, color = "m", marker = "o", s = 30)
+        # #creates region of optimal x values
+        # plt.axvspan(limits[0], limits[-1], alpha = 0.5)
+        # plt.axvline((limits[-1]), color = 'r')
+        # plt.xlabel('Resistance [ohm]')
+        # plt.ylabel('TES Power [pW]')
+        # plt.title('Optimal Transition Column %s' %(col))
+        # plt.savefig('plots/transition_tests_%s_%sK.png'%(col,temp))
+        # plt.clf()
 
-            plt.figure(4)
-            plt.scatter(xvals, yvals, color = "m", marker = "o", s = 30)
-            #creates region of optimal x values
-            plt.axvspan(limits[0], limits[-1], alpha = 0.5)
-            plt.axvline((limits[-1]), color = 'r')
-            plt.xlabel('Resistance [ohm]')
-            plt.ylabel('TES Power [pW]')
-            plt.title('Optimal Transition Column %s' %(col))
-            plt.savefig('plots/transition_tests_%s_%sK.png'%(col,temp))
-            plt.clf()
+        print(colored('opt_num: %s'%(opt_num), 'magenta'))
+    return opt_num, low_lim, up_lim
 
-            print(colored('opt_num: %s'%(opt_num), 'magenta'))
-            return opt_num #powerx,powery,biasx,biasy
-
-    except ValueError:
-        print('Empty Arrays')
-        return 0
+    # except ValueError:
+    #     print('Empty Arrays')
+    #     return 0
 
 def size():
     bias_X = np.zeros((32,33,20))
@@ -173,8 +173,9 @@ def size():
 
 def transition_sizes(y,x,bias_y,bias_x, mux_c, mux_r):
     flags = []
-    m_chng, err = turn(y,x,bias_y,bias_x, mux_c, mux_r) #grabs data where transition is
-    if m_chng == None:
+    # m_chng, err = turn(y,x,bias_y,bias_x, mux_c, mux_r) #grabs data where transition is
+    # if m_chng == None:
+    m_chng = None
         xnew = np.zeros(20)
         ynew = np.zeros(20)
         cxnew = np.zeros(20)
@@ -220,7 +221,7 @@ def main(T, dir, cols=32, rows=33):
     dir - (str) : Directory that the mce data is being stored in
     '''
     #for testing right now
-    # dir = 'home/time_user/time_analysis/py/timefpu/'
+    # dir = 'home/time/time_analysis/py/timefpu/'
 
     transition = False #initially set the transition flag as False
 
@@ -230,9 +231,9 @@ def main(T, dir, cols=32, rows=33):
     opt_num_fin = init_bias[:, 3]
 
     # this will have to be dynamic later on !
-    fname = '/home/time_user/time_analysis/py/timefpu/partial_load_test_5/partial_load_test_5'
-    folder = '/home/time_user/time_analysis/py/timefpu/partial_load_test_5'
-    fname_full = '/home/time_user/time_analysis/py/timefpu/iv_45deg_pid330mk_294k_beammap0'
+    fname = '/home/time/time_analysis/py/timefpu/partial_load_test_5/partial_load_test_5'
+    folder = '/home/time/time_analysis/py/timefpu/partial_load_test_5'
+    fname_full = '/home/time/time_analysis/py/timefpu/iv_45deg_pid330mk_294k_beammap0'
     # print(folder)
     # print(fname)
     # print(fname_full)
@@ -372,7 +373,7 @@ def main(T, dir, cols=32, rows=33):
 
 if __name__ == '__main__':
     # this is where your code starts running
-    main('77', 'home/time_user/time_analysis/py/timefpu/', cols=32, rows=33)
+    main('77', 'home/time/time_analysis/py/timefpu/', cols=32, rows=33)
     exit()
     transition = False
 
@@ -393,9 +394,9 @@ if __name__ == '__main__':
     # power_min = starting power
 
 
-    fname = '/home/time_user/time_analysis/py/timefpu/partial_load_test_5/partial_load_test_5'
-    folder = '/home/time_user/time_analysis/py/timefpu/partial_load_test_5'
-    fname_full = '/home/time_user/time_analysis/py/timefpu/iv_45deg_pid330mk_294k_beammap0'
+    fname = '/home/time/time_analysis/py/timefpu/partial_load_test_5/partial_load_test_5'
+    folder = '/home/time/time_analysis/py/timefpu/partial_load_test_5'
+    fname_full = '/home/time/time_analysis/py/timefpu/iv_45deg_pid330mk_294k_beammap0'
 
 
     while transition == False :

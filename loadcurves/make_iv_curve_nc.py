@@ -19,7 +19,7 @@ class MCEWrap():
         if not DEBUG:
             self.m.write(x,y,v)
 
-def generate_lc_data(d, temp, calib, input_bias, bias_cols, bias_start=2000, \
+def generate_lc_data(data_name, temp, calib, input_bias, bias_cols=None, bias_start=2000, \
                         bias_step=2, bias_count=1001, zap_bias=30000, zap_time=1.0, settle_time=2000.0, \
                         bias_pause=0.1, bias_final=0, data_mode=1):
     '''
@@ -44,7 +44,7 @@ def generate_lc_data(d, temp, calib, input_bias, bias_cols, bias_start=2000, \
 
     m = MCEWrap() #this is a wrapper for the MCE
     mas_data = os.environ['MAS_DATA']
-    dname = os.path.join(mas_data, data_name)
+    dname = os.path.join(mas_data, 'initial lc test')
     fname = os.path.join(dname, data_name)
     if not os.path.exists(dname):
         os.mkdir(dname)
@@ -123,7 +123,7 @@ def generate_lc_data(d, temp, calib, input_bias, bias_cols, bias_start=2000, \
 
     bias_inc = np.zeros((ncols, bias_count))
     for j in range(ncols):
-        bias_stop = bias_arr[j]
+        bias_stop = input_bias[j]
         bias_inc[j,:] = np.linspace(bias_start, bias_stop, bias_count)
 
     bias_inc = np.floor(bias_inc).astype(int)

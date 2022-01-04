@@ -37,29 +37,32 @@ def turn(y,x,bias_y,bias_x, mux_c, mux_r):
         bias_y = np.zeros(20)
 
     if np.mean(y) != 0.0 and np.mean(bias_y) != 0.0 : #gets rid of unecessary data
-        #finds what kind of slope is in the transition data
-        z, cov = np.polyfit(list(bias_x), list(bias_y), 1, cov=True) # I want to know if my data is a line
-        poly_func = np.poly1d(z)
+        try:
+            #finds what kind of slope is in the transition data
+            z, cov = np.polyfit(list(bias_x), list(bias_y), 1, cov=True) # I want to know if my data is a line
+            poly_func = np.poly1d(z)
 
 
-        e = np.sqrt(np.diag(cov))
-        intercept_error = e[1]
-        #print(intercept_error, 'intercept_error')
-        slope_error = e[0]
+            e = np.sqrt(np.diag(cov))
+            intercept_error = e[1]
+            #print(intercept_error, 'intercept_error')
+            slope_error = e[0]
 
-        if intercept_error > 0.1: #the data is getting close to the transition here
-        #As a note, this value may change, this intercept error value might not be good. (Check this later!)
+            if intercept_error > 0.1: #the data is getting close to the transition here
+            #As a note, this value may change, this intercept error value might not be good. (Check this later!)
 
-            m = np.diff(y) #finding the slope
-            out = np.where(np.logical_and(np.greater(m,0.0),np.less(m,0.06))) # where is the slope between those two numbers?
-            out = [list(k) for k in out][0]
+                m = np.diff(y) #finding the slope
+                out = np.where(np.logical_and(np.greater(m,0.0),np.less(m,0.5))) # where is the slope between those two numbers?
+                out = [list(k) for k in out][0]
 
-            if len(out) > 20 :
-                #print(out[0:19], 'slope')
-                return out[0:19], None #trims data array to only 20 points
-            else :
-                #print(out[0:19], 'slope')
-                return out, None
+                if len(out) > 20 :
+                    #print(out[0:19], 'slope')
+                    return out[0:19], None #trims data array to only 20 points
+                else :
+                    #print(out[0:19], 'slope')
+                    return out, None
+        except:
+            return None, 20
         else :
             #print('error with slope')
             return None, 4
@@ -174,8 +177,8 @@ def size():
 
 def transition_sizes(y,x,bias_y,bias_x, mux_c, mux_r):
     flags = []
-    # m_chng, err = turn(y,x,bias_y,bias_x, mux_c, mux_r) #grabs data where transition is
-    m_chng = None
+    m_chng, err = turn(y,x,bias_y,bias_x, mux_c, mux_r) #grabs data where transition is
+    # m_chng = None
     if m_chng == None:
         xnew = np.zeros(20)
         ynew = np.zeros(20)
@@ -318,11 +321,16 @@ def loadcurve_plotting(T, dir, i,cols=32, rows=33, auto=False):
         for mux_c in range(cols): #detector position
             for mux_r in range(rows): #detector frequency
                 # use turn function to find detectors in transition
-                res_detect, p_detect, current_x_detect, current_y_detect, flags = transition_sizes(tes_p_masked[(mux_c, mux_r)]*1e12, tes_r[(mux_c, mux_r)], bias_y[mux_c, mux_r], bias_x[mux_c], mux_c, mux_r)
-                final_res[mux_c,mux_r,:] = res_detect
-                final_p[mux_c,mux_r,:] = p_detect
-                current_x[mux_c,mux_r,:] = current_x_detect
-                current_y[mux_c,mux_r,:] = current_y_detect
+                # res_detect, p_detect, current_x_detect, current_y_detect, flags = transition_sizes(tes_p_masked[(mux_c, mux_r)]*1e12, tes_r[(mux_c, mux_r)], bias_y[mux_c, mux_r], bias_x[mux_c], mux_c, mux_r)
+                # final_res[mux_c,mux_r,:] = res_detect
+                # final_p[mux_c,mux_r,:] = p_detect
+                # current_x[mux_c,mux_r,:] = current_x_detect
+                # current_y[mux_c,mux_r,:] = current_y_detect
+                final_res[mux_c,mux_r,:] =  tes_r[(mux_c, mux_r)]
+                final_p[mux_c,mux_r,:] = tes_p_masked[(mux_c, mux_r)]*1e12
+                current_x[mux_c,mux_r,:] = bias_x[mux_c]
+                current_y[mux_c,mux_r,:] = bias_y[mux_c, mux_r]
+
 
             opt_num = find_mode_limits(final_res, final_p, current_x, current_y, col = mux_c, temp = T)
             opt_num_array.append(opt_num)

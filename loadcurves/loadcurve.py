@@ -22,16 +22,16 @@ import params
 # Loads one set of load curves from a given folder. Returns a 2d array
 # [col,row] of LoadCurve objects.  r_ser_override is a dictionary
 # of r_ser override values indexed as (col,row).
-def load_loadcurves_muxcr(foldername, calib, r_ser_override={}, partial=False):
+def load_loadcurves_muxcr(foldername, filename, calib, r_ser_override={}, partial=False):
 
 	if not os.path.isdir(foldername):
 		raise ValueError("Specified load curve folder doesn't exist: " + str(foldername))
 
 	# filename = os.path.join(foldername, os.path.basename(foldername))
 
-	# biasfilename = filename + '.bias'
-	biasfilename = '/home/time/TIME_Software/main/tempfiles/iv_pid375mK_opteff_300K/iv_pid375mK_opteff_300K.bias'
-	filename = '/home/time/TIME_Software/main/tempfiles/iv_pid375mK_opteff_300K/iv_pid375mK_opteff_300K'
+	biasfilename = filename + '.bias'
+	# biasfilename = '/home/time/TIME_Software/main/tempfiles/iv_pid375mK_opteff_300K/iv_pid375mK_opteff_300K.bias'
+	# filename = '/home/time/TIME_Software/main/tempfiles/iv_pid375mK_opteff_300K/iv_pid375mK_opteff_300K'
 	print(biasfilename, filename)
 
 
