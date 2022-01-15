@@ -23,7 +23,7 @@ class TIME_TELE :
         commands = '{} {} {} {}'
         print(colored(commands.format(coord1,coord2,epoch,object),'yellow'))
 
-        num_loop, calc_coord1, calc_coord2 = scan_params(coord_space,map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
+        num_loop, calc_coord1, calc_coord2 = scan_params(1,coord_space,map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
         # p2 = mp.Process(target = self.loop_track , args=(num_loop,queue2))
         # p2.start()
     # =================================================================================================================

@@ -44,7 +44,7 @@ class Time_Files:
     def retrieve(self,queue,dir):
         """
         The purpose of this function is to retrieve data for the telescope and both of the mces
-        Inputs: queue - idk
+        Inputs:
                 dir - the directory where we want to append data
         Outputs: None
         """

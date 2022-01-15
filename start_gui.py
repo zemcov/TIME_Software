@@ -847,6 +847,24 @@ class MainWindow(QtGui.QMainWindow):
             self.b2_checkboxes[ind].addWidget(self.bias_box_2[n], row, 0, 1, 1)
         [self.newgrid.addLayout(self.b2_checkboxes[i], 5, i,1,1) for i in range(ncols)]
 
+    def set_read_heatmap_levels(self):
+        self.h_limits = QtGui.QGridLayout()#create 2 boxes
+        self.lower_levels = [QtGui.QLineEdit('Not Set') for i in range(4)]
+        self.upper_levels = [QtGui.QLineEdit('Not Set') for i in range(4)]
+
+        self.uppers = [QtGui.QFormLayout() for i in range(4)]
+        self.lowers = [QtGui.QFormLayout() for i in range(4)]
+        for i in range(8):
+            col = i % 2
+            row = i // 2 #double check this notsure this is right
+            if col:
+                self.uppers[row].addRow('heatmap %s upper' % row, self.upper_levels[row])
+                self.h_limits.addLayout(self.uppers[row], row, col, 1, 1)
+            else:
+                self.lowers[row].addRow('hetamap %s lower' % row, self.lower_levels[row])
+                self.h_limits.addLayout(self.lowers[row], row, col, 1 ,1)
+        self.newgrid.addLayout(self.h_limits, 1, 0, 1, 2)
+
     def channelselection(self):
 
         self.channelreadoutbox1 = QtGui.QFormLayout()
@@ -1168,6 +1186,7 @@ class MainWindow(QtGui.QMainWindow):
         self.heatmapwindow.setGeometry(10, 10, 1920, 1080)
         self.heatmapwindow.setLayout(self.heatgrid)
         self.heatmapwindow.show()
+        self.set_read_heatmap_levels()
 
     def initfftgraph(self):
 
@@ -1864,6 +1883,17 @@ class MainWindow(QtGui.QMainWindow):
 
     def updateheatmap(self,h1,h2):
 
+        upper_limits = {}
+        lower_limits = {}
+        for i in range(4):
+            try:
+                upper_limits[i] = float(self.upper_levels[i].text())
+                lower_limits[i] = float(self.lower_levels[i].text())
+            except ValueError:
+                upper_limits[i] = str(self.upper_levels[i].text())
+                lower_limits[i] = str(self.lower_levels[i].text())
+
+        print(lower_limits, upper_limits)
         if ut.which_mce[0] == 1 or ut.which_mce[2] == 1:
 
             m1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
@@ -1890,6 +1920,12 @@ class MainWindow(QtGui.QMainWindow):
 
 
             self.heatmap1.setImage(m1)
+            if upper_limits[0] != 'Not Set':
+                if lower_limits[0] != 'Not Set':
+                    print(lower_limits[0], upper_limits[0])
+                    self.heatmap1.setLevels(lower_limits[0], upper_limits[0])
+            # if self.uppers[0] != 'Not Set':
+            # if self.lowers[0] != 'Not Set':
 
             d1_avg = np.empty([33,32])
 
@@ -1903,6 +1939,9 @@ class MainWindow(QtGui.QMainWindow):
             # d1_avg[bad_dets] = np.nan
 
             self.heatmap3.setImage(d1_avg)
+            if upper_limits[2] != 'Not Set':
+                if lower_limits[2] != 'Not Set':
+                    self.heatmap3.setLevels(lower_limits[2], upper_limits[2])
             # self.heatmap3.setLevels(self.h1_var - self.h1_avg , self.h1_var + self.h1_avg)
             # self.heatmap3.setLevels(-6 ,6)
 
@@ -1932,6 +1971,9 @@ class MainWindow(QtGui.QMainWindow):
             # ----------------------------------------------------------
 
             self.heatmap2.setImage(m2)
+            if upper_limits[1] != 'Not Set':
+                if lower_limits[1] != 'Not Set':
+                    self.heatmap2.setLevels(lower_limits[1], upper_limits[1])
 
             d2_avg = np.empty([33,32],dtype=np.float32)
 
@@ -1946,6 +1988,9 @@ class MainWindow(QtGui.QMainWindow):
             # d1_avg[bad_dets] = np.nan
             # self.heatmap3.setImage(d1_avg)
             self.heatmap4.setImage(d2_avg)
+            if upper_limits[3] != 'Not Set':
+                if lower_limits[3] != 'Not Set':
+                    self.heatmap4.setLevels(lower_limits[3], upper_limits[3])
             # self.heatmap4.setLevels(self.h2_var - self.h2_avg , self.h2_var + self.h2_avg)
 
 
@@ -2017,9 +2062,9 @@ class MCEThread(QtCore.QThread):
     def run(self):
         queue = mp.Queue()
         p = mp.Process(name='append_data',target=append_data.Time_Files(flags = self.flags, offset = self.offset).retrieve, args=(queue,self.netcdfdir,))
-        # p2 = mp.Process(name='append_hk',target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
+        p2 = mp.Process(name='append_hk',target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         p.start()
-        # p2.start()
+        p2.start()
         last_time = 0
 
         while not ut.mce_exit.is_set():

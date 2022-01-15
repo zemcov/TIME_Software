@@ -2,7 +2,7 @@ import numpy as np
 from os import stat
 import os, sys, subprocess
 sys.path.append('/home/butler/time_analysis/py')
-# import timefpu.mce_data as mce_data
+import timefpu.mce_data as mce_data
 from . import netcdf_files as nc
 import datetime as dt
 from termcolor import colored
@@ -33,11 +33,22 @@ def netcdfdata(mce_index, queue, flags):
         mce_file_name = dir + 'temp.%0.3i' %(a)
         mce_file = os.path.exists(dir + 'temp.%0.3i' %(a+1))
         mce_run = os.path.exists(dir + 'temp.run')
+        # I think the solution here is that instead of using this try except to return a
+        # bogus result for the queue. What we should try to do is lock the queue so the other
+        # thread doesn't try to read it before we put something there as that freezes the gui.
+        #see line 77 in append data 
         if mce_file and mce_run:
-            head,h,frame_num,mce_on = readdata(mce_index, mce_file_name, flags)
-            queue.put([h,head,frame_num,mce_on])
-            a += 1
-            subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
+            try: #this is a fix for not being able to read the first data frame
+                print('reading data')
+                head,h,frame_num,mce_on = readdata(mce_index, mce_file_name, flags)
+                print('data read')
+                queue.put([h,head,frame_num,mce_on])
+                a += 1
+                subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)
+            except IndexError:
+                print('attempt to read data failed')
+                queue.put(1,2,100, 0)
+
 
         time.sleep(0.01) # Rate limit
 
@@ -55,14 +66,6 @@ def netcdfdata(mce_index, queue, flags):
 # ===========================================================================================================================
 def readdata(mce_index, file, flags):
     """
-    Purpose: reads data from a raw mce file
-    Inputs: file - mce_file
-            flags - idk
-    Outputs: head - header data
-             h - mce data? idk
-             frame_num - an array of frame numbers
-             mce_on - mce on/off data
-             l - idk
     Calls: mce_data.MCEFILE()
            read_header()
     """

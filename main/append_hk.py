@@ -27,7 +27,7 @@ class Time_Files:
         self.saved_array = []
         self.saved_time = 0
 
-        self.data3, queue3 = mp.Pipe() #what does this pipe do? idk
+        self.data3, queue3 = mp.Pipe()
         self.p3 = mp.Process(target=read_hk.HK_Reader(offset = self.offset).loop_files , args=(queue3,))
         self.p3.start()
         print(colored('HK Has Started'),'red')

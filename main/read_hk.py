@@ -66,6 +66,7 @@ class HK_Reader :
                 fields = line.strip().split(",")
                 t_type = str(fields[0])
                 time_stamp = float(fields[1])
+                print(colored('HK Time Stamp :',time_stamp),'yellow')
                 name1 = str(fields[2])
                 name2 = str(fields[3])
                 names = (name1 + "_" + name2).replace('"','')
