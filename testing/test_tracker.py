@@ -36,7 +36,7 @@ def start_tracker():
                 map_ra, map_dec, ra_off, dec_off, az, el, azvelcmd, elvelcmd, azvelact,\
                 elvelact, pa, unix_val, unix_delta = unpacker.unpack(data)
                 # ==================================================================
-                #print('val: %s , delta: %s' %(unix_val,unix_delta))
+                print('val: %s , delta: %s' %(unix_val,unix_delta))
 
                 # if n == 20 :
                 #     break
@@ -66,13 +66,13 @@ def fake_gui_socket():
 
     while True :
         try:
-	    data = client.recv(unpacker.size)
-	    if len(data) !=0 :
-		pa, flag, time, enc_pos = unpacker.unpack(data)
-		print('kms data :', time, pa)
-	except KeyboardInterrupt:
-	    s.shutdown(1)
-	    s.close()
+            data = client.recv(unpacker.size)
+            if len(data) !=0 :
+                pa, flag, time, enc_pos = unpacker.unpack(data)
+                print('kms data :', time, pa)
+        except KeyboardInterrupt:
+            s.shutdown(1)
+            s.close()
 
 if __name__ == '__main__' :
     t2 = mp.Process(target=fake_gui_socket)

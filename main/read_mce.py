@@ -39,9 +39,9 @@ def netcdfdata(mce_index, queue, flags):
         #see line 77 in append data 
         if mce_file and mce_run:
             try: #this is a fix for not being able to read the first data frame
-                print('reading data')
+                #print('reading data')
                 head,h,frame_num,mce_on = readdata(mce_index, mce_file_name, flags)
-                print('data read')
+                #print('data read')
                 queue.put([h,head,frame_num,mce_on])
                 a += 1
                 subprocess.Popen(['rm %s' %(mce_file_name)], shell = True)

@@ -48,7 +48,7 @@ def start_tracker(queue):
                 n += 1
 
             # send positional data to gui window
-            queue.send([pa,int(direction),el,az,map_ra,map_dec,utc])
+            queue.put([pa,int(direction),el,az,map_ra,map_dec,utc])
         else :
             print('waiting for data')
         time.sleep(0.01)

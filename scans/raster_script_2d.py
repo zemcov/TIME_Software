@@ -24,6 +24,7 @@ class TIME_TELE :
         self.i.append(0)
         PORT = 1806
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind(('',6666))
         self.s.connect(('192.168.1.252',PORT))
         print('Socket Connected')
@@ -55,7 +56,7 @@ class TIME_TELE :
         #
         i = 0
         while i <= (len(cmnd_list) - 1):
-            self.s.send(cmnd_list[i])
+            self.s.send(cmnd_list[i].encode())
             reply = self.s.recv(1024).decode("ascii")
             print(cmnd_list[i],reply)
             if i == 0 :
@@ -64,13 +65,13 @@ class TIME_TELE :
                     p.start()
                     i += 1
                 else :
-                    print('ERROR reply')
+                    print(cmnd_list[i] + ' sent ERROR reply')
                     sys.exit()
             else :
                 if 'OK' in reply :
                     i += 1
                 else :
-                    print('ERROR reply')
+                    print(cmnd_list[i] + ' sent ERROR reply')
                     sys.exit()
 
         ################################################################################################
@@ -79,18 +80,18 @@ class TIME_TELE :
             if self.i[-1] == 0 :
                 commands = '{} {} {} {}'
                 msg = 'TIME_SEEK ' + commands.format(calc_coord1,calc_coord2,epoch,object)
-                self.s.send(msg)
+                self.s.send(msg.encode())
                 reply = self.s.recv(1024).decode("ascii")
                 print(msg,reply)
 
                 self.pos_update()
                 time.sleep((int(sec)+int(sec)*0.05)*2)
-                self.s.send('TIME_TURNAROUND_NOTIFY')
+                self.s.send('TIME_TURNAROUND_NOTIFY'.encode())
                 reply = self.s.recv(1024).decode("ascii")
                 if 'OK' in reply:
                     pass
                 else :
-                    print('Error Reply')
+                    print('TIME_TURNAROUND_NOTIFY sent Error Reply')
                     sys.exit()
 
 
@@ -104,7 +105,7 @@ class TIME_TELE :
                         # feed new values to telescope
                         commands = '{} {} {} {}'
                         msg = 'TIME_SEEK ' + commands.format(new_coord,calc_coord2,epoch,object)
-                        self.s.send(msg)
+                        self.s.send(msg.encode())
                         reply = self.s.recv(1024).decode("ascii")
                         print(msg,reply)
                     else :
@@ -115,7 +116,7 @@ class TIME_TELE :
                         # feed new values to telescope
                         commands = '{} {} {} {}'
                         msg = 'TIME_SEEK ' + commands.format(calc_coord1,new_coord,epoch,object)
-                        self.s.send(msg)
+                        self.s.send(msg.encode())
                         reply = self.s.recv(1024).decode("ascii")
                         print(msg,reply)
 
@@ -126,7 +127,7 @@ class TIME_TELE :
                         # feed new values to telescope
                         commands = '{} {} {} {}'
                         msg = 'TIME_SEEK ' + commands.format(new_coord,calc_coord2,epoch,object)
-                        self.s.send(msg)
+                        self.s.send(msg.encode())
                         reply = self.s.recv(1024).decode("ascii")
                         print(msg,reply)
                     else :
@@ -134,34 +135,34 @@ class TIME_TELE :
                         # feed new values to telescope
                         commands = '{} {} {} {}'
                         msg = 'TIME_SEEK ' + commands.format(calc_coord1,new_coord,epoch,object)
-                        self.s.send(msg)
+                        self.s.send(msg.encode())
                         reply = self.s.recv(1024).decode("ascii")
                         print(msg,reply)
 
                 time.sleep((int(sec)*0.9)*2)
-                self.s.send('TIME_TURNAROUND_NOTIFY')
+                self.s.send('TIME_TURNAROUND_NOTIFY'.encode())
                 reply = self.s.recv(1024).decode("ascii")
                 if 'OK' in reply:
                     pass
                 else :
-                    print("Error Reply")
+                    print("TIME_TURNAROUND_NOTIFY sent Error Reply")
                     sys.exit()
 
             self.i[-1] += 1
 
         # Closing Commands ============================
         msg = 'TIME_START_OBSERVING off'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         print(msg,reply)
         # -------------------------------------------
         msg = 'TIME_START_TRACKING OFF'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         print(msg,reply)
         # ---------------------------------------------
         msg = 'TIME_START_TELEMETRY 0'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         print('Telemetry Off')
         reply = self.s.recv(1024).decode("ascii")
         print(msg,reply)
@@ -177,12 +178,12 @@ class TIME_TELE :
 
         # -----------------------------------------------------------
         msg = 'TIME_START_TRACKING arm'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         print(msg,reply)
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING neg'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         print(msg,reply)
 
@@ -190,12 +191,12 @@ class TIME_TELE :
 
         # --------------------------------------------------------------
         msg = 'TIME_START_TRACKING track'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         print(msg,reply)
         # ---------------------------------------------------------------
         msg = 'TIME_START_OBSERVING on'
-        self.s.send(msg)
+        self.s.send(msg.encode())
         reply = self.s.recv(1024).decode("ascii")
         print(msg,reply)
         # -----------------------------------------------------------------
@@ -204,7 +205,7 @@ class TIME_TELE :
         while not ut.tel_exit.is_set():
             tot = int((float(self.i[-1]) / float(num_loop)) * 100.0)
             sys.stdout.flush()
-            queue2.send([tot])
+            queue2.put([tot])
             time.sleep(0.05)
 
         return

@@ -315,14 +315,12 @@ class MainWindow(QtGui.QMainWindow):
         print(self.useinit.isEnabled())
         # sys.exit()
         if not self.useinit.isEnabled():
-            print('I know useinit is false')
             #set variables to user input
             # observer ---------------------------------------
             self.observer = self.enterobserver.text()
 
             # which mces are active --------------------------
             self.mceson = self.whichmces.currentText()
-            print(self.mceson)
 
             # data mode --------------------------------------
             self.datamode = self.enterdatamode.currentText()
@@ -362,7 +360,7 @@ class MainWindow(QtGui.QMainWindow):
 
         if self.inittel == 'Yes':
             if self.kmsonoff == 'Yes':
-                self.kms_on_off = 3
+                self.kms_on_off = 2
             else :
                 self.kms_on_off = 1
 
@@ -380,10 +378,8 @@ class MainWindow(QtGui.QMainWindow):
         elif self.inittel == 'No' :
             if self.kmsonoff == 'Yes':
                 self.kms_on_off = 2
-                print(colored('I have set the kmsonoff to 2','red'))
             else :
                 self.kms_on_off = 0
-                print(colored('I have set the kmsonoff to 0','red'))
             self.tel_script = ' '
             self.off = True
             tel_message = 'NO TELESCOPE SELECTED'
@@ -483,7 +479,7 @@ class MainWindow(QtGui.QMainWindow):
                     if ut.which_mce[mce_index] == 1 :
                         print("Starting acquision on mce%i..." % mce_index)
                         cmd = './coms/mce_run.sh %i %s %s %s' % (mce_index, self.framenumber, rc, self.frameperfile)
-                        print(cmd)
+                        # print(cmd)
                         subprocess.Popen([cmd], shell = True)
 
                 # start file transfer scripts
@@ -546,7 +542,6 @@ class MainWindow(QtGui.QMainWindow):
                 self.newwindow.show()
 
             else:
-                print('init normal plot!!!- ----------')
                 data = np.zeros((33,32))
 
                 self.startwindow.hide()
@@ -849,8 +844,8 @@ class MainWindow(QtGui.QMainWindow):
 
     def set_read_heatmap_levels(self):
         self.h_limits = QtGui.QGridLayout()#create 2 boxes
-        self.lower_levels = [QtGui.QLineEdit('Not Set') for i in range(4)]
-        self.upper_levels = [QtGui.QLineEdit('Not Set') for i in range(4)]
+        self.lower_levels = [QtGui.QLineEdit('Auto') for i in range(4)]
+        self.upper_levels = [QtGui.QLineEdit('Auto') for i in range(4)]
 
         self.uppers = [QtGui.QFormLayout() for i in range(4)]
         self.lowers = [QtGui.QFormLayout() for i in range(4)]
@@ -1212,7 +1207,6 @@ class MainWindow(QtGui.QMainWindow):
             self.kms_updater = KMS_Thread(kms_on_off = self.kms_on_off)
             self.kms_updater.new_kms_data.connect(self.updatekmirrordata)
             self.kms_updater.start()
-            print('kms should be 1',self.kms_on_off)
 
         #place holder data
         self.parallacticangle = 0.0
@@ -1470,7 +1464,7 @@ class MainWindow(QtGui.QMainWindow):
 
             self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
-            self.progressbar.setValue(progress)
+            self.progressbar.setValue(progress[0])
 
     def setColumnCount(self, legend, columnCount):
         """change the orientation of all items of the legend
@@ -1893,7 +1887,7 @@ class MainWindow(QtGui.QMainWindow):
                 upper_limits[i] = str(self.upper_levels[i].text())
                 lower_limits[i] = str(self.lower_levels[i].text())
 
-        print(lower_limits, upper_limits)
+        #print(lower_limits, upper_limits)
         if ut.which_mce[0] == 1 or ut.which_mce[2] == 1:
 
             m1 = np.empty([h1.shape[0],h1.shape[1]],dtype=np.float32)
@@ -1920,12 +1914,10 @@ class MainWindow(QtGui.QMainWindow):
 
 
             self.heatmap1.setImage(m1)
-            if upper_limits[0] != 'Not Set':
-                if lower_limits[0] != 'Not Set':
-                    print(lower_limits[0], upper_limits[0])
+            if upper_limits[0] != 'Auto':
+                if lower_limits[0] != 'Auto':
+                    # print(lower_limits[0], upper_limits[0])
                     self.heatmap1.setLevels(lower_limits[0], upper_limits[0])
-            # if self.uppers[0] != 'Not Set':
-            # if self.lowers[0] != 'Not Set':
 
             d1_avg = np.empty([33,32])
 
@@ -1939,8 +1931,8 @@ class MainWindow(QtGui.QMainWindow):
             # d1_avg[bad_dets] = np.nan
 
             self.heatmap3.setImage(d1_avg)
-            if upper_limits[2] != 'Not Set':
-                if lower_limits[2] != 'Not Set':
+            if upper_limits[2] != 'Auto':
+                if lower_limits[2] != 'Auto':
                     self.heatmap3.setLevels(lower_limits[2], upper_limits[2])
             # self.heatmap3.setLevels(self.h1_var - self.h1_avg , self.h1_var + self.h1_avg)
             # self.heatmap3.setLevels(-6 ,6)
@@ -1971,8 +1963,8 @@ class MainWindow(QtGui.QMainWindow):
             # ----------------------------------------------------------
 
             self.heatmap2.setImage(m2)
-            if upper_limits[1] != 'Not Set':
-                if lower_limits[1] != 'Not Set':
+            if upper_limits[1] != 'Auto':
+                if lower_limits[1] != 'Auto':
                     self.heatmap2.setLevels(lower_limits[1], upper_limits[1])
 
             d2_avg = np.empty([33,32],dtype=np.float32)
@@ -1988,8 +1980,8 @@ class MainWindow(QtGui.QMainWindow):
             # d1_avg[bad_dets] = np.nan
             # self.heatmap3.setImage(d1_avg)
             self.heatmap4.setImage(d2_avg)
-            if upper_limits[3] != 'Not Set':
-                if lower_limits[3] != 'Not Set':
+            if upper_limits[3] != 'Auto':
+                if lower_limits[3] != 'Auto':
                     self.heatmap4.setLevels(lower_limits[3], upper_limits[3])
             # self.heatmap4.setLevels(self.h2_var - self.h2_avg , self.h2_var + self.h2_avg)
 
@@ -2062,9 +2054,7 @@ class MCEThread(QtCore.QThread):
     def run(self):
         queue = mp.Queue()
         p = mp.Process(name='append_data',target=append_data.Time_Files(flags = self.flags, offset = self.offset).retrieve, args=(queue,self.netcdfdir,))
-        p2 = mp.Process(name='append_hk',target=append_hk.Time_Files(offset = self.offset).retrieve, args=(self.netcdfdir,))
         p.start()
-        p2.start()
         last_time = 0
 
         while not ut.mce_exit.is_set():
@@ -2092,7 +2082,6 @@ class MCEThread(QtCore.QThread):
 
         print("MCEThread.run is waiting for subprocesses to join")
         p.join()
-        # ~ p2.join()
 
         print("MCEThread.run is exiting")
         sys.stdout.flush()
@@ -2294,7 +2283,7 @@ class KMS_Thread(QtCore.QThread):
         ut.kms_exit.set()
 
     def run(self):
-        if self.kms_on_off == 2 : #if the kms is starting without telescope, turn on tracker
+        if self.kms_on_off == 3 : #if the kms is starting without telescope, turn on tracker
             ''' This has been deprecated. Need access to socket for shutdown after scan finished.
             # from tel_tracker import turn_on_tracker
             # p1 = mp.Process(name='turn_on_tracker',target = turn_on_tracker, args=(self.kms_on_off,))
@@ -2330,7 +2319,7 @@ class KMS_Thread(QtCore.QThread):
 
             else :
                 self.new_kms_data.emit('done','done','done','done')
-                if self.kms_on_off == 2:
+                if self.kms_on_off == 3:
                     # send shutdown sequence to close telemetry
                     s.send('TIME_START_TELEMETRY 0'.encode())
                     s.shutdown(1)

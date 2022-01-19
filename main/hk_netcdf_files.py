@@ -18,14 +18,13 @@ def new_file(filestarttime,dir):
 
     # Dimensions for Data Arrays -------------------------------------------------------------------
     hk.createDimension('t',None)
-    hk.createDimension('hk_col',3)
-    hk.createDimension('hk_row',500)
+    hk.createDimension('hk_det',256)
     hk.createDimension('hk_num', int(ut.german_freq))
     hk.createDimension('tuple',2)
 
     # creating variables --------------------------------------------------------------------------------
     global HK_Data
-    HK_Data = hk.createVariable('hk_data','f8',('t','hk_num','hk_col','hk_row'))
+    HK_Data = hk.createVariable('hk_data','f8',('t','hk_num','hk_det'))
     global Time
     Time = hk.createVariable('hk_time', 'f8',('t','tuple'))
     # =========================================================================
@@ -35,15 +34,15 @@ def data_append(nc_file, p, data, time):
     """
     Purpose: to append data to the hk netcdf files
     input: nc_file - the name of the nc file that data is being appended to
-           p - idk
-           data - hk data to be appended
-           time - time data to be appended
+           p - dimensionless rolling time array
+           data - hk data of shape [100, 256 detectors]
+           time - time tuple of [network time, sync number]
     outputs: None
     calls: None
     """
     if os.path.exists(nc_file):
         hk = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-        HK_Data[p,:,:,:] = data
+        HK_Data[p,:,:] = data
         Time[p,:] = time
         hk.close()
     else :
