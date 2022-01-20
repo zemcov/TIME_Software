@@ -31,10 +31,11 @@ class HK_Reader:
         while not ut.mce_exit.is_set():
             if os.path.exists(self.dir + "syncframes.%i.npy" %(a+100)): #wait to read new file until old file is complete
                 hk_file = self.dir + 'syncframes.%i.npy' % (a)
-                a += 100
                 self.sync_num_base = a
+                a += 100
                 mega_hk, time_tuple = self.hk_read(hk_file)
-                queue3.send([mega_hk,time_tuple])
+                # print(colored(('hk data in read_hk',len(time_tuple),len(mega_hk)),'magenta'))
+                queue3.put([mega_hk,time_tuple])
                 subprocess.Popen(['rm %s' %(hk_file)], shell=True)
                 self.n += 1
             else :
@@ -45,21 +46,22 @@ class HK_Reader:
     def hk_read(self,hk):
         ntp_times = []
         sync_times = []
+        new_sync_offset = 0
 
         # Load in the array indexed (sync_num_offset, sensor_index), usually with shape (100, 256)
         data = np.load(hk)
 
-        new_sync_offset = ut.timing(data[0][0],self.sync_num_base)
-        if self.offset.value == 0.0 or self.offset.value != new_sync_offset:
-            with self.offset.get_lock():
-                self.offset.value = new_sync_offset
-                print(colored('Offset: %s , %s' %(self.offset.value),'red'))
-                sys.stdout.flush()
-
         # grab network time array and sync time array
         for sync_num_offset in range(data.shape[0]):
-                ntp_times.append(data[sync_num_offset][0])
-                print(colored(('len of ntp times : ', len(ntp_times)),'magenta'))
-                sync_times.append(self.sync_num_base + sync_num_offset)
+            if np.isfinite(data[sync_num_offset][0]):
+                new_sync_offset = ut.timing(data[sync_num_offset][0],self.sync_num_base + sync_num_offset)
+                if self.offset.value == 0.0 or self.offset.value != new_sync_offset:
+                    # with self.offset.get_lock():
+                    self.offset.value = new_sync_offset
+                    print(colored('Offset: %s' %(self.offset.value),'red'))
+                    sys.stdout.flush()
 
-        return data,[ntp_times,sync_nums]
+            ntp_times.append(data[sync_num_offset][0])
+            sync_times.append(self.sync_num_base + sync_num_offset)
+
+        return data,[ntp_times,sync_times]

@@ -22,15 +22,15 @@ def loop_files(queue):
 
         time.sleep(0.01) # Rate limit
 
-        if time.time() - last_time > 5:
+        # if time.time() - last_time > 5:
             # print("read_tel.loop_files inital loop is still alive")
-            last_time = time.time()
+            # last_time = time.time()
 
         # If this file exists, the telescope is off and we should send
         # fake empty data
         if os.path.isfile(dir + 'tele_packet_off1.npy'):
             if queue.qsize() < 1: # Don't overload the queue
-                # print('Sending fake/empty telescope data')
+                print('Sending fake/empty telescope data')
                 tel_data = np.zeros((20,21))
                 queue.put(tel_data)
             continue

@@ -51,9 +51,9 @@ def new_file(filestarttime,dir):
     Rc = mce.createVariable('rc','S1',('r',)) # can either use rc name or integer used by gui
     # creating HK variables --------------------------------------------------------------------------------
     global HK_Data
-    HK_Data = hk.createVariable('hk_data','f8',('t','hk_num','hk_det'))
+    HK_Data = mce.createVariable('hk_data','f8',('t','hk_num','hk_det'))
     global HK_Time
-    HK_Time = hk.createVariable('hk_time', 'f8',('t','hk_tuple'))
+    HK_Time = mce.createVariable('hk_time', 'f8',('t','hk_tuple','hk_num'))
     # =========================================================================
 
     global Time
@@ -109,7 +109,7 @@ def new_file(filestarttime,dir):
     Rc[:] = np.array([parameters[2][0]],dtype='S1')
     mce.close()
 
-def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele, hk_data):
+def data_append(nc_file, p, flags, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele, hk_data):
     """
     Purpose: to append data to the netcdf file created in the above function
     inputs: nc_file - the file in which you want to append data to
@@ -118,10 +118,9 @@ def data_append(nc_file, p, flags, times, head1, head2, mce0_data, mce1_data, mc
     """
     if os.path.exists(nc_file):
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
-        Time[p,:,:] = times
         Status_Flags[p,:,:] = flags
         HK_Data[p,:,:] = hk_data[0]
-        HK_Time[p,:] = hk_time[1]
+        Time[p,:,:] = hk_data[1]
 
         if ut.which_mce[0] == 1 :
             MCE0_Raw_Data_All[p,:,:,:] = mce0_data

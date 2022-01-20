@@ -42,7 +42,6 @@ def start_tracker(queue):
                 print('Tel Time:', pa, unix_val , unix_delta)
                 sys.stdout.flush()
                 np.save(directory.temp_dir + 'tele_packet%i.npy' %(n), mega_tel)
-                np.save(directory.netcdf_dir + 'tele_packet%i.npy' %(n), mega_tel)
                 mega_tel = []
                 mega_tel.append(tel_data)
                 n += 1

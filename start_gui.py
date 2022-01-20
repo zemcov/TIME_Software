@@ -80,6 +80,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.init_mce()
         self.qt_connections()
+        self.clear_temp_files()
 
     #sets all of the variables for mce/graph, deletes old gui_data_test files
     def init_mce(self):
@@ -162,13 +163,6 @@ class MainWindow(QtGui.QMainWindow):
         # ~ if self.mceson != 'MCE SIM':
             # ~ subprocess.Popen(['./coms/hk_stop_sftp.sh'], shell=True)
 
-        # self.clear_temp_files()
-
-        # ~ monitor_thread = start_monitoring(seconds_frozen=2)
-        # ~ print(monitor_thread)
-        # ~ monitor_thread.stop()
-
-
         print('=== Closing Windows ===')
         for window in [self.startwindow, self.browser, self.newwindow, self.heatmapwindow, self.telescopewindow]:
             if window is not None:
@@ -197,7 +191,7 @@ class MainWindow(QtGui.QMainWindow):
             directory.mce0_dir + 'temp.*',
             directory.mce1_dir + 'temp.*',
             directory.temp_dir + 'tele*',
-            directory.hk_dir + 'omnilog*',
+            directory.hk_dir + 'syncframes*',
             ]
         for td in tmp_dirs:
             # os.remove doesn't support wildcards
@@ -233,7 +227,7 @@ class MainWindow(QtGui.QMainWindow):
             for scan in scans :
                 if self.tel_scan == scan :
                     self.tel_script = script[scans.index(scan)]
-            tel_message = 'TELESCOPE INITIALIZED'
+            tel_message = 'TELESCOPE INITIALIZED , %s' %(self.tel_scan)
             self.off = False
 
         elif self.inittel == 'No' :
@@ -313,7 +307,6 @@ class MainWindow(QtGui.QMainWindow):
             return
 
         print(self.useinit.isEnabled())
-        # sys.exit()
         if not self.useinit.isEnabled():
             #set variables to user input
             # observer ---------------------------------------
@@ -361,6 +354,7 @@ class MainWindow(QtGui.QMainWindow):
         if self.inittel == 'Yes':
             if self.kmsonoff == 'Yes':
                 self.kms_on_off = 2
+                print('kms on off is 2')
             else :
                 self.kms_on_off = 1
 
@@ -490,7 +484,7 @@ class MainWindow(QtGui.QMainWindow):
 
                 time.sleep(2.0)
 
-            # subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/sftp/hk_sftp.py'], shell=True)
+            subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/coms/hk_sftp.py'], shell=True)
             if self.loadcurve_flag == True:
                 data = np.zeros((33,32))
 
@@ -2234,41 +2228,11 @@ class Tel_Thread(QtCore.QThread):
                         break
 
         else :
-            pass
-            # from tel_tracker import start_tracker, turn_on_tracker
-            # queue = mp.Queue()
-            #
-            # if True:
-            #     time.sleep(0.1) # give tracker time to turn on before accepting packets
-            #     p = mp.Process(name='start_tracker',target= start_tracker, args=(queue,))
-            #     p.start()
-            #     sys.stdout.flush()
-            #     sys.stderr.flush()
-            #
-            #     while True :
-            #         if not ut.tel_exit.is_set() :
-            #             time.sleep(0.01) # Rate limit
-            #             if queue.empty():
-            #                 continue # No new data, don't block in recv()
-            #             tel_stuff = queue.get()
-            #             with self.flags.get_lock() :
-            #                 self.flags[0] = int(tel_stuff[1]) #update flags passed to netcdf data
-            #             progress = 0.0
-            #             self.new_tel_data.emit(progress,tel_stuff[0],tel_stuff[1],tel_stuff[2],tel_stuff[3],tel_stuff[4],tel_stuff[5],tel_stuff[6])
-            #             time.sleep(0.01)
-            #             sys.stdout.flush()
-            #             sys.stderr.flush()
-            #
-            #         else :
-            #             self.new_tel_data.emit(0,0,'done',0,0,0,0,0)
-            #             break
-            #
-            # else :
-            #     # makes fake data for when we don't want to run the telescope
-            #     tele_array = np.zeros((20,20),dtype=float)
-            #     np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
-            #     time.sleep(0.01)
-            #     np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
+            # makes fake data for when we don't want to run the telescope
+            tele_array = np.zeros((20,20),dtype=float)
+            np.save(directory.temp_dir + 'tele_packet_off1.npy',tele_array)
+            time.sleep(0.01)
+            np.save(directory.temp_dir + 'tele_packet_off2.npy',tele_array)
 
 
 class KMS_Thread(QtCore.QThread):

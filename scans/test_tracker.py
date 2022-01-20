@@ -5,26 +5,22 @@ import multiprocessing as mp
 
 def start_tracker(queue):
     PORT = 4444
-    # PORT = 10002 #for testing
     l = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     l.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     l.bind(('',PORT))
-    print('.')
     print('Server Listening ------------------------------', time.localtime())
     l.listen(5)
 
-    # PORT = 1806
-    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    # s.bind(('',PORT))
-    # # s.connect(('192.168.1.252',PORT)) # this is tracker's IP
-    # s.connect(('',PORT)) # this is to connect locally
-    #
-    # print('Socket 1 Connected -----------------------------')
-    # s.send('TIME_START_TELEMETRY 2'.encode())
-    # reply = s.recv(1024).decode("ascii")
-    # print(reply)
+    PORT = 1806
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(('',PORT))
+    s.connect(('192.168.1.252',PORT)) # this is tracker's IP
 
+    print('Socket 1 Connected -----------------------------')
+    s.send('TIME_START_TELEMETRY 2'.encode())
+    reply = s.recv(1024).decode("ascii")
+    print(reply)
 
     client, info = l.accept()
     reply = client.recv(1024).decode('ascii')
