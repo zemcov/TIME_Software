@@ -5,8 +5,6 @@ from config import directory
 import config.utils as ut
 from termcolor import colored
 
-dir = directory.temp_dir
-
 def loop_files(queue):
     """
     Purpose: Sends data to append_data.py for storage in file

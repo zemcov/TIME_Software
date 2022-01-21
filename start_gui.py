@@ -192,6 +192,7 @@ class MainWindow(QtGui.QMainWindow):
             directory.mce1_dir + 'temp.*',
             directory.temp_dir + 'tele*',
             directory.hk_dir + 'syncframes*',
+            directory.temp_dir + 'kms*'
             ]
         for td in tmp_dirs:
             # os.remove doesn't support wildcards
@@ -450,8 +451,6 @@ class MainWindow(QtGui.QMainWindow):
 
             if self.mceson != "MCE SIM" :
 
-                # self.clear_temp_files()
-
                 #set the data mode for both mces and start them running
                 rc = self.readoutcard
                 if self.readoutcard == 'All':
@@ -485,6 +484,7 @@ class MainWindow(QtGui.QMainWindow):
                 time.sleep(2.0)
 
             subprocess.Popen(['ssh -T time@time-hk python /home/time/TIME_Software/coms/hk_sftp.py'], shell=True)
+
             if self.loadcurve_flag == True:
                 data = np.zeros((33,32))
 
@@ -2275,9 +2275,10 @@ class KMS_Thread(QtCore.QThread):
                 if queue.empty():
                     continue # No new data, don't block in recv()
                 kms_stuff = queue.get() # pa , flags, time, encoder pos
+                print(kms_stuff)
                 # send updated data to the gui
-                # with self.flags.get_lock():
-                #     self.flags[2] = int(kms_stuff[2])
+                with self.flags.get_lock():
+                    self.flags[2] = int(kms_stuff[2])
 
                 self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
 

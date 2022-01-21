@@ -109,7 +109,7 @@ def new_file(filestarttime,dir):
     Rc[:] = np.array([parameters[2][0]],dtype='S1')
     mce.close()
 
-def data_append(nc_file, p, flags, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele, hk_data):
+def data_append(nc_file, p, flags, head1, head2, mce0_data, mce1_data, mce0_on, mce1_on, tele, kms, hk_data):
     """
     Purpose: to append data to the netcdf file created in the above function
     inputs: nc_file - the file in which you want to append data to
@@ -120,7 +120,7 @@ def data_append(nc_file, p, flags, head1, head2, mce0_data, mce1_data, mce0_on, 
         mce = nc.Dataset(nc_file,"r+",format="NETCDF4_CLASSIC")
         Status_Flags[p,:,:] = flags
         HK_Data[p,:,:] = hk_data[0]
-        Time[p,:,:] = hk_data[1]
+        HK_Time[p,:,:] = hk_data[1]
 
         if ut.which_mce[0] == 1 :
             MCE0_Raw_Data_All[p,:,:,:] = mce0_data
@@ -133,7 +133,7 @@ def data_append(nc_file, p, flags, head1, head2, mce0_data, mce1_data, mce0_on, 
             MCE1_on_off[p,:,:] = mce1_on
 
         Tel[p,:,:] = tele
-        # KMS[p,:,:] = kms
+        KMS[p,:,:] = kms
         mce.close()
     else :
         print(colored("Could find NETCDF File!", 'red'))

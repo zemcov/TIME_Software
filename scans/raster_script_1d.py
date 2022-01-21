@@ -32,7 +32,7 @@ class TIME_TELE :
 
         i = 0
         while i <= (len(cmnd_list) - 1):
-            self.s.send(cmnd_list[i])
+            self.s.send(cmnd_list[i].encode())
             reply = self.s.recv(1024).decode("ascii")
             print(reply)
             if i == 0 :
