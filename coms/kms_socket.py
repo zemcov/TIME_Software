@@ -46,7 +46,7 @@ def start_sock(queue):
             n += 1
 
         else :
-            print('waiting for data')
+            pass; #print('waiting for data')
 
     s.shutdown(1)
     s.close()

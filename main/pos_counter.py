@@ -41,8 +41,8 @@ def scan_params(type,coord_space,map_size,map_size_unit,map_len,map_len_unit,coo
     WHEN ADDING STARTING VALUES TO POSITIONS
     #######################################################################'''
 
-    c1 = str(coord1).split(':')
-    c2 = str(coord2).split(':')
+    c1 = str(coord1).replace(';',':').split(':')
+    c2 = str(coord2).replace(';',':').split(':')
 
     if str(coord1_unit) == 'RA' and str(coord2_unit) == 'DEC' :
         old_coord = SkyCoord(c1[0]+'h'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')

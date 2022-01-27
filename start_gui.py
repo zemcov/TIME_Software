@@ -63,7 +63,7 @@ class MainWindow(QtGui.QMainWindow):
         self.startwindow = QtGui.QWidget()
         self.startgrid = QtGui.QGridLayout()
         self.startgrid.addLayout(self.parametersquit,1,1,QtCore.Qt.AlignBottom)
-        self.startwindow.setGeometry(10, 10, 1920, 1080)
+        self.startwindow.setGeometry(10, 10, 800, 600)
         self.startwindow.setLayout(self.startgrid)
         # self.startwindow.setPalette(self.logopal)
         self.startwindow.setPalette(p)
@@ -223,8 +223,8 @@ class MainWindow(QtGui.QMainWindow):
 
         if self.inittel == 'Yes':
             self.tel_scan = self.telescan.currentText()
-            scans = ['1D Raster','2D Raster','Bowtie (constant el)','Pointing Cross']
-            script = [raster_script_1d,raster_script_2d,bowtie_scan,point_cross]
+            scans = ['2D Raster','1D Raster','Bowtie (constant el)','Pointing Cross']
+            script = [raster_script_2d,raster_script_1d,bowtie_scan,point_cross]
             for scan in scans :
                 if self.tel_scan == scan :
                     self.tel_script = script[scans.index(scan)]
@@ -361,8 +361,8 @@ class MainWindow(QtGui.QMainWindow):
 
             if not self.useinit.isEnabled(): # only use self.telescan.currentText() if not using auto_fill
                 self.tel_scan = self.telescan.currentText()
-            scans = ['1D Raster','2D Raster','Bowtie (constant el)','Pointing Cross']
-            script = [raster_script_1d,raster_script_2d,bowtie_scan,point_cross]
+            scans = ['2D Raster','1D Raster','Bowtie (constant el)','Pointing Cross']
+            script = [raster_script_2d,raster_script_1d,bowtie_scan,point_cross]
             for scan in scans :
                 if self.tel_scan == scan :
                     self.tel_script = script[scans.index(scan)]
@@ -437,6 +437,25 @@ class MainWindow(QtGui.QMainWindow):
                 parafile.write(self.timeinterval+'\n')
                 parafile.write(self.channeldelete+'\n')
                 parafile.write(self.timestarted+'\n')
+                # DTC: adding in telescope parameters too 2022/01/26
+                if self.inittel == 'Yes':
+                    parafile.write('\n'+'-'*42+'\n')
+                    parafile.write('inittel: {}\n'.format(self.inittel))
+                    parafile.write('kmsonoff: {}\n'.format(self.kmsonoff))
+                    parafile.write('tel_scan: {}\n'.format(self.tel_scan))
+                    parafile.write('coord_space: {}\n'.format(self.coord_space))
+                    parafile.write('num_loop: {}\n'.format(self.num_loop))
+                    parafile.write('sec: {}\n'.format(self.sec))
+                    parafile.write('map_size: {} {}\n'.format(self.map_size,self.map_size_unit))
+                    parafile.write('map_len: {} {}\n'.format(self.map_len,self.map_len_unit))
+                    parafile.write('map_angle: {} {}\n'.format(self.map_angle,self.map_angle_unit))
+                    parafile.write('coord1: {} {}\n'.format(self.coord1,self.coord1_unit))
+                    parafile.write('coord2: {} {}\n'.format(self.coord2,self.coord2_unit))
+                    parafile.write('step: {} {}\n'.format(self.step,self.step_unit))
+                    parafile.write('epoch: {}\n'.format(self.epoch))
+                    parafile.write('object: {}\n'.format(self.object))
+                    parafile.write('\n'+'-'*42+'\n')
+                # DTC: end of changes 2022/01/26
                 parafile.write(self.logtext.toPlainText())
                 parafile.close()
 
@@ -494,7 +513,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.newwindow.setWindowTitle('TIME Live Data Viewer')
                 self.newgrid = QtGui.QGridLayout()
                 self.newgraphs = QtGui.QVBoxLayout()
-                self.newwindow.setGeometry(10, 10, 1920, 1080)
+                self.newwindow.setGeometry(10, 10, 800, 600)
                 self.newwindow.setLayout(self.newgrid)
                 self.newgrid.addLayout(self.newgraphs, 0,3,8,8)
 
@@ -544,7 +563,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.newwindow.setWindowTitle('TIME Live Data Viewer')
                 self.newgrid = QtGui.QGridLayout()
                 self.newgraphs = QtGui.QVBoxLayout()
-                self.newwindow.setGeometry(10, 10, 1920, 1080)
+                self.newwindow.setGeometry(10, 10, 800, 600)
                 self.newwindow.setLayout(self.newgrid)
                 self.newgrid.addLayout(self.newgraphs, 0,2,8,8)
 
@@ -636,7 +655,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # telescope options =================================================
         self.telescan = QtGui.QComboBox()
-        self.telescan.addItems(['1D Raster','2D Raster','BowTie (constant el)','Pointing Cross'])
+        self.telescan.addItems(['2D Raster','1D Raster','BowTie (constant el)','Pointing Cross'])
 
         self.numloop = QtGui.QLineEdit('2')
 
@@ -656,16 +675,16 @@ class MainWindow(QtGui.QMainWindow):
         self.tel_coord1 = QtGui.QLineEdit()
         self.tel_coord2 = QtGui.QLineEdit()
         self.tel_epoch = QtGui.QComboBox()
-        self.tel_epoch.addItems(['B1950.0','Apparent','J2000.0'])
-        self.tel_object = QtGui.QLineEdit('Mars')
+        self.tel_epoch.addItems(['J2000.0','Apparent','B1950.0'])
+        self.tel_object = QtGui.QLineEdit('???')
         self.unit1 = QtGui.QComboBox()
         self.unit2 = QtGui.QComboBox()
         self.unit3 = QtGui.QComboBox()
         self.unit6 = QtGui.QComboBox()
-        self.unit1.addItems(['arcsec','arcmin','deg'])
-        self.unit2.addItems(['arcsec','arcmin','deg'])
-        self.unit3.addItems(['arcsec','arcmin','deg'])
-        self.unit6.addItems(['arcsec','arcmin','deg'])
+        self.unit1.addItems(['deg','arcsec','arcmin'])
+        self.unit2.addItems(['deg','arcsec','arcmin'])
+        self.unit3.addItems(['deg','arcsec','arcmin'])
+        self.unit6.addItems(['deg','arcsec','arcmin'])
         self.unit4 = QtGui.QComboBox()
         self.unit4.addItems(['RA','AZ'])
         self.unit5 = QtGui.QComboBox()
@@ -1172,7 +1191,7 @@ class MainWindow(QtGui.QMainWindow):
         self.heatgrid.addWidget(self.heatmap2, 1, 2, 2, 3)
         self.heatgrid.addWidget(self.heatmap3, 3, 5, 2, 3)
         self.heatgrid.addWidget(self.heatmap4, 3, 2, 2, 3)
-        self.heatmapwindow.setGeometry(10, 10, 1920, 1080)
+        self.heatmapwindow.setGeometry(10, 10, 800, 600)
         self.heatmapwindow.setLayout(self.heatgrid)
         self.heatmapwindow.show()
         self.set_read_heatmap_levels()
@@ -1315,7 +1334,7 @@ class MainWindow(QtGui.QMainWindow):
         self.telegrid.addLayout(self.telescopedata, 1, 1, 1, 1)
         self.telegrid.addWidget(self.altazgraph, 1, 2, 2, 2)
         self.telegrid.addWidget(self.radecgraph, 1, 4, 2, 2)
-        self.telescopewindow.setGeometry(10, 10, 1920, 1080)
+        self.telescopewindow.setGeometry(10, 10, 800, 600)
         self.telescopewindow.setLayout(self.telegrid)
 
         if self.off == False and self.inittel != 'No' and self.inittel != 'Tracker':

@@ -102,6 +102,10 @@ class TIME_TELE :
                     c = SkyCoord(ra = (self.i[-1]*float(step))* u.degree, dec = (self.i[-1]*float(step)) * u.degree)
 
                     if str(coord_space) == 'DEC' :
+                        new_coord = (c.ra.degree + calc_coord1)
+                        print('new_coord:',new_coord)
+                        print('c:',c.ra.degree)
+                        sys.stdout.flush()
                         # feed new values to telescope
                         commands = '{} {} {} {}'
                         msg = 'TIME_SEEK ' + commands.format(new_coord,calc_coord2,epoch,object)

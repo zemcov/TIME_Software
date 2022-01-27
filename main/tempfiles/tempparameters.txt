@@ -1,7 +1,25 @@
-VLB
+atc
 10
 All 1350000
 120
 No
-2022-01-21T03:45:48.106081
-3C84 with 1D raster and an actually open port on the tracker
+2022-01-27T15:23:14.798726
+
+------------------------------------------
+inittel: Yes
+kmsonoff: No
+tel_scan: 2D Raster
+coord_space: RA
+num_loop: 2
+sec: 6
+map_size: .5 deg
+map_len: .3 deg
+map_angle: 0 deg
+coord1: 18:52:18.2 RA
+coord2: 1:23:57 DEC
+step: 0.005 deg
+epoch: J2000.0
+object: ATCG34
+
+------------------------------------------
+atc trying to observe G34
