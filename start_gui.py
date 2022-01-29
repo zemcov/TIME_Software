@@ -2294,10 +2294,10 @@ class KMS_Thread(QtCore.QThread):
                 if queue.empty():
                     continue # No new data, don't block in recv()
                 kms_stuff = queue.get() # pa , flags, time, encoder pos
-                print(kms_stuff)
+                #print(kms_stuff)
                 # send updated data to the gui
-                with self.flags.get_lock():
-                    self.flags[2] = int(kms_stuff[2])
+                #with self.flags.get_lock():
+                #    self.flags[2] = int(kms_stuff[2])
 
                 self.new_kms_data.emit(kms_stuff[0],kms_stuff[1],kms_stuff[2],kms_stuff[3]) #stuff 2 is status flag
 

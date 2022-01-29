@@ -42,7 +42,7 @@ def start_sock(queue):
                 kms_data = []
                 kms_data.append(np.array([float(pa),float(flag),float(time),float(enc_pos)]))
             # send positional data to gui window
-            queue.send([pa, flag, time, enc_pos])
+            queue.put([pa, flag, time, enc_pos])
             n += 1
 
         else :
