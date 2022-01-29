@@ -39,6 +39,10 @@ def draw_box(coord1,coord1_unit,coord2,coord2_unit,coord_space,map_size,map_size
     else :
         map_size = float(map_size)
 
+    # rpk: Need to correct map ra dimension for the cosine of dec
+    if str(coord1_unit) == 'RA':
+        map_size = map_size/np.cos(coord2*np.pi/180)
+
     box_leftx = np.linspace((coord1 - (map_size/2.0)) , (coord1 - (map_size/2.0)) , 100)
     box_lefty = np.linspace((coord2 - (map_len/2.0)) , (coord2 + (map_len/2.0)) , 100)
 
