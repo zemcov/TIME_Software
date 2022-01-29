@@ -44,10 +44,10 @@ class TIME_TELE :
                 map_size = float(map_size) // 60
 
         if str(map_angle_unit) != 'deg' :
-            if str(map_size_unit) == 'arcsec' :
-                map_size = float(map_size) // 3600
+            if str(map_angle_unit) == 'arcsec' :
+                map_angle = float(map_angle) // 3600
             else :
-                map_size = float(map_size) // 60
+                map_angle = float(map_angle) // 60
         # ===============================================
 
         cmnd_list = ['TIME_START_TELEMETRY ' + str(kms_on_off),'TIME_SEND_CMD CMD','TIME_TELESCOPE_WAIT_TIME 2',\
