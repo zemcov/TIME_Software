@@ -200,59 +200,174 @@ class MainWindow(QtGui.QMainWindow):
 
     def on_starttel_clicked(self):
 
-        self.num_loop = self.numloop.text()
-        self.sec = self.tel_sec.text()
-        self.map_size = self.tel_map_size.text()
-        self.map_len = self.tel_map_len.text()
-        self.map_angle = self.tel_map_angle.text()
-        self.coord1 = self.tel_coord1.text()
-        self.coord2 = self.tel_coord2.text()
-        self.epoch = self.tel_epoch.currentText()
-        self.object = self.tel_object.text()
-        self.inittel = self.init_tel.currentText()
-        self.kmsonoff = self.kmsonofftext.currentText()
-        self.step = self.tel_step.text()
-        self.coord_space = self.map_space.currentText()
-        self.map_size_unit = self.unit1.currentText()
-        self.map_len_unit = self.unit6.currentText()
-        self.map_angle_unit = self.unit2.currentText()
-        self.step_unit = self.unit3.currentText()
-        self.coord1_unit = self.unit4.currentText()
-        self.coord2_unit = self.unit5.currentText()
-        self.telescope_initialized = True
+        check = True
+        if check and self.starttel_error_check():
+            print("TELESCOPE NOT INITIALIZED, please correct errors")
 
-        if self.inittel == 'Yes':
-            self.tel_scan = self.telescan.currentText()
-            scans = ['2D Raster','1D Raster','Bowtie (constant el)','Pointing Cross']
-            script = [raster_script_2d,raster_script_1d,bowtie_scan,point_cross]
-            for scan in scans :
-                if self.tel_scan == scan :
-                    self.tel_script = script[scans.index(scan)]
-            tel_message = 'TELESCOPE INITIALIZED , %s' %(self.tel_scan)
-            self.off = False
+        else:
+            self.num_loop = self.numloop.text()
+            self.sec = self.tel_sec.text()
+            
+            # rpk: Convert all units into degrees so they don't make a mess later
+            if self.unit1.currentText() == 'arcmin':
+                self.tel_map_size.setText(str(float(self.tel_map_size.text())/60.0))
+                self.unit1.setCurrentIndex(0) # This will break if Degrees is not the default
+            if self.unit1.currentText() == 'arcsec':
+                self.tel_map_size.setText(str(float(self.tel_map_size.text())/3600.0))
+                self.unit1.setCurrentIndex(0) # This will break if Degrees is not the default
+            self.map_size = self.tel_map_size.text()
+            self.map_size_unit = self.unit1.currentText()
+            
+            if self.unit6.currentText() == 'arcmin':
+                self.tel_map_len.setText(str(float(self.tel_map_len.text())/60.0))
+                self.unit6.setCurrentIndex(0) # This will break if Degrees is not the default
+            if self.unit6.currentText() == 'arcsec':
+                self.tel_map_len.setText(str(float(self.tel_map_len.text())/3600.0))
+                self.unit6.setCurrentIndex(0) # This will break if Degrees is not the default
+            self.map_len = self.tel_map_len.text()
+            self.map_len_unit = self.unit6.currentText()
 
-        elif self.inittel == 'No' :
-            if self.kmsonoff == 'No':
-                self.tel_script = ' '
-                self.off = True
-                tel_message = 'NO TELESCOPE SELECTED'
-            if self.kmsonoff == 'Yes':
+            if self.unit2.currentText() == 'arcmin':
+                self.tel_map_angle.setText(str(float(self.tel_map_angle.text())/60.0))
+                self.unit2.setCurrentIndex(0) # This will break if Degrees is not the default
+            if self.unit2.currentText() == 'arcsec':
+                self.tel_map_angle.setText(str(float(self.tel_map_angle.text())/3600.0))
+                self.unit2.setCurrentIndex(0) # This will break if Degrees is not the default
+            self.map_angle = self.tel_map_angle.text()
+            self.map_angle_unit = self.unit2.currentText()
+
+            if self.unit3.currentText() == 'arcmin':
+                self.tel_step.setText(str(float(self.tel_step.text())/60.0))
+                self.unit2.setCurrentIndex(0) # This will break if Degrees is not the default
+            if self.unit3.currentText() == 'arcsec':
+                self.tel_step.setText(str(float(self.tel_step.text())/3600.0))
+                self.unit3.setCurrentIndex(0) # This will break if Degrees is not the default
+            self.step = self.tel_step.text()
+            self.step_unit = self.unit3.currentText()
+
+            self.coord1 = self.tel_coord1.text()
+            self.coord2 = self.tel_coord2.text()
+            self.epoch = self.tel_epoch.currentText()
+            self.object = self.tel_object.text()
+            self.inittel = self.init_tel.currentText()
+            self.kmsonoff = self.kmsonofftext.currentText()
+            self.coord_space = self.map_space.currentText()
+            self.coord1_unit = self.unit4.currentText()
+            self.coord2_unit = self.unit5.currentText()
+            self.telescope_initialized = True
+
+            if self.inittel == 'Yes':
+                self.tel_scan = self.telescan.currentText()
+                scans = ['2D Raster','1D Raster','Bowtie (constant el)','Pointing Cross']
+                script = [raster_script_2d,raster_script_1d,bowtie_scan,point_cross]
+                for scan in scans :
+                    if self.tel_scan == scan :
+                        self.tel_script = script[scans.index(scan)]
+                tel_message = 'TELESCOPE INITIALIZED , %s' %(self.tel_scan)
+                self.off = False
+
+            elif self.inittel == 'No' :
+                if self.kmsonoff == 'No':
+                    self.tel_script = ' '
+                    self.off = True
+                    tel_message = 'NO TELESCOPE SELECTED'
+                if self.kmsonoff == 'Yes':
+                    self.tel_script = 'Tracker'
+                    self.off = True
+                    tel_message = 'KMS ONLY'
+
+            elif self.inittel == 'Sim' :
+                tel_message = 'TEL SIM SELECTED'
+                self.tel_script = 'Sim'
+                self.off = False
+
+            else :
+                tel_message = 'TRACKER DATA ONLY'
                 self.tel_script = 'Tracker'
-                self.off = True
-                tel_message = 'KMS ONLY'
+                self.off = False
 
-        elif self.inittel == 'Sim' :
-            tel_message = 'TEL SIM SELECTED'
-            self.tel_script = 'Sim'
-            self.off = False
+            self.useinit.setEnabled(False)
+            print(tel_message)
 
-        else :
-            tel_message = 'TRACKER DATA ONLY'
-            self.tel_script = 'Tracker'
-            self.off = False
 
-        self.useinit.setEnabled(False)
-        print(tel_message)
+    # Checks input parameters for various errors and prints them out. Returns True if problems found
+    # False otherwise
+
+    def starttel_error_check(self):
+
+        # rpk: Adding error checking to inputs and then putting them in a predictable format
+        # to reduce problems with unit conversion later
+
+        check_error_found = False
+        check_error_message = ''
+
+        numeric_p = set('0123456789:;.+-')
+        numeric = set('0123456789.+-')
+
+        if set(self.numloop.text()) > numeric:
+            check_error_found = True
+            check_error_message += 'ERROR: Number of Scans contain invalid characters\n'
+        elif '.' in self.numloop.text():
+            check_error_found = True
+            check_error_message += 'ERROR: Number of Scans must be an integer\n'
+
+        if set(self.tel_sec.text()) > numeric:
+            check_error_found = True
+            check_error_message += 'ERROR: Time to Traverse Scan Length contain invalid characters\n'
+        elif float(self.tel_sec.text()) <= 0:
+            check_error_found = True
+            check_error_message += 'ERROR: Time to Traverse Scan Length <= 0\n'
+        if set(self.tel_map_size.text()) > numeric:
+            check_error_found = True
+            check_error_message += 'ERROR: Map Size contains invalid characters\n'
+        elif float(self.tel_map_size.text()) <= 0:
+            check_error_found = True
+            check_error_message += 'ERROR: Map Size <= 0\n'
+        if self.telescan.currentText() == '2D Raster':
+            if set(self.tel_map_size.text()) > numeric:
+                check_error_found = True
+                check_error_message += 'ERROR: Map Length contains invalid characters\n'
+            elif float(self.tel_map_len.text()) <= 0:
+                check_error_found = True
+                check_error_message += 'ERROR: Map Size <= 0\n'
+
+        if set(self.tel_map_size.text()) > numeric:
+            check_error_found = True
+            check_error_message += 'ERROR: Angle of Map Offset contains invalid characters\n'
+
+        if ';' in self.tel_coord1.text():
+            self.tel_coord1.setText(self.tel_coord1.text().replace(';',':'))
+            print("WARNING: Source Coords 1 contain semicolons, these will be replaced with colons")
+        if ';' in self.tel_coord2.text():
+            self.tel_coord2.setText(self.tel_coord2.text().replace(';',':'))
+            print("WARNING: Source Coords 2 contain semicolons, these will be replaced with colons")
+        if set(self.tel_coord1.text()) > numeric_p or set(self.tel_coord1.text()) > numeric_p:
+            check_error_found = True
+            check_error_message += 'ERROR: Source Coords contains an invalid character\n'
+        if self.tel_coord1.text().count(':')+self.tel_coord1.text().count(';') != 2 or self.tel_coord2.text().count(':')+self.tel_coord2.text().count(';') != 2:
+            check_error_found = True
+            check_error_message += 'ERROR: Source Coords are not in hh:mm:ss or dd:mm:ss format\n'
+        elif self.tel_coord1.text().count('.') > 1 or self.tel_coord2.text().count('.') > 1:
+            check_error_found = True
+            check_error_message += 'ERROR: Source Coords are not in hh:mm:ss or dd:mm:ss format\n'
+
+        if set(self.tel_step.text()) > numeric:
+            check_error_found = True
+            check_error_message += 'ERROR: Size of 2D Vertical Step contain invalid characters\n'
+
+        bad_names = [['Mercury','mercury'],['Venus','venus'],['Mars','mars'],['Jupiter','jupiter'],['Saturn','saturn'],['Uranus','uranus'],['Neptune','neptune']]
+        replacements = ['Hermes','Aphrodite','Ares','Zeus','Cronus','Ouranos','Poseidon']
+        for i in range(len(bad_names)):
+            if self.tel_object.text() in bad_names[i]:
+                self.tel_object.setText(replacements[i])
+                print("WARNING: Cannot observe objects with planet names, we've renamed the target {}".format(replacements[i]))
+
+        if check_error_found:
+            print(check_error_message)
+            return True
+        else:
+            return False
+
 
     def on_useinit_clicked(self):
 
@@ -681,10 +796,10 @@ class MainWindow(QtGui.QMainWindow):
         self.unit2 = QtGui.QComboBox()
         self.unit3 = QtGui.QComboBox()
         self.unit6 = QtGui.QComboBox()
-        self.unit1.addItems(['deg','arcsec','arcmin'])
-        self.unit2.addItems(['deg','arcsec','arcmin'])
-        self.unit3.addItems(['deg','arcsec','arcmin'])
-        self.unit6.addItems(['deg','arcsec','arcmin'])
+        self.unit1.addItems(['deg','arcsec','arcmin']) # Leave 'deg' as default
+        self.unit2.addItems(['deg','arcsec','arcmin']) # Leave 'deg' as default
+        self.unit3.addItems(['deg','arcsec','arcmin']) # Leave 'deg' as default
+        self.unit6.addItems(['deg','arcsec','arcmin']) # Leave 'deg' as default
         self.unit4 = QtGui.QComboBox()
         self.unit4.addItems(['RA','AZ'])
         self.unit5 = QtGui.QComboBox()
