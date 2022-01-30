@@ -1,25 +1,7 @@
-RPK
+ATC
 10
 All 1350000
 120
 No
-2022-01-29T05:10:27.501851
-
-------------------------------------------
-inittel: Yes
-kmsonoff: Yes
-tel_scan: 2D Raster
-coord_space: RA
-num_loop: 2
-sec: 6
-map_size: 1 deg
-map_len: 1 deg
-map_angle: 0 deg
-coord1: 05:35:14.50 RA
-coord2: -05:22:29.3 DEC
-step: 0.001 deg
-epoch: J2000.0
-object: OMC
-
-------------------------------------------
-kms
+2022-01-30T05:45:23.799181
+Noise stare at 460mk

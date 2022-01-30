@@ -344,12 +344,13 @@ class MainWindow(QtGui.QMainWindow):
         if set(self.tel_coord1.text()) > numeric_p or set(self.tel_coord1.text()) > numeric_p:
             check_error_found = True
             check_error_message += 'ERROR: Source Coords contains an invalid character\n'
-        if self.tel_coord1.text().count(':')+self.tel_coord1.text().count(';') != 2 or self.tel_coord2.text().count(':')+self.tel_coord2.text().count(';') != 2:
-            check_error_found = True
-            check_error_message += 'ERROR: Source Coords are not in hh:mm:ss or dd:mm:ss format\n'
-        elif self.tel_coord1.text().count('.') > 1 or self.tel_coord2.text().count('.') > 1:
-            check_error_found = True
-            check_error_message += 'ERROR: Source Coords are not in hh:mm:ss or dd:mm:ss format\n'
+        if self.init_tel.currentText() == 'Yes':
+            if self.tel_coord1.text().count(':')+self.tel_coord1.text().count(';') != 2 or self.tel_coord2.text().count(':')+self.tel_coord2.text().count(';') != 2:
+                check_error_found = True
+                check_error_message += 'ERROR: Source Coords are not in hh:mm:ss or dd:mm:ss format\n'
+            elif self.tel_coord1.text().count('.') > 1 or self.tel_coord2.text().count('.') > 1:
+                check_error_found = True
+                check_error_message += 'ERROR: Source Coords are not in hh:mm:ss or dd:mm:ss format\n'
 
         if set(self.tel_step.text()) > numeric:
             check_error_found = True

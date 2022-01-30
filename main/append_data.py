@@ -106,7 +106,7 @@ class Time_Files:
                 self.kms_data = np.zeros((20,4))
             else :
                 self.kms_data = self.queues[3].get()
-                print('append_data :',self.kms_data)
+                #print('append_data :',self.kms_data)
 
             ''' Check for empty HK data '''
             if self.queues[4].empty() :
