@@ -1440,8 +1440,8 @@ class MainWindow(QtGui.QMainWindow):
         self.radecgraph.addItem(self.radeclinedata4)
         self.radecgraph.showGrid(x=True, y=True)
         self.radecgraph.setTitle('Ra-Dec Graph')
-        self.radecgraph.setLabel('left', 'DEC (deg)')
-        self.radecgraph.setLabel('bottom', 'RA (deg)')
+        self.radecgraph.setLabel('left', 'Apparent DEC (deg)')
+        self.radecgraph.setLabel('bottom', 'Apparent RA (deg)')
 
         # create new window for telescope graphs
         self.telescopewindow = QtGui.QWidget()

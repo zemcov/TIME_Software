@@ -57,7 +57,8 @@ def scan_params(type,coord_space,map_size,map_size_unit,map_len,map_len_unit,coo
                 start_coord2 = old_coord.dec.degree
 
         elif type == 2:
-            start_coord1 = (old_coord.ra - c.ra).degree
+            # start_coord1 = (old_coord.ra - c.ra).degree
+            start_coord1 = old_coord.ra.degree
             start_coord2 = (old_coord.dec - c.dec).degree
 
     else :
