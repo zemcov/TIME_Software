@@ -200,6 +200,12 @@ class MainWindow(QtGui.QMainWindow):
 
     def on_starttel_clicked(self):
 
+        if self.telescan.currentText() == '2D Raster':
+            int_time = float(self.tel_sec.text()) * float(self.tel_map_len.text())/float(self.tel_step.text()) * 2
+        elif self.telescan.currentText() == '1D Raster':
+            int_time = float(self.tel_sec.text()) * int(self.numloop.text()) * 2
+        print("ESTIMATED INTEGRATION TIME: {:.1f} minutes".format(int_time/60))
+
         check = True
         if check and self.starttel_error_check():
             print("TELESCOPE NOT INITIALIZED, please correct errors")

@@ -32,7 +32,10 @@ def scan_params(type,coord_space,map_size,map_size_unit,map_len,map_len_unit,coo
     else :
         map_size = float(map_size)
 
-    num_loop = int(map_len / step) + 1
+    if type == 1:
+        num_loop = 1
+    elif type == 2:
+        num_loop = int(map_len / step) + 1
 
     # ============================================================================================
 
@@ -51,15 +54,18 @@ def scan_params(type,coord_space,map_size,map_size_unit,map_len,map_len_unit,coo
             if coord_space == 'RA':
                 sys.stdout.flush()
                 start_coord1 = old_coord.ra.degree
-                start_coord2 = (old_coord.dec - c.dec).degree
+                start_coord2 = old_coord.dec.degree
             else :
-                start_coord1 = (old_coord.ra - c.ra).degree
+                start_coord1 = old_coord.ra.degree
                 start_coord2 = old_coord.dec.degree
 
         elif type == 2:
-            # start_coord1 = (old_coord.ra - c.ra).degree
-            start_coord1 = old_coord.ra.degree
-            start_coord2 = (old_coord.dec - c.dec).degree
+            if coord_space == 'RA':
+                start_coord1 = old_coord.ra.degree
+                start_coord2 = (old_coord.dec - c.dec).degree
+            elif coord_space == 'DEC':
+                start_coord1 = (old_coord.ra - c.ra).degree
+                start_coord2 = old_coord.dec.degree
 
     else :
         old_coord = AltAz(c1[0]+'d'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
