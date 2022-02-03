@@ -8,34 +8,10 @@ import sys
 
 def scan_params(type,coord_space,map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit):
 
-    if str(step_unit) != 'deg':
-        if str(step_unit) == 'arcmin' :
-            step = float(step) / 60.0
-        else :
-            step = float(step) / 3600.0
-    else :
-        step = float(step)
-
-    if str(map_len_unit) != 'deg':
-        if str(map_len_unit) == 'arcmin' :
-            map_len = float(map_len) / 60.0
-        else :
-            map_len = float(map_len) / 3600.0
-    else :
-        map_len = float(map_len)
-
-    if str(map_size_unit) != 'deg':
-        if str(map_size_unit) == 'arcmin' :
-            map_size = float(map_size) / 60.0
-        else :
-            map_size = float(map_size) / 3600.0
-    else :
-        map_size = float(map_size)
-
     if type == 1:
         num_loop = 1
     elif type == 2:
-        num_loop = int(map_len / step) + 1
+        num_loop = int(float(map_len) / float(step)) + 1
 
     # ============================================================================================
 
@@ -44,12 +20,20 @@ def scan_params(type,coord_space,map_size,map_size_unit,map_len,map_len_unit,coo
     WHEN ADDING STARTING VALUES TO POSITIONS
     #######################################################################'''
 
+    map_size = float(map_size)
+    map_len = float(map_len)
+    step = float(step)
+
     c1 = str(coord1).replace(';',':').split(':')
     c2 = str(coord2).replace(';',':').split(':')
 
     if str(coord1_unit) == 'RA' and str(coord2_unit) == 'DEC' :
         old_coord = SkyCoord(c1[0]+'h'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
-        c = SkyCoord(ra = (map_size / 2.0)* u.degree, dec = (map_len / 2.0) * u.degree)
+        if coord_space == 'RA':
+            c = SkyCoord(ra = (map_size / 2.0)* u.degree, dec = (map_len / 2.0) * u.degree)
+        elif coord_space == 'DEC':
+            c = SkyCoord(ra = (map_len / 2.0)* u.degree, dec = (map_size / 2.0) * u.degree)
+
         if type == 1 :
             if coord_space == 'RA':
                 sys.stdout.flush()
@@ -68,20 +52,29 @@ def scan_params(type,coord_space,map_size,map_size_unit,map_len,map_len_unit,coo
                 start_coord2 = old_coord.dec.degree
 
     else :
+        # RPK - I've changed these to make them analogous to starting points we know work
+        # for the RA/Dec scans
         old_coord = AltAz(c1[0]+'d'+c1[1]+'m'+c1[2]+'s', c2[0]+'d'+c2[1]+'m'+c2[2]+'s')
-        c = AltAz(az = (map_size / 0.5)* u.degree, alt = (map_len / 0.5) * u.degree)
+        if coord_space == 'AZ':
+             c = AltAz(az = (map_size / 0.5)* u.degree, alt = (map_len / 0.5) * u.degree)
+        if coord_space == 'EL':
+             c = AltAz(az = (map_len / 0.5)* u.degree, alt = (map_size / 0.5) * u.degree)
         if type == 1 :
 
             if coord_space == 'ALT':
-                start_coord1 = (c.az - old_coord.az).degree
+                start_coord1 = old_coord.az.degree
                 start_coord2 = old_coord.alt.degree
-            else :
+            elif coord_space == 'AZ':
                 start_coord1 = c.az.degree
-                start_coord2 = (c.alt - old_coord.alt).degree
+                start_coord2 = old_coord.alt.degree
 
         elif type == 2 :
-            start_coord1 = (c.az - old_coord.az).degree
-            start_coord2 = (c.alt - old_coord.alt).degree
+            if coord_space == 'ALT':        
+                start_coord1 = (c.az - old_coord.az).degree
+                start_coord2 = old_coord.alt.degree
+            elif coord_space == 'AZ':        
+                start_coord1 = old_coord.az.degree
+                start_coord2 = (c.alt - old_coord.alt).degree
             
     # ============================================================================================
 

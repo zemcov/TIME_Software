@@ -2,8 +2,8 @@
 
 import sys
 
-if sys.version_info.major != 3:
-    sys.exit("This software is expecting Python 3.x")
+if sys.version_info.major != 3 or sys.version_info.minor<8:
+    sys.exit("This software is expecting Python >3.8")
 from matplotlib import cm
 import os, subprocess, time, datetime, socket, struct, threading, shutil
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
@@ -120,6 +120,9 @@ class MainWindow(QtGui.QMainWindow):
         self.kms_stop.clicked.connect(self.onkmsstop_clicked)
         self.kms_restart.clicked.connect(self.onkmsrestart_clicked)
         self.set_bias.clicked.connect(self.bias_bool)
+        
+        self.load_cat_button.clicked.connect(self.on_loadcat_clicked)
+        self.select_cat_button.clicked.connect(self.on_selectcat_clicked)
 
     def bias_bool(self):
         self.bias_ready = True
@@ -198,13 +201,34 @@ class MainWindow(QtGui.QMainWindow):
             # os.remove doesn't support wildcards
             subprocess.call('rm ' + td, shell=True)
 
+    def on_loadcat_clicked(self):
+        self.select_cat.clear()
+        catalog_name = self.load_cat.currentText()
+        self.catalog = np.genfromtxt('/home/time/TIME_Catalogs/'+catalog_name,dtype=[('ra','U15'),('dec','U15'),('epoch','U8'),('name','U20')],usecols=[0,1,2,3])
+        self.select_cat.addItems(self.catalog['name'])
+    
+    def on_selectcat_clicked(self):
+        target = self.select_cat.currentText()
+        index = np.nonzero(self.catalog['name'] == target)[0][0]
+        self.tel_coord1.setText(self.catalog[index]['ra'])
+        self.unit4.setCurrentIndex(self.list_of_coord1_options.index('RA'))
+        self.tel_coord2.setText(self.catalog[index]['dec'])
+        self.unit5.setCurrentIndex(self.list_of_coord2_options.index('DEC'))
+        if self.catalog[index]['epoch'] in self.list_of_epochs:
+            self.tel_epoch.setCurrentIndex(self.list_of_epochs.index(self.catalog[index]['epoch']))
+        else:
+            print("WARNING: Epoch not recognized/accepted - setting to J2000.0")
+            self.tel_epoch.setCurrentIndex(self.list_of_epochs.index("J2000.0"))
+        self.tel_object.setText(self.catalog[index]['name'])
+
     def on_starttel_clicked(self):
 
-        if self.telescan.currentText() == '2D Raster':
-            int_time = float(self.tel_sec.text()) * float(self.tel_map_len.text())/float(self.tel_step.text()) * 2
-        elif self.telescan.currentText() == '1D Raster':
-            int_time = float(self.tel_sec.text()) * int(self.numloop.text()) * 2
-        print("ESTIMATED INTEGRATION TIME: {:.1f} minutes".format(int_time/60))
+        if self.init_tel.currentText() == 'Yes':
+            if self.telescan.currentText() == '2D Raster':
+                int_time = float(self.tel_sec.text()) * float(self.tel_map_len.text())/float(self.tel_step.text()) * 2
+            elif self.telescan.currentText() == '1D Raster':
+                int_time = float(self.tel_sec.text()) * int(self.numloop.text()) * 2
+            print("ESTIMATED INTEGRATION TIME: {:.1f} minutes".format(int_time/60))
 
         check = True
         if check and self.starttel_error_check():
@@ -217,37 +241,37 @@ class MainWindow(QtGui.QMainWindow):
             # rpk: Convert all units into degrees so they don't make a mess later
             if self.unit1.currentText() == 'arcmin':
                 self.tel_map_size.setText(str(float(self.tel_map_size.text())/60.0))
-                self.unit1.setCurrentIndex(0) # This will break if Degrees is not the default
+                self.unit1.setCurrentIndex(self.list_of_angle_units.index['deg'])
             if self.unit1.currentText() == 'arcsec':
                 self.tel_map_size.setText(str(float(self.tel_map_size.text())/3600.0))
-                self.unit1.setCurrentIndex(0) # This will break if Degrees is not the default
+                self.unit1.setCurrentIndex(self.list_of_angle_units.index['deg'])
             self.map_size = self.tel_map_size.text()
             self.map_size_unit = self.unit1.currentText()
             
             if self.unit6.currentText() == 'arcmin':
                 self.tel_map_len.setText(str(float(self.tel_map_len.text())/60.0))
-                self.unit6.setCurrentIndex(0) # This will break if Degrees is not the default
+                self.unit6.setCurrentIndex(self.list_of_angle_units.index['deg']) 
             if self.unit6.currentText() == 'arcsec':
                 self.tel_map_len.setText(str(float(self.tel_map_len.text())/3600.0))
-                self.unit6.setCurrentIndex(0) # This will break if Degrees is not the default
+                self.unit6.setCurrentIndex(self.list_of_angle_units.index['deg'])
             self.map_len = self.tel_map_len.text()
             self.map_len_unit = self.unit6.currentText()
 
             if self.unit2.currentText() == 'arcmin':
                 self.tel_map_angle.setText(str(float(self.tel_map_angle.text())/60.0))
-                self.unit2.setCurrentIndex(0) # This will break if Degrees is not the default
+                self.unit2.setCurrentIndex(self.list_of_angle_units.index['deg'])
             if self.unit2.currentText() == 'arcsec':
                 self.tel_map_angle.setText(str(float(self.tel_map_angle.text())/3600.0))
-                self.unit2.setCurrentIndex(0) # This will break if Degrees is not the default
+                self.unit2.setCurrentIndex(self.list_of_angle_units.index['deg'])
             self.map_angle = self.tel_map_angle.text()
             self.map_angle_unit = self.unit2.currentText()
 
             if self.unit3.currentText() == 'arcmin':
                 self.tel_step.setText(str(float(self.tel_step.text())/60.0))
-                self.unit2.setCurrentIndex(0) # This will break if Degrees is not the default
+                self.unit2.setCurrentIndex(self.list_of_angle_units.index['deg'])
             if self.unit3.currentText() == 'arcsec':
                 self.tel_step.setText(str(float(self.tel_step.text())/3600.0))
-                self.unit3.setCurrentIndex(0) # This will break if Degrees is not the default
+                self.unit3.setCurrentIndex(self.list_of_angle_units.index['deg'])
             self.step = self.tel_step.text()
             self.step_unit = self.unit3.currentText()
 
@@ -292,7 +316,6 @@ class MainWindow(QtGui.QMainWindow):
                 self.tel_script = 'Tracker'
                 self.off = False
 
-            self.useinit.setEnabled(False)
             print(tel_message)
 
 
@@ -378,43 +401,48 @@ class MainWindow(QtGui.QMainWindow):
 
     def on_useinit_clicked(self):
 
+        # RPK: I'm altering this to fill in the GUI from the config file, 
+        # then user still has to initialize telescope and click submit. This
+        # will make the error checking and input formatting work for both 
+        # entry modes.
+        # Enter telescope parameters:
+        self.numloop.setText(init.tel_dict["num_loop"])
+        self.tel_sec.setText(init.tel_dict["sec"])
+        self.unit1.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_size_unit"]))
+                        # how it works: self.unit1.setCurrentIndex(0) # is 0 for degrees...
+        self.tel_map_size.setText(init.tel_dict["map_size"])
+        self.unit6.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_len_unit"]))
+        self.tel_map_len.setText(init.tel_dict["map_len"])
+
+        self.unit2.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_angle_unit"]))
+        self.tel_map_angle.setText(init.tel_dict["map_angle"])
+
+        self.unit3.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["step_unit"]))
+        self.tel_step.setText(init.tel_dict["step"])
+
+        self.tel_coord1.setText(init.tel_dict["coord1"])
+        self.unit4.setCurrentIndex(self.list_of_coord1_options.index(init.tel_dict["coord1_unit"]))
+        self.tel_coord2.setText(init.tel_dict["coord2"])
+        self.unit5.setCurrentIndex(self.list_of_coord2_options.index(init.tel_dict["coord2_unit"]))
+        self.tel_epoch.setCurrentIndex(self.list_of_epochs.index(init.tel_dict["epoch"]))
+        self.tel_object.setText(init.tel_dict["object"])
+
+        self.init_tel.setCurrentIndex(self.list_of_init_tels.index(init.tel_dict["inittel"]))
+        self.kmsonofftext.setCurrentIndex(self.list_of_kms_onoffs.index(init.tel_dict["kmsonoff"]))
+        self.map_space.setCurrentIndex(self.list_of_map_space_options.index(init.tel_dict["coord_space"]))
+
+        self.telescan.setCurrentIndex(self.list_of_scan_options.index(init.tel_dict["tel_scan"]))
+
         # mce params ========================
-        self.observer = init.mce_dict["observer"]
-        self.mceson = init.mce_dict["mceson"]
-        self.datamode = init.mce_dict["datamode"]
-        self.readoutcard = init.mce_dict["readoutcard"]
-        self.framenumber = init.mce_dict["framenumber"]
-        self.alpha = float(init.mce_dict["alpha"])
-        self.timeinterval = init.mce_dict["timeinterval"]
-        self.channeldelete = init.mce_dict["channeldelete"]
-        self.showmcedata = init.mce_dict["showmcedata"]
-        # =====================================
-
-        # telescope params ====================
-        self.num_loop = init.tel_dict["num_loop"]
-        self.sec = init.tel_dict["sec"]
-        self.map_size = init.tel_dict["map_size"]
-        self.map_len = init.tel_dict["map_len"]
-        self.map_angle = init.tel_dict["map_angle"]
-        self.coord1 = init.tel_dict["coord1"]
-        self.coord2 = init.tel_dict["coord2"]
-        self.epoch = init.tel_dict["epoch"]
-        self.object = init.tel_dict["object"]
-        self.inittel = init.tel_dict["inittel"]
-        self.kmsonoff = init.tel_dict["kmsonoff"]
-        self.tel_scan = init.tel_dict["tel_scan"]
-        self.step = init.tel_dict["step"]
-        self.coord_space = init.tel_dict["coord_space"]
-        self.map_size_unit = init.tel_dict["map_size_unit"]
-        self.map_len_unit = init.tel_dict["map_len_unit"]
-        self.map_angle_unit = init.tel_dict["map_angle_unit"]
-        self.step_unit = init.tel_dict["step_unit"]
-        self.coord1_unit = init.tel_dict["coord1_unit"]
-        self.coord2_unit = init.tel_dict["coord2_unit"]
-        # ==============================================================================
-        self.starttel.setEnabled(True)
-        self.useinit.setEnabled(True)
-
+        self.enterobserver.setText(init.mce_dict["observer"])
+        self.whichmces.setCurrentIndex(self.list_of_mce_options.index(init.mce_dict["mceson"]))        
+        self.enterdatamode.setCurrentIndex(self.list_of_datamode_options.index(init.mce_dict["datamode"]))
+        self.enterreadoutcard.setCurrentIndex(self.list_of_readoutcard_options.index(init.mce_dict["readoutcard"]))
+        self.enterframenumber.setText(init.mce_dict["framenumber"])
+        self.heatalpha.setText(init.mce_dict["alpha"])
+        self.entertimeinterval.setText(init.mce_dict["timeinterval"])
+        self.enterchanneldelete.setCurrentIndex(self.list_of_channeldelete_options.index(init.mce_dict["channeldelete"]))
+        self.entershowmcedata.setCurrentIndex(self.list_of_showmcedata_options.index(init.mce_dict["showmcedata"]))
 
     #sets parameter variables to user input and checks if valid - will start MCE
     #and live graphing if they are
@@ -429,50 +457,48 @@ class MainWindow(QtGui.QMainWindow):
             self.warningbox('gui')
             return
 
-        print(self.useinit.isEnabled())
-        if not self.useinit.isEnabled():
-            #set variables to user input
-            # observer ---------------------------------------
-            self.observer = self.enterobserver.text()
+        #set variables to user input
+        # observer ---------------------------------------
+        self.observer = self.enterobserver.text()
 
-            # which mces are active --------------------------
-            self.mceson = self.whichmces.currentText()
+        # which mces are active --------------------------
+        self.mceson = self.whichmces.currentText()
 
-            # data mode --------------------------------------
-            self.datamode = self.enterdatamode.currentText()
-            if self.datamode == 'Load Curves':
-                self.loadcurve_flag = True
-            else:
-                self.loadcurve_flag = False
-            mce_states = ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)', 'Load Curves']
-            #want loadcurve to be the same as ??
-            #for now I'm going to say that the load curve is the same as RAw or SQ1 Feedback
-            mce_states2 = [0,1,12,2,11,10,7,5,4, 12]
+        # data mode --------------------------------------
+        self.datamode = self.enterdatamode.currentText()
+        if self.datamode == 'Load Curves':
+            self.loadcurve_flag = True
+        else:
+            self.loadcurve_flag = False
+        mce_states = ['Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (25:7)','Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)', 'Load Curves']
+        #want loadcurve to be the same as ??
+        #for now I'm going to say that the load curve is the same as RAw or SQ1 Feedback
+        mce_states2 = [0,1,12,2,11,10,7,5,4, 12]
 
-            for state in mce_states :
-                if self.datamode == state :
-                    self.datamode = mce_states2[mce_states.index(state)]
-            # readout card ---------------------------------------------
-            self.readoutcard = self.enterreadoutcard.currentIndex() - 1
-            if self.readoutcard < 0:
-                self.readoutcard = 'All'
-                self.currentreadoutcard = 2
-                self.currentreadoutcarddisplay = 'MCE 1 RC 2'
+        for state in mce_states :
+            if self.datamode == state :
+                self.datamode = mce_states2[mce_states.index(state)]
+        # readout card ---------------------------------------------
+        self.readoutcard = self.enterreadoutcard.currentIndex() - 1
+        if self.readoutcard < 0:
+            self.readoutcard = 'All'
+            self.currentreadoutcard = 2
+            self.currentreadoutcarddisplay = 'MCE 1 RC 2'
 
-            # frame number ----------------------------------------------
-            self.framenumber = self.enterframenumber.text()
+        # frame number ----------------------------------------------
+        self.framenumber = self.enterframenumber.text()
 
-            # heatmap error function ------------------------------------
-            self.alpha = float(self.heatalpha.text())
+        # heatmap error function ------------------------------------
+        self.alpha = float(self.heatalpha.text())
 
-            # how much data to view on screen at once -------------------
-            self.timeinterval = self.entertimeinterval.text()
+        # how much data to view on screen at once -------------------
+        self.timeinterval = self.entertimeinterval.text()
 
-            # keep old channel data on graph ----------------------------
-            self.channeldelete = self.enterchanneldelete.currentText()
+        # keep old channel data on graph ----------------------------
+        self.channeldelete = self.enterchanneldelete.currentText()
 
-            # keep mce data on screen -----------------------------------
-            self.showmcedata = self.entershowmcedata.currentText()
+        # keep mce data on screen -----------------------------------
+        self.showmcedata = self.entershowmcedata.currentText()
 
         if self.inittel == 'Yes':
             if self.kmsonoff == 'Yes':
@@ -481,8 +507,7 @@ class MainWindow(QtGui.QMainWindow):
             else :
                 self.kms_on_off = 1
 
-            if not self.useinit.isEnabled(): # only use self.telescan.currentText() if not using auto_fill
-                self.tel_scan = self.telescan.currentText()
+            self.tel_scan = self.telescan.currentText()
             scans = ['2D Raster','1D Raster','Bowtie (constant el)','Pointing Cross']
             script = [raster_script_2d,raster_script_1d,bowtie_scan,point_cross]
             for scan in scans :
@@ -552,13 +577,13 @@ class MainWindow(QtGui.QMainWindow):
             dir = directory.master_dir
             if os.path.exists(dir + 'tempfiles/tempparameters.txt') :
                 parafile = open(dir + 'tempfiles/tempparameters.txt', 'w')
-                parafile.write(self.observer+'\n')
-                parafile.write(str(self.datamode)+'\n')
-                parafile.write(str(self.readoutcard)+' ')
-                parafile.write(self.framenumber+'\n')
-                parafile.write(self.timeinterval+'\n')
-                parafile.write(self.channeldelete+'\n')
-                parafile.write(self.timestarted+'\n')
+                parafile.write('observer: {}\n'.format(self.observer))
+                parafile.write('data mode: {}\n'.format(str(self.datamode)))
+                parafile.write('readout card: {}\n'.format(str(self.readoutcard)))
+                parafile.write('frame number: {}\n'.format(self.framenumber))
+                parafile.write('time interval: {}\n'.format(self.timeinterval))
+                parafile.write('delete old columbs: {}\n'.format(self.channeldelete))
+                parafile.write('time started: {}\n'.format(self.timestarted))
                 # DTC: adding in telescope parameters too 2022/01/26
                 if self.inittel == 'Yes':
                     parafile.write('\n'+'-'*42+'\n')
@@ -733,29 +758,28 @@ class MainWindow(QtGui.QMainWindow):
 
     def getparameters(self):
         #creating user input boxes
-        self.enterobserver = QtGui.QLineEdit('VLB')
-        self.enterobserver.setMaxLength(3)
+        self.enterobserver = QtGui.QLineEdit('TIME_obs')
+        # self.enterobserver.setMaxLength(3) # observer shouldn't have to be initials
         self.enterdatamode = QtGui.QComboBox()
-        self.enterdatamode.addItems(
-            ['Mixed Mode (25:7)', 'Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)', 'Load Curves'])
+        self.list_of_datamode_options = ['Mixed Mode (25:7)', 'Error', 'SQ1 Feedback', 'Raw', 'Filtered SQ1 Feedback', 'Debugging', 'Mixed Mode (22:10)','Mixed Mode (24:8)','Mixed mode (18:14)', 'Load Curves']
+        self.enterdatamode.addItems(self.list_of_datamode_options)
         self.whichmces = QtGui.QComboBox()
-        self.whichmces.addItems(['MCE0','MCE1','Both','MCE SIM'])
+        self.list_of_mce_options = ['MCE0','MCE1','Both','MCE SIM']
+        self.whichmces.addItems(self.list_of_mce_options)
         self.enterreadoutcard = QtGui.QComboBox()
-        self.enterreadoutcard.addItem('All')
-        for i in range(8):
-            if i < 4:
-                self.enterreadoutcard.addItem('MCE 0 RC %s' % (i % 4 + 1))
-            else:
-                self.enterreadoutcard.addItem('MCE 1 RC %s' % (i % 4 + 1))
+        self.list_of_readoutcard_options = ['All'] + ['MCE 0 RC {}'.format(i+1) for i in range(4)] + ['MCE 1 RC {}'.format(i+1) for i in range(4)]
+        self.enterreadoutcard.addItems(self.list_of_readoutcard_options)
         self.enterframenumber = QtGui.QLineEdit('1350000')
         self.enterframenumber.setMaxLength(9)
         self.heatalpha = QtGui.QLineEdit('0.1')
         # self.enterdatarate = QtGui.QLineEdit('45')
         self.entertimeinterval = QtGui.QLineEdit('120')
         self.enterchanneldelete = QtGui.QComboBox()
-        self.enterchanneldelete.addItems(['No', 'Yes'])
+        self.list_of_channeldelete_options = ['No','Yes']
+        self.enterchanneldelete.addItems(self.list_of_channeldelete_options)
         self.entershowmcedata = QtGui.QComboBox()
-        self.entershowmcedata.addItems(['Yes', 'No'])
+        self.list_of_showmcedata_options = ['Yes','No']
+        self.entershowmcedata.addItems(self.list_of_showmcedata_options)
 
         self.mceGroupBox = QtGui.QGroupBox()
         self.parameters = QtGui.QFormLayout()
@@ -777,17 +801,20 @@ class MainWindow(QtGui.QMainWindow):
 
         # telescope options =================================================
         self.telescan = QtGui.QComboBox()
-        self.telescan.addItems(['2D Raster','1D Raster','BowTie (constant el)','Pointing Cross'])
+        self.list_of_scan_options = ['2D Raster','1D Raster','BowTie (constant el)','Pointing Cross']
+        self.telescan.addItems(self.list_of_scan_options)
 
         self.numloop = QtGui.QLineEdit('2')
 
         self.tel_delay = QtGui.QLineEdit('0')
 
         self.init_tel = QtGui.QComboBox()
-        self.init_tel.addItems(['No','Yes','Sim','Tracker'])
+        self.list_of_init_tels = ['No','Yes','Sim','Tracker']
+        self.init_tel.addItems(self.list_of_init_tels)
 
+        self.list_of_kms_onoffs = ['No','Yes']
         self.kmsonofftext = QtGui.QComboBox()
-        self.kmsonofftext.addItems(['No','Yes'])
+        self.kmsonofftext.addItems(self.list_of_kms_onoffs)
 
         self.tel_sec = QtGui.QLineEdit('6')
         self.tel_map_len = QtGui.QLineEdit('1')
@@ -797,22 +824,34 @@ class MainWindow(QtGui.QMainWindow):
         self.tel_coord1 = QtGui.QLineEdit()
         self.tel_coord2 = QtGui.QLineEdit()
         self.tel_epoch = QtGui.QComboBox()
-        self.tel_epoch.addItems(['J2000.0','Apparent','B1950.0'])
+        self.list_of_epochs = ['J2000.0','Apparent']
+        self.tel_epoch.addItems(self.list_of_epochs)
         self.tel_object = QtGui.QLineEdit('???')
         self.unit1 = QtGui.QComboBox()
         self.unit2 = QtGui.QComboBox()
         self.unit3 = QtGui.QComboBox()
         self.unit6 = QtGui.QComboBox()
-        self.unit1.addItems(['deg','arcsec','arcmin']) # Leave 'deg' as default
-        self.unit2.addItems(['deg','arcsec','arcmin']) # Leave 'deg' as default
-        self.unit3.addItems(['deg','arcsec','arcmin']) # Leave 'deg' as default
-        self.unit6.addItems(['deg','arcsec','arcmin']) # Leave 'deg' as default
+        self.list_of_angle_units = ['deg','arcsec','arcmin'] # Leave 'deg' as default
+        self.unit1.addItems(self.list_of_angle_units) 
+        self.unit2.addItems(self.list_of_angle_units)
+        self.unit3.addItems(self.list_of_angle_units)
+        self.unit6.addItems(self.list_of_angle_units)
         self.unit4 = QtGui.QComboBox()
-        self.unit4.addItems(['RA','AZ'])
+        self.list_of_coord1_options = ['RA','AZ']
+        self.unit4.addItems(self.list_of_coord1_options)
         self.unit5 = QtGui.QComboBox()
-        self.unit5.addItems(['DEC','ALT'])
+        self.list_of_coord2_options = ['DEC','ALT']
+        self.unit5.addItems(self.list_of_coord2_options)
         self.map_space = QtGui.QComboBox()
-        self.map_space.addItems(['RA','DEC','AZ','ALT'])
+        self.list_of_map_space_options = ['RA','DEC','AZ','ALT']
+        self.map_space.addItems(self.list_of_map_space_options)
+
+        # RPK: implementing catalog tool
+        self.load_cat = QtGui.QComboBox()
+        self.load_cat.addItems(os.listdir('/home/time/TIME_Catalogs/'))
+        self.load_cat_button = QtGui.QPushButton('Load')
+        self.select_cat = QtGui.QComboBox()
+        self.select_cat_button = QtGui.QPushButton('Load')
 
         self.telGroupBox = QtGui.QGroupBox()
         self.telparams = QtGui.QFormLayout()
@@ -846,6 +885,16 @@ class MainWindow(QtGui.QMainWindow):
         self.vstep_widget.addWidget(self.tel_step)
         self.vstep_widget.addWidget(self.unit3)
         self.telparams.addRow('Size of 2D Vertical Step', self.vstep_widget)
+
+        self.load_cat_widget = QtGui.QHBoxLayout()
+        self.load_cat_widget.addWidget(self.load_cat)
+        self.load_cat_widget.addWidget(self.load_cat_button)
+        self.telparams.addRow('Catalog Name:',self.load_cat_widget)
+        self.select_cat_widget = QtGui.QHBoxLayout()
+        self.select_cat_widget.addWidget(self.select_cat)
+        self.select_cat_widget.addWidget(self.select_cat_button)
+        self.telparams.addRow('Catalog Object:',self.select_cat_widget)
+
         self.coord1_widget = QtGui.QHBoxLayout()
         self.coord1_widget.addWidget(self.tel_coord1)
         self.coord1_widget.addWidget(self.unit4)
@@ -1462,7 +1511,7 @@ class MainWindow(QtGui.QMainWindow):
         if self.off == False and self.inittel != 'No' and self.inittel != 'Tracker':
             box_leftx,box_lefty,box_rightx,box_righty,box_topx,box_topy,box_botx,box_boty =\
             draw_box(self.coord1,self.coord1_unit,self.coord2,self.coord2_unit,self.coord_space,\
-                        self.map_size,self.map_size_unit,self.map_len,self.map_len_unit)
+                        self.map_size,self.map_size_unit,self.map_len,self.map_len_unit,self.epoch)
 
             if self.coord_space == 'ALT' or self.coord_space == 'AZ' :
                 self.altazlinedata1.setData(box_leftx,box_lefty,brush=pg.mkBrush('g'))
@@ -1470,7 +1519,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.altazlinedata3.setData(box_topx,box_topy,brush=pg.mkBrush('g'))
                 self.altazlinedata4.setData(box_botx,box_boty,brush=pg.mkBrush('g'))
 
-            else :
+            elif self.coord_space == 'RA' or self.coord_space == 'DEC':
                 self.radeclinedata1.setData(box_leftx,box_lefty,brush=pg.mkBrush('g'))
                 self.radeclinedata2.setData(box_rightx,box_righty,brush=pg.mkBrush('g'))
                 self.radeclinedata3.setData(box_topx,box_topy,brush=pg.mkBrush('g'))
@@ -1479,6 +1528,7 @@ class MainWindow(QtGui.QMainWindow):
 
         else :
             pass
+
         self.repeat = False
 
         self.alt = []

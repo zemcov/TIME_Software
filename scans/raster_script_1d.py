@@ -31,25 +31,16 @@ class TIME_TELE :
         commands = '{} {} {} {}'
         print(colored(commands.format(coord1,coord2,epoch,object),'yellow'))
 
-        _, calc_coord1, calc_coord2 = scan_params(1,coord_space,map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
-        num_loop = numloop
-        p2 = mp.Process(target = self.loop_track , args=(num_loop,queue2))
-        p2.start()
-    # =================================================================================================================
+        # =================================================================================================================
         ''' Make sure map_size and map_angle are being fed as degrees to tracker '''
         # ===============================================
-        if str(map_size_unit) != 'deg' :
-            if str(map_size_unit) == 'arcsec' :
-                map_size = float(map_size) // 3600
-            else :
-                map_size = float(map_size) // 60
-
-        if str(map_angle_unit) != 'deg' :
-            if str(map_angle_unit) == 'arcsec' :
-                map_angle = float(map_angle) // 3600
-            else :
-                map_angle = float(map_angle) // 60
+        if str(map_size_unit) != 'deg' or str(map_len_unit) != 'deg' or str(map_angle_unit) != 'deg' or str(step_unit) != 'deg':
+            raise ValueError("raster_script_2d was expecting units in degrees")
         # ===============================================
+        _, calc_coord1, calc_coord2 = scan_params(1,coord_space,map_size,map_size_unit,map_len,map_len_unit,coord1,coord1_unit,coord2,coord2_unit,step,step_unit)
+        num_loop = int(numloop)
+        p2 = mp.Process(target = self.loop_track , args=(num_loop,queue2))
+        p2.start()
 
         cmnd_list = ['TIME_START_TELEMETRY ' + str(kms_on_off),'TIME_SEND_CMD CMD','TIME_TELESCOPE_WAIT_TIME 2',\
                         'TIME_START_TRACKING off','TIME_SCAN_TIME ' + str(sec),'TIME_MAP_SIZE ' + str(map_size),\
