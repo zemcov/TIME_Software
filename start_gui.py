@@ -6,11 +6,15 @@ if sys.version_info.major != 3 or sys.version_info.minor<8:
     sys.exit("This software is expecting Python >3.8")
 from matplotlib import cm
 import os, subprocess, time, datetime, socket, struct, threading, shutil
+from fnmatch import fnmatch
+import json
 from pyqtgraph import QtCore, QtGui, GraphicsLayoutWidget, GraphicsLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QSizePolicy
 import pyqtgraph as Qt
 import numpy as np
+from astropy import units as u
+from astropy.time import Time as thetime
 import pyqtgraph as pg
 import random as rm
 from termcolor import colored
@@ -20,13 +24,15 @@ from matplotlib import cm
 from coms import kms_socket, tel_tracker
 from main import append_data, append_hk, read_hk, fake_tel
 from main.tel_box import draw_box
-from scans import raster_script_1d, raster_script_2d, bowtie_scan, point_cross
+from scans import raster_script_1d, raster_planet_1d, raster_script_2d, bowtie_scan, point_cross
 # from make_iv_curve_nc import *
 from config import init, directory
 import time
 import config.utils as ut
 sys.path.append('loadcurves')
 from gui_loadcurve import *
+
+config_path = '/home/time/TIME_Catalogs/'
 
 #class of all components of GUI
 class MainWindow(QtGui.QMainWindow):
@@ -116,7 +122,8 @@ class MainWindow(QtGui.QMainWindow):
         self.starttel.clicked.connect(self.on_starttel_clicked)
         self.changechan.clicked.connect(self.on_set_chan_clicked)
         self.helpbutton.clicked.connect(self.on_help_clicked)
-        self.useinit.clicked.connect(self.on_useinit_clicked)
+        self.load_config_file_button.clicked.connect(self.on_load_config_file_clicked)
+        # self.useinit.clicked.connect(self.on_useinit_clicked)
         self.kms_stop.clicked.connect(self.onkmsstop_clicked)
         self.kms_restart.clicked.connect(self.onkmsrestart_clicked)
         self.set_bias.clicked.connect(self.bias_bool)
@@ -204,7 +211,7 @@ class MainWindow(QtGui.QMainWindow):
     def on_loadcat_clicked(self):
         self.select_cat.clear()
         catalog_name = self.load_cat.currentText()
-        self.catalog = np.genfromtxt('/home/time/TIME_Catalogs/'+catalog_name,dtype=[('ra','U15'),('dec','U15'),('epoch','U8'),('name','U20')],usecols=[0,1,2,3])
+        self.catalog = np.genfromtxt(config_path+catalog_name,dtype=[('ra','U15'),('dec','U15'),('epoch','U8'),('name','U20')],usecols=[0,1,2,3])
         self.select_cat.addItems(self.catalog['name'])
     
     def on_selectcat_clicked(self):
@@ -226,12 +233,14 @@ class MainWindow(QtGui.QMainWindow):
         if self.init_tel.currentText() == 'Yes':
             if self.telescan.currentText() == '2D Raster':
                 int_time = float(self.tel_sec.text()) * float(self.tel_map_len.text())/float(self.tel_step.text()) * 2
-            elif self.telescan.currentText() == '1D Raster':
+            elif self.telescan.currentText() == '1D Raster' or self.telescan.currentText() == '1D Planet Raster':
                 int_time = float(self.tel_sec.text()) * int(self.numloop.text()) * 2
-            print("ESTIMATED INTEGRATION TIME: {:.1f} minutes".format(int_time/60))
+            self.int_time = int_time/60
+            print("ESTIMATED INTEGRATION TIME: {:.1f} minutes".format(self.int_time))
+        else:
+            self.int_time = np.nan
 
-        check = True
-        if check and self.starttel_error_check():
+        if self.starttel_error_check():
             print("TELESCOPE NOT INITIALIZED, please correct errors")
 
         else:
@@ -288,8 +297,8 @@ class MainWindow(QtGui.QMainWindow):
 
             if self.inittel == 'Yes':
                 self.tel_scan = self.telescan.currentText()
-                scans = ['2D Raster','1D Raster','Bowtie (constant el)','Pointing Cross']
-                script = [raster_script_2d,raster_script_1d,bowtie_scan,point_cross]
+                scans = ['2D Raster','1D Raster','1D Planet Raster','Bowtie (constant el)','Pointing Cross']
+                script = [raster_script_2d,raster_script_1d,raster_planet_1d,bowtie_scan,point_cross]
                 for scan in scans :
                     if self.tel_scan == scan :
                         self.tel_script = script[scans.index(scan)]
@@ -352,7 +361,7 @@ class MainWindow(QtGui.QMainWindow):
         elif float(self.tel_map_size.text()) <= 0:
             check_error_found = True
             check_error_message += 'ERROR: Map Size <= 0\n'
-        if self.telescan.currentText() == '2D Raster':
+        if self.telescan.currentText() == '2D Raster' or self.telescan.currentText() == '2D Planet Raster':
             if set(self.tel_map_size.text()) > numeric:
                 check_error_found = True
                 check_error_message += 'ERROR: Map Length contains invalid characters\n'
@@ -373,7 +382,7 @@ class MainWindow(QtGui.QMainWindow):
         if set(self.tel_coord1.text()) > numeric_p or set(self.tel_coord1.text()) > numeric_p:
             check_error_found = True
             check_error_message += 'ERROR: Source Coords contains an invalid character\n'
-        if self.init_tel.currentText() == 'Yes':
+        if self.init_tel.currentText() == 'Yes' and self.telescan.currentText() not in ['2D Planet Raster', '1D Planet Raster']:
             if self.tel_coord1.text().count(':')+self.tel_coord1.text().count(';') != 2 or self.tel_coord2.text().count(':')+self.tel_coord2.text().count(';') != 2:
                 check_error_found = True
                 check_error_message += 'ERROR: Source Coords are not in hh:mm:ss or dd:mm:ss format\n'
@@ -385,12 +394,25 @@ class MainWindow(QtGui.QMainWindow):
             check_error_found = True
             check_error_message += 'ERROR: Size of 2D Vertical Step contain invalid characters\n'
 
-        bad_names = [['Mercury','mercury'],['Venus','venus'],['Mars','mars'],['Jupiter','jupiter'],['Saturn','saturn'],['Uranus','uranus'],['Neptune','neptune']]
-        replacements = ['Hermes','Aphrodite','Ares','Zeus','Cronus','Ouranos','Poseidon']
-        for i in range(len(bad_names)):
-            if self.tel_object.text() in bad_names[i]:
-                self.tel_object.setText(replacements[i])
-                print("WARNING: Cannot observe objects with planet names, we've renamed the target {}".format(replacements[i]))
+        if self.telescan.currentText() not in ['2D Planet Raster', '1D Planet Raster']:
+            bad_names = [['Mercury','mercury'],['Venus','venus'],['Mars','mars'],['Jupiter','jupiter'],['Saturn','saturn'],['Uranus','uranus'],['Neptune','neptune']]
+            replacements = ['Hermes','Aphrodite','Ares','Zeus','Cronus','Ouranos','Poseidon']
+            for i in range(len(bad_names)):
+                if self.tel_object.text() in bad_names[i]:
+                    self.tel_object.setText(replacements[i])
+                    print("WARNING: Cannot observe objects with planet names, we've renamed the target {}".format(replacements[i]))
+        else:
+            if self.tel_object.text() not in ['Mercury','Venus','Mars','Jupiter','Saturn','Neptune','Uranus','mercury','venus','mars','jupiter','saturn','neptune','uranus']:
+                check_error_found = True
+                check_error_message += 'ERROR: Planet Raster mode only works with planets. Make sure the object name is a planet\n'
+            print("WARNING: Planet coordinates have been updated - these are approximate")
+            coords = raster_planet_1d.get_planet_info(thetime(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + 7*u.h,self.tel_object.text())
+            strcoords = coords.to_string('hmsdms').split(' ')
+            self.tel_coord1.setText(strcoords[0][:-1].replace('h',':').replace('m',':'))
+            self.unit4.setCurrentIndex(self.list_of_coord1_options.index('RA'))
+            self.tel_coord2.setText(strcoords[1][:-1].replace('d',':').replace('m',':'))
+            self.unit5.setCurrentIndex(self.list_of_coord2_options.index('DEC'))
+            self.tel_epoch.setCurrentIndex(self.list_of_epochs.index('Apparent'))
 
         if check_error_found:
             print(check_error_message)
@@ -398,51 +420,103 @@ class MainWindow(QtGui.QMainWindow):
         else:
             return False
 
+    def on_load_config_file_clicked(self):
 
-    def on_useinit_clicked(self):
+        with open(config_path+self.load_config_file.currentText()) as f:
+            config = json.load(f)
+        
+        text_keys = {'Delayed Start (sec)':self.tel_delay, 
+                     'Scan Traversal Time (sec)':self.tel_sec,
+                     'Number of Scans (1D Only)':self.numloop, 
+                     '1st Dimension (Scan Length)':self.tel_map_size,
+                     '2nd Dimension (2D Only)':self.tel_map_len,
+                     'Angle of Map Offset':self.tel_map_angle, 
+                     'Size of 2D Vertical Step':self.tel_step,
+                     'Source Coord 1':self.tel_coord1,
+                     'Source Coord 2':self.tel_coord2,
+                     'Object Catalog Name':self.tel_object,
+                     'Observer':self.enterobserver,
+                     'Frame Number':self.enterframenumber,
+                     'Heatmpa Alpha':self.heatalpha,
+                     'Time Interval (sec)':self.entertimeinterval,
+                     }
+        drop_keys = {'Activate Telescope':(self.init_tel,self.list_of_init_tels),
+                     'Activate KMS':(self.kmsonofftext,self.list_of_kms_onoffs),
+                     'Scan Strategy':(self.telescan,self.list_of_scan_options),
+                     'Variable Coordinate':(self.map_space,self.list_of_map_space_options),
+                     'Unit (1st Dimension)':(self.unit1,self.list_of_angle_units),
+                     'Unit (2nd Dimension)':(self.unit6,self.list_of_angle_units),
+                     'Unit (Angle)':(self.unit2,self.list_of_angle_units),
+                     'Unit (Step)':(self.unit3,self.list_of_angle_units),
+                     'Source Coord 1 Type':(self.unit4,self.list_of_coord1_options),
+                     'Source Coord 2 Type':(self.unit5,self.list_of_coord2_options),
+                     'Epoch':(self.tel_epoch,self.list_of_epochs),
+                     'Active MCEs':(self.whichmces,self.list_of_mce_options),
+                     'Datamode':(self.enterdatamode,self.list_of_datamode_options),
+                     'Readout Card':(self.enterreadoutcard,self.list_of_readoutcard_options),
+                     'Delete Old Columns':(self.enterchanneldelete,self.list_of_channeldelete_options),
+                     'Show MCE Data':(self.entershowmcedata,self.list_of_showmcedata_options)
+                     }
 
-        # RPK: I'm altering this to fill in the GUI from the config file, 
-        # then user still has to initialize telescope and click submit. This
-        # will make the error checking and input formatting work for both 
-        # entry modes.
-        # Enter telescope parameters:
-        self.numloop.setText(init.tel_dict["num_loop"])
-        self.tel_sec.setText(init.tel_dict["sec"])
-        self.unit1.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_size_unit"]))
-                        # how it works: self.unit1.setCurrentIndex(0) # is 0 for degrees...
-        self.tel_map_size.setText(init.tel_dict["map_size"])
-        self.unit6.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_len_unit"]))
-        self.tel_map_len.setText(init.tel_dict["map_len"])
+        for key in config.keys():
+            if key in text_keys.keys():
+                text_keys[key].setText(str(config[key]))
+            elif key in drop_keys.keys():
+                if config[key] in drop_keys[key][1]:
+                    drop_keys[key][0].setCurrentIndex(drop_keys[key][1].index(config[key]))
+                else:
+                    print("WARNING: Value for '{}' not accepted".format(key))
+            elif key == "Observer Log":
+                self.logtext.setText(str(config[key]))
+            else:
+                print("WARNING: Configuration key '{}' not recognized".format(key))
 
-        self.unit2.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_angle_unit"]))
-        self.tel_map_angle.setText(init.tel_dict["map_angle"])
 
-        self.unit3.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["step_unit"]))
-        self.tel_step.setText(init.tel_dict["step"])
 
-        self.tel_coord1.setText(init.tel_dict["coord1"])
-        self.unit4.setCurrentIndex(self.list_of_coord1_options.index(init.tel_dict["coord1_unit"]))
-        self.tel_coord2.setText(init.tel_dict["coord2"])
-        self.unit5.setCurrentIndex(self.list_of_coord2_options.index(init.tel_dict["coord2_unit"]))
-        self.tel_epoch.setCurrentIndex(self.list_of_epochs.index(init.tel_dict["epoch"]))
-        self.tel_object.setText(init.tel_dict["object"])
+    # RPK: This init setup is deprecated in favor of loading from a .json file. Keeping here in case it is needed for dev
+    # def on_useinit_clicked(self):
 
-        self.init_tel.setCurrentIndex(self.list_of_init_tels.index(init.tel_dict["inittel"]))
-        self.kmsonofftext.setCurrentIndex(self.list_of_kms_onoffs.index(init.tel_dict["kmsonoff"]))
-        self.map_space.setCurrentIndex(self.list_of_map_space_options.index(init.tel_dict["coord_space"]))
+    #     # RPK: I'm altering this to fill in the GUI from the config file, 
+    #     # then user still has to initialize telescope and click submit. This
+    #     # will make the error checking and input formatting work for both 
+    #     # entry modes.
+    #     # Enter telescope parameters:
+    #     self.numloop.setText(init.tel_dict["num_loop"])
+    #     self.tel_sec.setText(init.tel_dict["sec"])
+    #     self.unit1.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_size_unit"]))
+    #     self.tel_map_size.setText(init.tel_dict["map_size"])
+    #     self.unit6.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_len_unit"]))
+    #     self.tel_map_len.setText(init.tel_dict["map_len"])
 
-        self.telescan.setCurrentIndex(self.list_of_scan_options.index(init.tel_dict["tel_scan"]))
+    #     self.unit2.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["map_angle_unit"]))
+    #     self.tel_map_angle.setText(init.tel_dict["map_angle"])
 
-        # mce params ========================
-        self.enterobserver.setText(init.mce_dict["observer"])
-        self.whichmces.setCurrentIndex(self.list_of_mce_options.index(init.mce_dict["mceson"]))        
-        self.enterdatamode.setCurrentIndex(self.list_of_datamode_options.index(init.mce_dict["datamode"]))
-        self.enterreadoutcard.setCurrentIndex(self.list_of_readoutcard_options.index(init.mce_dict["readoutcard"]))
-        self.enterframenumber.setText(init.mce_dict["framenumber"])
-        self.heatalpha.setText(init.mce_dict["alpha"])
-        self.entertimeinterval.setText(init.mce_dict["timeinterval"])
-        self.enterchanneldelete.setCurrentIndex(self.list_of_channeldelete_options.index(init.mce_dict["channeldelete"]))
-        self.entershowmcedata.setCurrentIndex(self.list_of_showmcedata_options.index(init.mce_dict["showmcedata"]))
+    #     self.unit3.setCurrentIndex(self.list_of_angle_units.index(init.tel_dict["step_unit"]))
+    #     self.tel_step.setText(init.tel_dict["step"])
+
+    #     self.tel_coord1.setText(init.tel_dict["coord1"])
+    #     self.unit4.setCurrentIndex(self.list_of_coord1_options.index(init.tel_dict["coord1_unit"]))
+    #     self.tel_coord2.setText(init.tel_dict["coord2"])
+    #     self.unit5.setCurrentIndex(self.list_of_coord2_options.index(init.tel_dict["coord2_unit"]))
+    #     self.tel_epoch.setCurrentIndex(self.list_of_epochs.index(init.tel_dict["epoch"]))
+    #     self.tel_object.setText(init.tel_dict["object"])
+
+    #     self.init_tel.setCurrentIndex(self.list_of_init_tels.index(init.tel_dict["inittel"]))
+    #     self.kmsonofftext.setCurrentIndex(self.list_of_kms_onoffs.index(init.tel_dict["kmsonoff"]))
+    #     self.map_space.setCurrentIndex(self.list_of_map_space_options.index(init.tel_dict["coord_space"]))
+
+    #     self.telescan.setCurrentIndex(self.list_of_scan_options.index(init.tel_dict["tel_scan"]))
+
+    #     # mce params ========================
+    #     self.enterobserver.setText(init.mce_dict["observer"])
+    #     self.whichmces.setCurrentIndex(self.list_of_mce_options.index(init.mce_dict["mceson"]))        
+    #     self.enterdatamode.setCurrentIndex(self.list_of_datamode_options.index(init.mce_dict["datamode"]))
+    #     self.enterreadoutcard.setCurrentIndex(self.list_of_readoutcard_options.index(init.mce_dict["readoutcard"]))
+    #     self.enterframenumber.setText(init.mce_dict["framenumber"])
+    #     self.heatalpha.setText(init.mce_dict["alpha"])
+    #     self.entertimeinterval.setText(init.mce_dict["timeinterval"])
+    #     self.enterchanneldelete.setCurrentIndex(self.list_of_channeldelete_options.index(init.mce_dict["channeldelete"]))
+    #     self.entershowmcedata.setCurrentIndex(self.list_of_showmcedata_options.index(init.mce_dict["showmcedata"]))
 
     #sets parameter variables to user input and checks if valid - will start MCE
     #and live graphing if they are
@@ -508,8 +582,8 @@ class MainWindow(QtGui.QMainWindow):
                 self.kms_on_off = 1
 
             self.tel_scan = self.telescan.currentText()
-            scans = ['2D Raster','1D Raster','Bowtie (constant el)','Pointing Cross']
-            script = [raster_script_2d,raster_script_1d,bowtie_scan,point_cross]
+            scans = ['2D Raster','1D Raster','1D Planet Raster','Bowtie (constant el)','Pointing Cross']
+            script = [raster_script_2d,raster_script_1d,raster_planet_1d,bowtie_scan,point_cross]
             for scan in scans :
                 if self.tel_scan == scan :
                     self.tel_script = script[scans.index(scan)]
@@ -757,6 +831,18 @@ class MainWindow(QtGui.QMainWindow):
         self.changerow()
 
     def getparameters(self):
+
+        # RPK: New config file system
+        self.load_config_file_box = QtGui.QGroupBox()
+        self.load_config_file_layout = QtGui.QFormLayout()
+        self.load_config_file = QtGui.QComboBox()
+        self.load_config_file.addItems(sorted([f for f in os.listdir(config_path) if fnmatch(f,'*.json')]))
+        self.load_config_file_button = QtGui.QPushButton('Load')
+        self.load_config_file_button.setStyleSheet("background-color: orange")
+        self.load_config_file_layout.addRow(self.load_config_file)
+        self.load_config_file_layout.addRow(self.load_config_file_button)
+        self.load_config_file_box.setLayout(self.load_config_file_layout)
+
         #creating user input boxes
         self.enterobserver = QtGui.QLineEdit('TIME_obs')
         # self.enterobserver.setMaxLength(3) # observer shouldn't have to be initials
@@ -795,13 +881,13 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters.addRow('Heatmap Alpha', self.heatalpha)
         # self.parameters.addRow('Data Rate', self.enterdatarate)
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
-        self.parameters.addRow('Time Interval (s)', self.entertimeinterval)
+        self.parameters.addRow('Time Interval (sec)', self.entertimeinterval)
         self.parameters.addRow('Show MCE Data', self.entershowmcedata)
         self.mceGroupBox.setLayout(self.parameters)
 
         # telescope options =================================================
         self.telescan = QtGui.QComboBox()
-        self.list_of_scan_options = ['2D Raster','1D Raster','BowTie (constant el)','Pointing Cross']
+        self.list_of_scan_options = ['2D Raster','1D Raster','1D Planet Raster','BowTie (constant el)','Pointing Cross']
         self.telescan.addItems(self.list_of_scan_options)
 
         self.numloop = QtGui.QLineEdit('2')
@@ -848,7 +934,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # RPK: implementing catalog tool
         self.load_cat = QtGui.QComboBox()
-        self.load_cat.addItems(os.listdir('/home/time/TIME_Catalogs/'))
+        self.load_cat.addItems(sorted([f for f in os.listdir(config_path) if fnmatch(f,'*.cat')]))
         self.load_cat_button = QtGui.QPushButton('Load')
         self.select_cat = QtGui.QComboBox()
         self.select_cat_button = QtGui.QPushButton('Load')
@@ -862,9 +948,9 @@ class MainWindow(QtGui.QMainWindow):
         self.telparams.addRow('Activate Telescope', self.init_tel)
         self.telparams.addRow('Activate KMS', self.kmsonofftext)
         self.telparams.addRow('Scan Strategy', self.telescan)
-        self.telparams.addRow('Constant Coordinate System', self.map_space)
+        self.telparams.addRow('Variable Coordinate', self.map_space)
         self.telparams.addRow('Delayed Start (sec)', self.tel_delay)
-        self.telparams.addRow('Time to Traverse Scan Length (sec)', self.tel_sec)
+        self.telparams.addRow('Scan Traversal Time (sec)', self.tel_sec)
         self.maplen_widget = QtGui.QHBoxLayout ()
         self.maplen_widget.addWidget(self.tel_map_len)
         self.maplen_widget.addWidget(self.unit6)
@@ -872,13 +958,13 @@ class MainWindow(QtGui.QMainWindow):
         self.numloop_widget.addWidget(self.numloop)
         self.telparams.addRow('Number of Scans (1D Only)',self.numloop_widget)
         self.mapsize_widget = QtGui.QHBoxLayout()
-        self.telparams.addRow('Map Len (2D only)',self.maplen_widget)
-        self.mapsize_widget.addWidget(self.tel_map_size)
-        self.mapsize_widget.addWidget(self.unit1)
-        self.telparams.addRow('Map Size',self.mapsize_widget)
+        self.telparams.addRow('1st Dimension (Scan Length)',self.mapsize_widget)
         self.mapangle_widget = QtGui.QHBoxLayout()
         self.mapangle_widget.addWidget(self.tel_map_angle)
         self.mapangle_widget.addWidget(self.unit2)
+        self.telparams.addRow('2nd Dimension (2D only)',self.maplen_widget)
+        self.mapsize_widget.addWidget(self.tel_map_size)
+        self.mapsize_widget.addWidget(self.unit1)
         self.telparams.addRow('Angle of Map Offset', self.mapangle_widget)
         self.telparams.addRow(self.mapangle_widget)
         self.vstep_widget = QtGui.QHBoxLayout()
@@ -911,11 +997,11 @@ class MainWindow(QtGui.QMainWindow):
         self.telGroupBox.setLayout(self.telparams)
         # =====================================================================
 
-        self.useinit = QtGui.QPushButton('Auto-Fill from File')
-        self.useinit.setStyleSheet("background-color: orange")
+        # self.useinit = QtGui.QPushButton('Auto-Fill from File')
+        # self.useinit.setStyleSheet("background-color: orange")
         self.initGroupBox = QtGui.QGroupBox()
         self.initparams = QtGui.QFormLayout()
-        self.initparams.addRow(self.useinit)
+        # self.initparams.addRow(self.useinit)
         self.quitbutton = QtGui.QPushButton('Quit')
         self.quitbutton.setStyleSheet("background-color: red")
         self.helpbutton = QtGui.QPushButton('Help')
@@ -949,7 +1035,6 @@ class MainWindow(QtGui.QMainWindow):
         self.logtitle.setText('Observer Log')
         self.logform.addRow(self.logtitle)
         self.logtext = QtGui.QTextEdit('Please make a note about the current run...')
-        self.logtext.setFontPointSize(20)
         self.logbox.addWidget(self.logtext)
         # self.logtext.resize(640,640)
 
@@ -958,6 +1043,7 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters.addWidget(self.mceGroupBox)
         self.parameters.addLayout(self.logbox)
 
+        self.allbuttons.addWidget(self.load_config_file_box)
         self.allbuttons.addLayout(self.parameters)
         self.allbuttons.addWidget(self.initGroupBox)
         self.parametersquit.setAlignment(QtCore.Qt.AlignCenter)
@@ -1452,6 +1538,12 @@ class MainWindow(QtGui.QMainWindow):
         self.timetext = QtGui.QLabel('UTC Time: -')
         self.timetext.setAlignment(QtCore.Qt.AlignCenter)
         self.barlabel = QtGui.QLabel('Scan Progress (%) ')
+        if ~np.isnan(self.int_time):
+            self.bartimeest = QtGui.QLabel('Estimated Total Time: {:02d}:{:02d}'.format(int(self.int_time),int((self.int_time*60)%60)))
+            self.bartimerem = QtGui.QLabel('Time Remaining:  {:02d}:{:02d}'.format(int(self.int_time),int((self.int_time*60)%60)))
+        else:
+            self.bartimeest = QtGui.QLabel('Estimated Total Time: Unknown')
+            self.bartimerem = QtGui.QLabel('Time Remaining: Unknown')
         self.progressbar = QtGui.QProgressBar()
         self.progressbar.setRange(0,100)
         self.progressbar.setTextVisible(True)
@@ -1460,6 +1552,8 @@ class MainWindow(QtGui.QMainWindow):
         self.telescopedata = QtGui.QVBoxLayout()
         self.telescopedata.addWidget(self.barlabel)
         self.telescopedata.addWidget(self.progressbar)
+        self.telescopedata.addWidget(self.bartimeest)
+        self.telescopedata.addWidget(self.bartimerem)
         self.telescopedata.addWidget(self.patext)
         self.telescopedata.addWidget(self.slewtext)
         self.telescopedata.addWidget(self.timetext)
@@ -1650,6 +1744,8 @@ class MainWindow(QtGui.QMainWindow):
             self.altazgraphdata.setData(x=self.az, y=self.alt, brush=altazcolor)
             self.radecgraphdata.setData(x=self.ra, y=self.dec, brush=radeccolor)
             self.progressbar.setValue(progress[0])
+            remtime = self.int_time*(1-progress[0]/100)
+            self.bartimerem.setText('Time Remaining: {:02d}:{:02d}'.format(int(remtime),int((remtime*60)%60)))
 
     def setColumnCount(self, legend, columnCount):
         """change the orientation of all items of the legend
