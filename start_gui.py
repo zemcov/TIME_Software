@@ -24,7 +24,7 @@ from matplotlib import cm
 from coms import kms_socket, tel_tracker
 from main import append_data, append_hk, read_hk, fake_tel
 from main.tel_box import draw_box
-from scans import raster_script_1d, raster_planet_1d, raster_script_2d, bowtie_scan, point_cross
+from scans import raster_script_1d, raster_planet_1d, raster_script_2d, bowtie_scan, point_cross, do_nothing
 # from make_iv_curve_nc import *
 from config import init, directory
 import time
@@ -235,6 +235,8 @@ class MainWindow(QtGui.QMainWindow):
                 int_time = float(self.tel_sec.text()) * float(self.tel_map_len.text())/float(self.tel_step.text()) * 2
             elif self.telescan.currentText() == '1D Raster' or self.telescan.currentText() == '1D Planet Raster':
                 int_time = float(self.tel_sec.text()) * int(self.numloop.text()) * 2
+            else:
+                int_time = 0
             self.int_time = int_time/60
             print("ESTIMATED INTEGRATION TIME: {:.1f} minutes".format(self.int_time))
         else:
@@ -297,8 +299,8 @@ class MainWindow(QtGui.QMainWindow):
 
             if self.inittel == 'Yes':
                 self.tel_scan = self.telescan.currentText()
-                scans = ['2D Raster','1D Raster','1D Planet Raster','Bowtie (constant el)','Pointing Cross']
-                script = [raster_script_2d,raster_script_1d,raster_planet_1d,bowtie_scan,point_cross]
+                scans = ['2D Raster','1D Raster','1D Planet Raster','Bowtie (constant el)','Pointing Cross','Watch']
+                script = [raster_script_2d,raster_script_1d,raster_planet_1d,bowtie_scan,point_cross,do_nothing]
                 for scan in scans :
                     if self.tel_scan == scan :
                         self.tel_script = script[scans.index(scan)]
@@ -582,8 +584,8 @@ class MainWindow(QtGui.QMainWindow):
                 self.kms_on_off = 1
 
             self.tel_scan = self.telescan.currentText()
-            scans = ['2D Raster','1D Raster','1D Planet Raster','Bowtie (constant el)','Pointing Cross']
-            script = [raster_script_2d,raster_script_1d,raster_planet_1d,bowtie_scan,point_cross]
+            scans = ['2D Raster','1D Raster','1D Planet Raster','Bowtie (constant el)','Pointing Cross','Watch']
+            script = [raster_script_2d,raster_script_1d,raster_planet_1d,bowtie_scan,point_cross,do_nothing]
             for scan in scans :
                 if self.tel_scan == scan :
                     self.tel_script = script[scans.index(scan)]
@@ -887,7 +889,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # telescope options =================================================
         self.telescan = QtGui.QComboBox()
-        self.list_of_scan_options = ['2D Raster','1D Raster','1D Planet Raster','BowTie (constant el)','Pointing Cross']
+        self.list_of_scan_options = ['2D Raster','1D Raster','1D Planet Raster','BowTie (constant el)','Pointing Cross','Watch']
         self.telescan.addItems(self.list_of_scan_options)
 
         self.numloop = QtGui.QLineEdit('2')
@@ -1126,7 +1128,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.uppers[row].addRow('heatmap %s upper' % row, self.upper_levels[row])
                 self.h_limits.addLayout(self.uppers[row], row, col, 1, 1)
             else:
-                self.lowers[row].addRow('hetamap %s lower' % row, self.lower_levels[row])
+                self.lowers[row].addRow('heatmap %s lower' % row, self.lower_levels[row])
                 self.h_limits.addLayout(self.lowers[row], row, col, 1 ,1)
         self.newgrid.addLayout(self.h_limits, 1, 0, 1, 2)
 
@@ -1461,12 +1463,15 @@ class MainWindow(QtGui.QMainWindow):
         self.fftgraph.addItem(self.fftgraphdata1)
         self.fftgraph.addItem(self.fftgraphdata2)
 
-        self.fftgraph.setLabel('bottom', 'Time', 's')
+        self.fftgraph.setLabel('bottom', 'Frequency [Hz]')
         self.fftgraph.setLabel('left', 'Counts')
         self.fftgraph.setTitle('MCE 0/1 FFT Data')
         self.fftlegend = pg.LegendItem()
         self.fftgraph.addItem(self.fftlegend)
         self.newgraphs.addWidget(self.fftgraph, stretch=1)
+
+        # x = np.linspace(self.index,self.index + 1,self.frameperfile)
+        self.x = np.fft.rfftfreq(self.frameperfile,0.01)
 
     def initkmirrordata(self):
         # start the kms QThread
@@ -1652,40 +1657,36 @@ class MainWindow(QtGui.QMainWindow):
 
             self.enctext.setText('Encoder Position %0.3f' %(self.enc))
             self.parallacticangletext.setText('Parallactic Angle: %0.2f' % (self.parallacticangle))
-            self.positionalerrortext.setText('Positonal Error: %s' % (self.positionalerror))
+            self.positionalerrortext.setText('Positional Error: %s' % (self.positionalerror))
             self.statustext.setText('Tel Current Status: %s' %(self.status))
             self.kmstimetext.setText('UTC Time: %0.3f' %(self.time))
 
     def updatefftgraph(self):
-        #self.y and self.x are defined in updateplot
-        self.fftgraph.setXRange(self.index, self.index + 1, padding=0)
+        #self.y are defined in updateplot
+        self.fftgraph.setXRange(np.amin(self.x),np.amax(self.x), padding=0)
 
         if ut.which_mce[0] == 1 :
 
-            self.fftdata1 = np.fft.fft(self.y1)
-            self.fftdata1 = np.asarray(self.fftdata1, dtype=np.float32)
+            self.fftdata1 = np.fft.rfft(self.y1).real
             self.fftdata1[0] = self.fftdata1[-1]
             self.fftgraphdata1.setData(self.x, self.fftdata1, brush=pg.mkBrush('r'))
             # self.fftlegend.setItem(self.fftgraphdata1,'mce0')
 
         if ut.which_mce[1] == 1 :
 
-            self.fftdata2 = np.fft.fft(self.y2)
-            self.fftdata2 = np.asarray(self.fftdata2, dtype=np.float32)
+            self.fftdata2 = np.fft.rfft(self.y2).real
             self.fftdata2[0] = self.fftdata2[-1]
             self.fftgraphdata2.setData(self.x, self.fftdata2, brush=pg.mkBrush('w'))
             # self.fftlegend.setItem(self.fftgraphdata2,'mce1')
 
         if ut.which_mce[2] == 1 :
 
-            self.fftdata1 = np.fft.fft(self.y1)
-            self.fftdata1 = np.asarray(self.fftdata1, dtype=np.float32)
+            self.fftdata1 = np.fft.rfft(self.y1).real
             self.fftdata1[0] = self.fftdata1[-1]
             self.fftgraphdata1.setData(self.x, self.fftdata1, brush=pg.mkBrush('r'))
             # self.fftlegend.setItem(self.fftgraphdata1,'mce0')
 
-            self.fftdata2 = np.fft.fft(self.y2)
-            self.fftdata2 = np.asarray(self.fftdata2, dtype=np.float32)
+            self.fftdata2 = np.fft.rfft(self.y2).real
             self.fftdata2[0] = self.fftdata2[-1]
             self.fftgraphdata2.setData(self.x, self.fftdata2, brush=pg.mkBrush('w'))
             # self.fftlegend.setItem(self.fftgraphdata2,'mce1')
@@ -1883,6 +1884,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.index = index
         self.starttime = datetime.datetime.utcnow()
+        x = np.linspace(self.index,self.index + 1,self.frameperfile)
 
         # parsing mce array for graph data ========================
         if ut.which_mce[0] == 1 :
@@ -1908,9 +1910,6 @@ class MainWindow(QtGui.QMainWindow):
         #creates x values for current time interval and colors points based on current channel ===
         self.endtime = datetime.datetime.utcnow()
         self.timetaken = self.endtime - self.starttime
-
-        x = np.linspace(self.index,self.index + 1,self.frameperfile)
-        self.x = x
 
         syms = ['d','o','s','t','+','d','o'] #these are the actual symbols
         symbols = ['b','r','g','y','c','m','k','w'] #these represent colors
