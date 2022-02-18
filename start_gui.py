@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-
 if sys.version_info.major != 3 or sys.version_info.minor<8:
     sys.exit("This software is expecting Python >3.8")
+
 from matplotlib import cm
 import os, subprocess, time, datetime, socket, struct, threading, shutil
 from fnmatch import fnmatch
@@ -26,7 +26,7 @@ from main import append_data, append_hk, read_hk, fake_tel
 from main.tel_box import draw_box
 from scans import raster_script_1d, raster_planet_1d, raster_script_2d, bowtie_scan, point_cross, do_nothing
 # from make_iv_curve_nc import *
-from config import init, directory
+from config import init, directory, coordinates
 import time
 import config.utils as ut
 sys.path.append('loadcurves')
@@ -426,46 +426,13 @@ class MainWindow(QtGui.QMainWindow):
 
         with open(config_path+self.load_config_file.currentText()) as f:
             config = json.load(f)
-        
-        text_keys = {'Delayed Start (sec)':self.tel_delay, 
-                     'Scan Traversal Time (sec)':self.tel_sec,
-                     'Number of Scans (1D Only)':self.numloop, 
-                     '1st Dimension (Scan Length)':self.tel_map_size,
-                     '2nd Dimension (2D Only)':self.tel_map_len,
-                     'Angle of Map Offset':self.tel_map_angle, 
-                     'Size of 2D Vertical Step':self.tel_step,
-                     'Source Coord 1':self.tel_coord1,
-                     'Source Coord 2':self.tel_coord2,
-                     'Object Catalog Name':self.tel_object,
-                     'Observer':self.enterobserver,
-                     'Frame Number':self.enterframenumber,
-                     'Heatmpa Alpha':self.heatalpha,
-                     'Time Interval (sec)':self.entertimeinterval,
-                     }
-        drop_keys = {'Activate Telescope':(self.init_tel,self.list_of_init_tels),
-                     'Activate KMS':(self.kmsonofftext,self.list_of_kms_onoffs),
-                     'Scan Strategy':(self.telescan,self.list_of_scan_options),
-                     'Variable Coordinate':(self.map_space,self.list_of_map_space_options),
-                     'Unit (1st Dimension)':(self.unit1,self.list_of_angle_units),
-                     'Unit (2nd Dimension)':(self.unit6,self.list_of_angle_units),
-                     'Unit (Angle)':(self.unit2,self.list_of_angle_units),
-                     'Unit (Step)':(self.unit3,self.list_of_angle_units),
-                     'Source Coord 1 Type':(self.unit4,self.list_of_coord1_options),
-                     'Source Coord 2 Type':(self.unit5,self.list_of_coord2_options),
-                     'Epoch':(self.tel_epoch,self.list_of_epochs),
-                     'Active MCEs':(self.whichmces,self.list_of_mce_options),
-                     'Datamode':(self.enterdatamode,self.list_of_datamode_options),
-                     'Readout Card':(self.enterreadoutcard,self.list_of_readoutcard_options),
-                     'Delete Old Columns':(self.enterchanneldelete,self.list_of_channeldelete_options),
-                     'Show MCE Data':(self.entershowmcedata,self.list_of_showmcedata_options)
-                     }
 
         for key in config.keys():
-            if key in text_keys.keys():
-                text_keys[key].setText(str(config[key]))
-            elif key in drop_keys.keys():
-                if config[key] in drop_keys[key][1]:
-                    drop_keys[key][0].setCurrentIndex(drop_keys[key][1].index(config[key]))
+            if key in self.text_keys.keys():
+                self.text_keys[key].setText(str(config[key]))
+            elif key in self.drop_keys.keys():
+                if config[key] in self.drop_keys[key][1]:
+                    self.drop_keys[key][0].setCurrentIndex(self.drop_keys[key][1].index(config[key]))
                 else:
                     print("WARNING: Value for '{}' not accepted".format(key))
             elif key == "Observer Log":
@@ -539,6 +506,44 @@ class MainWindow(QtGui.QMainWindow):
 
         # which mces are active --------------------------
         self.mceson = self.whichmces.currentText()
+
+        #set channel to plot
+        if self.entertype0.currentText() == 'RC':
+            if 0 <= int(self.enterrowfeed0.text()) <= 32 and 0 <= int(self.entercolchan0.text()) <= 31:
+                self.row1 = int(self.enterrowfeed0.text())
+                self.channel1 = int(self.entercolchan0.text())
+                self.oldch1 = int(self.entercolchan0.text())
+            else:
+                raise ValueError("RC/XF values invalid")
+        elif self.entertype0.currentText() == 'XF':
+            if int(self.enterrowfeed0.text()) < 16 and int(self.entercolchan0.text()) < 60:
+                cr = coordinates.xf_to_muxcr(int(self.enterrowfeed0.text()),int(self.entercolchan0.text()),p=0)
+                self.row1 = cr[1]
+                self.channel1 = cr[0]
+                self.oldch1 = cr[0]
+            else:
+                raise ValueError("RC/XF values invalid")
+        else:
+            raise ValueError("RC type not recognized")
+
+        if self.entertype1.currentText() == 'RC':
+            if 0 <= int(self.enterrowfeed1.text()) <= 32 and 0 <= int(self.entercolchan1.text()) <= 31:
+                self.row2 = int(self.enterrowfeed1.text())
+                self.channel2 = int(self.entercolchan1.text())
+                self.oldch2 = int(self.entercolchan1.text())
+            else:
+                raise ValueError("RC/XF values invalid")
+        elif self.entertype1.currentText() == 'XF':
+            if int(self.enterrowfeed1.text()) < 16 and int(self.entercolchan1.text()) < 60:
+                cr = coordinates.xf_to_muxcr(int(self.enterrowfeed1.text()),int(self.entercolchan1.text()),p=0)
+                self.row2 = cr[1]
+                self.channel2 = cr[0]
+                self.oldch2 = cr[0]
+            else:
+                raise ValueError("RC/XF values invalid")
+        else:
+            raise ValueError("RC type not recognized")
+
 
         # data mode --------------------------------------
         self.datamode = self.enterdatamode.currentText()
@@ -823,6 +828,16 @@ class MainWindow(QtGui.QMainWindow):
                 self.newwindow.closeEvent = self.on_quitbutton_clicked
                 self.newwindow.show()
 
+        # Write this observation to "previous_config.json"
+        config_dict = {}
+        for key in self.text_keys.keys():
+            config_dict[key] = self.text_keys[key].text()
+        for key in self.drop_keys.keys():
+            config_dict[key] = self.drop_keys[key][0].currentText()
+        config_dict["Observer Log"] = self.logtext.toPlainText()
+
+        json.dump(config_dict,open(config_path+'previous_config.json','w'))
+
     #resets parameter variables after warning box is read
     def on_warningbutton_clicked(self):
         self.on_quitbutton_clicked()
@@ -838,7 +853,8 @@ class MainWindow(QtGui.QMainWindow):
         self.load_config_file_box = QtGui.QGroupBox()
         self.load_config_file_layout = QtGui.QFormLayout()
         self.load_config_file = QtGui.QComboBox()
-        self.load_config_file.addItems(sorted([f for f in os.listdir(config_path) if fnmatch(f,'*.json')]))
+        self.load_config_file.addItems(['previous_config.json'])
+        self.load_config_file.addItems(sorted([f for f in os.listdir(config_path) if fnmatch(f,'*.json') and f != 'previous_config.json']))
         self.load_config_file_button = QtGui.QPushButton('Load')
         self.load_config_file_button.setStyleSheet("background-color: orange")
         self.load_config_file_layout.addRow(self.load_config_file)
@@ -869,6 +885,26 @@ class MainWindow(QtGui.QMainWindow):
         self.list_of_showmcedata_options = ['Yes','No']
         self.entershowmcedata.addItems(self.list_of_showmcedata_options)
 
+        self.list_of_rowchan_options = ['RC','XF']
+        self.enterrowfeed0 = QtGui.QLineEdit('0')
+        self.entercolchan0 = QtGui.QLineEdit('0')
+        self.entertype0 = QtGui.QComboBox()
+        self.entertype0.addItems(self.list_of_rowchan_options)
+
+        self.enterrowfeed1 = QtGui.QLineEdit('0')
+        self.entercolchan1 = QtGui.QLineEdit('0')
+        self.entertype1 = QtGui.QComboBox()
+        self.entertype1.addItems(self.list_of_rowchan_options)
+        
+        self.det0_widget = QtGui.QHBoxLayout()
+        self.det0_widget.addWidget(self.enterrowfeed0)
+        self.det0_widget.addWidget(self.entercolchan0)
+        self.det0_widget.addWidget(self.entertype0)
+        self.det1_widget = QtGui.QHBoxLayout()
+        self.det1_widget.addWidget(self.enterrowfeed1)
+        self.det1_widget.addWidget(self.entercolchan1)
+        self.det1_widget.addWidget(self.entertype1)
+
         self.mceGroupBox = QtGui.QGroupBox()
         self.parameters = QtGui.QFormLayout()
         self.mcetitle = QtGui.QLabel(self)
@@ -885,6 +921,9 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters.addRow('Delete Old Columns', self.enterchanneldelete)
         self.parameters.addRow('Time Interval (sec)', self.entertimeinterval)
         self.parameters.addRow('Show MCE Data', self.entershowmcedata)
+        self.parameters.addRow('MCE0 Detector:', self.det0_widget)
+        self.parameters.addRow('MCE1 Detector:', self.det1_widget)
+
         self.mceGroupBox.setLayout(self.parameters)
 
         # telescope options =================================================
@@ -1061,6 +1100,48 @@ class MainWindow(QtGui.QMainWindow):
         sys.stdout.flush()
         sys.stderr.flush()
 
+        self.text_keys = {'Delayed Start (sec)':self.tel_delay, 
+                     'Scan Traversal Time (sec)':self.tel_sec,
+                     'Number of Scans (1D Only)':self.numloop, 
+                     '1st Dimension (Scan Length)':self.tel_map_size,
+                     '2nd Dimension (2D Only)':self.tel_map_len,
+                     'Angle of Map Offset':self.tel_map_angle, 
+                     'Size of 2D Vertical Step':self.tel_step,
+                     'Source Coord 1':self.tel_coord1,
+                     'Source Coord 2':self.tel_coord2,
+                     'Object Catalog Name':self.tel_object,
+                     'Observer':self.enterobserver,
+                     'Frame Number':self.enterframenumber,
+                     'Heatmpa Alpha':self.heatalpha,
+                     'Time Interval (sec)':self.entertimeinterval,
+                     'Row/Feed 0':self.enterrowfeed0,
+                     'Col/Channel 0':self.entercolchan0,
+                     'Row/Feed 1':self.enterrowfeed1,
+                     'Col/Channel 1':self.enterrowfeed1
+                     }
+        self.drop_keys = {'Activate Telescope':(self.init_tel,self.list_of_init_tels),
+                     'Activate KMS':(self.kmsonofftext,self.list_of_kms_onoffs),
+                     'Scan Strategy':(self.telescan,self.list_of_scan_options),
+                     'Variable Coordinate':(self.map_space,self.list_of_map_space_options),
+                     'Unit (1st Dimension)':(self.unit1,self.list_of_angle_units),
+                     'Unit (2nd Dimension)':(self.unit6,self.list_of_angle_units),
+                     'Unit (Angle)':(self.unit2,self.list_of_angle_units),
+                     'Unit (Step)':(self.unit3,self.list_of_angle_units),
+                     'Source Coord 1 Type':(self.unit4,self.list_of_coord1_options),
+                     'Source Coord 2 Type':(self.unit5,self.list_of_coord2_options),
+                     'Epoch':(self.tel_epoch,self.list_of_epochs),
+                     'Active MCEs':(self.whichmces,self.list_of_mce_options),
+                     'Datamode':(self.enterdatamode,self.list_of_datamode_options),
+                     'Readout Card':(self.enterreadoutcard,self.list_of_readoutcard_options),
+                     'Delete Old Columns':(self.enterchanneldelete,self.list_of_channeldelete_options),
+                     'Show MCE Data':(self.entershowmcedata,self.list_of_showmcedata_options),
+                     'Detector 0 Type':(self.entertype0,self.list_of_rowchan_options),
+                     'Detector 1 Type':(self.entertype1,self.list_of_rowchan_options)
+                     }
+
+        if os.path.exists(config_path+'previous_config.json'):
+            self.on_load_config_file_clicked()
+
     #creates input to change channel of live graph during operation, also adds
     #input for readout card if reading All readout cards
 
@@ -1135,8 +1216,8 @@ class MainWindow(QtGui.QMainWindow):
     def channelselection(self):
 
         self.channelreadoutbox1 = QtGui.QFormLayout()
-        self.selectchannel1 = QtGui.QLineEdit('0')
-        self.selectrow1 = QtGui.QLineEdit('0')
+        self.selectchannel1 = QtGui.QLineEdit(str(self.channel1))
+        self.selectrow1 = QtGui.QLineEdit(str(self.row1))
         self.row1 = int(self.selectrow1.text())
         self.channel1 = int(self.selectchannel1.text())
         self.channelreadoutbox1.addRow('Row1 [0-32]',self.selectrow1)
@@ -1144,8 +1225,8 @@ class MainWindow(QtGui.QMainWindow):
         self.newgrid.addLayout(self.channelreadoutbox1, 0,0,1,2)
 
         self.channelreadoutbox2 = QtGui.QFormLayout()
-        self.selectchannel2 = QtGui.QLineEdit('0')
-        self.selectrow2 = QtGui.QLineEdit('0')
+        self.selectchannel2 = QtGui.QLineEdit(str(self.channel2))
+        self.selectrow2 = QtGui.QLineEdit(str(self.row2))
         self.row2 = int(self.selectrow2.text())
         self.channel2 = int(self.selectchannel2.text())
         self.channelreadoutbox2.addRow('Row2 [0-32]',self.selectrow2)
