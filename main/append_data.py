@@ -64,8 +64,8 @@ class Time_Files:
             # for qi in [4]: # [2,3]:
             #     if self.queues[qi].empty():
             #         data_ready = False
-            # if not data_ready:
-            #     continue
+            if not data_ready:
+                continue
 
             a = []
             b = []

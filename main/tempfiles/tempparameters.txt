@@ -1,7 +1,26 @@
-ATC
-10
-All 1350000
-120
-No
-2022-01-30T05:45:23.799181
-Noise stare at 460mk
+observer: RPK
+data mode: 10
+readout card: All
+frame number: 1350000
+time interval: 120
+delete old columbs: No
+time started: 2022-02-09T11:53:31.724160
+
+------------------------------------------
+inittel: Yes
+kmsonoff: Yes
+tel_scan: 1D Raster
+coord_space: RA
+num_loop: 10
+sec: 30
+map_size: 0.3125 deg
+map_len: 0.05 deg
+map_angle: 0 deg
+coord1: 12:56:43.9 RA
+coord2: 21:41:00.1 DEC
+step: 0.0005 deg
+epoch: J2000.0
+object: M64
+
+------------------------------------------
+Please make a note about the current run...

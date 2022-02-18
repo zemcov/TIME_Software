@@ -46,7 +46,7 @@ while True:
 	if file_index < 0:
 		# Transfer the run file
 		logging.info("Found run file!  Transferring...")
-		subprocess.run('rsync -z ' + basefolder + 'temp.run ' + transfer_dest, shell=True)
+		subprocess.run('rsync -zu ' + basefolder + 'temp.run ' + transfer_dest, shell=True)
 		logging.info("Run file transferred!")
 		file_index = 0
 	elif os.path.exists(fname_template %(file_index+1)):
@@ -54,7 +54,7 @@ while True:
 		mce_file_name = fname_template % (file_index)
 		if os.path.exists(mce_file_name) :
 			logging.info('Transferring ' + hostname + ' file ' + mce_file_name)
-			subprocess.run('rsync -z ' + mce_file_name + ' ' + transfer_dest, shell=True)
+			subprocess.run('rsync -zu ' + mce_file_name + ' ' + transfer_dest, shell=True)
 			subprocess.run('rm ' + mce_file_name, shell=True)
 			file_index += 1
 			begin = dt.datetime.utcnow()
