@@ -37,7 +37,7 @@ class Checker(threading.Thread):
         self.in_chan_list = [12,13,16]
         self.out_chan_list = [20,21]
         self.reset_mode = reset_mode
-        
+
     def boot(self, reset_mode = 0):
         print("Starting safety boot sequence")
         GPIO.setmode(GPIO.BCM)
@@ -48,6 +48,7 @@ class Checker(threading.Thread):
         ''' reset_mode: 0=all fine, 1=emergency stop, 2=reverse limit, 3=forward limit '''
         self.enable_motor()
         print("SICK coming online")
+        time.sleep(1.0)
         dots=1
         while GPIO.input(16) == GPIO.LOW:
             print("."*dots, end="\r")
@@ -57,7 +58,7 @@ class Checker(threading.Thread):
             time.sleep(.4)
         print("Safety system initialized!")
         booted=True
-    
+
     def run(self):
         bad_counter = [0,0,0] #corresponds to 12, 13, and 16, respectively
         while self.operating:
@@ -98,10 +99,10 @@ class Checker(threading.Thread):
                     time.sleep(1.0)
                     reset_mode=0
             time.sleep(0.01)           #Operates 2 times as fast as the 20Hz at which signals are sent to the motor controller
-        
+
     def stop(self):
         self.operating = False
-    
+
 ##    def is_high(self, pin):
 ##        if GPIO.input(pin) == GPIO.LOW:
 ##            return False
@@ -114,7 +115,7 @@ class Checker(threading.Thread):
 ##            return True
 ##        else:
 ##            return False
-##        
+##
 ##    def is_low(self, pin):
 ##        if GPIO.input(pin) == GPIO.HIGH:
 ##            return False
@@ -134,15 +135,15 @@ class Checker(threading.Thread):
         """
         GPIO.output(21,GPIO.HIGH)
         print("Motor Deactivated")
-        
+
     def enable_motor(self):
         """
         Undoes the effects of stop_motor
         """
         GPIO.output(21,GPIO.LOW)
         #print("Motor enabled")
-        
-    
+
+
     def stop(self):
         self.operating=False
 
@@ -152,12 +153,12 @@ class Reset(threading.Thread):
     """
     Does reset stuff
     """
-    
+
     def __init__(self):
         threading.Thread.__init__(self)
         GPIO.setup(20,GPIO.OUT)
         GPIO.setup(21,GPIO.OUT)
-    
+
     def e_reset(self):
         """
         Tells the SICK that the positional reset was successful
@@ -168,7 +169,7 @@ class Reset(threading.Thread):
         GPIO.output(21,GPIO.LOW)
         time.sleep(1.0)
         print("PLEASE PUSH FLASHING RESET BUTTON TO PROCEED...")
-        
+
     def limit_reset(self):
         GPIO.output(21,GPIO.LOW)
         time.sleep(1.0)
